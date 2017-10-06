@@ -1,0 +1,5 @@
+wrapt==1.10.5
+boto3==1.4.4
+botocore==1.5.31
+simplejson==3.8.0
+requests==2.10.0
