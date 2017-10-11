@@ -8,7 +8,7 @@ from cStringIO import StringIO
 events = []
 transaction_id = None
 function_name = None
-TRACES_URL = 'https://fib01keo54.execute-api.us-east-1.amazonaws.com/dev/'
+TRACES_URL = 'https://bhz8m2pkr4.execute-api.us-east-1.amazonaws.com/dev/'
 
 
 class Event(object):
