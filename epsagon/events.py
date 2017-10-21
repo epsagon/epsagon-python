@@ -1,14 +1,14 @@
-import simplejson
-import requests
-import gzip
 import time
-from cStringIO import StringIO
+import json
+import requests
 
 
 events = []
 transaction_id = None
 function_name = None
-TRACES_URL = 'https://bhz8m2pkr4.execute-api.us-east-1.amazonaws.com/dev/'
+app_name = None
+token = None
+TRACES_URL = 'http://api.epsagon.com:8002/event'
 
 
 class Event(object):
@@ -35,11 +35,13 @@ class Event(object):
             self.timestamp = time.time()
 
     def get_dict(self):
-        global transaction_id, function_name
+        global transaction_id, function_name, app_name
         event_json = {
             'id': self.event_id,
             'transaction_id': transaction_id,
             'function_name': function_name,
+            'app_name': app_name,
+            'token': token,
             'event_type': self.event_type,
             'service_type': self.service_type,
             'service_name': self.service_name,
@@ -53,9 +55,6 @@ class Event(object):
 
 def send_to_server():
     global events
-    events_json = simplejson.dumps([event.get_dict() for event in events])
-    #gzipped_data = StringIO()
-    #with gzip.GzipFile(fileobj=gzipped_data, mode='w') as gzipped_file:
-    #    gzipped_file.write(events_json)
+    events_json = json.dumps([event.get_dict() for event in events])
     requests.post(TRACES_URL, data=events_json)
     events = []

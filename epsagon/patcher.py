@@ -10,6 +10,7 @@ PATCHED_MODULES = [
     patch_botocore
 ]
 
+# TODO: Need to check if module exist before patching
 
 def patch_all():
     """

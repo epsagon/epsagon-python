@@ -22,7 +22,8 @@ def _request_wrapper(wrapped, instance, args, kwargs):
             'request_body': prepared_request.body,
             'request_method': prepared_request.method,
             'response_headers': dict(response.headers),
-            'response_body': response.text
+            'status_code': response.status_code,
+            #'response_body': response.text
         }
     )
     events.events.append(event)
