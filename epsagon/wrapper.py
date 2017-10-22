@@ -1,8 +1,13 @@
-import uuid
+"""
+Main Epsagon agent module
+"""
+
 import time
-from patcher import patch_all
-import events
+import uuid
 import functools
+import traceback
+from epsagon.patcher import patch_all
+from epsagon import events
 
 
 def lambda_wrapper(app_name, token):
@@ -35,17 +40,17 @@ def lambda_wrapper(app_name, token):
             try:
                 result = func(*args, **kwargs)
             except Exception, ex:
-                import traceback
                 event.end_reason = events.Event.ER_EXCEPTION
                 event.metadata['exception'] = ex.message
                 event.metadata['traceback'] = traceback.format_exc()
                 exception = ex
+
             event.duration = time.time() - event.timestamp
             events.events.insert(0, event)
             try:
                 events.send_to_server()
-            except:
-                return 'error sending'
+            except Exception, ex:
+                return result
 
             if exception is None:
                 return result

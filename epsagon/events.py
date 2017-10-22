@@ -8,7 +8,7 @@ transaction_id = None
 function_name = None
 app_name = None
 token = None
-TRACES_URL = 'http://api.epsagon.com:8002/event'
+TRACES_URL = 'http://api.epsagon.com/event'
 
 
 class Event(object):

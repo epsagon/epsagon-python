@@ -4,7 +4,7 @@ botocore patcher module
 
 import time
 import wrapt
-import events
+from epsagon import events
 
 # TODO: Fill read end reason by parsed_response['ResponseMetadata']['HTTPStatusCode'] - http://botocore.readthedocs.io/en/latest/client_upgrades.html#error-handling
 AWS_TIME_FORMAT = '%a, %d %b %Y %H:%M:%S GMT'

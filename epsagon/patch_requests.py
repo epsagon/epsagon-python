@@ -2,12 +2,12 @@
 requests patcher module
 """
 
-import wrapt
 import uuid
-import events
+import wrapt
+from epsagon import events
 
 
-def _request_wrapper(wrapped, instance, args, kwargs):
+def _request_wrapper(wrapped, _, args, kwargs):
     prepared_request = args[0]
     response = wrapped(*args, **kwargs)
     event = events.Event(
