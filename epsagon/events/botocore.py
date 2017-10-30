@@ -59,8 +59,10 @@ class BotocoreS3Event(BotocoreEvent):
     def post_update(self, parsed_response):
         super(BotocoreS3Event, self).post_update(parsed_response)
 
-        self.metadata['bucket'] = parsed_response['Name']
-        self.metadata['key'] = parsed_response['Contents'][0]['Key']
+        # TODO: Need to extract bucket name from request
+        # TODO: response data depends on request type
+        #self.metadata['bucket'] = parsed_response['Name']
+        #self.metadata['key'] = parsed_response['Contents'][0]['Key']
 
 
 class BotocoreLambdaEvent(BotocoreEvent):

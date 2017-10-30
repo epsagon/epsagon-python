@@ -37,6 +37,7 @@ def lambda_wrapper(app_name, token):
                 )
                 raise exception
             finally:
+                tracer.runner.terminate()
                 tracer.send_traces()
 
         return _lambda_wrapper

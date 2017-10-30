@@ -36,7 +36,7 @@ class RequestsEvent(BaseEvent):
 
     def post_update(self, response):
         self.metadata['status_code'] = response.status_code
-        self.metadata['response_headers'] = response.headers
+        self.metadata['response_headers'] = dict(response.headers)
 
         # Extract only json responses
         self.metadata['response_body'] = ''
@@ -84,7 +84,7 @@ class RequestsEventFactory(object):
     @staticmethod
     def factory(args):
         prepared_request = args[0]
-        base_url = urlparse(prepared_request).netloc
+        base_url = urlparse(prepared_request.url).netloc
 
         # Start with base event
         instance_type = RequestsEvent

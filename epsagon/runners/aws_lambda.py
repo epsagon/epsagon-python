@@ -25,8 +25,8 @@ class LambdaRunner(BaseEvent):
         self.event_id = context.__dict__['aws_request_id']
 
         self.metadata = {
-            'event': event,
             'log_stream_name': context.__dict__['log_stream_name'],
+            'log_group_name': context.__dict__['log_group_name'],
             'function_version': context.__dict__['function_version'],
         }
 
