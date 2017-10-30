@@ -2,20 +2,14 @@
 Main patcher module
 """
 
-import patch_botocore
-import patch_requests
+from __future__ import absolute_import
+from .modules import MODULES
 
-PATCHED_MODULES = [
-    patch_requests,
-    patch_botocore
-]
-
-# TODO: Need to check if module exist before patching
 
 def patch_all():
     """
     Instrumenting all modules
     :return: None
     """
-    for patch_module in PATCHED_MODULES:
+    for patch_module in MODULES:
         patch_module.patch()

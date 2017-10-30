@@ -2,6 +2,9 @@
 
 This package provides a Python object to send telemetry to the IOpipe platform for application performance monitoring, analytics, and distributed tracing.
 
+Explanation on trace, event...
+
+
 ## Installation
 
 From your project directory:
