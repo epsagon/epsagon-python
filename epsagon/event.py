@@ -40,7 +40,7 @@ class BaseEvent(object):
     @staticmethod
     def load_from_dict(event_data):
         event = BaseEvent()
-        event.event_id = event_data['id']
+        event.event_id = event_data['event_id']
         event.resource_name = event_data['resource_name']
         event.event_operation = event_data['event_operation']
         event.event_type = event_data['event_type']
@@ -53,7 +53,7 @@ class BaseEvent(object):
 
     def dictify(self):
         return {
-            'id': self.event_id,
+            'event_id': self.event_id,
             'start_timestamp': self.start_timestamp,
             'end_timestamp': self.end_timestamp,
             'resource_name': self.resource_name,

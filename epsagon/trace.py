@@ -65,7 +65,7 @@ class Trace(object):
             'start_timestamp': self.start_timestamp,
             'end_timestamp': self.end_timestamp,
             'error_code': self.error_code,
-            'trigger': self.trigger.dictify(),
+            'trigger': None if self.trigger is None else self.trigger.dictify(),
             'runner': self.runner.dictify(),
             'operations': [operation.dictify() for operation in self.operations]
         }

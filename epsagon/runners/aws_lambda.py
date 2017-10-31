@@ -50,11 +50,11 @@ class BaseLambdaTrigger(BaseEvent):
     EVENT_MODULE = 'trigger'
     EVENT_TYPE = 'base'
 
-    def __init__(self, _):
+    def __init__(self):
         super(BaseLambdaTrigger, self).__init__()
 
 
-class S3LambdaTrigger(BaseEvent):
+class S3LambdaTrigger(BaseLambdaTrigger):
     """
     Represents S3 Lambda trigger
     """

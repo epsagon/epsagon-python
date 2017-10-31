@@ -40,7 +40,7 @@ class RequestsEvent(BaseEvent):
         self.metadata['response_headers'] = dict(response.headers)
 
         # Extract only json responses
-        self.metadata['response_body'] = ''
+        self.metadata['response_body'] = None
         try:
             self.metadata['response_body'] = response.json()
         except ValueError:
@@ -73,6 +73,8 @@ class RequestsTwilioEvent(RequestsEvent):
 
     def __init__(self, args):
         super(RequestsTwilioEvent, self).__init__(args)
+        prepared_request = args[0]
+        self.event_operation = prepared_request.path_url.split('/')[-1]
 
 
 class RequestsEventFactory(object):
