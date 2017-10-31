@@ -21,7 +21,8 @@ class LambdaRunner(BaseEvent):
 
     def __init__(self, event, context):
         super(LambdaRunner, self).__init__()
-        self.event_name = context.__dict__['function_name']
+        self.resource_name = context.__dict__['function_name']
+        self.event_operation = 'invoke'
         self.event_id = context.__dict__['aws_request_id']
 
         self.metadata = {
@@ -66,14 +67,14 @@ class S3LambdaTrigger(BaseEvent):
 
         # TODO: Need to support multiple records
 
-        self.event_name = event['Records'][0]['eventName']
+        self.resource_name = event['Records'][0]['s3']['bucket']['name']
+        self.event_operation = event['Records'][0]['eventName']
         self.event_id = event['Records'][0]['s3']['object']['sequencer']
 
         self.metadata = {
             'region': event['Records'][0]['awsRegion'],
             'request_parameters': event['Records'][0]['requestParameters'],
             'user_identity': event['Records'][0]['userIdentity'],
-            'bucket': event['Records'][0]['s3']['bucket']['name'],
             'object_key': event['Records'][0]['s3']['object']['key'],
             'object_size': event['Records'][0]['s3']['object']['size'],
             'object_etag': event['Records'][0]['s3']['object']['eTag'],

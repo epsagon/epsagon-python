@@ -21,6 +21,7 @@ class RequestsEvent(BaseEvent):
         super(RequestsEvent, self).__init__()
         # Most APIs requests don't have ids so we generate one
         self.event_id = 'r{}'.format(str(uuid4()))
+        self.resource_name = self.EVENT_TYPE
 
         prepared_request = args[0]
 
@@ -60,7 +61,7 @@ class RequestsAuth0Event(RequestsEvent):
     def __init__(self, args):
         super(RequestsAuth0Event, self).__init__(args)
         prepared_request = args[0]
-        self.event_name = prepared_request.path_url.split('/')[-1]
+        self.event_operation = prepared_request.path_url.split('/')[-1]
 
 
 class RequestsTwilioEvent(RequestsEvent):

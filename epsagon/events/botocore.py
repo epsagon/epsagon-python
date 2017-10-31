@@ -18,13 +18,11 @@ class BotocoreEvent(BaseEvent):
     def __init__(self, instance, args):
         super(BotocoreEvent, self).__init__()
 
-        operation_model, request_data = args
-        self.event_name = operation_model.name
+        event_operation, _ = args
+        self.event_operation = str(event_operation)
 
         self.metadata = {
-            'host': str(instance.host),
-            'region': request_data['context']['client_region'],
-            'body': None if len(request_data['body']) == 0 else request_data['body'],
+            'region': instance.meta.region_name,
         }
 
     def set_error(self, exception):
@@ -55,6 +53,8 @@ class BotocoreS3Event(BotocoreEvent):
 
     def __init__(self, instance, args):
         super(BotocoreS3Event, self).__init__(instance, args)
+        _, request_data = args
+        self.resource_name = request_data['Bucket']
 
     def post_update(self, parsed_response):
         super(BotocoreS3Event, self).post_update(parsed_response)
@@ -76,7 +76,8 @@ class BotocoreLambdaEvent(BotocoreEvent):
         super(BotocoreLambdaEvent, self).__init__(instance, args)
         _, request_data = args
 
-        self.metadata['invocation_type'] = request_data['headers']['X-Amz-Invocation-Type']
+        self.resource_name = request_data['FunctionName']
+        self.metadata['payload'] = request_data['Payload']
 
 
 class BotocoreEventFactory(object):
@@ -88,7 +89,7 @@ class BotocoreEventFactory(object):
 
     @staticmethod
     def factory(instance, args):
-        instance_type = getattr(instance, '_endpoint_prefix')
+        instance_type = getattr(instance, '_service_model').endpoint_prefix
         if instance_type not in BotocoreEventFactory.FACTORY_DICT:
             return BotocoreEvent(instance, args)
 

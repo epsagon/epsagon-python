@@ -11,9 +11,9 @@ from ..events.botocore import BotocoreEventFactory
 def _botocore_wrapper(wrapped, instance, args, kwargs):
     event = BotocoreEventFactory.factory(instance, args)
     try:
-        http_response, parsed_response = wrapped(*args, **kwargs)
+        parsed_response = wrapped(*args, **kwargs)
         event.post_update(parsed_response)
-        return http_response, parsed_response
+        return parsed_response
     except ClientError as exception:
         event.set_error(exception.response['Error'])
         raise exception
@@ -27,7 +27,7 @@ def patch():
     :return: None
     """
     wrapt.wrap_function_wrapper(
-        'botocore.endpoint',
-        'Endpoint.make_request',
+        'botocore.client',
+        'BaseClient._make_api_call',
         _botocore_wrapper
     )

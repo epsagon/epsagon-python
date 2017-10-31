@@ -38,6 +38,25 @@ class Trace(object):
         self.runner = None
         self.operations = []
 
+    @staticmethod
+    def load_from_dict(trace_data):
+        trace = Trace()
+        trace.trace_id = trace_data['id']
+        trace.app_name = trace_data['app_name']
+        trace.token = trace_data['token']
+        trace.start_timestamp = trace_data['start_timestamp']
+        trace.end_timestamp = trace_data['end_timestamp']
+        trace.error_code = trace_data['error_code']
+        return trace
+
+    def get_events(self):
+        if self.trigger is None:
+            events = [self.runner] + self.operations
+        else:
+            events = [self.trigger, self.runner] + self.operations
+
+        return events
+
     def dictify(self):
         return {
             'id': self.trace_id,
@@ -58,6 +77,7 @@ class Trace(object):
         try:
             requests.post(TRACE_COLLECTOR_URL, data=ujson.dumps(self.dictify()))
         except Exception as exception:
+            # TODO: Think of what needs to be done if there is an error in send
             pass
 
 
