@@ -58,7 +58,6 @@ class S3LambdaTrigger(BaseEvent):
     Represents S3 Lambda trigger
     """
 
-    EVENT_MODULE = 'trigger'
     EVENT_TYPE = 's3'
 
     def __init__(self, event):
@@ -89,11 +88,10 @@ class LambdaTriggerFactory(object):
 
     @staticmethod
     def factory(event):
-
-        instance_type = BaseLambdaTrigger
         if 'Records' in event:
             trigger_service = event['Records'][0]['eventSource'].split(':')[-1]
             if trigger_service in LambdaTriggerFactory.FACTORY_DICT:
                 instance_type = LambdaTriggerFactory.FACTORY_DICT[trigger_service]
+                return instance_type(event)
 
-        return instance_type(event)
+        return None
