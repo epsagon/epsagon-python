@@ -64,16 +64,17 @@ class BaseEvent(object):
             'metadata': self.metadata,
         }
 
-    def dictify_dynamodb(self, transaction_id):
+    def dictify_dynamodb(self, transaction_id, app_name):
         """
         Preparing dict that ready for dynamodb (no empty string and no floats).
-        Adding transaction ID
+        Adding transaction ID and app_name for easier extraction
         :return: dict
         """
         event = self.dictify()
         event['start_timestamp'] = str(self.start_timestamp)
         event['end_timestamp'] = str(self.end_timestamp)
         event['transaction_id'] = transaction_id
+        event['app_name'] = app_name
         return event
 
     def terminate(self):
