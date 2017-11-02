@@ -59,10 +59,35 @@ class BotocoreS3Event(BotocoreEvent):
     def post_update(self, parsed_response):
         super(BotocoreS3Event, self).post_update(parsed_response)
 
-        # TODO: Need to extract bucket name from request
-        # TODO: response data depends on request type
-        #self.metadata['bucket'] = parsed_response['Name']
-        #self.metadata['key'] = parsed_response['Contents'][0]['Key']
+        if self.event_operation == 'ListObjects':
+            self.metadata['files'] = [
+                [str(x['Key']), x['Size'], x['ETag']] for x in parsed_response['Contents']
+            ]
+        elif self.event_operation == 'PutObject':
+            self.metadata['etag'] = parsed_response['ETag']
+
+
+class BotocoreKinesisEvent(BotocoreEvent):
+    """
+    Represents kinesis botocore event
+    """
+
+    EVENT_TYPE = 'kinesis'
+
+    def __init__(self, instance, args):
+        super(BotocoreKinesisEvent, self).__init__(instance, args)
+        _, request_data = args
+        self.resource_name = request_data['StreamName']
+
+        self.metadata['data'] = request_data['Data']
+        self.metadata['partition_key'] = request_data['PartitionKey']
+
+    def post_update(self, parsed_response):
+        super(BotocoreKinesisEvent, self).post_update(parsed_response)
+
+        if self.event_operation == 'PutRecord':
+            self.metadata['shard_id'] = parsed_response['ShardId']
+            self.metadata['sequence_number'] = parsed_response['SequenceNumber']
 
 
 class BotocoreLambdaEvent(BotocoreEvent):
