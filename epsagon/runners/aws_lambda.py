@@ -81,6 +81,31 @@ class S3LambdaTrigger(BaseLambdaTrigger):
         }
 
 
+class KinesisLambdaTrigger(BaseLambdaTrigger):
+    """
+    Represents Kinesis Lambda trigger
+    """
+
+    EVENT_TYPE = 'kinesis'
+
+    def __init__(self, event):
+        super(KinesisLambdaTrigger, self).__init__()
+        self.end_timestamp = self.start_timestamp
+
+        # TODO: Need to support multiple records
+
+        self.resource_name = event['Records'][0]['eventSourceARN'].split('/')[-1]
+        self.event_operation = event['Records'][0]['eventName'].replace('aws:kinesis:', '')
+        self.event_id = event['Records'][0]['eventID']
+
+        self.metadata = {
+            'region': event['Records'][0]['awsRegion'],
+            'invoke_identity': event['Records'][0]['invokeIdentityArn'],
+            'sequence_number': event['Records'][0]['kinesis']['partitionKey'],
+            'partition_key': event['Records'][0]['kinesis']['sequenceNumber'],
+        }
+
+
 class APIGatewayLambdaTrigger(BaseLambdaTrigger):
     """
     Represents API Gateway Lambda trigger
@@ -109,6 +134,7 @@ class LambdaTriggerFactory(object):
 
     FACTORY_DICT = {
         S3LambdaTrigger.EVENT_TYPE: S3LambdaTrigger,
+        KinesisLambdaTrigger.EVENT_TYPE: KinesisLambdaTrigger,
         APIGatewayLambdaTrigger.EVENT_TYPE: APIGatewayLambdaTrigger,
     }
 
