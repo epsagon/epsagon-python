@@ -20,28 +20,24 @@ class BotocoreEvent(BaseEvent):
 
         event_operation, _ = args
         self.event_operation = str(event_operation)
+        self.resource_name = None
 
         self.metadata = {
             'region': instance.meta.region_name,
         }
 
     def set_error(self, exception):
+        self.event_id = exception.response['ResponseMetadata']['RequestId']
         tracer.error_code = ErrorCode.ERROR
         self.error_code = ErrorCode.ERROR
-        self.metadata['error_message'] = str(exception['Message'])
-        self.metadata['error_code'] = str(exception['Code'])
+        self.metadata['error_message'] = str(exception['Error']['Message'])
+        self.metadata['error_code'] = str(exception['Error']['Code'])
 
     def post_update(self, parsed_response):
         self.event_id = parsed_response['ResponseMetadata']['RequestId']
         self.metadata['retry_attempts'] = parsed_response['ResponseMetadata']['RetryAttempts']
         self.metadata['request_id'] = parsed_response['ResponseMetadata']['RequestId']
         self.metadata['status_code'] = parsed_response['ResponseMetadata']['HTTPStatusCode']
-
-        if 'Error' in parsed_response:
-            self.set_error({
-                'Message': parsed_response['Error']['Message'],
-                'Code': parsed_response['Error']['Code'],
-            })
 
 
 class BotocoreS3Event(BotocoreEvent):
@@ -110,6 +106,7 @@ class BotocoreEventFactory(object):
     FACTORY_DICT = {
         BotocoreS3Event.EVENT_TYPE: BotocoreS3Event,
         BotocoreLambdaEvent.EVENT_TYPE: BotocoreLambdaEvent,
+        BotocoreKinesisEvent.EVENT_TYPE: BotocoreKinesisEvent,
     }
 
     @staticmethod

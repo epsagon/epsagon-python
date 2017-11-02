@@ -52,6 +52,7 @@ class BaseLambdaTrigger(BaseEvent):
 
     def __init__(self):
         super(BaseLambdaTrigger, self).__init__()
+        self.event_operation = 'trigger'
 
 
 class S3LambdaTrigger(BaseLambdaTrigger):
@@ -101,8 +102,8 @@ class KinesisLambdaTrigger(BaseLambdaTrigger):
         self.metadata = {
             'region': event['Records'][0]['awsRegion'],
             'invoke_identity': event['Records'][0]['invokeIdentityArn'],
-            'sequence_number': event['Records'][0]['kinesis']['partitionKey'],
-            'partition_key': event['Records'][0]['kinesis']['sequenceNumber'],
+            'sequence_number': event['Records'][0]['kinesis']['sequenceNumber'],
+            'partition_key': event['Records'][0]['kinesis']['partitionKey'],
         }
 
 

@@ -15,7 +15,7 @@ def _botocore_wrapper(wrapped, instance, args, kwargs):
         event.post_update(parsed_response)
         return parsed_response
     except ClientError as exception:
-        event.set_error(exception.response['Error'])
+        event.set_error(exception)
         raise exception
     finally:
         event.add_event()

@@ -24,6 +24,7 @@ class RequestsEvent(BaseEvent):
         self.resource_name = self.EVENT_TYPE
 
         prepared_request = args[0]
+        self.event_operation = prepared_request.method
 
         self.metadata = {
             'method': prepared_request.method,
