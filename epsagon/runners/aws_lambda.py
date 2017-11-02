@@ -81,18 +81,46 @@ class S3LambdaTrigger(BaseLambdaTrigger):
         }
 
 
+class APIGatewayLambdaTrigger(BaseLambdaTrigger):
+    """
+    Represents API Gateway Lambda trigger
+    """
+
+    EVENT_TYPE = 'api_gateway'
+
+    def __init__(self, event):
+        super(APIGatewayLambdaTrigger, self).__init__()
+        self.end_timestamp = self.start_timestamp
+
+        self.resource_name = event['resource']
+        self.event_operation = event['httpMethod']
+        self.event_id = event['requestContext']['requestId']
+
+        self.metadata = {
+            'stage': event['requestContext']['stage'],
+            'body': event['body'],
+            'headers': event['headers'],
+            'query_string_parameters': event['queryStringParameters'],
+            'path_parameters': event['pathParameters'],
+        }
+
+
 class LambdaTriggerFactory(object):
 
     FACTORY_DICT = {
         S3LambdaTrigger.EVENT_TYPE: S3LambdaTrigger,
+        APIGatewayLambdaTrigger.EVENT_TYPE: APIGatewayLambdaTrigger,
     }
 
     @staticmethod
     def factory(event):
+        trigger_service = None
         if 'Records' in event:
             trigger_service = event['Records'][0]['eventSource'].split(':')[-1]
-            if trigger_service in LambdaTriggerFactory.FACTORY_DICT:
-                instance_type = LambdaTriggerFactory.FACTORY_DICT[trigger_service]
-                return instance_type(event)
+        elif 'httpMethod' in event:
+            trigger_service = APIGatewayLambdaTrigger.EVENT_TYPE
 
-        return None
+        if trigger_service not in LambdaTriggerFactory.FACTORY_DICT:
+            return None
+
+        return LambdaTriggerFactory.FACTORY_DICT[trigger_service](event)
