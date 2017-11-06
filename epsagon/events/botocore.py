@@ -86,6 +86,51 @@ class BotocoreKinesisEvent(BotocoreEvent):
             self.metadata['sequence_number'] = parsed_response['SequenceNumber']
 
 
+class BotocoreSNSEvent(BotocoreEvent):
+    """
+    Represents SNS botocore event
+    """
+
+    EVENT_TYPE = 'sns'
+
+    def __init__(self, instance, args):
+        super(BotocoreSNSEvent, self).__init__(instance, args)
+        _, request_data = args
+        self.resource_name = request_data['TopicArn'].split(':')[-1]
+
+        self.metadata['data'] = request_data['Message']
+
+    def post_update(self, parsed_response):
+        super(BotocoreSNSEvent, self).post_update(parsed_response)
+
+        if self.event_operation == 'Publish':
+            self.metadata['message_id'] = parsed_response['MessageId']
+
+
+class BotocoreDynamoDBEvent(BotocoreEvent):
+    """
+    Represents DynamoDB botocore event
+    """
+
+    EVENT_TYPE = 'sns'
+
+    def __init__(self, instance, args):
+        super(BotocoreDynamoDBEvent, self).__init__(instance, args)
+        _, request_data = args
+        self.resource_name = request_data['TableName']
+
+        if self.event_operation == 'PutItem':
+            self.metadata['item'] = request_data['Item']
+
+    def post_update(self, parsed_response):
+        super(BotocoreDynamoDBEvent, self).post_update(parsed_response)
+
+        if self.event_operation == 'Scan':
+            self.metadata['items_count'] = parsed_response['Count']
+            self.metadata['items'] = parsed_response['Items']
+            self.metadata['scanned_count'] = parsed_response['ScannedCount']
+
+
 class BotocoreLambdaEvent(BotocoreEvent):
     """
     Represents lambda botocore event
