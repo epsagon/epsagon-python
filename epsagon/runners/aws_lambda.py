@@ -107,6 +107,29 @@ class KinesisLambdaTrigger(BaseLambdaTrigger):
         }
 
 
+class SNSLambdaTrigger(BaseLambdaTrigger):
+    """
+    Represents SNS Lambda trigger
+    """
+
+    EVENT_TYPE = 'sns'
+
+    def __init__(self, event):
+        super(SNSLambdaTrigger, self).__init__()
+        self.end_timestamp = self.start_timestamp
+
+        # TODO: Need to support multiple records
+
+        self.resource_name = event['Records'][0]['EventSubscriptionArn'].split(':')[-2]
+        self.event_operation = str(event['Records'][0]['Sns']['Type'])
+        self.event_id = str(event['Records'][0]['Sns']['MessageId'])
+
+        self.metadata = {
+            'subject': str(event['Records'][0]['Sns']['Subject']),
+            'message': str(event['Records'][0]['Sns']['Message']),
+        }
+
+
 class APIGatewayLambdaTrigger(BaseLambdaTrigger):
     """
     Represents API Gateway Lambda trigger
@@ -137,13 +160,17 @@ class LambdaTriggerFactory(object):
         S3LambdaTrigger.EVENT_TYPE: S3LambdaTrigger,
         KinesisLambdaTrigger.EVENT_TYPE: KinesisLambdaTrigger,
         APIGatewayLambdaTrigger.EVENT_TYPE: APIGatewayLambdaTrigger,
+        SNSLambdaTrigger.EVENT_TYPE: SNSLambdaTrigger,
     }
 
     @staticmethod
     def factory(event):
         trigger_service = None
         if 'Records' in event:
-            trigger_service = event['Records'][0]['eventSource'].split(':')[-1]
+            event_source = 'eventSource'
+            if event_source not in event['Records'][0]:
+                event_source = 'EventSource'
+            trigger_service = event['Records'][0][event_source].split(':')[-1]
         elif 'httpMethod' in event:
             trigger_service = APIGatewayLambdaTrigger.EVENT_TYPE
 

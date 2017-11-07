@@ -30,8 +30,8 @@ class BotocoreEvent(BaseEvent):
         self.event_id = exception.response['ResponseMetadata']['RequestId']
         tracer.error_code = ErrorCode.ERROR
         self.error_code = ErrorCode.ERROR
-        self.metadata['error_message'] = str(exception['Error']['Message'])
-        self.metadata['error_code'] = str(exception['Error']['Code'])
+        self.metadata['error_message'] = str(exception.message)
+        self.metadata['error_code'] = str(exception.response['Error']['Code'])
 
     def post_update(self, parsed_response):
         self.event_id = parsed_response['ResponseMetadata']['RequestId']
@@ -104,6 +104,7 @@ class BotocoreSNSEvent(BotocoreEvent):
         super(BotocoreSNSEvent, self).post_update(parsed_response)
 
         if self.event_operation == 'Publish':
+            self.event_id = parsed_response['MessageId']
             self.metadata['message_id'] = parsed_response['MessageId']
 
 
@@ -112,7 +113,7 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
     Represents DynamoDB botocore event
     """
 
-    EVENT_TYPE = 'sns'
+    EVENT_TYPE = 'dynamodb'
 
     def __init__(self, instance, args):
         super(BotocoreDynamoDBEvent, self).__init__(instance, args)
@@ -147,17 +148,13 @@ class BotocoreLambdaEvent(BotocoreEvent):
 
 
 class BotocoreEventFactory(object):
-
-    FACTORY_DICT = {
-        BotocoreS3Event.EVENT_TYPE: BotocoreS3Event,
-        BotocoreLambdaEvent.EVENT_TYPE: BotocoreLambdaEvent,
-        BotocoreKinesisEvent.EVENT_TYPE: BotocoreKinesisEvent,
-    }
-
     @staticmethod
     def factory(instance, args):
-        instance_type = getattr(instance, '_service_model').endpoint_prefix
-        if instance_type not in BotocoreEventFactory.FACTORY_DICT:
-            return BotocoreEvent(instance, args)
+        factory = {
+            class_obj.EVENT_TYPE: class_obj
+            for class_obj in BotocoreEvent.__subclasses__()
+        }
 
-        return BotocoreEventFactory.FACTORY_DICT[instance_type](instance, args)
+        instance_type = getattr(instance, '_service_model').endpoint_prefix
+
+        return factory.get(instance_type, BotocoreEvent)(instance, args)

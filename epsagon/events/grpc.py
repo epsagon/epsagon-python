@@ -25,8 +25,9 @@ class GoogleRPCEvent(BaseEvent):
         self.event_operation = operation
         self.resource_name = endpoint
 
+        print type(request_data), dir(request_data)
         self.metadata = {
-            'request_data': request_data,
+            'request_data': str(request_data),
         }
 
     def post_update(self, parsed_response):
@@ -43,13 +44,14 @@ class GRPCNaturalLanguageEvent(GoogleRPCEvent):
 
 class GRPCEventFactory(object):
 
-    FACTORY_DICT = {
-        GRPCNaturalLanguageEvent.EVENT_TYPE: GRPCNaturalLanguageEvent,
-    }
-
     @staticmethod
     def factory(instance, args):
+        factory = {
+            class_obj.EVENT_TYPE: class_obj
+            for class_obj in GoogleRPCEvent.__subclasses__()
+        }
+
         _, endpoint, _ = getattr(instance, '_method').split('/')
         endpoint = endpoint.split('.')[-1]
 
-        return GRPCEventFactory.FACTORY_DICT.get(endpoint, GoogleRPCEvent)(instance, args)
+        return factory.get(endpoint, GoogleRPCEvent)(instance, args)

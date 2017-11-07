@@ -51,6 +51,11 @@ class RequestsEvent(BaseEvent):
         if response.status_code >= 300:
             self.set_error()
 
+    def add_event(self):
+        if self.metadata['url'] == 'https://accounts.google.com/o/oauth2/token':
+            return
+        super(RequestsEvent, self).add_event()
+
 
 class RequestsAuth0Event(RequestsEvent):
     """
@@ -58,11 +63,13 @@ class RequestsAuth0Event(RequestsEvent):
     """
 
     EVENT_TYPE = 'auth0'
+    API_TAG = '/api/v2/'
 
     def __init__(self, args):
         super(RequestsAuth0Event, self).__init__(args)
         prepared_request = args[0]
-        self.event_operation = prepared_request.path_url.split('/')[-1]
+        url = prepared_request.path_url
+        self.event_operation = url[url.find(self.API_TAG) + len(self.API_TAG):]
 
 
 class RequestsTwilioEvent(RequestsEvent):
@@ -80,13 +87,13 @@ class RequestsTwilioEvent(RequestsEvent):
 
 class RequestsEventFactory(object):
 
-    FACTORY_DICT = {
-        RequestsAuth0Event.EVENT_TYPE: RequestsAuth0Event,
-        RequestsTwilioEvent.EVENT_TYPE: RequestsTwilioEvent,
-    }
-
     @staticmethod
     def factory(args):
+        factory = {
+            class_obj.EVENT_TYPE: class_obj
+            for class_obj in RequestsEvent.__subclasses__()
+        }
+
         prepared_request = args[0]
         base_url = urlparse(prepared_request.url).netloc
 
@@ -94,8 +101,8 @@ class RequestsEventFactory(object):
         instance_type = RequestsEvent
 
         # Look for API matching in url
-        for api_name in RequestsEventFactory.FACTORY_DICT:
-            if api_name in base_url:
-                instance_type = RequestsEventFactory.FACTORY_DICT[api_name]
+        for api_name in factory:
+            if api_name in base_url.lower():
+                instance_type = factory[api_name]
 
         return instance_type(args)
