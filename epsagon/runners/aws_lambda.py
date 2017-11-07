@@ -130,6 +130,26 @@ class SNSLambdaTrigger(BaseLambdaTrigger):
         }
 
 
+class SNSHTTPTrigger(BaseLambdaTrigger):
+    """
+    Represents SNS Lambda trigger based on HTTP message
+    """
+
+    EVENT_TYPE = 'sns'
+
+    def __init__(self, event):
+        super(SNSHTTPTrigger, self).__init__()
+        self.end_timestamp = self.start_timestamp
+
+        self.resource_name = event['TopicArn'].split(':')[-1]
+        self.event_operation = str(event['Type'])
+        self.event_id = str(event['MessageId'])
+
+        self.metadata = {
+            'message': str(event['Message']),
+        }
+
+
 class APIGatewayLambdaTrigger(BaseLambdaTrigger):
     """
     Represents API Gateway Lambda trigger
@@ -173,6 +193,8 @@ class LambdaTriggerFactory(object):
             trigger_service = event['Records'][0][event_source].split(':')[-1]
         elif 'httpMethod' in event:
             trigger_service = APIGatewayLambdaTrigger.EVENT_TYPE
+        elif 'TopicArn' in event:
+            return SNSHTTPTrigger(event)
 
         if trigger_service not in LambdaTriggerFactory.FACTORY_DICT:
             return None

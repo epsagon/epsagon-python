@@ -5,7 +5,12 @@
 from __future__ import absolute_import
 import time
 from uuid import uuid4
-import ujson
+try:
+    # TODO: Fix json->ujson (error in azure)
+    import ujson as json
+except:
+    # Support azure for now
+    import json
 import requests
 from .common import ErrorCode
 from .constants import TRACE_COLLECTOR_URL
@@ -75,7 +80,7 @@ class Trace(object):
             self.end_timestamp = time.time()
 
         try:
-            requests.post(TRACE_COLLECTOR_URL, data=ujson.dumps(self.dictify()))
+            requests.post(TRACE_COLLECTOR_URL, data=json.dumps(self.dictify()))
         except Exception as exception:
             # TODO: Think of what needs to be done if there is an error in send
             pass

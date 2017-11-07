@@ -7,3 +7,4 @@ __version__ = '.'.join(__version_info__)
 
 patch_all()
 lambda_wrapper = wrapper.lambda_wrapper
+azure_wrapper = wrapper.azure_wrapper
