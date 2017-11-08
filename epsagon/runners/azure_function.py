@@ -33,5 +33,5 @@ class AzureFunctionRunner(BaseEvent):
     def set_error(self, error_code, exception, traceback):
         tracer.error_code = error_code
         self.error_code = error_code
-        self.metadata['exception'] = exception
+        self.metadata['exception'] = repr(exception)
         self.metadata['traceback'] = traceback
