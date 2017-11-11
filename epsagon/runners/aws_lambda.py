@@ -5,6 +5,7 @@ Runner and Triggers for aws_lambda
 from __future__ import absolute_import
 from ..event import BaseEvent
 from ..trace import tracer
+from .. import constants
 
 
 ##########
@@ -29,6 +30,7 @@ class LambdaRunner(BaseEvent):
             'log_stream_name': context.__dict__['log_stream_name'],
             'log_group_name': context.__dict__['log_group_name'],
             'function_version': context.__dict__['function_version'],
+            'cold_start': constants.COLD_START,
         }
 
     def set_error(self, error_code, exception, traceback):

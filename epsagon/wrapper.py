@@ -13,6 +13,7 @@ from .trace import tracer
 from .runners.aws_lambda import LambdaRunner, LambdaTriggerFactory
 from .runners.azure_function import AzureFunctionRunner
 from .common import ErrorCode
+from . import constants
 
 # TODO: Maybe separate to different modules (under same wrappers dirs)
 
@@ -31,6 +32,7 @@ def lambda_wrapper(app_name, token):
 
             tracer.trigger = LambdaTriggerFactory.factory(event)
             tracer.runner = LambdaRunner(event, context)
+            constants.COLD_START = False
 
             try:
                 result = func(*args, **kwargs)
