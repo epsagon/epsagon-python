@@ -21,6 +21,7 @@ setup(name='epsagon',
               'flake8'
           ]
       },
+      license="Apache License 2.0",
       setup_requires=['pytest-runner'],
       tests_require=['pytest']
       )
