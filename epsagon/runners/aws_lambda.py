@@ -176,6 +176,28 @@ class APIGatewayLambdaTrigger(BaseLambdaTrigger):
         }
 
 
+class EventsLambdaTrigger(BaseLambdaTrigger):
+    """
+    Represents Events (schedule) Lambda trigger
+    """
+
+    EVENT_TYPE = 'events'
+
+    def __init__(self, event):
+        super(EventsLambdaTrigger, self).__init__()
+        self.end_timestamp = self.start_timestamp
+
+        self.resource_name = str(event['resources'][0].split('/')[-1])
+        self.event_operation = str(event['detail-type'])
+        self.event_id = str(event['id'])
+
+        self.metadata = {
+            'region': event['region'],
+            'detail': None if len(event['detail']) == 0 else event['detail'],
+            'account': str(event['account']),
+        }
+
+
 class LambdaTriggerFactory(object):
 
     FACTORY_DICT = {
@@ -183,6 +205,7 @@ class LambdaTriggerFactory(object):
         KinesisLambdaTrigger.EVENT_TYPE: KinesisLambdaTrigger,
         APIGatewayLambdaTrigger.EVENT_TYPE: APIGatewayLambdaTrigger,
         SNSLambdaTrigger.EVENT_TYPE: SNSLambdaTrigger,
+        EventsLambdaTrigger.EVENT_TYPE: EventsLambdaTrigger,
     }
 
     @staticmethod
@@ -197,6 +220,8 @@ class LambdaTriggerFactory(object):
             trigger_service = APIGatewayLambdaTrigger.EVENT_TYPE
         elif 'TopicArn' in event:
             return SNSHTTPTrigger(event)
+        elif 'source' in event:
+            trigger_service = str(event['source'].split('.')[-1])
 
         if trigger_service not in LambdaTriggerFactory.FACTORY_DICT:
             return None
