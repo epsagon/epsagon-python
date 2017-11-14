@@ -16,6 +16,8 @@ from .common import ErrorCode
 from . import constants
 
 # TODO: Maybe separate to different modules (under same wrappers dirs)
+# TODO: Add rate limiter for trace sends
+# TODO: Send agent and version
 
 
 def lambda_wrapper(app_name, token):

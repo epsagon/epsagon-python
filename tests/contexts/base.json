@@ -1,0 +1,10 @@
+{
+  "aws_request_id": "a04706d1-c869-11e7-869c-e1c01e15f88b",
+  "log_stream_name": "2017/11/13/[$LATEST]b504678096f64a72b2ca555cb4fb764a",
+  "invoked_function_arn": "arn:aws:lambda:us-east-1:066549572091:function:test",
+  "client_context": null,
+  "log_group_name": "/aws/lambda/test",
+  "function_name": "test",
+  "function_version": "$LATEST",
+  "memory_limit_in_mb": "128"
+}
