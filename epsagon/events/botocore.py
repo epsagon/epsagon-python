@@ -122,6 +122,12 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
 
         if self.event_operation == 'PutItem':
             self.metadata['item'] = request_data['Item']
+        elif self.event_operation == 'UpdateItem':
+            self.metadata['update_params'] = {
+                'key': request_data['Key'],
+                'expression_attribute_values': request_data['ExpressionAttributeValues'],
+                'update_expression': request_data['UpdateExpression'],
+            }
 
     def post_update(self, parsed_response):
         super(BotocoreDynamoDBEvent, self).post_update(parsed_response)
