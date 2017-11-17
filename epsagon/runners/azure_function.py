@@ -27,7 +27,8 @@ class AzureFunctionRunner(BaseEvent):
         self.event_id = os.environ['EXECUTION_CONTEXT_INVOCATIONID']
 
         self.metadata = {
-            'region': os.environ['REGION_NAME']
+            'region': os.environ['REGION_NAME'],
+            'cold_start': 'False',
         }
 
     def set_error(self, error_code, exception, traceback):

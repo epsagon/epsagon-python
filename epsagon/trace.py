@@ -35,16 +35,19 @@ class Trace(object):
             'version': __version__,
         }
 
-    def initialize(self, app_name, token):
+    def prepare(self):
+        assert tracer.token != '', 'Please initialize token'
         self.trace_id = str(uuid4())
-        self.app_name = app_name
-        self.token = token
         self.start_timestamp = time.time()
         self.end_timestamp = 0
         self.error_code = ErrorCode.OK
         self.trigger = None
         self.runner = None
         self.operations = []
+
+    def initialize(self, app_name, token):
+        self.app_name = app_name
+        self.token = token
 
     @staticmethod
     def load_from_dict(trace_data):

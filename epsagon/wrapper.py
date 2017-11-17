@@ -28,7 +28,7 @@ def init(token, app_name='default'):
 def lambda_wrapper(func):
     """Epsagon's Lambda wrapper."""
     def _lambda_wrapper(*args, **kwargs):
-        assert tracer.token != '', 'Please initialize token'
+        tracer.prepare()
         event, context = args
 
         tracer.trigger = LambdaTriggerFactory.factory(event)
@@ -55,7 +55,7 @@ def lambda_wrapper(func):
 def azure_wrapper(func):
     """Epsagon's Azure Function wrapper."""
     def _azure_wrapper(*args, **kwargs):
-        assert tracer.token != '', 'Please initialize token'
+        tracer.prepare()
         event = json.loads(open(os.environ['req']).read())
         tracer.trigger = LambdaTriggerFactory.factory(event)
         tracer.runner = AzureFunctionRunner()
