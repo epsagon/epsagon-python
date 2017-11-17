@@ -2,6 +2,7 @@ import json
 import os
 import epsagon
 from epsagon import constants
+from epsagon import trace
 
 # coverage run --source epsagon -m py.test tests
 
@@ -27,6 +28,7 @@ def load_event(event_name):
 
 def test_cold_start_value():
     reload(epsagon.constants)
+    epsagon.init('test')
     assert constants.COLD_START
 
     event = load_event('api_gateway')
@@ -42,6 +44,31 @@ def test_region_detection():
     assert constants.REGION == new_region
 
 
-@epsagon.lambda_wrapper('', '')
+def test_initialization_token_assert():
+    reload(epsagon.trace)
+    reload(epsagon.wrapper)
+
+    event = load_event('api_gateway')
+    context = load_context()
+    try:
+        demo(event, context)
+        assert False
+    except AssertionError:
+        pass
+
+
+def test_token_and_appname_initialization():
+    reload(epsagon.trace)
+    reload(epsagon.wrapper)
+
+    epsagon.init('test', 'test')
+    event = load_event('api_gateway')
+    context = load_context()
+    demo(event, context)
+    assert epsagon.trace.tracer.token == 'test'
+    assert epsagon.trace.tracer.app_name == 'test'
+
+
+@epsagon.lambda_wrapper
 def demo(event, context):
     pass
