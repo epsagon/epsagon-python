@@ -2,14 +2,14 @@
 from pip.req import parse_requirements
 from pip.download import PipSession
 from setuptools import setup
-import epsagon
+import epsagon.constants
 
 install_reqs = parse_requirements('./requirements.txt', session=PipSession())
 reqs = [str(ir.req) for ir in install_reqs]
 
 
 setup(name='epsagon',
-      version=epsagon.__version__,
+      version=epsagon.constants.__version__,
       description='Epsagon agent for serverless Architecture Performance Monitoring',
       author='Epsagon',
       author_email='support@epsagon.com',

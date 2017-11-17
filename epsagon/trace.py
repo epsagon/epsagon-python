@@ -13,7 +13,7 @@ except:
     import json
 import requests
 from .common import ErrorCode
-from .constants import TRACE_COLLECTOR_URL
+from .constants import TRACE_COLLECTOR_URL, __version__
 
 
 class Trace(object):
@@ -31,6 +31,9 @@ class Trace(object):
         self.trigger = None
         self.runner = None
         self.operations = []
+        self.metadata = {
+            'version': __version__,
+        }
 
     def initialize(self, app_name, token):
         self.trace_id = str(uuid4())
@@ -52,6 +55,7 @@ class Trace(object):
         trace.start_timestamp = trace_data['start_timestamp']
         trace.end_timestamp = trace_data['end_timestamp']
         trace.error_code = trace_data['error_code']
+        trace.metadata = trace_data.get('metadata', {})
         return trace
 
     def get_events(self):
@@ -70,6 +74,7 @@ class Trace(object):
             'start_timestamp': self.start_timestamp,
             'end_timestamp': self.end_timestamp,
             'error_code': self.error_code,
+            'metadata': self.metadata,
             'trigger': None if self.trigger is None else self.trigger.dictify(),
             'runner': self.runner.dictify(),
             'operations': [operation.dictify() for operation in self.operations]
