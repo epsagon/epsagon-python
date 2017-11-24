@@ -1,10 +1,11 @@
-from __future__ import absolute_import
-from . import botocore
-from . import requests
-from . import grpc
+import os
 
-MODULES = {
-    'botocore': botocore,
-    'requests': requests,
-    'grpc': grpc,
-}
+MODULES = {}
+
+for module in os.listdir(os.path.dirname(__file__)):
+    if module == '__init__.py' or module[-3:] != '.py':
+        continue
+
+    imported = __import__(module[:-3], locals(), globals())
+    MODULES[module[:-3]] = imported
+del module
