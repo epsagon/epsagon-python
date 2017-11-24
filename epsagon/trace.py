@@ -5,6 +5,7 @@
 from __future__ import absolute_import
 import time
 from uuid import uuid4
+import boto3
 try:
     # TODO: Fix json->ujson (error in azure)
     import ujson as json
@@ -13,7 +14,15 @@ except:
     import json
 import requests
 from .common import ErrorCode
-from .constants import TRACE_COLLECTOR_URL, __version__
+from .constants import REGION, TRACE_COLLECTOR_STREAM, __version__
+
+
+kinesis = boto3.client(
+    'kinesis',
+    aws_access_key_id='AKIAJCGBKUPQWB663YRA',
+    aws_secret_access_key='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',
+    region_name=REGION
+)
 
 
 class Trace(object):
@@ -88,7 +97,13 @@ class Trace(object):
             self.end_timestamp = time.time()
 
         try:
-            requests.post(TRACE_COLLECTOR_URL, data=json.dumps(self.dictify()))
+            # Sending events via kinesis stream
+            kinesis.put_record(
+                StreamName=TRACE_COLLECTOR_STREAM,
+                Data=json.dumps(self.dictify()),
+                PartitionKey='0',
+            )
+            pass
         except Exception as exception:
             # TODO: Think of what needs to be done if there is an error in send
             pass
