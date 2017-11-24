@@ -20,7 +20,7 @@ class RequestsEvent(BaseEvent):
     def __init__(self, args):
         super(RequestsEvent, self).__init__()
         # Most APIs requests don't have ids so we generate one
-        self.event_id = 'requests{}'.format(str(uuid4()))
+        self.event_id = 'requests-{}'.format(str(uuid4()))
         self.resource_name = self.EVENT_TYPE
 
         prepared_request = args[0]
@@ -85,17 +85,18 @@ class RequestsTwilioEvent(RequestsEvent):
         self.event_operation = prepared_request.path_url.split('/')[-1]
 
 
-class RequestsGoogleCalendarEvent(RequestsEvent):
+class RequestsGoogleAPIEvent(RequestsEvent):
     """
-    Represents Google Calendar requests event
+    Represents Google API requests event
     """
 
-    EVENT_TYPE = 'googleapis.com/calendar'
+    EVENT_TYPE = 'googleapis'
 
     def __init__(self, args):
-        super(RequestsGoogleCalendarEvent, self).__init__(args)
+        super(RequestsGoogleAPIEvent, self).__init__(args)
         prepared_request = args[0]
         self.event_operation = '/'.join(prepared_request.path_url.split('/')[-2:])
+        self.event_type = 'google_{}'.format(urlparse(prepared_request.url).path.split('/')[1])
 
 
 class RequestsOutlookOfficeEvent(RequestsEvent):
