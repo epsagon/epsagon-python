@@ -3,6 +3,7 @@ Runner and Triggers for aws_lambda
 """
 
 from __future__ import absolute_import
+from uuid import uuid4
 from ..event import BaseEvent
 from ..trace import tracer
 from .. import constants
@@ -54,7 +55,27 @@ class BaseLambdaTrigger(BaseEvent):
 
     def __init__(self):
         super(BaseLambdaTrigger, self).__init__()
+        self.end_timestamp = self.start_timestamp
         self.event_operation = 'trigger'
+
+
+class JSONLambdaTrigger(BaseLambdaTrigger):
+    """
+    Represents JSON simple Lambda trigger
+    """
+
+    EVENT_TYPE = 'json'
+
+    def __init__(self, event):
+        super(JSONLambdaTrigger, self).__init__()
+
+        self.resource_name = 'None'
+        self.event_operation = 'Event'
+        self.event_id = self.event_id = 'trigger-{}'.format(str(uuid4()))
+
+        self.metadata = {
+            'data': event
+        }
 
 
 class S3LambdaTrigger(BaseLambdaTrigger):
@@ -66,7 +87,6 @@ class S3LambdaTrigger(BaseLambdaTrigger):
 
     def __init__(self, event):
         super(S3LambdaTrigger, self).__init__()
-        self.end_timestamp = self.start_timestamp
 
         # TODO: Need to support multiple records
 
@@ -93,7 +113,6 @@ class KinesisLambdaTrigger(BaseLambdaTrigger):
 
     def __init__(self, event):
         super(KinesisLambdaTrigger, self).__init__()
-        self.end_timestamp = self.start_timestamp
 
         # TODO: Need to support multiple records
 
@@ -118,7 +137,6 @@ class SNSLambdaTrigger(BaseLambdaTrigger):
 
     def __init__(self, event):
         super(SNSLambdaTrigger, self).__init__()
-        self.end_timestamp = self.start_timestamp
 
         # TODO: Need to support multiple records
 
@@ -141,7 +159,6 @@ class SNSHTTPTrigger(BaseLambdaTrigger):
 
     def __init__(self, event):
         super(SNSHTTPTrigger, self).__init__()
-        self.end_timestamp = self.start_timestamp
 
         self.resource_name = event['TopicArn'].split(':')[-1]
         self.event_operation = str(event['Type'])
@@ -161,7 +178,6 @@ class APIGatewayLambdaTrigger(BaseLambdaTrigger):
 
     def __init__(self, event):
         super(APIGatewayLambdaTrigger, self).__init__()
-        self.end_timestamp = self.start_timestamp
 
         self.resource_name = event['resource']
         self.event_operation = event['httpMethod']
@@ -185,7 +201,6 @@ class EventsLambdaTrigger(BaseLambdaTrigger):
 
     def __init__(self, event):
         super(EventsLambdaTrigger, self).__init__()
-        self.end_timestamp = self.start_timestamp
 
         self.resource_name = str(event['resources'][0].split('/')[-1])
         self.event_operation = str(event['detail-type'])
@@ -199,18 +214,14 @@ class EventsLambdaTrigger(BaseLambdaTrigger):
 
 
 class LambdaTriggerFactory(object):
-
-    FACTORY_DICT = {
-        S3LambdaTrigger.EVENT_TYPE: S3LambdaTrigger,
-        KinesisLambdaTrigger.EVENT_TYPE: KinesisLambdaTrigger,
-        APIGatewayLambdaTrigger.EVENT_TYPE: APIGatewayLambdaTrigger,
-        SNSLambdaTrigger.EVENT_TYPE: SNSLambdaTrigger,
-        EventsLambdaTrigger.EVENT_TYPE: EventsLambdaTrigger,
-    }
-
     @staticmethod
     def factory(event):
-        trigger_service = None
+        factory = {
+            class_obj.EVENT_TYPE: class_obj
+            for class_obj in BaseLambdaTrigger.__subclasses__()
+        }
+
+        trigger_service = JSONLambdaTrigger.EVENT_TYPE
         if 'Records' in event:
             event_source = 'eventSource'
             if event_source not in event['Records'][0]:
@@ -223,7 +234,4 @@ class LambdaTriggerFactory(object):
         elif 'source' in event:
             trigger_service = str(event['source'].split('.')[-1])
 
-        if trigger_service not in LambdaTriggerFactory.FACTORY_DICT:
-            return None
-
-        return LambdaTriggerFactory.FACTORY_DICT[trigger_service](event)
+        return factory.get(trigger_service, JSONLambdaTrigger)(event)

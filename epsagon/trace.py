@@ -12,7 +12,6 @@ try:
 except:
     # Support azure for now
     import json
-import requests
 from .common import ErrorCode
 from .constants import REGION, TRACE_COLLECTOR_STREAM, __version__
 
@@ -103,7 +102,6 @@ class Trace(object):
                 Data=json.dumps(self.dictify()),
                 PartitionKey='0',
             )
-            pass
         except Exception as exception:
             # TODO: Think of what needs to be done if there is an error in send
             pass
