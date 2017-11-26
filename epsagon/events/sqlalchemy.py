@@ -27,7 +27,7 @@ class SQLAlchemyEvent(BaseEvent):
 
         # override event type with the specific DB type
         if 'rds.amazonaws' in repr(instance.bind.url):
-            self.event_type = 'RDS'
+            self.event_type = 'rds'
 
         self.metadata = {
             'url': repr(instance.bind.url),

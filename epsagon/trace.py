@@ -7,7 +7,6 @@ import time
 from uuid import uuid4
 import boto3
 try:
-    # TODO: Fix json->ujson (error in azure)
     import ujson as json
 except:
     # Support azure for now
@@ -44,7 +43,8 @@ class Trace(object):
         }
 
     def prepare(self):
-        assert tracer.token != '', 'Please initialize token'
+        if self.token == '':
+            print 'Epsagon Error: Please initialize token, data won\'t be sent.'
         self.trace_id = str(uuid4())
         self.start_timestamp = time.time()
         self.end_timestamp = 0
@@ -92,19 +92,20 @@ class Trace(object):
         }
 
     def send_traces(self):
+        if self.token == '':
+            return
+
         if self.end_timestamp == 0:
             self.end_timestamp = time.time()
 
         try:
-            # Sending events via kinesis stream
             kinesis.put_record(
                 StreamName=TRACE_COLLECTOR_STREAM,
                 Data=json.dumps(self.dictify()),
                 PartitionKey='0',
             )
         except Exception as exception:
-            # TODO: Think of what needs to be done if there is an error in send
-            pass
+            print 'Epsagon Error: Could not send traces {}'.format(exception.message)
 
 
 tracer = Trace()

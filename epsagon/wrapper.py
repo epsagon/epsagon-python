@@ -4,7 +4,6 @@ Main Epsagon agent module
 
 from __future__ import absolute_import
 import traceback
-# TODO: Fix json->ujson (error in azure)
 import json
 import os
 
@@ -13,9 +12,6 @@ from .runners.aws_lambda import LambdaRunner, LambdaTriggerFactory
 from .runners.azure_function import AzureFunctionRunner
 from .common import ErrorCode
 from . import constants
-
-# TODO: Maybe separate to different modules (under same wrappers dirs)
-# TODO: Add rate limiter for trace sends
 
 
 def init(token, app_name='default'):
@@ -31,7 +27,12 @@ def lambda_wrapper(func):
         tracer.prepare()
         event, context = args
 
-        tracer.trigger = LambdaTriggerFactory.factory(event)
+        try:
+            tracer.trigger = LambdaTriggerFactory.factory(event)
+        except Exception as exception:
+            print 'Epsagon Error: Could not load trigger {}'.format(exception.message)
+            tracer.trigger = None
+
         tracer.runner = LambdaRunner(event, context)
         constants.COLD_START = False
 

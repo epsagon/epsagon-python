@@ -69,7 +69,7 @@ class JSONLambdaTrigger(BaseLambdaTrigger):
     def __init__(self, event):
         super(JSONLambdaTrigger, self).__init__()
 
-        self.resource_name = 'None'
+        self.resource_name = 'trigger'
         self.event_operation = 'Event'
         self.event_id = self.event_id = 'trigger-{}'.format(str(uuid4()))
 
@@ -87,8 +87,6 @@ class S3LambdaTrigger(BaseLambdaTrigger):
 
     def __init__(self, event):
         super(S3LambdaTrigger, self).__init__()
-
-        # TODO: Need to support multiple records
 
         self.resource_name = event['Records'][0]['s3']['bucket']['name']
         self.event_operation = event['Records'][0]['eventName']
@@ -114,8 +112,6 @@ class KinesisLambdaTrigger(BaseLambdaTrigger):
     def __init__(self, event):
         super(KinesisLambdaTrigger, self).__init__()
 
-        # TODO: Need to support multiple records
-
         self.resource_name = event['Records'][0]['eventSourceARN'].split('/')[-1]
         self.event_operation = event['Records'][0]['eventName'].replace('aws:kinesis:', '')
         self.event_id = event['Records'][0]['eventID']
@@ -137,8 +133,6 @@ class SNSLambdaTrigger(BaseLambdaTrigger):
 
     def __init__(self, event):
         super(SNSLambdaTrigger, self).__init__()
-
-        # TODO: Need to support multiple records
 
         self.resource_name = event['Records'][0]['EventSubscriptionArn'].split(':')[-2]
         self.event_operation = str(event['Records'][0]['Sns']['Type'])
