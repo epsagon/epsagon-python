@@ -4,19 +4,19 @@ pymongo patcher module
 
 from __future__ import absolute_import
 import wrapt
-from ..events.pymongo import PyMongoEvent
+from ..events.pymongo import PyMongoEventFactory
 
 
 def _wrapper(wrapped, instance, args, kwargs):
-    event = PyMongoEvent(instance, args)
+    response = None
+    exception = None
     try:
         response = wrapped(*args, **kwargs)
-        event.post_update(response)
         return response
     except Exception as exception:
         raise exception
     finally:
-        event.add_event()
+        PyMongoEventFactory.create_event(wrapped, instance, args, kwargs, response, exception)
 
 
 def patch():

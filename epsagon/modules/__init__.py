@@ -1,11 +1,14 @@
+"""
+Automatically imports all available modules for patch
+"""
+
 import os
 
 MODULES = {}
 
-for module in os.listdir(os.path.dirname(__file__)):
-    if module == '__init__.py' or module[-3:] != '.py':
+for module_file in os.listdir(os.path.dirname(__file__)):
+    if module_file == '__init__.py' or module_file[-3:] != '.py':
         continue
 
-    imported = __import__(module[:-3], locals(), globals())
-    MODULES[module[:-3]] = imported
-del module
+    imported = __import__(module_file[:-3], locals(), globals())
+    MODULES[module_file[:-3]] = imported

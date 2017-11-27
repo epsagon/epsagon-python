@@ -8,15 +8,15 @@ from ..events.grpc import GRPCEventFactory
 
 
 def _grpc_wrapper(wrapped, instance, args, kwargs):
-    event = GRPCEventFactory.factory(instance, args)
+    response = None
+    exception = None
     try:
-        parsed_response = wrapped(*args, **kwargs)
-        event.post_update(parsed_response)
-        return parsed_response
+        response = wrapped(*args, **kwargs)
+        return response
     except Exception as exception:
         raise exception
     finally:
-        event.add_event()
+        GRPCEventFactory.create_event(wrapped, instance, args, kwargs, response, exception)
 
 
 def patch():

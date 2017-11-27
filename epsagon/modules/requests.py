@@ -7,16 +7,16 @@ import wrapt
 from ..events.requests import RequestsEventFactory
 
 
-def _request_wrapper(wrapped, _, args, kwargs):
-    event = RequestsEventFactory.factory(args)
+def _request_wrapper(wrapped, instance, args, kwargs):
+    response = None
+    exception = None
     try:
         response = wrapped(*args, **kwargs)
-        event.post_update(response)
         return response
     except Exception as exception:
         raise exception
     finally:
-        event.add_event()
+        RequestsEventFactory.create_event(wrapped, instance, args, kwargs, response, exception)
 
 
 def patch():

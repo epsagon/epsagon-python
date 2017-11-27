@@ -83,3 +83,10 @@ class BaseEvent(object):
     def add_event(self):
         self.terminate()
         tracer.operations.append(self)
+
+    def update_response(self, response):
+        pass
+
+    def set_error(self):
+        tracer.error_code = ErrorCode.ERROR
+        self.error_code = ErrorCode.ERROR

@@ -9,16 +9,15 @@ from ..events.botocore import BotocoreEventFactory
 
 
 def _botocore_wrapper(wrapped, instance, args, kwargs):
-    event = BotocoreEventFactory.factory(instance, args)
+    response = None
+    exception = None
     try:
-        parsed_response = wrapped(*args, **kwargs)
-        event.post_update(parsed_response)
-        return parsed_response
+        response = wrapped(*args, **kwargs)
+        return response
     except ClientError as exception:
-        event.set_error(exception)
         raise exception
     finally:
-        event.add_event()
+        BotocoreEventFactory.create_event(wrapped, instance, args, kwargs, response, exception)
 
 
 def patch():

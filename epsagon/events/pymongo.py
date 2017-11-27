@@ -3,8 +3,6 @@ pymongo events module
 """
 from __future__ import absolute_import
 from uuid import uuid4
-from ..common import ErrorCode
-from ..trace import tracer
 from ..event import BaseEvent
 
 
@@ -16,7 +14,7 @@ class PyMongoEvent(BaseEvent):
     EVENT_MODULE = 'pymongo'
     EVENT_TYPE = 'pymongo'
 
-    def __init__(self, instance, args):
+    def __init__(self, wrapped, instance, args, kwargs, response, exception):
         super(PyMongoEvent, self).__init__()
 
         documents = args[0]
@@ -25,7 +23,7 @@ class PyMongoEvent(BaseEvent):
         self.resource_name = instance.full_name
 
         self.event_operation = 'insert_many' if isinstance(documents, list) else 'insert_one'
-        address = [x for x in instance.database.client._topology_settings.seeds][0]
+        address = [x for x in getattr(instance.database.client, '_topology_settings').seeds][0]
 
         if self.event_operation == 'insert_one':
             documents = [documents]
@@ -37,11 +35,13 @@ class PyMongoEvent(BaseEvent):
             'items': documents,
         }
 
-    def set_error(self):
-        tracer.error_code = ErrorCode.ERROR
-        self.error_code = ErrorCode.ERROR
+        if response is not None:
+            self.update_response(response)
 
-    def post_update(self, response):
+        if exception is not None:
+            self.set_error()
+
+    def update_response(self, response):
         for i in xrange(len(self.metadata['items'])):
             self.metadata['items'][i]['_id'] = str(self.metadata['items'][i]['_id'])
 
@@ -49,3 +49,13 @@ class PyMongoEvent(BaseEvent):
             self.metadata['inserted_ids'] = [str(x) for x in response.inserted_ids]
         elif self.event_operation == 'insert_one':
             self.metadata['inserted_ids'] = [str(response.inserted_id)]
+
+
+class PyMongoEventFactory(object):
+    @staticmethod
+    def create_event(wrapped, instance, args, kwargs, response, exception):
+        try:
+            event = PyMongoEvent(wrapped, instance, args, kwargs, response, exception)
+            event.add_event()
+        except Exception as ev_exception:
+            print 'Epsagon Error: Could not create pymongo event: {}'.format(ev_exception.message)

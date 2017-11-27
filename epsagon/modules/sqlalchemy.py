@@ -1,5 +1,5 @@
 """
-sql alchemy patcher module
+sqlalchemy patcher module
 """
 
 from __future__ import absolute_import
@@ -8,15 +8,15 @@ from ..events.sqlalchemy import SQLAlchemyEventFactory
 
 
 def _commit_wrapper(wrapped, instance, args, kwargs):
-    event = SQLAlchemyEventFactory.factory(wrapped, instance, args)
+    response = None
+    exception = None
     try:
         response = wrapped(*args, **kwargs)
-        event.post_update(response)
         return response
     except Exception as exception:
         raise exception
     finally:
-        event.add_event()
+        SQLAlchemyEventFactory.create_event(wrapped, instance, args, kwargs, response, exception)
 
 
 def patch():

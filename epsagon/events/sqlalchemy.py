@@ -2,10 +2,7 @@
 sqlalchemy events module
 """
 from __future__ import absolute_import
-from urlparse import urlparse
 from uuid import uuid4
-from ..common import ErrorCode
-from ..trace import tracer
 from ..event import BaseEvent
 
 
@@ -18,7 +15,7 @@ class SQLAlchemyEvent(BaseEvent):
     EVENT_TYPE = 'sqlalchemy'
     EVENT_OPERATION = None
 
-    def __init__(self, instance, args):
+    def __init__(self, wrapped, instance, args, kwargs, response, exception):
         super(SQLAlchemyEvent, self).__init__()
 
         self.event_id = 'sqlalchemy-{}'.format(str(uuid4()))
@@ -34,12 +31,11 @@ class SQLAlchemyEvent(BaseEvent):
             'driver': instance.bind.url.drivername,
         }
 
-    def set_error(self):
-        tracer.error_code = ErrorCode.ERROR
-        self.error_code = ErrorCode.ERROR
+        if response is not None:
+            self.update_response(response)
 
-    def post_update(self, response):
-        pass
+        if exception is not None:
+            self.set_error()
 
 
 class SQLAlchemyCommitEvent(SQLAlchemyEvent):
@@ -49,11 +45,13 @@ class SQLAlchemyCommitEvent(SQLAlchemyEvent):
 
     EVENT_OPERATION = 'add'
 
-    def __init__(self, instance, args):
-        super(SQLAlchemyCommitEvent, self).__init__(instance, args)
+    def __init__(self, wrapped, instance, args, kwargs, response, exception):
+        super(SQLAlchemyCommitEvent, self).__init__(wrapped, instance, args, kwargs, response,
+                                                    exception)
 
         # Currently support only add
-        items = [{'object': str(x), 'table': x.__tablename__} for x in instance._new.values()]
+        items = [{'object': str(x), 'table': x.__tablename__}
+                 for x in getattr(instance, '_new').values()]
 
         self.metadata['items'] = items
 
@@ -65,22 +63,30 @@ class SQLAlchemyQueryEvent(SQLAlchemyEvent):
 
     EVENT_OPERATION = 'query'
 
-    def __init__(self, instance, args):
-        super(SQLAlchemyQueryEvent, self).__init__(instance, args)
+    def __init__(self, wrapped, instance, args, kwargs, response, exception):
+        super(SQLAlchemyQueryEvent, self).__init__(wrapped, instance, args, kwargs, response,
+                                                   exception)
+
         query_element = args[0]
         self.metadata['table_name'] = query_element.__tablename__
 
-    def post_update(self, response):
+    def update_response(self, response):
         self.metadata['items_count'] = int(response.count())
 
 
 class SQLAlchemyEventFactory(object):
-
     @staticmethod
-    def factory(wrapped, instance, args):
+    def create_event(wrapped, instance, args, kwargs, response, exception):
         factory = {
             class_obj.EVENT_OPERATION: class_obj
             for class_obj in SQLAlchemyEvent.__subclasses__()
         }
 
-        return factory.get(wrapped.im_func.func_name, SQLAlchemyEvent)(instance, args)
+        try:
+            event_class = factory.get(wrapped.im_func.func_name, SQLAlchemyEvent)
+            event = event_class(wrapped, instance, args, kwargs, response, exception)
+            event.add_event()
+        except Exception as ev_exception:
+            print 'Epsagon Error: Could not create sqlalchemy event: {}'.format(
+                ev_exception.message
+            )
