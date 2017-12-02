@@ -28,10 +28,11 @@ class AzureFunctionRunner(BaseEvent):
 
         self.metadata = {
             'region': os.environ['REGION_NAME'],
+            'memory': os.environ['WEBSITE_MEMORY_LIMIT_MB'],
             'cold_start': 'False',
         }
 
-    def set_error(self, error_code, exception, traceback):
+    def set_exception(self, error_code, exception, traceback):
         tracer.error_code = error_code
         self.error_code = error_code
         self.metadata['exception'] = repr(exception)

@@ -40,7 +40,7 @@ def lambda_wrapper(func):
             result = func(*args, **kwargs)
             return result
         except Exception as exception:
-            tracer.runner.set_error(
+            tracer.runner.set_exception(
                 error_code=ErrorCode.EXCEPTION,
                 exception=exception,
                 traceback=traceback.format_exc()
@@ -65,7 +65,7 @@ def azure_wrapper(func):
             result = func(*args, **kwargs)
             return result
         except Exception as exception:
-            tracer.runner.set_error(
+            tracer.runner.set_exception(
                 error_code=ErrorCode.EXCEPTION,
                 exception=exception,
                 traceback=traceback.format_exc()

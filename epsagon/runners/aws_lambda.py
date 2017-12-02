@@ -32,9 +32,11 @@ class LambdaRunner(BaseEvent):
             'log_group_name': context.__dict__['log_group_name'],
             'function_version': context.__dict__['function_version'],
             'cold_start': constants.COLD_START,
+            'memory': context.__dict__['memory_limit_in_mb'],
+            'region': constants.REGION,
         }
 
-    def set_error(self, error_code, exception, traceback):
+    def set_exception(self, error_code, exception, traceback):
         tracer.error_code = error_code
         self.error_code = error_code
         self.metadata['exception'] = repr(exception)
