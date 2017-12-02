@@ -56,6 +56,13 @@ class BotocoreS3Event(BotocoreEvent):
         _, request_data = args
         self.resource_name = request_data['Bucket']
 
+        if self.event_operation == 'HeadObject':
+            self.metadata['key'] = request_data['Key']
+        elif self.event_operation == 'GetObject':
+            self.metadata['key'] = request_data['Key']
+        elif self.event_operation == 'PutObject':
+            self.metadata['key'] = request_data['Key']
+
     def update_response(self, response):
         super(BotocoreS3Event, self).update_response(response)
 
@@ -65,6 +72,14 @@ class BotocoreS3Event(BotocoreEvent):
             ]
         elif self.event_operation == 'PutObject':
             self.metadata['etag'] = response['ETag']
+        elif self.event_operation == 'HeadObject':
+            self.metadata['etag'] = response['ETag']
+            self.metadata['file_size'] = response['ContentLength']
+            self.metadata['last_modified'] = response['LastModified'].strftime('%s')
+        elif self.event_operation == 'GetObject':
+            self.metadata['etag'] = response['ETag']
+            self.metadata['file_size'] = response['ContentLength']
+            self.metadata['last_modified'] = response['LastModified'].strftime('%s')
 
 
 class BotocoreKinesisEvent(BotocoreEvent):
@@ -131,9 +146,13 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
         elif self.event_operation == 'UpdateItem':
             self.metadata['update_params'] = {
                 'key': request_data['Key'],
-                'expression_attribute_values': request_data['ExpressionAttributeValues'],
-                'update_expression': request_data['UpdateExpression'],
+                'expression_attribute_values': request_data.get('ExpressionAttributeValues', None),
+                'update_expression': request_data.get('UpdateExpression', None),
             }
+        elif self.event_operation == 'GetItem':
+            self.metadata['key'] = request_data['Key']
+        elif self.event_operation == 'DeleteItem':
+            self.metadata['key'] = request_data['Key']
 
     def update_response(self, response):
         super(BotocoreDynamoDBEvent, self).update_response(response)
@@ -142,6 +161,31 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
             self.metadata['items_count'] = response['Count']
             self.metadata['items'] = response['Items']
             self.metadata['scanned_count'] = response['ScannedCount']
+        elif self.event_operation == 'GetItem':
+            self.metadata['item'] = response['Item']
+
+
+class BotocoreSESEvent(BotocoreEvent):
+    """
+    Represents SES botocore event
+    """
+
+    EVENT_TYPE = 'ses'
+
+    def __init__(self, wrapped, instance, args, kwargs, response, exception):
+        super(BotocoreSESEvent, self).__init__(wrapped, instance, args, kwargs, response, exception)
+        _, request_data = args
+
+        if self.event_operation == 'SendEmail':
+            self.metadata['source'] = request_data['Source']
+            self.metadata['message'] = request_data['Message']
+            self.metadata['destination'] = request_data['Destination']
+
+    def update_response(self, response):
+        super(BotocoreSESEvent, self).update_response(response)
+
+        if self.event_operation == 'SendEmail':
+            self.metadata['message_id'] = response['MessageId']
 
 
 class BotocoreLambdaEvent(BotocoreEvent):
@@ -168,7 +212,8 @@ class BotocoreEventFactory(object):
             for class_obj in BotocoreEvent.__subclasses__()
         }
 
-        instance_type = getattr(instance, '_service_model').endpoint_prefix
+        instance_type = instance.__class__.__name__.lower()
+        # getattr(instance, '_service_model').endpoint_prefix
 
         try:
             event_class = factory.get(instance_type, BotocoreEvent)
