@@ -29,7 +29,8 @@ def _botocore_wrapper(wrapped, instance, args, kwargs):
                 args,
                 kwargs,
                 response,
-                exception)
+                exception
+            )
         except Exception as e:
             exception_dict = {
                 'message': e.message,

@@ -89,7 +89,8 @@ class Trace(object):
             'metadata': self.metadata,
             'trigger': None if self.trigger is None else self.trigger.dictify(),
             'runner': self.runner.dictify(),
-            'operations': [operation.dictify() for operation in self.operations]
+            'operations': [operation.dictify() for operation in self.operations],
+            'exceptions': self.exceptions,
         }
 
     def send_traces(self):
