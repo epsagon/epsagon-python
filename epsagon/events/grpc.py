@@ -58,9 +58,6 @@ class GRPCEventFactory(object):
         _, endpoint, _ = getattr(instance, '_method').split('/')
         endpoint = endpoint.split('.')[-1]
 
-        try:
-            event_class = factory.get(endpoint, GoogleRPCEvent)
-            event = event_class(wrapped, instance, args, kwargs, response, exception)
-            event.add_event()
-        except Exception as ev_exception:
-            print 'Epsagon Error: Could not create grpc event: {}'.format(ev_exception.message)
+        event_class = factory.get(endpoint, GoogleRPCEvent)
+        event = event_class(wrapped, instance, args, kwargs, response, exception)
+        event.add_event()

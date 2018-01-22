@@ -82,11 +82,6 @@ class SQLAlchemyEventFactory(object):
             for class_obj in SQLAlchemyEvent.__subclasses__()
         }
 
-        try:
-            event_class = factory.get(wrapped.im_func.func_name, SQLAlchemyEvent)
-            event = event_class(wrapped, instance, args, kwargs, response, exception)
-            event.add_event()
-        except Exception as ev_exception:
-            print 'Epsagon Error: Could not create sqlalchemy event: {}'.format(
-                ev_exception.message
-            )
+        event_class = factory.get(wrapped.im_func.func_name, SQLAlchemyEvent)
+        event = event_class(wrapped, instance, args, kwargs, response, exception)
+        event.add_event()

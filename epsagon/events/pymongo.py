@@ -54,8 +54,5 @@ class PyMongoEvent(BaseEvent):
 class PyMongoEventFactory(object):
     @staticmethod
     def create_event(wrapped, instance, args, kwargs, response, exception):
-        try:
-            event = PyMongoEvent(wrapped, instance, args, kwargs, response, exception)
-            event.add_event()
-        except Exception as ev_exception:
-            print 'Epsagon Error: Could not create pymongo event: {}'.format(ev_exception.message)
+        event = PyMongoEvent(wrapped, instance, args, kwargs, response, exception)
+        event.add_event()

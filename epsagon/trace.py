@@ -38,6 +38,7 @@ class Trace(object):
         self.trigger = None
         self.runner = None
         self.operations = []
+        self.exceptions = []
         self.metadata = {
             'version': __version__,
         }
