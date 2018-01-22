@@ -139,8 +139,5 @@ class RequestsEventFactory(object):
             if api_name in base_url.lower():
                 instance_type = factory[api_name]
 
-        try:
-            event = instance_type(wrapped, instance, args, kwargs, response, exception)
-            event.add_event()
-        except Exception as ev_exception:
-            print 'Epsagon Error: Could not create requests event: {}'.format(ev_exception.message)
+        event = instance_type(wrapped, instance, args, kwargs, response, exception)
+        event.add_event()

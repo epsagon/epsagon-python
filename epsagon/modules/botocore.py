@@ -3,8 +3,13 @@ botocore patcher module
 """
 
 from __future__ import absolute_import
+
+import traceback
+
 import wrapt
 from botocore.exceptions import ClientError
+
+from epsagon.trace import tracer
 from ..events.botocore import BotocoreEventFactory
 
 
@@ -17,7 +22,22 @@ def _botocore_wrapper(wrapped, instance, args, kwargs):
     except ClientError as exception:
         raise exception
     finally:
-        BotocoreEventFactory.create_event(wrapped, instance, args, kwargs, response, exception)
+        try:
+            BotocoreEventFactory.create_event(
+                wrapped,
+                instance,
+                args,
+                kwargs,
+                response,
+                exception
+            )
+        except Exception as e:
+            exception_dict = {
+                'message': e.message,
+                'args': e.args,
+                'traceback': traceback.format_exc()
+            }
+            tracer.exceptions.append(exception_dict)
 
 
 def patch():

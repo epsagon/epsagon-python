@@ -215,9 +215,6 @@ class BotocoreEventFactory(object):
         instance_type = instance.__class__.__name__.lower()
         # getattr(instance, '_service_model').endpoint_prefix
 
-        try:
-            event_class = factory.get(instance_type, BotocoreEvent)
-            event = event_class(wrapped, instance, args, kwargs, response, exception)
-            event.add_event()
-        except Exception as ev_exception:
-            print 'Epsagon Error: Could not create botocore event: {}'.format(ev_exception.message)
+        event_class = factory.get(instance_type, BotocoreEvent)
+        event = event_class(wrapped, instance, args, kwargs, response, exception)
+        event.add_event()
