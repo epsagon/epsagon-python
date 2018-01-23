@@ -32,6 +32,8 @@ class BotocoreEvent(BaseEvent):
         if exception is not None:
             if isinstance(exception, ClientError):
                 self.set_botocore_error(exception)
+            else:
+                self.set_error(exception)
 
     def set_botocore_error(self, exception):
         self.set_error()
