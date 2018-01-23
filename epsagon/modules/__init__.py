@@ -2,6 +2,8 @@
 Automatically imports all available modules for patch
 """
 
+from __future__ import absolute_import
+
 import os
 
 MODULES = {}
