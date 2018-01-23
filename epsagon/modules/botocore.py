@@ -10,7 +10,7 @@ from ..events.botocore import BotocoreEventFactory
 
 
 def _botocore_wrapper(wrapped, instance, args, kwargs):
-    wrapper(
+    return wrapper(
         BotocoreEventFactory,
         wrapped,
         instance,

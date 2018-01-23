@@ -9,7 +9,7 @@ from ..events.requests import RequestsEventFactory
 
 
 def _request_wrapper(wrapped, instance, args, kwargs):
-    wrapper(
+    return wrapper(
         RequestsEventFactory,
         wrapped,
         instance,

@@ -9,7 +9,7 @@ from ..events.sqlalchemy import SQLAlchemyEventFactory
 
 
 def _commit_wrapper(wrapped, instance, args, kwargs):
-    wrapper(
+    return wrapper(
         SQLAlchemyEventFactory,
         wrapped,
         instance,
