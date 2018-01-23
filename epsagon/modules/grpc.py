@@ -11,7 +11,6 @@ from ..events.grpc import GRPCEventFactory
 def _grpc_wrapper(wrapped, instance, args, kwargs):
     wrapper(
         GRPCEventFactory,
-        Exception,
         wrapped,
         instance,
         args,

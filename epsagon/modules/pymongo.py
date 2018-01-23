@@ -11,7 +11,6 @@ from ..events.pymongo import PyMongoEventFactory
 def _wrapper(wrapped, instance, args, kwargs):
     wrapper(
         PyMongoEventFactory,
-        Exception,
         wrapped,
         instance,
         args,

@@ -4,13 +4,13 @@ import traceback
 from epsagon.trace import tracer
 
 
-def wrapper(factory, exception_type, wrapped, instance, args, kwargs):
+def wrapper(factory, wrapped, instance, args, kwargs):
     response = None
     exception = None
     try:
         response = wrapped(*args, **kwargs)
         return response
-    except exception_type as exception:
+    except Exception as exception:
         raise exception
     finally:
         try:

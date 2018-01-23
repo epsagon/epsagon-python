@@ -4,6 +4,7 @@ botocore events module
 
 from __future__ import absolute_import
 from ..event import BaseEvent
+from botocore.exceptions import ClientError
 
 
 class BotocoreEvent(BaseEvent):
@@ -29,7 +30,8 @@ class BotocoreEvent(BaseEvent):
             self.update_response(response)
 
         if exception is not None:
-            self.set_botocore_error(exception)
+            if isinstance(exception, ClientError):
+                self.set_botocore_error(exception)
 
     def set_botocore_error(self, exception):
         self.set_error()
@@ -39,9 +41,11 @@ class BotocoreEvent(BaseEvent):
 
     def update_response(self, response):
         self.event_id = response['ResponseMetadata']['RequestId']
-        self.metadata['retry_attempts'] = response['ResponseMetadata']['RetryAttempts']
+        self.metadata['retry_attempts'] = response['ResponseMetadata'][
+            'RetryAttempts']
         self.metadata['request_id'] = response['ResponseMetadata']['RequestId']
-        self.metadata['status_code'] = response['ResponseMetadata']['HTTPStatusCode']
+        self.metadata['status_code'] = response['ResponseMetadata'][
+            'HTTPStatusCode']
 
 
 class BotocoreS3Event(BotocoreEvent):
@@ -52,7 +56,8 @@ class BotocoreS3Event(BotocoreEvent):
     EVENT_TYPE = 's3'
 
     def __init__(self, wrapped, instance, args, kwargs, response, exception):
-        super(BotocoreS3Event, self).__init__(wrapped, instance, args, kwargs, response, exception)
+        super(BotocoreS3Event, self).__init__(wrapped, instance, args, kwargs,
+                                              response, exception)
         _, request_data = args
         self.resource_name = request_data['Bucket']
 
@@ -68,18 +73,21 @@ class BotocoreS3Event(BotocoreEvent):
 
         if self.event_operation == 'ListObjects':
             self.metadata['files'] = [
-                [str(x['Key']), x['Size'], x['ETag']] for x in response['Contents']
+                [str(x['Key']), x['Size'], x['ETag']] for x in
+                response['Contents']
             ]
         elif self.event_operation == 'PutObject':
             self.metadata['etag'] = response['ETag']
         elif self.event_operation == 'HeadObject':
             self.metadata['etag'] = response['ETag']
             self.metadata['file_size'] = response['ContentLength']
-            self.metadata['last_modified'] = response['LastModified'].strftime('%s')
+            self.metadata['last_modified'] = response['LastModified'].strftime(
+                '%s')
         elif self.event_operation == 'GetObject':
             self.metadata['etag'] = response['ETag']
             self.metadata['file_size'] = response['ContentLength']
-            self.metadata['last_modified'] = response['LastModified'].strftime('%s')
+            self.metadata['last_modified'] = response['LastModified'].strftime(
+                '%s')
 
 
 class BotocoreKinesisEvent(BotocoreEvent):
@@ -90,7 +98,8 @@ class BotocoreKinesisEvent(BotocoreEvent):
     EVENT_TYPE = 'kinesis'
 
     def __init__(self, wrapped, instance, args, kwargs, response, exception):
-        super(BotocoreKinesisEvent, self).__init__(wrapped, instance, args, kwargs, response,
+        super(BotocoreKinesisEvent, self).__init__(wrapped, instance, args,
+                                                   kwargs, response,
                                                    exception)
         _, request_data = args
         self.resource_name = request_data['StreamName']
@@ -114,7 +123,8 @@ class BotocoreSNSEvent(BotocoreEvent):
     EVENT_TYPE = 'sns'
 
     def __init__(self, wrapped, instance, args, kwargs, response, exception):
-        super(BotocoreSNSEvent, self).__init__(wrapped, instance, args, kwargs, response, exception)
+        super(BotocoreSNSEvent, self).__init__(wrapped, instance, args, kwargs,
+                                               response, exception)
         _, request_data = args
         self.resource_name = request_data['TopicArn'].split(':')[-1]
 
@@ -136,7 +146,8 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
     EVENT_TYPE = 'dynamodb'
 
     def __init__(self, wrapped, instance, args, kwargs, response, exception):
-        super(BotocoreDynamoDBEvent, self).__init__(wrapped, instance, args, kwargs, response,
+        super(BotocoreDynamoDBEvent, self).__init__(wrapped, instance, args,
+                                                    kwargs, response,
                                                     exception)
         _, request_data = args
         self.resource_name = request_data['TableName']
@@ -146,7 +157,8 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
         elif self.event_operation == 'UpdateItem':
             self.metadata['update_params'] = {
                 'key': request_data['Key'],
-                'expression_attribute_values': request_data.get('ExpressionAttributeValues', None),
+                'expression_attribute_values': request_data.get(
+                    'ExpressionAttributeValues', None),
                 'update_expression': request_data.get('UpdateExpression', None),
             }
         elif self.event_operation == 'GetItem':
@@ -173,7 +185,8 @@ class BotocoreSESEvent(BotocoreEvent):
     EVENT_TYPE = 'ses'
 
     def __init__(self, wrapped, instance, args, kwargs, response, exception):
-        super(BotocoreSESEvent, self).__init__(wrapped, instance, args, kwargs, response, exception)
+        super(BotocoreSESEvent, self).__init__(wrapped, instance, args, kwargs,
+                                               response, exception)
         _, request_data = args
 
         if self.event_operation == 'SendEmail':
@@ -196,7 +209,8 @@ class BotocoreLambdaEvent(BotocoreEvent):
     EVENT_TYPE = 'lambda'
 
     def __init__(self, wrapped, instance, args, kwargs, response, exception):
-        super(BotocoreLambdaEvent, self).__init__(wrapped, instance, args, kwargs, response,
+        super(BotocoreLambdaEvent, self).__init__(wrapped, instance, args,
+                                                  kwargs, response,
                                                   exception)
         _, request_data = args
 
@@ -216,5 +230,6 @@ class BotocoreEventFactory(object):
         # getattr(instance, '_service_model').endpoint_prefix
 
         event_class = factory.get(instance_type, BotocoreEvent)
-        event = event_class(wrapped, instance, args, kwargs, response, exception)
+        event = event_class(wrapped, instance, args, kwargs, response,
+                            exception)
         event.add_event()

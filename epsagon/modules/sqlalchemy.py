@@ -11,7 +11,6 @@ from ..events.sqlalchemy import SQLAlchemyEventFactory
 def _commit_wrapper(wrapped, instance, args, kwargs):
     wrapper(
         SQLAlchemyEventFactory,
-        Exception,
         wrapped,
         instance,
         args,
