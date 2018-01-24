@@ -9,7 +9,7 @@ from ..events.pymongo import PyMongoEventFactory
 
 
 def _wrapper(wrapped, instance, args, kwargs):
-    wrapper(
+    return wrapper(
         PyMongoEventFactory,
         wrapped,
         instance,

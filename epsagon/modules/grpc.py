@@ -9,7 +9,7 @@ from ..events.grpc import GRPCEventFactory
 
 
 def _grpc_wrapper(wrapped, instance, args, kwargs):
-    wrapper(
+    return wrapper(
         GRPCEventFactory,
         wrapped,
         instance,
