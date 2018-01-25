@@ -5,7 +5,6 @@
 from __future__ import absolute_import
 import time
 from uuid import uuid4
-import boto3
 import requests
 
 try:
@@ -14,15 +13,7 @@ except:
     # Support azure for now
     import json
 from .common import ErrorCode
-from .constants import REGION, TRACE_COLLECTOR_URL, __version__
-
-
-kinesis = boto3.client(
-    'kinesis',
-    aws_access_key_id='AKIAJCGBKUPQWB663YRA',
-    aws_secret_access_key='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',
-    region_name=REGION
-)
+from .constants import TRACE_COLLECTOR_URL, __version__
 
 
 class Trace(object):
@@ -91,7 +82,8 @@ class Trace(object):
             'metadata': self.metadata,
             'trigger': None if self.trigger is None else self.trigger.dictify(),
             'runner': self.runner.dictify(),
-            'operations': [operation.dictify() for operation in self.operations],
+            'operations': [operation.dictify() for operation in
+                           self.operations],
             'exceptions': self.exceptions,
         }
 
@@ -106,7 +98,8 @@ class Trace(object):
         try:
             requests.post(TRACE_COLLECTOR_URL, json=json.dumps(self.dictify()))
         except Exception as exception:
-            print 'Epsagon Error: Could not send traces {}'.format(exception.message)
+            print 'Epsagon Error: Could not send traces {}'.format(
+                exception.message)
 
 
 tracer = Trace()
