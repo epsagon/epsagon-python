@@ -8,6 +8,7 @@ from ..event import BaseEvent
 
 BLACKLIST_URLS = [
     'https://accounts.google.com/o/oauth2/token',
+    'http://tc.us-east-1.epsagon.com'
 ]
 
 

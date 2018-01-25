@@ -14,5 +14,5 @@ REGION = os.environ.get('AWS_REGION', DEFAULT_REGION)
 if REGION not in TC_REGIONS:
     REGION = DEFAULT_REGION
 
-TRACE_COLLECTOR_STREAM = 'tc.{0}'.format(REGION)
+TRACE_COLLECTOR_URL = "http://tc.{}.epsagon.com".format(REGION)
 COLD_START = True
