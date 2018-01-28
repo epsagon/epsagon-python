@@ -96,7 +96,7 @@ class Trace(object):
             self.end_timestamp = time.time()
 
         try:
-            requests.post(TRACE_COLLECTOR_URL, json=json.dumps(self.dictify()))
+            requests.post(TRACE_COLLECTOR_URL, data=json.dumps(self.dictify()))
         except Exception as exception:
             print 'Epsagon Error: Could not send traces {}'.format(
                 exception.message)
