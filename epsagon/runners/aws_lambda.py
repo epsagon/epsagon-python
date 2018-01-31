@@ -19,7 +19,7 @@ class LambdaRunner(BaseEvent):
     """
 
     EVENT_MODULE = 'runner'
-    EVENT_TYPE = 'lambda'
+    RESOURCE_TYPE = 'lambda'
 
     def __init__(self, event, context):
         super(LambdaRunner, self).__init__()
@@ -42,6 +42,7 @@ class LambdaRunner(BaseEvent):
         self.metadata['exception'] = repr(exception)
         self.metadata['traceback'] = traceback
 
+
 ############
 # triggers #
 ############
@@ -53,7 +54,7 @@ class BaseLambdaTrigger(BaseEvent):
     """
 
     EVENT_MODULE = 'trigger'
-    EVENT_TYPE = 'base'
+    RESOURCE_TYPE = 'base'
 
     def __init__(self):
         super(BaseLambdaTrigger, self).__init__()
@@ -66,7 +67,7 @@ class JSONLambdaTrigger(BaseLambdaTrigger):
     Represents JSON simple Lambda trigger
     """
 
-    EVENT_TYPE = 'json'
+    RESOURCE_TYPE = 'json'
 
     def __init__(self, event):
         super(JSONLambdaTrigger, self).__init__()
@@ -85,7 +86,7 @@ class S3LambdaTrigger(BaseLambdaTrigger):
     Represents S3 Lambda trigger
     """
 
-    EVENT_TYPE = 's3'
+    RESOURCE_TYPE = 's3'
 
     def __init__(self, event):
         super(S3LambdaTrigger, self).__init__()
@@ -109,13 +110,15 @@ class KinesisLambdaTrigger(BaseLambdaTrigger):
     Represents Kinesis Lambda trigger
     """
 
-    EVENT_TYPE = 'kinesis'
+    RESOURCE_TYPE = 'kinesis'
 
     def __init__(self, event):
         super(KinesisLambdaTrigger, self).__init__()
 
-        self.resource_name = event['Records'][0]['eventSourceARN'].split('/')[-1]
-        self.event_operation = event['Records'][0]['eventName'].replace('aws:kinesis:', '')
+        self.resource_name = event['Records'][0]['eventSourceARN'].split('/')[
+            -1]
+        self.event_operation = event['Records'][0]['eventName'].replace(
+            'aws:kinesis:', '')
         self.event_id = event['Records'][0]['eventID']
 
         self.metadata = {
@@ -131,12 +134,13 @@ class SNSLambdaTrigger(BaseLambdaTrigger):
     Represents SNS Lambda trigger
     """
 
-    EVENT_TYPE = 'sns'
+    RESOURCE_TYPE = 'sns'
 
     def __init__(self, event):
         super(SNSLambdaTrigger, self).__init__()
 
-        self.resource_name = event['Records'][0]['EventSubscriptionArn'].split(':')[-2]
+        self.resource_name = \
+            event['Records'][0]['EventSubscriptionArn'].split(':')[-2]
         self.event_operation = str(event['Records'][0]['Sns']['Type'])
         self.event_id = str(event['Records'][0]['Sns']['MessageId'])
 
@@ -146,31 +150,12 @@ class SNSLambdaTrigger(BaseLambdaTrigger):
         }
 
 
-class SNSHTTPTrigger(BaseLambdaTrigger):
-    """
-    Represents SNS Lambda trigger based on HTTP message
-    """
-
-    EVENT_TYPE = 'sns'
-
-    def __init__(self, event):
-        super(SNSHTTPTrigger, self).__init__()
-
-        self.resource_name = event['TopicArn'].split(':')[-1]
-        self.event_operation = str(event['Type'])
-        self.event_id = str(event['MessageId'])
-
-        self.metadata = {
-            'message': str(event['Message']),
-        }
-
-
 class APIGatewayLambdaTrigger(BaseLambdaTrigger):
     """
     Represents API Gateway Lambda trigger
     """
 
-    EVENT_TYPE = 'api_gateway'
+    RESOURCE_TYPE = 'api_gateway'
 
     def __init__(self, event):
         super(APIGatewayLambdaTrigger, self).__init__()
@@ -193,7 +178,7 @@ class EventsLambdaTrigger(BaseLambdaTrigger):
     Represents Events (schedule) Lambda trigger
     """
 
-    EVENT_TYPE = 'events'
+    RESOURCE_TYPE = 'events'
 
     def __init__(self, event):
         super(EventsLambdaTrigger, self).__init__()
@@ -210,24 +195,26 @@ class EventsLambdaTrigger(BaseLambdaTrigger):
 
 
 class LambdaTriggerFactory(object):
+    FACTORY = {
+        class_obj.RESOURCE_TYPE: class_obj
+        for class_obj in BaseLambdaTrigger.__subclasses__()
+    }
+
     @staticmethod
     def factory(event):
-        factory = {
-            class_obj.EVENT_TYPE: class_obj
-            for class_obj in BaseLambdaTrigger.__subclasses__()
-        }
 
-        trigger_service = JSONLambdaTrigger.EVENT_TYPE
+        trigger_service = JSONLambdaTrigger.RESOURCE_TYPE
         if 'Records' in event:
             event_source = 'eventSource'
             if event_source not in event['Records'][0]:
                 event_source = 'EventSource'
             trigger_service = event['Records'][0][event_source].split(':')[-1]
         elif 'httpMethod' in event:
-            trigger_service = APIGatewayLambdaTrigger.EVENT_TYPE
-        elif 'TopicArn' in event:
-            return SNSHTTPTrigger(event)
+            trigger_service = APIGatewayLambdaTrigger.RESOURCE_TYPE
         elif 'source' in event:
             trigger_service = str(event['source'].split('.')[-1])
 
-        return factory.get(trigger_service, JSONLambdaTrigger)(event)
+        return LambdaTriggerFactory.FACTORY.get(
+            trigger_service,
+            JSONLambdaTrigger
+        )(event)

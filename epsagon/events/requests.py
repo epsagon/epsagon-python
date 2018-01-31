@@ -4,6 +4,7 @@ requests events module
 from __future__ import absolute_import
 from urlparse import urlparse
 from uuid import uuid4
+from ..trace import tracer
 from ..event import BaseEvent
 
 BLACKLIST_URLS = [
@@ -19,13 +20,13 @@ class RequestsEvent(BaseEvent):
     """
 
     EVENT_MODULE = 'requests'
-    EVENT_TYPE = 'requests'
+    RESOURCE_TYPE = 'requests'
 
     def __init__(self, wrapped, instance, args, kwargs, response, exception):
         super(RequestsEvent, self).__init__()
 
         self.event_id = 'requests-{}'.format(str(uuid4()))
-        self.resource_name = self.EVENT_TYPE
+        self.resource_name = self.RESOURCE_TYPE
 
         prepared_request = args[0]
         self.event_operation = prepared_request.method
@@ -41,6 +42,7 @@ class RequestsEvent(BaseEvent):
 
         if exception is not None:
             self.set_error()
+            tracer.set_error()
 
     def update_response(self, response):
         self.metadata['status_code'] = response.status_code
@@ -56,11 +58,7 @@ class RequestsEvent(BaseEvent):
         # Detect errors based on status code
         if response.status_code >= 300:
             self.set_error()
-
-    def add_event(self):
-        if self.metadata['url'] in BLACKLIST_URLS:
-            return
-        super(RequestsEvent, self).add_event()
+            tracer.set_error()
 
 
 class RequestsAuth0Event(RequestsEvent):
@@ -68,11 +66,12 @@ class RequestsAuth0Event(RequestsEvent):
     Represents auth0 requests event
     """
 
-    EVENT_TYPE = 'auth0'
+    RESOURCE_TYPE = 'auth0'
     API_TAG = '/api/v2/'
 
     def __init__(self, wrapped, instance, args, kwargs, response, exception):
-        super(RequestsAuth0Event, self).__init__(wrapped, instance, args, kwargs, response,
+        super(RequestsAuth0Event, self).__init__(wrapped, instance, args,
+                                                 kwargs, response,
                                                  exception)
         prepared_request = args[0]
         url = prepared_request.path_url
@@ -84,10 +83,11 @@ class RequestsTwilioEvent(RequestsEvent):
     Represents Twilio requests event
     """
 
-    EVENT_TYPE = 'twilio'
+    RESOURCE_TYPE = 'twilio'
 
     def __init__(self, wrapped, instance, args, kwargs, response, exception):
-        super(RequestsTwilioEvent, self).__init__(wrapped, instance, args, kwargs, response,
+        super(RequestsTwilioEvent, self).__init__(wrapped, instance, args,
+                                                  kwargs, response,
                                                   exception)
         prepared_request = args[0]
         self.event_operation = prepared_request.path_url.split('/')[-1]
@@ -98,14 +98,17 @@ class RequestsGoogleAPIEvent(RequestsEvent):
     Represents Google API requests event
     """
 
-    EVENT_TYPE = 'googleapis'
+    RESOURCE_TYPE = 'googleapis'
 
     def __init__(self, wrapped, instance, args, kwargs, response, exception):
-        super(RequestsGoogleAPIEvent, self).__init__(wrapped, instance, args, kwargs, response,
+        super(RequestsGoogleAPIEvent, self).__init__(wrapped, instance, args,
+                                                     kwargs, response,
                                                      exception)
         prepared_request = args[0]
-        self.event_operation = '/'.join(prepared_request.path_url.split('/')[-2:])
-        self.event_type = 'google_{}'.format(urlparse(prepared_request.url).path.split('/')[1])
+        self.event_operation = '/'.join(
+            prepared_request.path_url.split('/')[-2:])
+        self.resource_type = 'google_{}'.format(
+            urlparse(prepared_request.url).path.split('/')[1])
 
 
 class RequestsOutlookOfficeEvent(RequestsEvent):
@@ -113,22 +116,25 @@ class RequestsOutlookOfficeEvent(RequestsEvent):
     Represents Outlook Office requests event
     """
 
-    EVENT_TYPE = 'outlook.office'
+    RESOURCE_TYPE = 'outlook.office'
 
     def __init__(self, wrapped, instance, args, kwargs, response, exception):
-        super(RequestsOutlookOfficeEvent, self).__init__(wrapped, instance, args, kwargs, response,
+        super(RequestsOutlookOfficeEvent, self).__init__(wrapped, instance,
+                                                         args, kwargs, response,
                                                          exception)
         prepared_request = args[0]
-        self.event_operation = '/'.join(prepared_request.path_url.split('/')[-2:])
+        self.event_operation = '/'.join(
+            prepared_request.path_url.split('/')[-2:])
 
 
 class RequestsEventFactory(object):
+    FACTORY = {
+        class_obj.RESOURCE_TYPE: class_obj
+        for class_obj in RequestsEvent.__subclasses__()
+    }
+
     @staticmethod
     def create_event(wrapped, instance, args, kwargs, response, exception):
-        factory = {
-            class_obj.EVENT_TYPE: class_obj
-            for class_obj in RequestsEvent.__subclasses__()
-        }
 
         prepared_request = args[0]
         base_url = urlparse(prepared_request.url).netloc
@@ -137,9 +143,11 @@ class RequestsEventFactory(object):
         instance_type = RequestsEvent
 
         # Look for API matching in url
-        for api_name in factory:
+        for api_name in RequestsEventFactory.FACTORY:
             if api_name in base_url.lower():
-                instance_type = factory[api_name]
+                instance_type = RequestsEventFactory.FACTORY[api_name]
 
-        event = instance_type(wrapped, instance, args, kwargs, response, exception)
-        event.add_event()
+        event = instance_type(wrapped, instance, args, kwargs, response,
+                              exception)
+        if event.metadata['url'] not in BLACKLIST_URLS:
+            tracer.add_event(event)

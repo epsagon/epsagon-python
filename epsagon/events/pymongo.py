@@ -4,7 +4,7 @@ pymongo events module
 from __future__ import absolute_import
 from uuid import uuid4
 from ..event import BaseEvent
-
+from ..trace import tracer
 
 class PyMongoEvent(BaseEvent):
     """
@@ -12,7 +12,7 @@ class PyMongoEvent(BaseEvent):
     """
 
     EVENT_MODULE = 'pymongo'
-    EVENT_TYPE = 'pymongo'
+    RESOURCE_TYPE = 'pymongo'
 
     def __init__(self, wrapped, instance, args, kwargs, response, exception):
         super(PyMongoEvent, self).__init__()
@@ -40,6 +40,7 @@ class PyMongoEvent(BaseEvent):
 
         if exception is not None:
             self.set_error()
+            tracer.set_error()
 
     def update_response(self, response):
         for i in xrange(len(self.metadata['items'])):
@@ -55,4 +56,4 @@ class PyMongoEventFactory(object):
     @staticmethod
     def create_event(wrapped, instance, args, kwargs, response, exception):
         event = PyMongoEvent(wrapped, instance, args, kwargs, response, exception)
-        event.add_event()
+        tracer.add_event(event)

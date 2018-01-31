@@ -5,7 +5,6 @@
 from __future__ import absolute_import
 import time
 from .common import ErrorCode
-from .trace import tracer
 
 
 class BaseEvent(object):
@@ -14,7 +13,7 @@ class BaseEvent(object):
     """
 
     EVENT_MODULE = 'base'
-    EVENT_TYPE = 'generic'
+    RESOURCE_TYPE = 'generic'
 
     def __init__(self):
         self.start_timestamp = time.time()
@@ -28,7 +27,7 @@ class BaseEvent(object):
         self.event_operation = ''
 
         # S3, Lambda, Twilio
-        self.event_type = self.EVENT_TYPE
+        self.resource_type = self.RESOURCE_TYPE
 
         # botocore, requests, ...
         self.event_module = self.EVENT_MODULE
@@ -43,7 +42,7 @@ class BaseEvent(object):
         event.event_id = event_data['event_id']
         event.resource_name = event_data['resource_name']
         event.event_operation = event_data['event_operation']
-        event.event_type = event_data['event_type']
+        event.resource_type = event_data['resource_type']
         event.event_module = event_data['event_module']
         event.start_timestamp = event_data['start_timestamp']
         event.end_timestamp = event_data['end_timestamp']
@@ -58,7 +57,7 @@ class BaseEvent(object):
             'end_timestamp': self.end_timestamp,
             'resource_name': self.resource_name,
             'event_operation': self.event_operation,
-            'event_type': self.event_type,
+            'resource_type': self.resource_type,
             'event_module': self.event_module,
             'error_code': self.error_code,
             'metadata': self.metadata,
@@ -80,13 +79,8 @@ class BaseEvent(object):
     def terminate(self):
         self.end_timestamp = time.time()
 
-    def add_event(self):
-        self.terminate()
-        tracer.operations.append(self)
-
     def update_response(self, response):
         pass
 
     def set_error(self):
-        tracer.error_code = ErrorCode.ERROR
         self.error_code = ErrorCode.ERROR

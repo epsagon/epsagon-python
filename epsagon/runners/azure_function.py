@@ -18,7 +18,7 @@ class AzureFunctionRunner(BaseEvent):
     """
 
     EVENT_MODULE = 'runner'
-    EVENT_TYPE = 'azure_function'
+    RESOURCE_TYPE = 'azure_function'
 
     def __init__(self):
         super(AzureFunctionRunner, self).__init__()

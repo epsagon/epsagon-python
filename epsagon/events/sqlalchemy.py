@@ -3,6 +3,7 @@ sqlalchemy events module
 """
 from __future__ import absolute_import
 from uuid import uuid4
+from ..trace import tracer
 from ..event import BaseEvent
 
 
@@ -12,7 +13,7 @@ class SQLAlchemyEvent(BaseEvent):
     """
 
     EVENT_MODULE = 'sqlalchemy'
-    EVENT_TYPE = 'sqlalchemy'
+    RESOURCE_TYPE = 'sqlalchemy'
     EVENT_OPERATION = None
 
     def __init__(self, wrapped, instance, args, kwargs, response, exception):
@@ -24,7 +25,7 @@ class SQLAlchemyEvent(BaseEvent):
 
         # override event type with the specific DB type
         if 'rds.amazonaws' in repr(instance.bind.url):
-            self.event_type = 'rds'
+            self.resource_type = 'rds'
 
         self.metadata = {
             'url': repr(instance.bind.url),
@@ -36,6 +37,7 @@ class SQLAlchemyEvent(BaseEvent):
 
         if exception is not None:
             self.set_error()
+            tracer.set_error()
 
 
 class SQLAlchemyCommitEvent(SQLAlchemyEvent):
@@ -46,7 +48,8 @@ class SQLAlchemyCommitEvent(SQLAlchemyEvent):
     EVENT_OPERATION = 'add'
 
     def __init__(self, wrapped, instance, args, kwargs, response, exception):
-        super(SQLAlchemyCommitEvent, self).__init__(wrapped, instance, args, kwargs, response,
+        super(SQLAlchemyCommitEvent, self).__init__(wrapped, instance, args,
+                                                    kwargs, response,
                                                     exception)
 
         # Currently support only add
@@ -64,7 +67,8 @@ class SQLAlchemyQueryEvent(SQLAlchemyEvent):
     EVENT_OPERATION = 'query'
 
     def __init__(self, wrapped, instance, args, kwargs, response, exception):
-        super(SQLAlchemyQueryEvent, self).__init__(wrapped, instance, args, kwargs, response,
+        super(SQLAlchemyQueryEvent, self).__init__(wrapped, instance, args,
+                                                   kwargs, response,
                                                    exception)
 
         query_element = args[0]
@@ -75,13 +79,16 @@ class SQLAlchemyQueryEvent(SQLAlchemyEvent):
 
 
 class SQLAlchemyEventFactory(object):
+    FACTORY = {
+        class_obj.EVENT_OPERATION: class_obj
+        for class_obj in SQLAlchemyEvent.__subclasses__()
+    }
+
     @staticmethod
     def create_event(wrapped, instance, args, kwargs, response, exception):
-        factory = {
-            class_obj.EVENT_OPERATION: class_obj
-            for class_obj in SQLAlchemyEvent.__subclasses__()
-        }
-
-        event_class = factory.get(wrapped.im_func.func_name, SQLAlchemyEvent)
-        event = event_class(wrapped, instance, args, kwargs, response, exception)
-        event.add_event()
+        event_class = SQLAlchemyEventFactory.FACTORY.get(
+            wrapped.im_func.func_name,
+            SQLAlchemyEvent)
+        event = event_class(wrapped, instance, args, kwargs, response,
+                            exception)
+        tracer.add_event(event)

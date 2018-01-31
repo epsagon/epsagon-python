@@ -4,7 +4,7 @@ google events module
 from __future__ import absolute_import
 from uuid import uuid4
 from ..event import BaseEvent
-
+from ..trace import tracer
 
 class GoogleRPCEvent(BaseEvent):
     """
@@ -12,7 +12,7 @@ class GoogleRPCEvent(BaseEvent):
     """
 
     EVENT_MODULE = 'grpc'
-    EVENT_TYPE = 'grpc'
+    RESOURCE_TYPE = 'grpc'
 
     def __init__(self, wrapped, instance, args, kwargs, response, exception):
         super(GoogleRPCEvent, self).__init__()
@@ -34,6 +34,7 @@ class GoogleRPCEvent(BaseEvent):
 
         if exception is not None:
             self.set_error()
+            tracer.set_error()
 
     def update_response(self, response):
         self.metadata['response'] = str(response)
@@ -44,20 +45,20 @@ class GRPCNaturalLanguageEvent(GoogleRPCEvent):
     Represents Natural Language grpc event
     """
 
-    EVENT_TYPE = 'LanguageService'
+    RESOURCE_TYPE = 'LanguageService'
 
 
 class GRPCEventFactory(object):
+    FACTORY = {
+        class_obj.RESOURCE_TYPE: class_obj
+        for class_obj in GoogleRPCEvent.__subclasses__()
+    }
     @staticmethod
     def create_event(wrapped, instance, args, kwargs, response, exception):
-        factory = {
-            class_obj.EVENT_TYPE: class_obj
-            for class_obj in GoogleRPCEvent.__subclasses__()
-        }
 
         _, endpoint, _ = getattr(instance, '_method').split('/')
         endpoint = endpoint.split('.')[-1]
 
-        event_class = factory.get(endpoint, GoogleRPCEvent)
+        event_class = GRPCEventFactory.FACTORY.get(endpoint, GoogleRPCEvent)
         event = event_class(wrapped, instance, args, kwargs, response, exception)
-        event.add_event()
+        tracer.add_event(event)

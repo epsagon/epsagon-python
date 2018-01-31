@@ -4,8 +4,11 @@
 
 from __future__ import absolute_import
 import time
-from uuid import uuid4
+import sys
 import requests
+
+from uuid import uuid4
+from epsagon.event import BaseEvent
 
 try:
     import ujson as json
@@ -28,12 +31,14 @@ class Trace(object):
         self.start_timestamp = 0
         self.end_timestamp = 0
         self.error_code = ErrorCode.OK
-        self.trigger = None
-        self.runner = None
-        self.operations = []
+        self.events = []
         self.exceptions = []
         self.metadata = {
             'version': __version__,
+            'platform': 'Python {}.{}'.format(
+                sys.version_info.major,
+                sys.version_info.minor
+            )
         }
 
     def prepare(self):
@@ -43,9 +48,7 @@ class Trace(object):
         self.start_timestamp = time.time()
         self.end_timestamp = 0
         self.error_code = ErrorCode.OK
-        self.trigger = None
-        self.runner = None
-        self.operations = []
+        self.events = []
 
     def initialize(self, app_name, token):
         self.app_name = app_name
@@ -61,15 +64,19 @@ class Trace(object):
         trace.end_timestamp = trace_data['end_timestamp']
         trace.error_code = trace_data['error_code']
         trace.metadata = trace_data.get('metadata', {})
+        for event in trace_data['events']:
+            trace.events.append(BaseEvent.load_from_dict(event))
         return trace
 
     def get_events(self):
-        if self.trigger is None:
-            events = [self.runner] + self.operations
-        else:
-            events = [self.trigger, self.runner] + self.operations
+        return self.events
 
-        return events
+    def add_event(self, event):
+        event.terminate()
+        self.events.append(event)
+
+    def set_error(self):
+        self.error_code = ErrorCode.ERROR
 
     def dictify(self):
         return {
@@ -80,10 +87,7 @@ class Trace(object):
             'end_timestamp': self.end_timestamp,
             'error_code': self.error_code,
             'metadata': self.metadata,
-            'trigger': None if self.trigger is None else self.trigger.dictify(),
-            'runner': self.runner.dictify(),
-            'operations': [operation.dictify() for operation in
-                           self.operations],
+            'events': [event.dictify() for event in self.events],
             'exceptions': self.exceptions,
         }
 

@@ -20,34 +20,37 @@ def init(token, app_name='default'):
         app_name=app_name,
     )
 
+#TODO: This code can be refactored (50% of the methods are the same)
 
 def lambda_wrapper(func):
     """Epsagon's Lambda wrapper."""
+
     def _lambda_wrapper(*args, **kwargs):
         tracer.prepare()
         event, context = args
 
         try:
-            tracer.trigger = LambdaTriggerFactory.factory(event)
+            tracer.events.append(LambdaTriggerFactory.factory(event))
         except Exception as exception:
-            print 'Epsagon Error: Could not load trigger {}'.format(exception.message)
-            tracer.trigger = None
+            print 'Epsagon Error: Could not load trigger {}'.format(
+                exception.message)
 
-        tracer.runner = LambdaRunner(event, context)
+        runner = LambdaRunner(event, context)
+        tracer.events.append(runner)
         constants.COLD_START = False
 
         try:
             result = func(*args, **kwargs)
             return result
         except Exception as exception:
-            tracer.runner.set_exception(
+            runner.set_exception(
                 error_code=ErrorCode.EXCEPTION,
                 exception=exception,
                 traceback=traceback.format_exc()
             )
             raise exception
         finally:
-            tracer.runner.terminate()
+            runner.terminate()
             tracer.send_traces()
 
     return _lambda_wrapper
@@ -55,24 +58,26 @@ def lambda_wrapper(func):
 
 def azure_wrapper(func):
     """Epsagon's Azure Function wrapper."""
+
     def _azure_wrapper(*args, **kwargs):
         tracer.prepare()
         event = json.loads(open(os.environ['req']).read())
-        tracer.trigger = LambdaTriggerFactory.factory(event)
-        tracer.runner = AzureFunctionRunner()
+        tracer.events.append(LambdaTriggerFactory.factory(event))
+        runner = AzureFunctionRunner()
+        tracer.events.append(runner)
 
         try:
             result = func(*args, **kwargs)
             return result
         except Exception as exception:
-            tracer.runner.set_exception(
+            runner.set_exception(
                 error_code=ErrorCode.EXCEPTION,
                 exception=exception,
                 traceback=traceback.format_exc()
             )
             raise exception
         finally:
-            tracer.runner.terminate()
+            runner.terminate()
             tracer.send_traces()
 
     return _azure_wrapper

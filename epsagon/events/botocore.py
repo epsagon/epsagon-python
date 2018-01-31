@@ -3,6 +3,8 @@ botocore events module
 """
 
 from __future__ import absolute_import
+
+from ..trace import tracer
 from ..event import BaseEvent
 from botocore.exceptions import ClientError
 
@@ -13,7 +15,7 @@ class BotocoreEvent(BaseEvent):
     """
 
     EVENT_MODULE = 'botocore'
-    EVENT_TYPE = 'botocore'
+    RESOURCE_TYPE = 'botocore'
 
     def __init__(self, wrapped, instance, args, kwargs, response, exception):
         super(BotocoreEvent, self).__init__()
@@ -33,7 +35,8 @@ class BotocoreEvent(BaseEvent):
             if isinstance(exception, ClientError):
                 self.set_botocore_error(exception)
             else:
-                self.set_error(exception)
+                self.set_error()
+                tracer.set_error()
 
     def set_botocore_error(self, exception):
         self.set_error()
@@ -55,7 +58,7 @@ class BotocoreS3Event(BotocoreEvent):
     Represents s3 botocore event
     """
 
-    EVENT_TYPE = 's3'
+    RESOURCE_TYPE = 's3'
 
     def __init__(self, wrapped, instance, args, kwargs, response, exception):
         super(BotocoreS3Event, self).__init__(wrapped, instance, args, kwargs,
@@ -97,7 +100,7 @@ class BotocoreKinesisEvent(BotocoreEvent):
     Represents kinesis botocore event
     """
 
-    EVENT_TYPE = 'kinesis'
+    RESOURCE_TYPE = 'kinesis'
 
     def __init__(self, wrapped, instance, args, kwargs, response, exception):
         super(BotocoreKinesisEvent, self).__init__(wrapped, instance, args,
@@ -122,7 +125,7 @@ class BotocoreSNSEvent(BotocoreEvent):
     Represents SNS botocore event
     """
 
-    EVENT_TYPE = 'sns'
+    RESOURCE_TYPE = 'sns'
 
     def __init__(self, wrapped, instance, args, kwargs, response, exception):
         super(BotocoreSNSEvent, self).__init__(wrapped, instance, args, kwargs,
@@ -136,7 +139,6 @@ class BotocoreSNSEvent(BotocoreEvent):
         super(BotocoreSNSEvent, self).update_response(response)
 
         if self.event_operation == 'Publish':
-            self.event_id = response['MessageId']
             self.metadata['message_id'] = response['MessageId']
 
 
@@ -145,7 +147,7 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
     Represents DynamoDB botocore event
     """
 
-    EVENT_TYPE = 'dynamodb'
+    RESOURCE_TYPE = 'dynamodb'
 
     def __init__(self, wrapped, instance, args, kwargs, response, exception):
         super(BotocoreDynamoDBEvent, self).__init__(wrapped, instance, args,
@@ -184,7 +186,7 @@ class BotocoreSESEvent(BotocoreEvent):
     Represents SES botocore event
     """
 
-    EVENT_TYPE = 'ses'
+    RESOURCE_TYPE = 'ses'
 
     def __init__(self, wrapped, instance, args, kwargs, response, exception):
         super(BotocoreSESEvent, self).__init__(wrapped, instance, args, kwargs,
@@ -208,7 +210,7 @@ class BotocoreLambdaEvent(BotocoreEvent):
     Represents lambda botocore event
     """
 
-    EVENT_TYPE = 'lambda'
+    RESOURCE_TYPE = 'lambda'
 
     def __init__(self, wrapped, instance, args, kwargs, response, exception):
         super(BotocoreLambdaEvent, self).__init__(wrapped, instance, args,
@@ -221,17 +223,18 @@ class BotocoreLambdaEvent(BotocoreEvent):
 
 
 class BotocoreEventFactory(object):
+    FACTORY = {
+        class_obj.RESOURCE_TYPE: class_obj
+        for class_obj in BotocoreEvent.__subclasses__()
+    }
+
     @staticmethod
     def create_event(wrapped, instance, args, kwargs, response, exception):
-        factory = {
-            class_obj.EVENT_TYPE: class_obj
-            for class_obj in BotocoreEvent.__subclasses__()
-        }
-
         instance_type = instance.__class__.__name__.lower()
-        # getattr(instance, '_service_model').endpoint_prefix
 
-        event_class = factory.get(instance_type, BotocoreEvent)
+        event_class = BotocoreEventFactory.FACTORY.get(
+            instance_type,
+            BotocoreEvent)
         event = event_class(wrapped, instance, args, kwargs, response,
                             exception)
-        event.add_event()
+        tracer.add_event(event)
