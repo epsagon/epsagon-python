@@ -6,15 +6,10 @@ from __future__ import absolute_import
 import time
 import sys
 import requests
+import json
 
 from uuid import uuid4
 from epsagon.event import BaseEvent
-
-try:
-    import ujson as json
-except:
-    # Support azure for now
-    import json
 from .common import ErrorCode
 from .constants import TRACE_COLLECTOR_URL, __version__
 
