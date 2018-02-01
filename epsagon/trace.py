@@ -34,7 +34,8 @@ class Trace(object):
 
     def prepare(self):
         """
-        for every function running we prepare empty trace object
+        Prepares new trace.
+        Prints error if token is empty, and empty events list.
         :return: None
         """
 
@@ -45,7 +46,8 @@ class Trace(object):
 
     def initialize(self, app_name, token):
         """
-        Called once function first initialized (from users code)
+        Initializes trace with user's data.
+        User can configure here trace parameters.
         :param app_name: application name
         :param token: user's token
         :return: None
@@ -57,7 +59,7 @@ class Trace(object):
     @staticmethod
     def load_from_dict(trace_data):
         """
-        Load new trace object from dict
+        Load new trace object from dict.
         :param trace_data: dict data of trace
         :return: Trace
         """
