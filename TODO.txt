@@ -1,4 +1,3 @@
-# TODO: Fix json->ujson (error in azure)
 # TODO: Maybe separate wrappers to different modules (under same wrappers dirs)
 # TODO: Add rate limiter for trace sends
 
