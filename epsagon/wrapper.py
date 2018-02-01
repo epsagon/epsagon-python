@@ -20,7 +20,6 @@ def init(token, app_name='default'):
         app_name=app_name,
     )
 
-#TODO: This code can be refactored (50% of the methods are the same)
 
 def lambda_wrapper(func):
     """Epsagon's Lambda wrapper."""

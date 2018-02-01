@@ -42,7 +42,6 @@ class RequestsEvent(BaseEvent):
 
         if exception is not None:
             self.set_error()
-            tracer.set_error()
 
     def update_response(self, response):
         self.metadata['status_code'] = response.status_code
@@ -58,7 +57,6 @@ class RequestsEvent(BaseEvent):
         # Detect errors based on status code
         if response.status_code >= 300:
             self.set_error()
-            tracer.set_error()
 
 
 class RequestsAuth0Event(RequestsEvent):

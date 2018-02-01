@@ -37,7 +37,6 @@ class SQLAlchemyEvent(BaseEvent):
 
         if exception is not None:
             self.set_error()
-            tracer.set_error()
 
 
 class SQLAlchemyCommitEvent(SQLAlchemyEvent):

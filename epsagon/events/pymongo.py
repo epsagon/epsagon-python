@@ -40,7 +40,6 @@ class PyMongoEvent(BaseEvent):
 
         if exception is not None:
             self.set_error()
-            tracer.set_error()
 
     def update_response(self, response):
         for i in xrange(len(self.metadata['items'])):

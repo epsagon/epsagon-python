@@ -34,7 +34,6 @@ class GoogleRPCEvent(BaseEvent):
 
         if exception is not None:
             self.set_error()
-            tracer.set_error()
 
     def update_response(self, response):
         self.metadata['response'] = str(response)
