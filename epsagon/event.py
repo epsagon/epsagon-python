@@ -74,7 +74,20 @@ class BaseEvent(object):
 
     def set_error(self):
         """
-        Sets error.
+        Sets general error.
         :return: None
         """
+
         self.error_code = ErrorCode.ERROR
+
+    def set_exception(self, exception, traceback_data):
+        """
+        Sets exception data on event.
+        :param exception: Exception object
+        :param traceback_data: traceback string
+        :return: None
+        """
+
+        self.error_code = ErrorCode.EXCEPTION
+        self.resource['metadata']['exception'] = repr(exception)
+        self.resource['metadata']['traceback'] = traceback_data

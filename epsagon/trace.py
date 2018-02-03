@@ -74,7 +74,7 @@ class Trace(object):
 
     def get_events(self):
         """
-        get events
+        get events.
         :return: events list
         """
 
@@ -82,30 +82,30 @@ class Trace(object):
 
     def add_event(self, event):
         """
-        Add event to events list
+        Add event to events list.
         :param event: BaseEvent
         :return: None
         """
         event.terminate()
         self.events.append(event)
 
-    def dictify(self):
+    def to_dict(self):
         """
-        Convert trace to dict
+        Convert trace to dict.
         :return: Trace dict
         """
 
         return {
             'token': self.token,
             'app_name': self.app_name,
-            'events': [event.dictify() for event in self.events],
+            'events': [event.to_dict() for event in self.events],
             'exceptions': self.exceptions,
             'metadata': self.metadata,
         }
 
     def send_traces(self):
         """
-        Send trace to collector
+        Send trace to collector.
         :return: None
         """
 
@@ -115,7 +115,7 @@ class Trace(object):
         try:
             requests.post(
                 TRACE_COLLECTOR_URL,
-                data=json.dumps(self.dictify()),
+                data=json.dumps(self.to_dict()),
                 timeout=SEND_TIMEOUT
             )
         except requests.ReadTimeout as _:

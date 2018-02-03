@@ -1,93 +1,148 @@
 """
-sqlalchemy events module
+sqlalchemy events module.
 """
+
 from __future__ import absolute_import
 from uuid import uuid4
+import traceback
 from ..trace import tracer
 from ..event import BaseEvent
 
 
 class SQLAlchemyEvent(BaseEvent):
     """
-    Represents base sqlalchemy event
+    Represents base sqlalchemy event.
     """
 
-    EVENT_MODULE = 'sqlalchemy'
+    ORIGIN = 'sqlalchemy'
     RESOURCE_TYPE = 'sqlalchemy'
-    EVENT_OPERATION = None
+    RESOURCE_OPERATION = None
 
-    def __init__(self, wrapped, instance, args, kwargs, response, exception):
-        super(SQLAlchemyEvent, self).__init__()
+    def __init__(self, wrapped, instance, args, kwargs, start_time, response, exception):
+        """
+        Initialize.
+        :param wrapped: wrapt's wrapped
+        :param instance: wrapt's instance
+        :param args: wrapt's args
+        :param kwargs: wrapt's kwargs
+        :param start_time: Start timestamp (epoch)
+        :param response: response data
+        :param exception: Exception (if happened)
+        """
+
+        super(SQLAlchemyEvent, self).__init__(start_time)
 
         self.event_id = 'sqlalchemy-{}'.format(str(uuid4()))
-        self.resource_name = instance.bind.url.database
-        self.event_operation = self.EVENT_OPERATION
+        self.resource['name'] = instance.bind.url.database
+        self.resource['operation'] = self.RESOURCE_OPERATION
 
         # override event type with the specific DB type
         if 'rds.amazonaws' in repr(instance.bind.url):
-            self.resource_type = 'rds'
+            self.resource['type'] = 'rds'
 
-        self.metadata = {
+        self.resource['metadata'] = {
             'url': repr(instance.bind.url),
             'driver': instance.bind.url.drivername,
         }
 
-        if response is not None:
-            self.update_response(response)
-
         if exception is not None:
-            self.set_error()
+            self.set_exception(exception, traceback.format_exc())
 
 
 class SQLAlchemyCommitEvent(SQLAlchemyEvent):
     """
-    Represents sqlalchemy commit event
+    Represents sqlalchemy commit event.
     """
 
-    EVENT_OPERATION = 'add'
+    RESOURCE_OPERATION = 'add'
 
-    def __init__(self, wrapped, instance, args, kwargs, response, exception):
-        super(SQLAlchemyCommitEvent, self).__init__(wrapped, instance, args,
-                                                    kwargs, response,
-                                                    exception)
+    def __init__(self, wrapped, instance, args, kwargs, start_time, response, exception):
+        """
+        Initialize.
+        :param wrapped: wrapt's wrapped
+        :param instance: wrapt's instance
+        :param args: wrapt's args
+        :param kwargs: wrapt's kwargs
+        :param start_time: Start timestamp (epoch)
+        :param response: response data
+        :param exception: Exception (if happened)
+        """
+
+        super(SQLAlchemyCommitEvent, self).__init__(
+            wrapped,
+            instance,
+            args,
+            kwargs,
+            start_time,
+            response,
+            exception
+        )
 
         # Currently support only add
-        items = [{'object': str(x), 'table': x.__tablename__}
-                 for x in getattr(instance, '_new').values()]
+        items = [
+            {'object': str(x), 'table': x.__tablename__} for x in getattr(instance, '_new').values()
+        ]
 
-        self.metadata['items'] = items
+        self.resource['metadata']['items'] = items
 
 
 class SQLAlchemyQueryEvent(SQLAlchemyEvent):
     """
-    Represents sqlalchemy query event
+    Represents sqlalchemy query event.
     """
 
-    EVENT_OPERATION = 'query'
+    RESOURCE_OPERATION = 'query'
 
-    def __init__(self, wrapped, instance, args, kwargs, response, exception):
-        super(SQLAlchemyQueryEvent, self).__init__(wrapped, instance, args,
-                                                   kwargs, response,
-                                                   exception)
+    def __init__(self, wrapped, instance, args, kwargs, start_time, response, exception):
+        """
+        Initialize.
+        :param wrapped: wrapt's wrapped
+        :param instance: wrapt's instance
+        :param args: wrapt's args
+        :param kwargs: wrapt's kwargs
+        :param start_time: Start timestamp (epoch)
+        :param response: response data
+        :param exception: Exception (if happened)
+        """
+
+        super(SQLAlchemyQueryEvent, self).__init__(
+            wrapped,
+            instance,
+            args,
+            kwargs,
+            start_time,
+            response,
+            exception
+        )
 
         query_element = args[0]
-        self.metadata['table_name'] = query_element.__tablename__
+        self.resource['metadata']['table_name'] = query_element.__tablename__
+
+        if response is not None:
+            self.update_response(response)
 
     def update_response(self, response):
-        self.metadata['items_count'] = int(response.count())
+        """
+        Adds response data to event.
+        :param response: Response from botocore
+        :return: None
+        """
+
+        self.resource['metadata']['items_count'] = int(response.count())
 
 
 class SQLAlchemyEventFactory(object):
+    """
+    Factory class, generates SQL alchemy event.
+    """
+
     FACTORY = {
-        class_obj.EVENT_OPERATION: class_obj
+        class_obj.RESOURCE_OPERATION: class_obj
         for class_obj in SQLAlchemyEvent.__subclasses__()
     }
 
     @staticmethod
-    def create_event(wrapped, instance, args, kwargs, response, exception):
-        event_class = SQLAlchemyEventFactory.FACTORY.get(
-            wrapped.im_func.func_name,
-            SQLAlchemyEvent)
-        event = event_class(wrapped, instance, args, kwargs, response,
-                            exception)
+    def create_event(wrapped, instance, args, kwargs, start_time, response, exception):
+        event_class = SQLAlchemyEventFactory.FACTORY.get(wrapped.im_func.func_name, SQLAlchemyEvent)
+        event = event_class(wrapped, instance, args, kwargs, start_time, response, exception)
         tracer.add_event(event)

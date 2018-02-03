@@ -5,8 +5,6 @@ Runner for Azure Functions.
 from __future__ import absolute_import
 import os
 from ..event import BaseEvent
-from ..trace import tracer
-from ..common import ErrorCode
 
 
 class AzureFunctionRunner(BaseEvent):
@@ -34,16 +32,3 @@ class AzureFunctionRunner(BaseEvent):
             'region': os.environ.get('REGION_NAME', ''),
             'memory': os.environ.get('WEBSITE_MEMORY_LIMIT_MB', ''),
         }
-
-    def set_exception(self, exception, traceback):
-        """
-        Sets exception data on event.
-        :param exception: Exception object
-        :param traceback: traceback string
-        :return: None
-        """
-
-        tracer.error_code = ErrorCode.EXCEPTION
-        self.error_code = ErrorCode.EXCEPTION
-        self.resource['metadata']['exception'] = repr(exception)
-        self.resource['metadata']['traceback'] = traceback

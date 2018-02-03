@@ -26,7 +26,7 @@ def azure_wrapper(func):
         except Exception as exception:
             runner.set_exception(
                 exception=exception,
-                traceback=traceback.format_exc()
+                traceback_data=traceback.format_exc()
             )
             raise exception
         finally:

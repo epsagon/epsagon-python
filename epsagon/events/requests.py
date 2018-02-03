@@ -1,9 +1,11 @@
 """
-requests events module
+requests events module.
 """
+
 from __future__ import absolute_import
 from urlparse import urlparse
 from uuid import uuid4
+import traceback
 from ..trace import tracer
 from ..event import BaseEvent
 
@@ -16,23 +18,33 @@ BLACKLIST_URLS = [
 
 class RequestsEvent(BaseEvent):
     """
-    Represents base requests event
+    Represents base requests event.
     """
 
-    EVENT_MODULE = 'requests'
+    ORIGIN = 'requests'
     RESOURCE_TYPE = 'requests'
 
-    def __init__(self, wrapped, instance, args, kwargs, response, exception):
-        super(RequestsEvent, self).__init__()
+    def __init__(self, wrapped, instance, args, kwargs, start_time, response, exception):
+        """
+        Initialize.
+        :param wrapped: wrapt's wrapped
+        :param instance: wrapt's instance
+        :param args: wrapt's args
+        :param kwargs: wrapt's kwargs
+        :param start_time: Start timestamp (epoch)
+        :param response: response data
+        :param exception: Exception (if happened)
+        """
+
+        super(RequestsEvent, self).__init__(start_time)
 
         self.event_id = 'requests-{}'.format(str(uuid4()))
-        self.resource_name = self.RESOURCE_TYPE
+        self.resource['name'] = self.RESOURCE_TYPE
 
         prepared_request = args[0]
-        self.event_operation = prepared_request.method
+        self.resource['operation'] = prepared_request.method
 
-        self.metadata = {
-            'method': prepared_request.method,
+        self.resource['metadata'] = {
             'url': prepared_request.url,
             'request_body': prepared_request.body,
         }
@@ -41,16 +53,22 @@ class RequestsEvent(BaseEvent):
             self.update_response(response)
 
         if exception is not None:
-            self.set_error()
+            self.set_exception(exception, traceback.format_exc())
 
     def update_response(self, response):
-        self.metadata['status_code'] = response.status_code
-        self.metadata['response_headers'] = dict(response.headers)
+        """
+        Adds response data to event.
+        :param response: Response from botocore
+        :return: None
+        """
+
+        self.resource['metadata']['status_code'] = response.status_code
+        self.resource['metadata']['response_headers'] = dict(response.headers)
 
         # Extract only json responses
-        self.metadata['response_body'] = None
+        self.resource['metadata']['response_body'] = None
         try:
-            self.metadata['response_body'] = response.json()
+            self.resource['metadata']['response_body'] = response.json()
         except ValueError:
             pass
 
@@ -61,78 +79,84 @@ class RequestsEvent(BaseEvent):
 
 class RequestsAuth0Event(RequestsEvent):
     """
-    Represents auth0 requests event
+    Represents auth0 requests event.
     """
 
     RESOURCE_TYPE = 'auth0'
     API_TAG = '/api/v2/'
 
-    def __init__(self, wrapped, instance, args, kwargs, response, exception):
-        super(RequestsAuth0Event, self).__init__(wrapped, instance, args,
-                                                 kwargs, response,
-                                                 exception)
+    def __init__(self, wrapped, instance, args, kwargs, start_time, response, exception):
+        """
+        Initialize.
+        :param wrapped: wrapt's wrapped
+        :param instance: wrapt's instance
+        :param args: wrapt's args
+        :param kwargs: wrapt's kwargs
+        :param start_time: Start timestamp (epoch)
+        :param response: response data
+        :param exception: Exception (if happened)
+        """
+
+        super(RequestsAuth0Event, self).__init__(
+            wrapped,
+            instance,
+            args,
+            kwargs,
+            start_time,
+            response,
+            exception
+        )
+
         prepared_request = args[0]
         url = prepared_request.path_url
-        self.event_operation = url[url.find(self.API_TAG) + len(self.API_TAG):]
+        self.resource['operation'] = url[url.find(self.API_TAG) + len(self.API_TAG):]
 
 
 class RequestsTwilioEvent(RequestsEvent):
     """
-    Represents Twilio requests event
+    Represents Twilio requests event.
     """
 
     RESOURCE_TYPE = 'twilio'
 
-    def __init__(self, wrapped, instance, args, kwargs, response, exception):
-        super(RequestsTwilioEvent, self).__init__(wrapped, instance, args,
-                                                  kwargs, response,
-                                                  exception)
+    def __init__(self, wrapped, instance, args, kwargs, start_time, response, exception):
+        """
+        Initialize.
+        :param wrapped: wrapt's wrapped
+        :param instance: wrapt's instance
+        :param args: wrapt's args
+        :param kwargs: wrapt's kwargs
+        :param start_time: Start timestamp (epoch)
+        :param response: response data
+        :param exception: Exception (if happened)
+        """
+
+        super(RequestsTwilioEvent, self).__init__(
+            wrapped,
+            instance,
+            args,
+            kwargs,
+            start_time,
+            response,
+            exception
+        )
+
         prepared_request = args[0]
-        self.event_operation = prepared_request.path_url.split('/')[-1]
-
-
-class RequestsGoogleAPIEvent(RequestsEvent):
-    """
-    Represents Google API requests event
-    """
-
-    RESOURCE_TYPE = 'googleapis'
-
-    def __init__(self, wrapped, instance, args, kwargs, response, exception):
-        super(RequestsGoogleAPIEvent, self).__init__(wrapped, instance, args,
-                                                     kwargs, response,
-                                                     exception)
-        prepared_request = args[0]
-        self.event_operation = '/'.join(
-            prepared_request.path_url.split('/')[-2:])
-        self.resource_type = 'google_{}'.format(
-            urlparse(prepared_request.url).path.split('/')[1])
-
-
-class RequestsOutlookOfficeEvent(RequestsEvent):
-    """
-    Represents Outlook Office requests event
-    """
-
-    RESOURCE_TYPE = 'outlook.office'
-
-    def __init__(self, wrapped, instance, args, kwargs, response, exception):
-        super(RequestsOutlookOfficeEvent, self).__init__(wrapped, instance,
-                                                         args, kwargs, response,
-                                                         exception)
-        prepared_request = args[0]
-        self.event_operation = '/'.join(
-            prepared_request.path_url.split('/')[-2:])
+        self.resource['operation'] = prepared_request.path_url.split('/')[-1]
 
 
 class RequestsEventFactory(object):
+    """
+    Factory class, generates requests event.
+    """
+
     FACTORY = {
         class_obj.RESOURCE_TYPE: class_obj
         for class_obj in RequestsEvent.__subclasses__()
     }
 
     @staticmethod
-    def create_event(wrapped, instance, args, kwargs, response, exception):
+    def create_event(wrapped, instance, args, kwargs, start_time, response, exception):
 
         prepared_request = args[0]
         base_url = urlparse(prepared_request.url).netloc
@@ -145,7 +169,6 @@ class RequestsEventFactory(object):
             if api_name in base_url.lower():
                 instance_type = RequestsEventFactory.FACTORY[api_name]
 
-        event = instance_type(wrapped, instance, args, kwargs, response,
-                              exception)
-        if event.metadata['url'] not in BLACKLIST_URLS:
+        event = instance_type(wrapped, instance, args, kwargs, start_time, response, exception)
+        if event.resource['metadata']['url'] not in BLACKLIST_URLS:
             tracer.add_event(event)
