@@ -125,3 +125,18 @@ class Trace(object):
 
 
 tracer = Trace()
+
+
+def init(token, app_name='default'):
+    """
+    Initializes trace with user's data.
+    User can configure here trace parameters.
+    :param app_name: application name
+    :param token: user's token
+    :return: None
+    """
+
+    tracer.initialize(
+        token=token,
+        app_name=app_name,
+    )

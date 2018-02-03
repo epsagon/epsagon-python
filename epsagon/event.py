@@ -13,7 +13,7 @@ class BaseEvent(object):
     """
 
     ORIGIN = 'base'
-    RESOURCE_TYPE = 'generic'
+    RESOURCE_TYPE = 'base'
 
     def __init__(self, start_time):
         """
@@ -28,7 +28,7 @@ class BaseEvent(object):
         self.error_code = ErrorCode.OK
 
         self.resource = {
-            'type': '',
+            'type': self.RESOURCE_TYPE,
             'name': '',
             'operation': '',
             'metadata': {},
