@@ -4,7 +4,6 @@ Runner for Azure Functions
 
 from __future__ import absolute_import
 import os
-import time
 from ..event import BaseEvent
 from ..trace import tracer
 from ..common import ErrorCode
@@ -15,16 +14,17 @@ class AzureFunctionRunner(BaseEvent):
     Represents Azure function event runner
     """
 
-    EVENT_MODULE = 'runner'
+    ORIGIN = 'runner'
     RESOURCE_TYPE = 'azure_function'
     OPERATION = 'Invoke'
 
-    def __init__(self):
+    def __init__(self, start_time):
         """
         Initialize.
+        :param start_time: event's start time (epoch)
         """
 
-        super(AzureFunctionRunner, self).__init__(time.time())
+        super(AzureFunctionRunner, self).__init__(start_time)
 
         self.event_id = os.environ.get('EXECUTION_CONTEXT_INVOCATIONID', '')
         self.resource['name'] = os.environ.get('EXECUTION_CONTEXT_FUNCTIONNAME', '')

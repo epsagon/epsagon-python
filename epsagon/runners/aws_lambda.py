@@ -4,7 +4,6 @@ Runner for AWS Lambda
 
 from __future__ import absolute_import
 import os
-import time
 from ..event import BaseEvent
 from ..trace import tracer
 from ..common import ErrorCode
@@ -20,13 +19,14 @@ class LambdaRunner(BaseEvent):
     RESOURCE_TYPE = 'lambda'
     OPERATION = 'invoke'
 
-    def __init__(self, context):
+    def __init__(self, start_time, context):
         """
         Initialize.
+        :param start_time: event's start time (epoch)
         :param context: Lambda's context (passed from entry point)
         """
 
-        super(LambdaRunner, self).__init__(time.time())
+        super(LambdaRunner, self).__init__(start_time)
 
         self.event_id = context.aws_request_id
         self.resource['name'] = context.function_name
