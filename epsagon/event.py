@@ -1,5 +1,5 @@
 """
-
+Base Event class
 """
 
 from __future__ import absolute_import
@@ -12,75 +12,69 @@ class BaseEvent(object):
     Represents base trace's event
     """
 
-    EVENT_MODULE = 'base'
+    ORIGIN = 'base'
     RESOURCE_TYPE = 'generic'
 
-    def __init__(self):
-        self.start_timestamp = time.time()
+    def __init__(self, start_time):
+        """
+        Initialize.
+        :param start_time: event's start time (epoch)
+        """
 
+        self.start_time = start_time
         self.event_id = ''
-
-        # my-resize, traces-stream, ...
-        self.resource_name = ''
-
-        # invoke, add_user, ...
-        self.event_operation = ''
-
-        # S3, Lambda, Twilio
-        self.resource_type = self.RESOURCE_TYPE
-
-        # botocore, requests, ...
-        self.event_module = self.EVENT_MODULE
-
-        self.end_timestamp = 0
+        self.origin = self.ORIGIN
+        self.duration = 0.0
         self.error_code = ErrorCode.OK
-        self.metadata = {}
+
+        self.resource = {
+            'type': '',
+            'name': '',
+            'operation': '',
+            'metadata': {},
+        }
 
     @staticmethod
     def load_from_dict(event_data):
-        event = BaseEvent()
+        """
+        Load Event object from dict.
+        :param event_data: dict
+        :return: Event
+        """
+
+        event = BaseEvent(event_data['start_time'])
         event.event_id = event_data['event_id']
-        event.resource_name = event_data['resource_name']
-        event.event_operation = event_data['event_operation']
-        event.resource_type = event_data['resource_type']
-        event.event_module = event_data['event_module']
-        event.start_timestamp = event_data['start_timestamp']
-        event.end_timestamp = event_data['end_timestamp']
+        event.origin = event_data['origin']
+        event.duration = event_data['duration']
         event.error_code = event_data['error_code']
-        event.metadata = event_data['metadata']
+        event.resource = event_data['resource']
         return event
 
-    def dictify(self):
-        return {
-            'event_id': self.event_id,
-            'start_timestamp': self.start_timestamp,
-            'end_timestamp': self.end_timestamp,
-            'resource_name': self.resource_name,
-            'event_operation': self.event_operation,
-            'resource_type': self.resource_type,
-            'event_module': self.event_module,
-            'error_code': self.error_code,
-            'metadata': self.metadata,
-        }
-
-    def dictify_dynamodb(self, transaction_id, app_name):
+    def to_dict(self):
         """
-        Preparing dict that ready for dynamodb (no empty string and no floats).
-        Adding transaction ID and app_name for easier extraction
+        Converts Event to dict.
         :return: dict
         """
-        event = self.dictify()
-        event['start_timestamp'] = str(self.start_timestamp)
-        event['end_timestamp'] = str(self.end_timestamp)
-        event['transaction_id'] = transaction_id
-        event['app_name'] = app_name
-        return event
+
+        return {
+            'id': self.event_id,
+            'start_time': self.start_time,
+            'duration': self.duration,
+            'origin': self.origin,
+            'error_code': self.error_code,
+            'resource': self.resource,
+        }
 
     def terminate(self):
-        self.end_timestamp = time.time()
-
-    def update_response(self, response):
-        pass
+        """
+        Sets duration time.
+        :return: None
+        """
+        self.duration = time.time() - self.start_time
 
     def set_error(self):
+        """
+        Sets error.
+        :return: None
+        """
         self.error_code = ErrorCode.ERROR
