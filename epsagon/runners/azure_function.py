@@ -1,39 +1,49 @@
 """
-Runner and Triggers for Azure Functions
+Runner for Azure Functions
 """
 
 from __future__ import absolute_import
+import os
+import time
 from ..event import BaseEvent
 from ..trace import tracer
-import os
+from ..common import ErrorCode
 
-
-##########
-# runner #
-##########
 
 class AzureFunctionRunner(BaseEvent):
     """
-    Represents epsagon azure event (main runner)
+    Represents Azure function event runner
     """
 
     EVENT_MODULE = 'runner'
     RESOURCE_TYPE = 'azure_function'
+    OPERATION = 'Invoke'
 
     def __init__(self):
-        super(AzureFunctionRunner, self).__init__()
-        self.resource_name = os.environ['EXECUTION_CONTEXT_FUNCTIONNAME']
-        self.event_operation = 'Invoke'
-        self.event_id = os.environ['EXECUTION_CONTEXT_INVOCATIONID']
+        """
+        Initialize.
+        """
 
-        self.metadata = {
-            'region': os.environ['REGION_NAME'],
-            'memory': os.environ['WEBSITE_MEMORY_LIMIT_MB'],
-            'cold_start': 'False',
+        super(AzureFunctionRunner, self).__init__(time.time())
+
+        self.event_id = os.environ.get('EXECUTION_CONTEXT_INVOCATIONID', '')
+        self.resource['name'] = os.environ.get('EXECUTION_CONTEXT_FUNCTIONNAME', '')
+        self.resource['operation'] = self.OPERATION
+
+        self.resource['metadata'] = {
+            'region': os.environ.get('REGION_NAME', ''),
+            'memory': os.environ.get('WEBSITE_MEMORY_LIMIT_MB', ''),
         }
 
-    def set_exception(self, error_code, exception, traceback):
-        tracer.error_code = error_code
-        self.error_code = error_code
-        self.metadata['exception'] = repr(exception)
-        self.metadata['traceback'] = traceback
+    def set_exception(self, exception, traceback):
+        """
+        Sets exception data on event.
+        :param exception: Exception object
+        :param traceback: traceback string
+        :return: None
+        """
+
+        tracer.error_code = ErrorCode.EXCEPTION
+        self.error_code = ErrorCode.EXCEPTION
+        self.resource['metadata']['exception'] = repr(exception)
+        self.resource['metadata']['traceback'] = traceback
