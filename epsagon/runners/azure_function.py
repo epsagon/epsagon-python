@@ -1,5 +1,5 @@
 """
-Runner for Azure Functions
+Runner for Azure Functions.
 """
 
 from __future__ import absolute_import
@@ -11,7 +11,7 @@ from ..common import ErrorCode
 
 class AzureFunctionRunner(BaseEvent):
     """
-    Represents Azure function event runner
+    Represents Azure function event runner.
     """
 
     ORIGIN = 'runner'

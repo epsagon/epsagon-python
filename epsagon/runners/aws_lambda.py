@@ -1,5 +1,5 @@
 """
-Runner for AWS Lambda
+Runner for AWS Lambda.
 """
 
 from __future__ import absolute_import
@@ -12,7 +12,7 @@ from .. import constants
 
 class LambdaRunner(BaseEvent):
     """
-    Represents Lambda event runner
+    Represents Lambda event runner.
     """
 
     ORIGIN = 'runner'
@@ -47,6 +47,7 @@ class LambdaRunner(BaseEvent):
         :param traceback: traceback string
         :return: None
         """
+
         tracer.error_code = ErrorCode.EXCEPTION
         self.error_code = ErrorCode.EXCEPTION
         self.resource['metadata']['exception'] = repr(exception)
