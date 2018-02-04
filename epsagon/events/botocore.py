@@ -17,7 +17,8 @@ class BotocoreEvent(BaseEvent):
     ORIGIN = 'botocore'
     RESOURCE_TYPE = 'botocore'
 
-    def __init__(self, wrapped, instance, args, kwargs, start_time, response, exception):
+    def __init__(self, wrapped, instance, args, kwargs, start_time, response,
+                 exception):
         """
         Initialize.
         :param wrapped: wrapt's wrapped
@@ -61,9 +62,12 @@ class BotocoreEvent(BaseEvent):
             self.event_id = exception.response['ResponseMetadata']['RequestId']
             botocore_error = exception.response['Error']
             self.resource['metadata']['botocore_error'] = True
-            self.resource['metadata']['error_code'] = str(botocore_error.get('Code', ''))
-            self.resource['metadata']['error_message'] = str(botocore_error.get('Message', ''))
-            self.resource['metadata']['error_type'] = str(botocore_error.get('Type', ''))
+            self.resource['metadata']['error_code'] = \
+                str(botocore_error.get('Code', ''))
+            self.resource['metadata']['error_message'] = \
+                str(botocore_error.get('Message', ''))
+            self.resource['metadata']['error_type'] = \
+                str(botocore_error.get('Type', ''))
 
     def update_response(self, response):
         """
@@ -73,8 +77,10 @@ class BotocoreEvent(BaseEvent):
         """
 
         self.event_id = response['ResponseMetadata']['RequestId']
-        self.resource['metadata']['retry_attempts'] = response['ResponseMetadata']['RetryAttempts']
-        self.resource['metadata']['status_code'] = response['ResponseMetadata']['HTTPStatusCode']
+        self.resource['metadata']['retry_attempts'] = \
+            response['ResponseMetadata']['RetryAttempts']
+        self.resource['metadata']['status_code'] = \
+            response['ResponseMetadata']['HTTPStatusCode']
 
 
 class BotocoreS3Event(BotocoreEvent):
@@ -84,7 +90,8 @@ class BotocoreS3Event(BotocoreEvent):
 
     RESOURCE_TYPE = 's3'
 
-    def __init__(self, wrapped, instance, args, kwargs, start_time, response, exception):
+    def __init__(self, wrapped, instance, args, kwargs, start_time, response,
+                 exception):
         """
         Initialize.
         :param wrapped: wrapt's wrapped
@@ -109,7 +116,8 @@ class BotocoreS3Event(BotocoreEvent):
         _, request_data = args
         self.resource['name'] = request_data['Bucket']
 
-        if self.resource['operation'] in ['HeadObject', 'GetObject', 'PutObject']:
+        if self.resource['operation'] in \
+                ['HeadObject', 'GetObject', 'PutObject']:
             self.resource['metadata']['key'] = request_data['Key']
 
     def update_response(self, response):
@@ -123,18 +131,21 @@ class BotocoreS3Event(BotocoreEvent):
 
         if self.resource['operation'] == 'ListObjects':
             self.resource['metadata']['files'] = [
-                [str(x['Key']), x['Size'], x['ETag']] for x in response['Contents']
+                [str(x['Key']), x['Size'], x['ETag']]
+                for x in response['Contents']
             ]
         elif self.resource['operation'] == 'PutObject':
             self.resource['metadata']['etag'] = response['ETag']
         elif self.resource['operation'] == 'HeadObject':
             self.resource['metadata']['etag'] = response['ETag']
             self.resource['metadata']['file_size'] = response['ContentLength']
-            self.resource['metadata']['last_modified'] = response['LastModified'].strftime('%s')
+            self.resource['metadata']['last_modified'] = \
+                response['LastModified'].strftime('%s')
         elif self.resource['operation'] == 'GetObject':
             self.resource['metadata']['etag'] = response['ETag']
             self.resource['metadata']['file_size'] = response['ContentLength']
-            self.resource['metadata']['last_modified'] = response['LastModified'].strftime('%s')
+            self.resource['metadata']['last_modified'] = \
+                response['LastModified'].strftime('%s')
 
 
 class BotocoreKinesisEvent(BotocoreEvent):
@@ -144,7 +155,8 @@ class BotocoreKinesisEvent(BotocoreEvent):
 
     RESOURCE_TYPE = 'kinesis'
 
-    def __init__(self, wrapped, instance, args, kwargs, start_time, response, exception):
+    def __init__(self, wrapped, instance, args, kwargs, start_time, response,
+                 exception):
         """
         Initialize.
         :param wrapped: wrapt's wrapped
@@ -170,7 +182,8 @@ class BotocoreKinesisEvent(BotocoreEvent):
         self.resource_name = request_data['StreamName']
 
         self.resource['metadata']['data'] = request_data['Data']
-        self.resource['metadata']['partition_key'] = request_data['PartitionKey']
+        self.resource['metadata']['partition_key'] = \
+            request_data['PartitionKey']
 
     def update_response(self, response):
         """
@@ -183,7 +196,8 @@ class BotocoreKinesisEvent(BotocoreEvent):
 
         if self.resource['operation'] == 'PutRecord':
             self.resource['metadata']['shard_id'] = response['ShardId']
-            self.resource['metadata']['sequence_number'] = response['SequenceNumber']
+            self.resource['metadata']['sequence_number'] = \
+                response['SequenceNumber']
 
 
 class BotocoreSNSEvent(BotocoreEvent):
@@ -193,7 +207,8 @@ class BotocoreSNSEvent(BotocoreEvent):
 
     RESOURCE_TYPE = 'sns'
 
-    def __init__(self, wrapped, instance, args, kwargs, start_time, response, exception):
+    def __init__(self, wrapped, instance, args, kwargs, start_time, response,
+                 exception):
         """
         Initialize.
         :param wrapped: wrapt's wrapped
@@ -240,7 +255,8 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
 
     RESOURCE_TYPE = 'dynamodb'
 
-    def __init__(self, wrapped, instance, args, kwargs, start_time, response, exception):
+    def __init__(self, wrapped, instance, args, kwargs, start_time, response,
+                 exception):
         """
         Initialize.
         :param wrapped: wrapt's wrapped
@@ -291,7 +307,8 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
         if self.resource['operation'] == 'Scan':
             self.resource['metadata']['items_count'] = response['Count']
             self.resource['metadata']['items'] = response['Items']
-            self.resource['metadata']['scanned_count'] = response['ScannedCount']
+            self.resource['metadata']['scanned_count'] = \
+                response['ScannedCount']
         elif self.resource['operation'] == 'GetItem':
             self.resource['metadata']['item'] = response['Item']
 
@@ -303,7 +320,8 @@ class BotocoreSESEvent(BotocoreEvent):
 
     RESOURCE_TYPE = 'ses'
 
-    def __init__(self, wrapped, instance, args, kwargs, start_time, response, exception):
+    def __init__(self, wrapped, instance, args, kwargs, start_time, response,
+                 exception):
         """
         Initialize.
         :param wrapped: wrapt's wrapped
@@ -330,7 +348,8 @@ class BotocoreSESEvent(BotocoreEvent):
         if self.resource['operation'] == 'SendEmail':
             self.resource['metadata']['source'] = request_data['Source']
             self.resource['metadata']['message'] = request_data['Message']
-            self.resource['metadata']['destination'] = request_data['Destination']
+            self.resource['metadata']['destination'] = \
+                request_data['Destination']
 
     def update_response(self, response):
         """
@@ -352,7 +371,8 @@ class BotocoreLambdaEvent(BotocoreEvent):
 
     RESOURCE_TYPE = 'lambda'
 
-    def __init__(self, wrapped, instance, args, kwargs, start_time, response, exception):
+    def __init__(self, wrapped, instance, args, kwargs, start_time, response,
+                 exception):
         """
         Initialize.
         :param wrapped: wrapt's wrapped
@@ -391,8 +411,20 @@ class BotocoreEventFactory(object):
     }
 
     @staticmethod
-    def create_event(wrapped, instance, args, kwargs, start_time, response, exception):
+    def create_event(wrapped, instance, args, kwargs, start_time, response,
+                     exception):
         instance_type = instance.__class__.__name__.lower()
-        event_class = BotocoreEventFactory.FACTORY.get(instance_type, BotocoreEvent)
-        event = event_class(wrapped, instance, args, kwargs, start_time, response, exception)
+        event_class = BotocoreEventFactory.FACTORY.get(
+            instance_type,
+            BotocoreEvent
+        )
+        event = event_class(
+            wrapped,
+            instance,
+            args,
+            kwargs,
+            start_time,
+            response,
+            exception
+        )
         tracer.add_event(event)

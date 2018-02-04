@@ -30,7 +30,15 @@ def wrapper(factory, wrapped, instance, args, kwargs):
         raise exception
     finally:
         try:
-            factory.create_event(wrapped, instance, args, kwargs, start_time, response, exception)
+            factory.create_event(
+                wrapped,
+                instance,
+                args,
+                kwargs,
+                start_time,
+                response,
+                exception
+            )
         except Exception as exception:
             exception_dict = {
                 'exception': repr(exception),

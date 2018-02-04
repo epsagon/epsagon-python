@@ -24,7 +24,8 @@ class RequestsEvent(BaseEvent):
     ORIGIN = 'requests'
     RESOURCE_TYPE = 'requests'
 
-    def __init__(self, wrapped, instance, args, kwargs, start_time, response, exception):
+    def __init__(self, wrapped, instance, args, kwargs, start_time, response,
+                 exception):
         """
         Initialize.
         :param wrapped: wrapt's wrapped
@@ -85,7 +86,8 @@ class RequestsAuth0Event(RequestsEvent):
     RESOURCE_TYPE = 'auth0'
     API_TAG = '/api/v2/'
 
-    def __init__(self, wrapped, instance, args, kwargs, start_time, response, exception):
+    def __init__(self, wrapped, instance, args, kwargs, start_time, response,
+                 exception):
         """
         Initialize.
         :param wrapped: wrapt's wrapped
@@ -109,7 +111,8 @@ class RequestsAuth0Event(RequestsEvent):
 
         prepared_request = args[0]
         url = prepared_request.path_url
-        self.resource['operation'] = url[url.find(self.API_TAG) + len(self.API_TAG):]
+        self.resource['operation'] = \
+            url[url.find(self.API_TAG) + len(self.API_TAG):]
 
 
 class RequestsTwilioEvent(RequestsEvent):
@@ -119,7 +122,8 @@ class RequestsTwilioEvent(RequestsEvent):
 
     RESOURCE_TYPE = 'twilio'
 
-    def __init__(self, wrapped, instance, args, kwargs, start_time, response, exception):
+    def __init__(self, wrapped, instance, args, kwargs, start_time, response,
+                 exception):
         """
         Initialize.
         :param wrapped: wrapt's wrapped
@@ -156,7 +160,8 @@ class RequestsEventFactory(object):
     }
 
     @staticmethod
-    def create_event(wrapped, instance, args, kwargs, start_time, response, exception):
+    def create_event(wrapped, instance, args, kwargs, start_time, response,
+                     exception):
 
         prepared_request = args[0]
         base_url = urlparse(prepared_request.url).netloc
@@ -169,6 +174,14 @@ class RequestsEventFactory(object):
             if api_name in base_url.lower():
                 instance_type = RequestsEventFactory.FACTORY[api_name]
 
-        event = instance_type(wrapped, instance, args, kwargs, start_time, response, exception)
+        event = instance_type(
+            wrapped,
+            instance,
+            args,
+            kwargs,
+            start_time,
+            response,
+            exception
+        )
         if event.resource['metadata']['url'] not in BLACKLIST_URLS:
             tracer.add_event(event)

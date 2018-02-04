@@ -17,7 +17,8 @@ class GoogleRPCEvent(BaseEvent):
     ORIGIN = 'grpc'
     RESOURCE_TYPE = 'grpc'
 
-    def __init__(self, wrapped, instance, args, kwargs, start_time, response, exception):
+    def __init__(self, wrapped, instance, args, kwargs, start_time, response,
+                 exception):
         """
         Initialize.
         :param wrapped: wrapt's wrapped
@@ -79,10 +80,19 @@ class GRPCEventFactory(object):
     }
 
     @staticmethod
-    def create_event(wrapped, instance, args, kwargs, start_time, response, exception):
+    def create_event(wrapped, instance, args, kwargs, start_time, response,
+                     exception):
         _, endpoint, _ = getattr(instance, '_method').split('/')
         endpoint = endpoint.split('.')[-1]
 
         event_class = GRPCEventFactory.FACTORY.get(endpoint, GoogleRPCEvent)
-        event = event_class(wrapped, instance, args, kwargs, start_time, response, exception)
+        event = event_class(
+            wrapped,
+            instance,
+            args,
+            kwargs,
+            start_time,
+            response,
+            exception
+        )
         tracer.add_event(event)

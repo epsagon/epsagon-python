@@ -8,7 +8,7 @@ from epsagon.modules.general_wrapper import wrapper
 from ..events.sqlalchemy import SQLAlchemyEventFactory
 
 
-def _commit_wrapper(wrapped, instance, args, kwargs):
+def _wrapper(wrapped, instance, args, kwargs):
     """
     Commit wrapper for sqlalchemy instrumentation.
     :param wrapped: wrapt's wrapped
@@ -30,11 +30,11 @@ def patch():
     wrapt.wrap_function_wrapper(
         'sqlalchemy.orm.session',
         'Session.commit',
-        _commit_wrapper
+        _wrapper
     )
 
     wrapt.wrap_function_wrapper(
         'sqlalchemy.orm.session',
         'Session.query',
-        _commit_wrapper
+        _wrapper
     )

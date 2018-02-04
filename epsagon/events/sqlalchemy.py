@@ -18,7 +18,8 @@ class SQLAlchemyEvent(BaseEvent):
     RESOURCE_TYPE = 'sqlalchemy'
     RESOURCE_OPERATION = None
 
-    def __init__(self, wrapped, instance, args, kwargs, start_time, response, exception):
+    def __init__(self, wrapped, instance, args, kwargs, start_time, response,
+                 exception):
         """
         Initialize.
         :param wrapped: wrapt's wrapped
@@ -56,7 +57,8 @@ class SQLAlchemyCommitEvent(SQLAlchemyEvent):
 
     RESOURCE_OPERATION = 'add'
 
-    def __init__(self, wrapped, instance, args, kwargs, start_time, response, exception):
+    def __init__(self, wrapped, instance, args, kwargs, start_time, response,
+                 exception):
         """
         Initialize.
         :param wrapped: wrapt's wrapped
@@ -80,7 +82,8 @@ class SQLAlchemyCommitEvent(SQLAlchemyEvent):
 
         # Currently support only add
         items = [
-            {'object': str(x), 'table': x.__tablename__} for x in getattr(instance, '_new').values()
+            {'object': str(x), 'table': x.__tablename__} for x in
+            getattr(instance, '_new').values()
         ]
 
         self.resource['metadata']['items'] = items
@@ -93,7 +96,8 @@ class SQLAlchemyQueryEvent(SQLAlchemyEvent):
 
     RESOURCE_OPERATION = 'query'
 
-    def __init__(self, wrapped, instance, args, kwargs, start_time, response, exception):
+    def __init__(self, wrapped, instance, args, kwargs, start_time, response,
+                 exception):
         """
         Initialize.
         :param wrapped: wrapt's wrapped
@@ -142,7 +146,19 @@ class SQLAlchemyEventFactory(object):
     }
 
     @staticmethod
-    def create_event(wrapped, instance, args, kwargs, start_time, response, exception):
-        event_class = SQLAlchemyEventFactory.FACTORY.get(wrapped.im_func.func_name, SQLAlchemyEvent)
-        event = event_class(wrapped, instance, args, kwargs, start_time, response, exception)
+    def create_event(wrapped, instance, args, kwargs, start_time, response,
+                     exception):
+        event_class = SQLAlchemyEventFactory.FACTORY.get(
+            wrapped.im_func.func_name,
+            SQLAlchemyEvent
+        )
+        event = event_class(
+            wrapped,
+            instance,
+            args,
+            kwargs,
+            start_time,
+            response,
+            exception
+        )
         tracer.add_event(event)

@@ -17,7 +17,8 @@ class PyMongoEvent(BaseEvent):
     ORIGIN = 'pymongo'
     RESOURCE_TYPE = 'pymongo'
 
-    def __init__(self, wrapped, instance, args, kwargs, start_time, response, exception):
+    def __init__(self, wrapped, instance, args, kwargs, start_time, response,
+                 exception):
         """
         Initialize.
         :param wrapped: wrapt's wrapped
@@ -36,8 +37,12 @@ class PyMongoEvent(BaseEvent):
         self.event_id = 'mongo-{}'.format(str(uuid4()))
         self.resource['name'] = instance.full_name
 
-        self.resource['operation'] = 'insert_many' if isinstance(documents, list) else 'insert_one'
-        address = [x for x in getattr(instance.database.client, '_topology_settings').seeds][0]
+        self.resource['operation'] = \
+            'insert_many' if isinstance(documents, list) else 'insert_one'
+        address = [x for x in getattr(
+            instance.database.client,
+            '_topology_settings'
+        ).seeds][0]
 
         if self.resource['operation'] == 'insert_one':
             documents = [documents]
@@ -68,9 +73,11 @@ class PyMongoEvent(BaseEvent):
             )
 
         if self.resource['operation'] == 'insert_many':
-            self.resource['metadata']['inserted_ids'] = [str(x) for x in response.inserted_ids]
+            self.resource['metadata']['inserted_ids'] = \
+                [str(x) for x in response.inserted_ids]
         elif self.resource['operation'] == 'insert_one':
-            self.resource['metadata']['inserted_ids'] = [str(response.inserted_id)]
+            self.resource['metadata']['inserted_ids'] = \
+                [str(response.inserted_id)]
 
 
 class PyMongoEventFactory(object):
@@ -79,6 +86,15 @@ class PyMongoEventFactory(object):
     """
 
     @staticmethod
-    def create_event(wrapped, instance, args, kwargs, start_time, response, exception):
-        event = PyMongoEvent(wrapped, instance, args, kwargs, start_time, response, exception)
+    def create_event(wrapped, instance, args, kwargs, start_time, response,
+                     exception):
+        event = PyMongoEvent(
+            wrapped,
+            instance,
+            args,
+            kwargs,
+            start_time,
+            response,
+            exception
+        )
         tracer.add_event(event)

@@ -19,7 +19,9 @@ def lambda_wrapper(func):
         event, context = args
 
         try:
-            tracer.events.append(LambdaTriggerFactory.factory(time.time(), event))
+            tracer.events.append(
+                LambdaTriggerFactory.factory(time.time(), event)
+            )
         except Exception as exception:
             exception_dict = {
                 'exception': repr(exception),

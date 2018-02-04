@@ -25,7 +25,10 @@ class AzureFunctionRunner(BaseEvent):
         super(AzureFunctionRunner, self).__init__(start_time)
 
         self.event_id = os.environ.get('EXECUTION_CONTEXT_INVOCATIONID', '')
-        self.resource['name'] = os.environ.get('EXECUTION_CONTEXT_FUNCTIONNAME', '')
+        self.resource['name'] = os.environ.get(
+            'EXECUTION_CONTEXT_FUNCTIONNAME',
+            ''
+        )
         self.resource['operation'] = self.OPERATION
 
         self.resource['metadata'] = {

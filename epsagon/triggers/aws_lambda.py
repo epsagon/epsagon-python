@@ -89,8 +89,10 @@ class KinesisLambdaTrigger(BaseLambdaTrigger):
         super(KinesisLambdaTrigger, self).__init__(start_time)
 
         self.event_id = event['Records'][0]['eventID']
-        self.resource['name'] = event['Records'][0]['eventSourceARN'].split('/')[-1]
-        self.resource['operation'] = event['Records'][0]['eventName'].replace('aws:kinesis:', '')
+        self.resource['name'] = \
+            event['Records'][0]['eventSourceARN'].split('/')[-1]
+        self.resource['operation'] = \
+            event['Records'][0]['eventName'].replace('aws:kinesis:', '')
 
         self.resource['metadata'] = {
             'region': event['Records'][0]['awsRegion'],
@@ -117,7 +119,8 @@ class SNSLambdaTrigger(BaseLambdaTrigger):
         super(SNSLambdaTrigger, self).__init__(start_time)
 
         self.event_id = str(event['Records'][0]['Sns']['MessageId'])
-        self.resource['name'] = event['Records'][0]['EventSubscriptionArn'].split(':')[-2]
+        self.resource['name'] = \
+            event['Records'][0]['EventSubscriptionArn'].split(':')[-2]
         self.resource['operation'] = str(event['Records'][0]['Sns']['Type'])
 
         self.resource['metadata'] = {
