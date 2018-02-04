@@ -24,13 +24,11 @@ class Trace(object):
         self.token = ''
         self.events = []
         self.exceptions = []
-        self.metadata = {
-            'version': __version__,
-            'platform': 'Python {}.{}'.format(
-                sys.version_info.major,
-                sys.version_info.minor
-            )
-        }
+        self.version = __version__
+        self.platform = 'Python {}.{}'.format(
+            sys.version_info.major,
+            sys.version_info.minor
+        )
 
     def prepare(self):
         """
@@ -119,6 +117,7 @@ class Trace(object):
                 timeout=SEND_TIMEOUT
             )
         except requests.ReadTimeout as _:
+            # In future, send basic data
             pass
         except Exception as _:
             pass
