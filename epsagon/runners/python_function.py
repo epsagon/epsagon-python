@@ -4,7 +4,6 @@ Runner for a general python function
 
 from __future__ import absolute_import
 import uuid
-
 from ..event import BaseEvent
 
 
@@ -28,7 +27,7 @@ class PythonRunner(BaseEvent):
 
         super(PythonRunner, self).__init__(start_time)
 
-        self.event_id = uuid.uuid4()
+        self.event_id = str(uuid.uuid4())
         self.resource['name'] = wrapped_function.__name__
         self.resource['operation'] = self.OPERATION
         self.resource['metadata'] = {
