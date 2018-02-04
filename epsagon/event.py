@@ -43,7 +43,7 @@ class BaseEvent(object):
         """
 
         event = BaseEvent(event_data['start_time'])
-        event.event_id = event_data['event_id']
+        event.event_id = event_data['id']
         event.origin = event_data['origin']
         event.duration = event_data['duration']
         event.error_code = event_data['error_code']
