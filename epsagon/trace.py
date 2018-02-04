@@ -65,7 +65,8 @@ class Trace(object):
         trace = Trace()
         trace.app_name = trace_data['app_name']
         trace.token = trace_data['token']
-        trace.metadata = trace_data.get('metadata', {})
+        trace.version = trace_data['version']
+        trace.platform = trace_data['platform']
         for event in trace_data['events']:
             trace.events.append(BaseEvent.load_from_dict(event))
         return trace
@@ -98,7 +99,8 @@ class Trace(object):
             'app_name': self.app_name,
             'events': [event.to_dict() for event in self.events],
             'exceptions': self.exceptions,
-            'metadata': self.metadata,
+            'version': self.version,
+            'platform': self.platform,
         }
 
     def send_traces(self):
