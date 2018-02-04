@@ -27,7 +27,7 @@ def wrapper(factory, wrapped, instance, args, kwargs):
         response = wrapped(*args, **kwargs)
         return response
     except Exception as exception:
-        raise exception
+        raise
     finally:
         try:
             factory.create_event(

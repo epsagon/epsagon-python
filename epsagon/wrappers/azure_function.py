@@ -28,7 +28,7 @@ def azure_wrapper(func):
                 exception=exception,
                 traceback_data=traceback.format_exc()
             )
-            raise exception
+            raise
         finally:
             runner.terminate()
             tracer.send_traces()
