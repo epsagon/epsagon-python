@@ -4,7 +4,6 @@ Runner for a general python function
 
 from __future__ import absolute_import
 import uuid
-import json
 
 from ..event import BaseEvent
 
