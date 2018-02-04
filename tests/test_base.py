@@ -46,7 +46,7 @@ def test_region_detection():
 
 def test_initialization_token_assert():
     reload(epsagon.trace)
-    reload(epsagon.wrapper)
+    reload(epsagon.wrappers)
 
     event = load_event('api_gateway')
     context = load_context()
@@ -59,7 +59,7 @@ def test_initialization_token_assert():
 
 def test_token_and_appname_initialization():
     reload(epsagon.trace)
-    reload(epsagon.wrapper)
+    reload(epsagon.wrappers)
 
     epsagon.init('test', 'test')
     event = load_event('api_gateway')

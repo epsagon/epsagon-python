@@ -16,3 +16,6 @@ if REGION not in TC_REGIONS:
 
 TRACE_COLLECTOR_URL = "http://tc.{}.epsagon.com".format(REGION)
 COLD_START = True
+
+# How long we try to send traces
+SEND_TIMEOUT = 1
