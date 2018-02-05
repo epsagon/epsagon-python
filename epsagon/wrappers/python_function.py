@@ -22,10 +22,7 @@ def python_wrapper(func):
             result = func(*args, **kwargs)
             return result
         except Exception as exception:
-            runner.set_exception(
-                exception=exception,
-                traceback_data=traceback.format_exc()
-            )
+            runner.set_exception(exception, traceback.format_exc())
             raise
         finally:
             runner.terminate()

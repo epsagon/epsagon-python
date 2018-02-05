@@ -23,11 +23,7 @@ def lambda_wrapper(func):
                 LambdaTriggerFactory.factory(time.time(), event)
             )
         except Exception as exception:
-            exception_dict = {
-                'exception': repr(exception),
-                'traceback': traceback.format_exc()
-            }
-            tracer.exceptions.append(exception_dict)
+            tracer.add_exception(exception, traceback.format_exc())
 
         runner = LambdaRunner(time.time(), context)
         tracer.events.append(runner)
@@ -37,10 +33,7 @@ def lambda_wrapper(func):
             result = func(*args, **kwargs)
             return result
         except Exception as exception:
-            runner.set_exception(
-                exception=exception,
-                traceback_data=traceback.format_exc()
-            )
+            runner.set_exception(exception, traceback.format_exc())
             raise
         finally:
             runner.terminate()
