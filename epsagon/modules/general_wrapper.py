@@ -40,8 +40,4 @@ def wrapper(factory, wrapped, instance, args, kwargs):
                 exception
             )
         except Exception as exception:
-            exception_dict = {
-                'exception': repr(exception),
-                'traceback': traceback.format_exc()
-            }
-            tracer.exceptions.append(exception_dict)
+            tracer.add_exception(exception, traceback.format_exc())

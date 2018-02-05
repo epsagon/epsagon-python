@@ -23,12 +23,11 @@ def azure_wrapper(func):
         try:
             result = func(*args, **kwargs)
             return result
+
         except Exception as exception:
-            runner.set_exception(
-                exception=exception,
-                traceback_data=traceback.format_exc()
-            )
+            tracer.add_exception(exception, traceback.format_exc())
             raise
+
         finally:
             runner.terminate()
             tracer.send_traces()

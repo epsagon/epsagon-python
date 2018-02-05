@@ -26,6 +26,7 @@ class BaseEvent(object):
         self.origin = self.ORIGIN
         self.duration = 0.0
         self.error_code = ErrorCode.OK
+        self.exception = {}
 
         self.resource = {
             'type': self.RESOURCE_TYPE,
@@ -89,5 +90,7 @@ class BaseEvent(object):
         """
 
         self.error_code = ErrorCode.EXCEPTION
-        self.resource['metadata']['exception'] = repr(exception)
-        self.resource['metadata']['traceback'] = traceback_data
+        self.exception['type'] = str(type(exception))
+        self.exception['message'] = str(exception)
+        self.exception['traceback'] = traceback_data
+        self.exception['time'] = time.time()

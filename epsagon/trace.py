@@ -4,6 +4,7 @@ Trace object holds events and metadata
 
 from __future__ import absolute_import
 import sys
+import time
 import json
 import requests
 from epsagon.event import BaseEvent
@@ -29,6 +30,23 @@ class Trace(object):
             sys.version_info.major,
             sys.version_info.minor
         )
+
+    def add_exception(self, exception, stack_trace):
+        """
+        add an exception to the trace
+        :param exception: the exception to add
+        :param stack_trace: the traceback at the moment of the event
+        :return: None
+        """
+
+        exception_dict = {
+            'type': str(type(exception)),
+            'message': str(exception),
+            'traceback': stack_trace,
+            'time': time.time()
+        }
+
+        self.exceptions.append(exception_dict)
 
     def prepare(self):
         """
