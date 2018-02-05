@@ -31,8 +31,10 @@ def setup_function(function):
     tracer.exceptions = []
 
 
-@mock.patch('epsagon.events.requests.RequestsEventFactory.create_event',
-            side_effect=raise_exception)
+@mock.patch(
+    'epsagon.events.requests.RequestsEventFactory.create_event',
+    side_effect=raise_exception
+)
 def test_request_wrapper_failsafe(_):
     """Validates that the request wrapper is not raising any exception to
     the user."""

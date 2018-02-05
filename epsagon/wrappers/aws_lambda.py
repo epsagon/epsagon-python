@@ -6,9 +6,9 @@ from __future__ import absolute_import
 import traceback
 import time
 import functools
-from ..trace import tracer
-from ..runners.aws_lambda import LambdaRunner
-from ..triggers.aws_lambda import LambdaTriggerFactory
+import epsagon.trace 
+import epsagon.runners.aws_lambda
+import epsagon.triggers.aws_lambda
 from .. import constants
 
 
@@ -17,18 +17,19 @@ def lambda_wrapper(func):
 
     @functools.wraps(func)
     def _lambda_wrapper(*args, **kwargs):
-        tracer.prepare()
+        epsagon.trace.tracer.prepare()
         event, context = args
 
         try:
-            tracer.events.append(
-                LambdaTriggerFactory.factory(time.time(), event)
-            )
+            epsagon.trace.tracer.events.append(
+                epsagon.triggers.aws_lambda.LambdaTriggerFactory.factory(
+                    time.time(),
+                    event
+            ))
         except Exception as exception:
-            tracer.add_exception(exception, traceback.format_exc())
+            epsagon.trace.tracer.add_exception(exception, traceback.format_exc())
 
-        runner = LambdaRunner(time.time(), context)
-        tracer.events.append(runner)
+        runner = epsagon.runners.aws_lambda.LambdaRunner(time.time(), context)
         constants.COLD_START = False
 
         try:
@@ -38,7 +39,7 @@ def lambda_wrapper(func):
             runner.set_exception(exception, traceback.format_exc())
             raise
         finally:
-            runner.terminate()
-            tracer.send_traces()
+            epsagon.trace.tracer.add_event(runner)
+            epsagon.trace.tracer.send_traces()
 
     return _lambda_wrapper
