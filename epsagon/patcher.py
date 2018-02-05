@@ -3,7 +3,7 @@ Main patcher module
 """
 
 from __future__ import absolute_import
-from .modules import MODULES
+import epsagon.modules
 
 
 def _import_exists(module_name):
@@ -24,6 +24,6 @@ def patch_all():
     Instrumenting all modules
     :return: None
     """
-    for patch_module in MODULES:
+    for patch_module in epsagon.modules.MODULES:
         if _import_exists(patch_module):
-            MODULES[patch_module].patch()
+            epsagon.modules.MODULES[patch_module].patch()
