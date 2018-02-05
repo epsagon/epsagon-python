@@ -6,6 +6,7 @@ from __future__ import absolute_import
 import sys
 import time
 import json
+import warnings
 import requests
 from epsagon.event import BaseEvent
 from .constants import TRACE_COLLECTOR_URL, SEND_TIMEOUT, __version__
@@ -56,7 +57,7 @@ class Trace(object):
         """
 
         if self.token == '':
-            print 'Epsagon Error: Please initialize token, data won\'t be sent.'
+            warnings.warn('Epsagon Error: Please initialize token, data won\'t be sent.')
 
         self.events = []
 
@@ -88,14 +89,6 @@ class Trace(object):
         for event in trace_data['events']:
             trace.events.append(BaseEvent.load_from_dict(event))
         return trace
-
-    def get_events(self):
-        """
-        get events.
-        :return: events list
-        """
-
-        return self.events
 
     def add_event(self, event):
         """
@@ -150,8 +143,8 @@ def init(token, app_name='default'):
     """
     Initializes trace with user's data.
     User can configure here trace parameters.
-    :param app_name: application name
     :param token: user's token
+    :param app_name: application name
     :return: None
     """
 
