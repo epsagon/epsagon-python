@@ -179,7 +179,7 @@ class BotocoreKinesisEvent(BotocoreEvent):
         )
 
         _, request_data = args
-        self.resource_name = request_data['StreamName']
+        self.resource['name'] = request_data['StreamName']
 
         self.resource['metadata']['data'] = request_data['Data']
         self.resource['metadata']['partition_key'] = \
@@ -231,7 +231,7 @@ class BotocoreSNSEvent(BotocoreEvent):
         )
 
         _, request_data = args
-        self.resource_name = request_data['TopicArn'].split(':')[-1]
+        self.resource['name'] = request_data['TopicArn'].split(':')[-1]
 
         self.resource['metadata']['data'] = request_data['Message']
 
@@ -279,7 +279,7 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
         )
 
         _, request_data = args
-        self.resource_name = request_data['TableName']
+        self.resource['name'] = request_data['TableName']
 
         if self.resource['operation'] == 'PutItem':
             self.resource['metadata']['item'] = request_data['Item']
@@ -396,7 +396,7 @@ class BotocoreLambdaEvent(BotocoreEvent):
 
         _, request_data = args
 
-        self.resource_name = request_data['FunctionName']
+        self.resource['name'] = request_data['FunctionName']
         self.resource['metadata']['payload'] = request_data['Payload']
 
 
