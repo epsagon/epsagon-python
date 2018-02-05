@@ -3,8 +3,9 @@ Wrapper for a general python function
 """
 
 from __future__ import absolute_import
-import traceback
 import time
+import traceback
+import functools
 from ..trace import tracer
 from ..runners.python_function import PythonRunner
 
@@ -12,6 +13,7 @@ from ..runners.python_function import PythonRunner
 def python_wrapper(func):
     """Epsagon's general python wrapper."""
 
+    @functools.wraps(func)
     def _python_wrapper(*args, **kwargs):
         tracer.prepare()
 

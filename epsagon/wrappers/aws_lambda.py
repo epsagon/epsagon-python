@@ -5,6 +5,7 @@ Wrapper for AWS Lambda.
 from __future__ import absolute_import
 import traceback
 import time
+import functools
 from ..trace import tracer
 from ..runners.aws_lambda import LambdaRunner
 from ..triggers.aws_lambda import LambdaTriggerFactory
@@ -14,6 +15,7 @@ from .. import constants
 def lambda_wrapper(func):
     """Epsagon's Lambda wrapper."""
 
+    @functools.wraps(func)
     def _lambda_wrapper(*args, **kwargs):
         tracer.prepare()
         event, context = args
