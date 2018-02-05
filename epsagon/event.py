@@ -49,6 +49,9 @@ class BaseEvent(object):
         event.duration = event_data['duration']
         event.error_code = event_data['error_code']
         event.resource = event_data['resource']
+        if event.error_code == ErrorCode.EXCEPTION:
+            event.exception = event_data['exception']
+
         return event
 
     def to_dict(self):
@@ -57,7 +60,7 @@ class BaseEvent(object):
         :return: dict
         """
 
-        return {
+        self_as_dict = {
             'id': self.event_id,
             'start_time': self.start_time,
             'duration': self.duration,
@@ -65,6 +68,11 @@ class BaseEvent(object):
             'error_code': self.error_code,
             'resource': self.resource,
         }
+
+        if self.error_code == ErrorCode.EXCEPTION:
+            self_as_dict['exception'] = self.exception
+
+        return self_as_dict
 
     def terminate(self):
         """
