@@ -6,9 +6,8 @@ from __future__ import absolute_import
 import time
 import wrapt
 import traceback
-from sqlalchemy.event import listen
+import sqlalchemy.event
 from epsagon.trace import tracer
-from epsagon.modules.general_wrapper import wrapper
 from ..events.sqlalchemy import SQLAlchemyEventFactory
 
 
@@ -18,9 +17,9 @@ class EngineWrapper(object):
         self.engine = engine
         self.current_event = None
 
-        listen(engine, 'before_cursor_execute', self._before_cur_execute)
-        listen(engine, 'after_cursor_execute', self._after_cur_execute)
-        listen(engine, 'dbapi_error', self._after_cur_execute)
+        sqlalchemy.event.listen(engine, 'before_cursor_execute', self._before_cur_execute)
+        sqlalchemy.event.listen(engine, 'after_cursor_execute', self._after_cur_execute)
+        sqlalchemy.event.listen(engine, 'dbapi_error', self._after_cur_execute)
 
     def _before_cur_execute(self, conn, cursor, statement, *args):
         self.start_time = time.time()
