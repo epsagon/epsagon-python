@@ -4,6 +4,7 @@ sqlalchemy events module.
 
 from __future__ import absolute_import
 from uuid import uuid4
+import sys
 import traceback
 from ..trace import tracer
 from ..event import BaseEvent
@@ -18,121 +19,106 @@ class SQLAlchemyEvent(BaseEvent):
     RESOURCE_TYPE = 'sqlalchemy'
     RESOURCE_OPERATION = None
 
-    def __init__(self, wrapped, instance, args, kwargs, start_time, response,
-                 exception):
+    def __init__(self, engine, table_name, start_time, exception):
         """
         Initialize.
-        :param wrapped: wrapt's wrapped
-        :param instance: wrapt's instance
-        :param args: wrapt's args
-        :param kwargs: wrapt's kwargs
+        :param engine: The SQL engine the event is using
+        :param table_name: the table the event is occurring on
         :param start_time: Start timestamp (epoch)
-        :param response: response data
-        :param exception: Exception (if happened)
+        :param exception: Exception (if occurred)
         """
 
         super(SQLAlchemyEvent, self).__init__(start_time)
 
         self.event_id = 'sqlalchemy-{}'.format(str(uuid4()))
-        self.resource['name'] = instance.bind.url.database
+        self.resource['name'] = engine.url.database
         self.resource['operation'] = self.RESOURCE_OPERATION
 
         # override event type with the specific DB type
-        if 'rds.amazonaws' in repr(instance.bind.url):
+        if 'rds.amazonaws' in repr(engine.url):
             self.resource['type'] = 'rds'
 
         self.resource['metadata'] = {
-            'url': repr(instance.bind.url),
-            'driver': instance.bind.url.drivername,
+            'url': repr(engine.url),
+            'driver': engine.url.drivername,
+            'table_name': table_name
         }
 
         if exception is not None:
             self.set_exception(exception, traceback.format_exc())
 
 
-class SQLAlchemyCommitEvent(SQLAlchemyEvent):
+class SQLAlchemyInsertEvent(SQLAlchemyEvent):
     """
-    Represents sqlalchemy commit event.
+    Represents sqlalchemy insert event.
     """
 
-    RESOURCE_OPERATION = 'add'
+    RESOURCE_OPERATION = 'insert'
 
-    def __init__(self, wrapped, instance, args, kwargs, start_time, response,
-                 exception):
+    def __init__(self, engine, cursor, statement, args,  start_time, exception):
         """
         Initialize.
-        :param wrapped: wrapt's wrapped
-        :param instance: wrapt's instance
-        :param args: wrapt's args
-        :param kwargs: wrapt's kwargs
+        :param engine: The SQL engine the event is using
+        :param cursor: The cursor from sqlalchemy
+        :param statement: the SQL statement that was executed
+        :param args: the arguments to the sql statement
         :param start_time: Start timestamp (epoch)
-        :param response: response data
         :param exception: Exception (if happened)
         """
 
-        super(SQLAlchemyCommitEvent, self).__init__(
-            wrapped,
-            instance,
-            args,
-            kwargs,
+        table_name_index = statement.lower().split().index('into') + 1
+
+        super(SQLAlchemyInsertEvent, self).__init__(
+            engine,
+            statement.split()[table_name_index],
             start_time,
-            response,
             exception
         )
 
-        # Currently support only add
-        items = [
-            {'object': str(x), 'table': x.__tablename__} for x in
-            getattr(instance, '_new').values()
+        self.resource['metadata']['items'] = [{
+                name: str(value) for name, value in arg.iteritems()
+            } for arg in args[0]
         ]
 
-        self.resource['metadata']['items'] = items
 
-
-class SQLAlchemyQueryEvent(SQLAlchemyEvent):
+class SQLAlchemySelectEvent(SQLAlchemyEvent):
     """
-    Represents sqlalchemy query event.
+    Represents sqlalchemy select event.
     """
 
-    RESOURCE_OPERATION = 'query'
+    RESOURCE_OPERATION = 'select'
 
-    def __init__(self, wrapped, instance, args, kwargs, start_time, response,
-                 exception):
+    def __init__(self, engine, cursor, statement, args,  start_time, exception):
         """
         Initialize.
-        :param wrapped: wrapt's wrapped
-        :param instance: wrapt's instance
-        :param args: wrapt's args
-        :param kwargs: wrapt's kwargs
+        :param engine: The SQL engine the event is using
+        :param cursor: The cursor from sqlalchemy
+        :param statement: the SQL statement that was executed
+        :param args: the arguments to the sql statement
         :param start_time: Start timestamp (epoch)
-        :param response: response data
         :param exception: Exception (if happened)
         """
 
-        super(SQLAlchemyQueryEvent, self).__init__(
-            wrapped,
-            instance,
-            args,
-            kwargs,
+        table_name_index = statement.lower().split().index('from') + 1
+
+        super(SQLAlchemySelectEvent, self).__init__(
+            engine,
+            statement.split()[table_name_index],
             start_time,
-            response,
             exception
         )
 
-        query_element = args[0]
-        self.resource['metadata']['table_name'] = query_element.__tablename__
+        if exception is not None:
+            self.update_response(cursor)
 
-        if response is not None:
-            self.update_response(response)
-
-    def update_response(self, response):
+    def update_response(self, cursor):
         """
         Adds response data to event.
-        :param response: Response from botocore
+        :param cursor: The cursor to the response
         :return: None
         """
 
-        self.resource['metadata']['items_count'] = int(response.count())
+        self.resource['metadata']['items_count'] = int(cursor.rowcount)
 
 
 class SQLAlchemyEventFactory(object):
@@ -146,19 +132,20 @@ class SQLAlchemyEventFactory(object):
     }
 
     @staticmethod
-    def create_event(wrapped, instance, args, kwargs, start_time, response,
-                     exception):
+    def create_event(engine, cursor, statement, args, start_time):
+        operation = statement.split()[0].lower()
         event_class = SQLAlchemyEventFactory.FACTORY.get(
-            wrapped.im_func.func_name,
-            SQLAlchemyEvent
+            operation,
+            None
         )
-        event = event_class(
-            wrapped,
-            instance,
-            args,
-            kwargs,
-            start_time,
-            response,
-            exception
-        )
-        tracer.add_event(event)
+
+        if event_class is not None:
+            event = event_class(
+                engine,
+                cursor,
+                statement,
+                args,
+                start_time,
+                sys.exc_info()[0]
+            )
+            tracer.add_event(event)
