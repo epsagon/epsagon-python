@@ -3,9 +3,9 @@ import mock
 from epsagon.modules.botocore import _wrapper as _botocore_wrapper
 from epsagon.modules.grpc import _wrapper as _grpc_wrapper
 from epsagon.modules.sqlalchemy import _wrapper as _commit_wrapper
-from epsagon.trace import tracer
 from epsagon.modules.requests import _wrapper as _request_wrapper
 from epsagon.modules.pymongo import _wrapper as _pymongo_wrapper
+from epsagon.trace import tracer
 
 EXCEPTION_MESSAGE = 'Test exception'
 EXCEPTION_TYPE = RuntimeError
@@ -31,8 +31,10 @@ def setup_function(function):
     tracer.exceptions = []
 
 
-@mock.patch('epsagon.events.requests.RequestsEventFactory.create_event',
-            side_effect=raise_exception)
+@mock.patch(
+    'epsagon.events.requests.RequestsEventFactory.create_event',
+    side_effect=raise_exception
+)
 def test_request_wrapper_failsafe(_):
     """Validates that the request wrapper is not raising any exception to
     the user."""

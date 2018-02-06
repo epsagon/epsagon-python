@@ -5,6 +5,7 @@ Wrapper for Azure Function.
 from __future__ import absolute_import
 import time
 import traceback
+import functools
 from ..trace import tracer
 from ..runners.azure_function import AzureFunctionRunner
 
@@ -12,6 +13,7 @@ from ..runners.azure_function import AzureFunctionRunner
 def azure_wrapper(func):
     """Epsagon's Azure Function wrapper."""
 
+    @functools.wraps(func)
     def _azure_wrapper(*args, **kwargs):
         tracer.prepare()
 
