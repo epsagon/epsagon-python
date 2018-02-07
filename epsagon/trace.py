@@ -60,6 +60,7 @@ class Trace(object):
             warnings.warn('Epsagon Error: Please initialize token, data won\'t be sent.')
 
         self.events = []
+        self.exceptions = []
 
     def initialize(self, app_name, token):
         """
@@ -86,6 +87,7 @@ class Trace(object):
         trace.token = trace_data['token']
         trace.version = trace_data['version']
         trace.platform = trace_data['platform']
+        trace.exceptions = trace_data.get('exceptions', {})
         for event in trace_data['events']:
             trace.events.append(BaseEvent.load_from_dict(event))
         return trace
