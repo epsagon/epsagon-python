@@ -42,6 +42,7 @@ def test_prepare():
         warnings.simplefilter('always')
         tracer.prepare()
         assert tracer.events == []
+        assert tracer.exceptions == []
         assert len(w) == 1
 
     tracer.events = ['test_event']
@@ -49,6 +50,7 @@ def test_prepare():
         warnings.simplefilter('always')
         tracer.prepare()
         assert tracer.events == []
+        assert tracer.exceptions == []
         assert len(w) == 1
 
     tracer.events = ['test_event']
@@ -56,6 +58,7 @@ def test_prepare():
         tracer.prepare()
         tracer.prepare() # this call should NOT trigger a warning
         assert tracer.events == []
+        assert tracer.exceptions == []
         assert len(w) == 1
 
 
@@ -93,6 +96,29 @@ def test_load_from_dict():
             assert new_trace.version == trace_data['version']
             assert new_trace.platform == trace_data['platform']
             assert new_trace.events == trace_data['events']
+            assert new_trace.exceptions == []
+
+
+def test_load_from_dict_with_exceptions():
+    for i in range(2): # validate a new trace is created each time
+        number_of_events = 10
+        trace_data = {
+            'app_name': 'app_name',
+            'token': 'token',
+            'version': 'version',
+            'platform': 'platform',
+            'events': range(number_of_events),
+            'exceptions': 'test_exceptions'
+        }
+
+        with mock.patch('epsagon.event.BaseEvent.load_from_dict', side_effect=(lambda x: x)):
+            new_trace = epsagon.trace.Trace.load_from_dict(trace_data)
+            assert new_trace.app_name == trace_data['app_name']
+            assert new_trace.token == trace_data['token']
+            assert new_trace.version == trace_data['version']
+            assert new_trace.platform == trace_data['platform']
+            assert new_trace.events == trace_data['events']
+            assert new_trace.exceptions == trace_data['exceptions']
 
 
 def test_add_event():

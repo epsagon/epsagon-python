@@ -98,7 +98,7 @@ class BaseEvent(object):
         """
 
         self.error_code = ErrorCode.EXCEPTION
-        self.exception['type'] = str(type(exception))
+        self.exception['type'] = type(exception).__name__
         self.exception['message'] = str(exception)
         self.exception['traceback'] = traceback_data
         self.exception['time'] = time.time()
