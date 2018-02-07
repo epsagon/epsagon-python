@@ -87,7 +87,7 @@ class Trace(object):
         trace.token = trace_data['token']
         trace.version = trace_data['version']
         trace.platform = trace_data['platform']
-        trace.exceptions = trace_data.get('exceptions', {})
+        trace.exceptions = trace_data.get('exceptions', [])
         for event in trace_data['events']:
             trace.events.append(BaseEvent.load_from_dict(event))
         return trace

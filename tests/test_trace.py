@@ -96,7 +96,7 @@ def test_load_from_dict():
             assert new_trace.version == trace_data['version']
             assert new_trace.platform == trace_data['platform']
             assert new_trace.events == trace_data['events']
-            assert new_trace.exceptions == {}
+            assert new_trace.exceptions == []
 
 
 def test_load_from_dict_with_exceptions():
