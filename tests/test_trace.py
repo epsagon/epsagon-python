@@ -26,7 +26,7 @@ def test_add_exception():
         try:
             raise exception_type(message_format % i)
         except exception_type as e:
-            tracer.add_exception(e, stack_trace_format %i)
+            tracer.add_exception(e, stack_trace_format % i)
 
     assert len(tracer.exceptions) == len(tested_exception_types)
     for i, exception_type in enumerate(tested_exception_types):

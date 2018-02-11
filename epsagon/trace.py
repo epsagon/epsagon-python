@@ -27,6 +27,7 @@ class Trace(object):
         self.events = []
         self.exceptions = []
         self.version = __version__
+        self.collector_url = TRACE_COLLECTOR_URL
         self.platform = 'Python {}.{}'.format(
             sys.version_info.major,
             sys.version_info.minor
@@ -62,17 +63,19 @@ class Trace(object):
         self.events = []
         self.exceptions = []
 
-    def initialize(self, app_name, token):
+    def initialize(self, app_name, token, collector_url):
         """
         Initializes trace with user's data.
         User can configure here trace parameters.
         :param app_name: application name
         :param token: user's token
+        :param collector_url: the url to send traces to
         :return: None
         """
 
         self.app_name = app_name
         self.token = token
+        self.collector_url = collector_url
 
     @staticmethod
     def load_from_dict(trace_data):
@@ -127,7 +130,7 @@ class Trace(object):
 
         try:
             requests.post(
-                TRACE_COLLECTOR_URL,
+                self.collector_url,
                 data=json.dumps(self.to_dict()),
                 timeout=SEND_TIMEOUT
             )
@@ -141,16 +144,18 @@ class Trace(object):
 tracer = Trace()
 
 
-def init(token, app_name='default'):
+def init(token, app_name='default', collector_url=TRACE_COLLECTOR_URL):
     """
     Initializes trace with user's data.
     User can configure here trace parameters.
     :param token: user's token
     :param app_name: application name
+    :param collector_url: the
     :return: None
     """
 
     tracer.initialize(
         token=token,
         app_name=app_name,
+        collector_url=collector_url,
     )
