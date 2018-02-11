@@ -131,18 +131,18 @@ class BotocoreS3Event(BotocoreEvent):
 
         if self.resource['operation'] == 'ListObjects':
             self.resource['metadata']['files'] = [
-                [str(x['Key']), x['Size'], x['ETag']]
+                [str(x['Key']).strip('"'), x['Size'], x['ETag']]
                 for x in response['Contents']
             ]
         elif self.resource['operation'] == 'PutObject':
-            self.resource['metadata']['etag'] = response['ETag']
+            self.resource['metadata']['etag'] = response['ETag'].strip('"')
         elif self.resource['operation'] == 'HeadObject':
-            self.resource['metadata']['etag'] = response['ETag']
+            self.resource['metadata']['etag'] = response['ETag'].strip('"')
             self.resource['metadata']['file_size'] = response['ContentLength']
             self.resource['metadata']['last_modified'] = \
                 response['LastModified'].strftime('%s')
         elif self.resource['operation'] == 'GetObject':
-            self.resource['metadata']['etag'] = response['ETag']
+            self.resource['metadata']['etag'] = response['ETag'].strip('"')
             self.resource['metadata']['file_size'] = response['ContentLength']
             self.resource['metadata']['last_modified'] = \
                 response['LastModified'].strftime('%s')
