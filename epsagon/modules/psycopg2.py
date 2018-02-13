@@ -1,12 +1,9 @@
 """
 psycopg2 patcher module
 """
-import time
 import wrapt
-import traceback
 
 from ..events.dbapi import DBAPIEventFactory
-from epsagon.trace import tracer
 import general_wrapper
 
 
@@ -25,14 +22,41 @@ class CursorWrapper(wrapt.ObjectProxy):
     def connection_wrapper(self):
         return self._self_connection
 
-    def execute(self, operation, *args, **kwargs):
+    #TODO: handle arguments name correctly. might not be query in different libraries
+    def execute(self, query, *args, **kwargs):
         general_wrapper.wrapper(
             DBAPIEventFactory,
             self.__wrapped__.execute,
             self,
-            [operation] + args,
+            (query, ) + args,
             kwargs,
         )
+
+    #TODO: handle arguments name correctly. might not be query in different libraries
+    def executemany(self, query, *args, **kwargs):
+        general_wrapper.wrapper(
+            DBAPIEventFactory,
+            self.__wrapped__.executemany,
+            self,
+            (query, ) + args,
+            kwargs,
+        )
+
+    #TODO: handle arguments name correctly. might not be query in different libraries
+    def callproc(self, proc, args):
+        general_wrapper.wrapper(
+            DBAPIEventFactory,
+            self.__wrapped__.callproc,
+            self,
+            [proc, args],
+            {}
+        )
+
+    def __enter__(self):
+        # raise appropriate error if api not supported (should reach the user)
+        self.__wrapped__.__enter__
+
+        return self
 
 
 # TODO: this is a general dbapi wrapper. when we instrument another dbapi
@@ -43,9 +67,8 @@ class ConnectionWrapper(wrapt.ObjectProxy):
     """
 
     def cursor(self, *args, **kwargs):
-        import ipdb;ipdb.set_trace()
         cursor = self.__wrapped__.cursor(*args, **kwargs)
-        return CursorWrapper(cursor)
+        return CursorWrapper(cursor, self)
 
 
 def _connect_wrapper(wrapped, instance, args, kwargs):
@@ -58,9 +81,88 @@ def _connect_wrapper(wrapped, instance, args, kwargs):
     :return: None
     """
 
-    import ipdb;ipdb.set_trace()
     connection = wrapped(*args, **kwargs)
     return ConnectionWrapper(connection)
+
+def _register_type_wrapper(wrapped, instance, args, kwargs):
+    """
+    register_type wrapper for psycopg2 instrumentation
+    :param wrapped: wrapt's wrapped
+    :param instance: wrapt's instance
+    :param args: wrapt's args
+    :param kwargs: wrapt's kwargs
+    :return: None
+    """
+
+    def _extract_argumnets(obj, scope=None):
+        return obj, scope
+
+    obj, scope = _extract_argumnets(*args, **kwargs)
+
+    if scope is not None:
+        if isinstance(scope, wrapt.ObjectProxy):
+            scope = scope.__wrapped__
+        return wrapped(obj, scope)
+
+    return wrapped(obj)
+
+
+class AdapterWrapper(wrapt.ObjectProxy):
+    def prepare(self, *args, **kwargs):
+        if not args:
+            return self.__wrapped__.prepare(*args, **kwargs)
+
+        connection = args[0]
+        if isinstance(connection, wrapt.ObjectProxy):
+            connection = connection.__wrapped__
+
+        return self.__wrapped__.prepare(connection, *args[1:], **kwargs)
+
+
+def _adapt_wrapper(wrapped, instance, args, kwargs):
+    """
+    adapt wrapper for psycopg2 instrumentation
+    :param wrapped: wrapt's wrapped
+    :param instance: wrapt's instance
+    :param args: wrapt's args
+    :param kwargs: wrapt's kwargs
+    :return: None
+    """
+
+    adapter = wrapped(*args, **kwargs)
+    return AdapterWrapper(adapter) if hasattr(adapter, 'prepare') else adapter
+
+
+def _patch_unwrappers():
+    """
+    patches the functions that do not accept our ObjectProxy to strip the proxy
+    before calling the function
+    :return:
+    """
+
+    wrapt.wrap_function_wrapper(
+        'psycopg2.extensions',
+        'register_type',
+        _register_type_wrapper
+    )
+
+    wrapt.wrap_function_wrapper(
+        'psycopg2._psycopg',
+        'register_type',
+        _register_type_wrapper
+    )
+
+    wrapt.wrap_function_wrapper(
+        'psycopg2._json',
+        'register_type',
+        _register_type_wrapper
+    )
+
+    wrapt.wrap_function_wrapper(
+        'psycopg2.extensions',
+        'adapt',
+        _adapt_wrapper
+    )
 
 
 def patch():
@@ -74,4 +176,5 @@ def patch():
         'connect',
         _connect_wrapper
     )
+    _patch_unwrappers()
 

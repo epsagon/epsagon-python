@@ -4,8 +4,17 @@ sqlalchemy events module.
 
 from __future__ import absolute_import
 from uuid import uuid4
-import sys
 import traceback
+try:
+    from psycopg2.extensions import parse_dsn
+
+except ImportError:
+    def parse_dsn(dsn):
+        return dict(
+            attribute.split("=") for attribute in dsn.split()
+            if "=" in attribute
+        )
+
 from ..trace import tracer
 from ..event import BaseEvent
 
@@ -31,16 +40,17 @@ class DBAPIEvent(BaseEvent):
         super(DBAPIEvent, self).__init__(start_time)
 
         self.event_id = 'dbapi-{}'.format(str(uuid4()))
-        self.resource['name'] = connection.url.database
+        dsn = parse_dsn(connection.dsn)
+        self.resource['name'] = dsn['dbname']
         self.resource['operation'] = self.RESOURCE_OPERATION
 
         # override event type with the specific DB type
-        if 'rds.amazonaws' in repr(connection.url):
+        if 'rds.amazonaws' in connection.dsn:
             self.resource['type'] = 'rds'
 
         self.resource['metadata'] = {
-            'url': repr(connection.url),
-            'driver': connection.url.drivername,
+            'url': dsn['host'],
+            'driver': connection.__module__.split('.')[-1],
             'table_name': table_name
         }
 
@@ -55,29 +65,29 @@ class DBAPIInsertEvent(DBAPIEvent):
 
     RESOURCE_OPERATION = 'insert'
 
-    def __init__(self, connection, cursor, operation, kwargs, start_time, exception):
+    def __init__(self, connection, cursor, args, kwargs, start_time, exception):
         """
         Initialize.
         :param connection: The SQL engine the event is using
         :param cursor: The cursor from sqlalchemy
-        :param operation: the SQL statement that was executed
-        :param kwargs: the arguments to the sql statement
+        :param args: the arguments passed to the execution function
+        :param kwargs: the arguments to the execution function
         :param start_time: Start timestamp (epoch)
         :param exception: Exception (if happened)
         """
 
-        table_name_index = operation.lower().split().index('into') + 1
+        table_name_index = args[0].lower().split().index('into') + 1
 
         super(DBAPIInsertEvent, self).__init__(
             connection,
-            operation.split()[table_name_index],
+            args[0].split()[table_name_index],
             start_time,
             exception
         )
 
         self.resource['metadata']['items'] = [{
-                name: str(value) for name, value in arg.iteritems()
-            } for arg in kwargs[0]
+                name: str(value) for name, value in row.iteritems()
+            } for row in args[1]
         ]
 
 
@@ -88,22 +98,22 @@ class DBAPISelectEvent(DBAPIEvent):
 
     RESOURCE_OPERATION = 'select'
 
-    def __init__(self, connection, cursor, operation, kwargs, start_time, exception):
+    def __init__(self, connection, cursor, args, kwargs, start_time, exception):
         """
         Initialize.
         :param connection: The SQL engine the event is using
         :param cursor: The cursor from sqlalchemy
-        :param operation: the SQL statement that was executed
-        :param kwargs: the arguments to the sql statement
+        :param args: the arguments passed to the execution function
+        :param kwargs: the arguments to the execution function
         :param start_time: Start timestamp (epoch)
         :param exception: Exception (if happened)
         """
 
-        table_name_index = operation.lower().split().index('from') + 1
+        table_name_index = args[0].lower().split().index('from') + 1
 
         super(DBAPISelectEvent, self).__init__(
             connection,
-            operation.split()[table_name_index],
+            args[0].split()[table_name_index],
             start_time,
             exception
         )
@@ -133,7 +143,6 @@ class DBAPIEventFactory(object):
 
     @staticmethod
     def create_event(wrapped, cursor_wrapper, args, kwargs, start_time, response, exception):
-        import ipdb;ipdb.set_trace()
         operation = args[0].split()[0].lower()
         event_class = DBAPIEventFactory.FACTORY.get(
             operation,
@@ -144,26 +153,9 @@ class DBAPIEventFactory(object):
             event = event_class(
                 cursor_wrapper.connection_wrapper,
                 cursor_wrapper,
-                operation,
+                args,
                 kwargs,
                 start_time,
                 exception,
             )
             tracer.add_event(event)
-    # def create_event(connection, cursor, operation, kwargs, start_time):
-    #     operation = operation.split()[0].lower()
-    #     event_class = DBAPIEventFactory.FACTORY.get(
-    #         operation,
-    #         None
-    #     )
-    #
-    #     if event_class is not None:
-    #         event = event_class(
-    #             connection,
-    #             cursor,
-    #             operation,
-    #             kwargs,
-    #             start_time,
-    #             sys.exc_info()[0]
-    #         )
-    #         tracer.add_event(event)
