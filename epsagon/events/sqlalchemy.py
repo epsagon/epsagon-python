@@ -77,8 +77,7 @@ class SQLAlchemyInsertEvent(SQLAlchemyEvent):
 
         self.resource['metadata']['items'] = [{
                 name: str(value) for name, value in arg.iteritems()
-            } for arg in args[0]
-        ]
+        } for arg in args[0]]
 
 
 class SQLAlchemySelectEvent(SQLAlchemyEvent):

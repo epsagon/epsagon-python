@@ -26,13 +26,16 @@ class EngineWrapper(object):
 
     def _after_cur_execute(self, conn, cursor, statement, *args):
         if self.start_time is not None:
-            SQLAlchemyEventFactory.create_event(
-                self.engine,
-                cursor,
-                statement,
-                args,
-                self.start_time,
-            )
+            try:
+                SQLAlchemyEventFactory.create_event(
+                    self.engine,
+                    cursor,
+                    statement,
+                    args,
+                    self.start_time,
+                )
+            except Exception as exception:
+                tracer.add_exception(exception, traceback.format_exc())
 
         self.start_time = None
 
