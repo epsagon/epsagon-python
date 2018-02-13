@@ -84,6 +84,7 @@ def _connect_wrapper(wrapped, instance, args, kwargs):
     connection = wrapped(*args, **kwargs)
     return ConnectionWrapper(connection)
 
+
 def _register_type_wrapper(wrapped, instance, args, kwargs):
     """
     register_type wrapper for psycopg2 instrumentation
@@ -94,10 +95,10 @@ def _register_type_wrapper(wrapped, instance, args, kwargs):
     :return: None
     """
 
-    def _extract_argumnets(obj, scope=None):
+    def _extract_arguments(obj, scope=None):
         return obj, scope
 
-    obj, scope = _extract_argumnets(*args, **kwargs)
+    obj, scope = _extract_arguments(*args, **kwargs)
 
     if scope is not None:
         if isinstance(scope, wrapt.ObjectProxy):
@@ -108,6 +109,11 @@ def _register_type_wrapper(wrapped, instance, args, kwargs):
 
 
 class AdapterWrapper(wrapt.ObjectProxy):
+    """
+    a wrapper for an adapter, to strip the connection out of the objectProxy
+    before calling prepare
+    """
+
     def prepare(self, *args, **kwargs):
         if not args:
             return self.__wrapped__.prepare(*args, **kwargs)
