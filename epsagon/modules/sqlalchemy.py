@@ -26,13 +26,16 @@ class EngineWrapper(object):
 
     def _after_cur_execute(self, conn, cursor, statement, *args):
         if self.start_time is not None:
-            DBAPIEventFactory.create_event(
-                self.engine,
-                cursor,
-                statement,
-                args,
-                self.start_time,
-            )
+            try:
+                SQLAlchemyEventFactory.create_event(
+                    self.engine,
+                    cursor,
+                    statement,
+                    args,
+                    self.start_time,
+                )
+            except Exception as exception:
+                tracer.add_exception(exception, traceback.format_exc())
 
         self.start_time = None
 
@@ -43,7 +46,6 @@ def _create_engine_wrapper(wrapped, instance, args, kwargs):
     :param wrapped: wrapt's wrapped
     :param instance: wrapt's instance
     :param args: wrapt's args
-    :param kwargs: wrapt's kwargs
     :return: None
     """
 
