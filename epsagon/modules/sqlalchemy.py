@@ -8,7 +8,7 @@ import wrapt
 import traceback
 import sqlalchemy.event
 from epsagon.trace import tracer
-from ..events.sqlalchemy import SQLAlchemyEventFactory
+from ..events.dbapi import DBAPIEventFactory
 
 
 class EngineWrapper(object):
@@ -42,11 +42,10 @@ class EngineWrapper(object):
 
 def _create_engine_wrapper(wrapped, instance, args, kwargs):
     """
-    Commit wrapper for sqlalchemy instrumentation.
+    create_engine wrapper for sqlalchemy instrumentation.
     :param wrapped: wrapt's wrapped
     :param instance: wrapt's instance
     :param args: wrapt's args
-    :param kwargs: wrapt's kwargs
     :return: None
     """
 
@@ -66,14 +65,15 @@ def patch():
     :return: None
     """
 
-    wrapt.wrap_function_wrapper(
-        'sqlalchemy',
-        'create_engine',
-        _create_engine_wrapper
-    )
-
-    wrapt.wrap_function_wrapper(
-        'sqlalchemy.engine',
-        'create_engine',
-        _create_engine_wrapper
-    )
+    pass
+    # wrapt.wrap_function_wrapper(
+    #     'sqlalchemy',
+    #     'create_engine',
+    #     _create_engine_wrapper
+    # )
+    #
+    # wrapt.wrap_function_wrapper(
+    #     'sqlalchemy.engine',
+    #     'create_engine',
+    #     _create_engine_wrapper
+    # )

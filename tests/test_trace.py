@@ -65,17 +65,21 @@ def test_prepare():
 def test_initialize():
     app_name = 'app-name'
     token = 'token'
-    tracer.initialize(app_name, token)
+    collector_url = 'collector_url'
+    tracer.initialize(app_name, token, collector_url)
     assert tracer.app_name == app_name
     assert tracer.token == token
+    assert tracer.collector_url == collector_url
 
-    tracer.initialize(app_name, '')
+    tracer.initialize(app_name, '', '')
     assert tracer.app_name == app_name
     assert tracer.token == ''
+    assert tracer.collector_url == ''
 
-    tracer.initialize('', '')
+    tracer.initialize('', '', '')
     assert tracer.app_name == ''
     assert tracer.token == ''
+    assert tracer.collector_url == ''
 
 
 def test_load_from_dict():
@@ -217,11 +221,29 @@ def test_send_traces_post_error(wrapped_post):
 
 @mock.patch('epsagon.trace.Trace.initialize')
 def test_init_sanity(wrapped_init):
-    epsagon.trace.init('token', 'app-name')
-    wrapped_init.assert_called_with(token='token', app_name='app-name')
+    epsagon.trace.init('token', 'app-name', 'collector')
+    wrapped_init.assert_called_with(
+        token='token',
+        app_name='app-name',
+        collector_url='collector'
+    )
 
 
 @mock.patch('epsagon.trace.Trace.initialize')
 def test_init_empty_app_name(wrapped_init):
-    epsagon.trace.init('token', '')
-    wrapped_init.assert_called_with(token='token', app_name='')
+    epsagon.trace.init('token', '', 'collector')
+    wrapped_init.assert_called_with(
+        token='token',
+        app_name='',
+        collector_url='collector'
+    )
+
+
+@mock.patch('epsagon.trace.Trace.initialize')
+def test_init_empty_collector_url(wrapped_init):
+    epsagon.trace.init('token', 'app-name')
+    wrapped_init.assert_called_with(
+        token='token',
+        app_name='app-name',
+        collector_url=epsagon.constants.TRACE_COLLECTOR_URL
+    )

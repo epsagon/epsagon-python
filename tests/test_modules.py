@@ -2,7 +2,6 @@ import mock
 
 from epsagon.modules.botocore import _wrapper as _botocore_wrapper
 from epsagon.modules.grpc import _wrapper as _grpc_wrapper
-from epsagon.modules.sqlalchemy import _create_engine_wrapper
 from epsagon.modules.requests import _wrapper as _request_wrapper
 from epsagon.modules.pymongo import _wrapper as _pymongo_wrapper
 from epsagon.trace import tracer
@@ -40,33 +39,6 @@ def test_request_wrapper_failsafe(_):
     the user."""
     _test(_request_wrapper)
 
-
-@mock.patch('sqlalchemy.event.listen')
-@mock.patch(
-    'epsagon.events.sqlalchemy.SQLAlchemyEventFactory.create_event',
-    side_effect=raise_exception
-)
-def test_commit_wrapper_failsafe(_, listen_mock):
-    """Validates that the sqlalchemy wrapper is not raising any exception to
-    the user."""
-    _create_engine_wrapper(lambda: None, [], [], {})
-
-    assert len(tracer.exceptions) == 0
-    assert listen_mock.call_count == 3
-
-
-@mock.patch('sqlalchemy.event.listen', side_effect=raise_exception)
-@mock.patch('epsagon.events.sqlalchemy.SQLAlchemyEventFactory.create_event')
-def test_commit_wrapper_failsafe_listen_failure(_, listen_mock):
-    """Validates that the sqlalchemy wrapper is not raising any exception to
-    the user."""
-    _create_engine_wrapper(lambda: None, [], [], {})
-
-    assert len(tracer.exceptions) == 1
-    assert tracer.exceptions[0]['message'] == EXCEPTION_MESSAGE
-    assert tracer.exceptions[0]['type'] == str(EXCEPTION_TYPE)
-    assert 'time' in tracer.exceptions[0].keys()
-    assert len(tracer.exceptions[0]['traceback']) > 0
 
 
 @mock.patch('epsagon.events.pymongo.PyMongoEventFactory.create_event',
