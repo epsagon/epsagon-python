@@ -1,6 +1,7 @@
 """
 psycopg2 patcher module
 """
+from __future__ import absolute_import
 import wrapt
 
 from ..events.dbapi import DBAPIEventFactory
