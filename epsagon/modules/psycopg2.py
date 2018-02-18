@@ -5,7 +5,7 @@ from __future__ import absolute_import
 import wrapt
 
 from ..events.dbapi import DBAPIEventFactory
-import general_wrapper
+import epsagon.modules.general_wrapper
 
 
 # TODO: this is a general dbapi wrapper. when we instrument another dbapi
@@ -23,9 +23,9 @@ class CursorWrapper(wrapt.ObjectProxy):
     def connection_wrapper(self):
         return self._self_connection
 
-    #TODO: handle arguments name correctly. might not be query in different libraries
+    # TODO: handle arguments name correctly. might not be query in different libraries
     def execute(self, query, *args, **kwargs):
-        general_wrapper.wrapper(
+        epsagon.modules.general_wrapper.wrapper(
             DBAPIEventFactory,
             self.__wrapped__.execute,
             self,
@@ -33,9 +33,9 @@ class CursorWrapper(wrapt.ObjectProxy):
             kwargs,
         )
 
-    #TODO: handle arguments name correctly. might not be query in different libraries
+    # TODO: handle arguments name correctly. might not be query in different libraries
     def executemany(self, query, *args, **kwargs):
-        general_wrapper.wrapper(
+        epsagon.modules.general_wrapper.wrapper(
             DBAPIEventFactory,
             self.__wrapped__.executemany,
             self,
@@ -43,9 +43,9 @@ class CursorWrapper(wrapt.ObjectProxy):
             kwargs,
         )
 
-    #TODO: handle arguments name correctly. might not be query in different libraries
+    # TODO: handle arguments name correctly. might not be query in different libraries
     def callproc(self, proc, args):
-        general_wrapper.wrapper(
+        epsagon.modules.general_wrapper.wrapper(
             DBAPIEventFactory,
             self.__wrapped__.callproc,
             self,
@@ -184,4 +184,3 @@ def patch():
         _connect_wrapper
     )
     _patch_unwrappers()
-

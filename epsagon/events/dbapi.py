@@ -3,6 +3,7 @@ sqlalchemy events module.
 """
 
 from __future__ import absolute_import
+import collections
 from uuid import uuid4
 import traceback
 try:
@@ -88,7 +89,9 @@ class DBAPIInsertEvent(DBAPIEvent):
         self.resource['metadata']['items'] = [{
                 name: str(value) for name, value in row.iteritems()
             } for row in args[1]
-        ]
+        ] if not isinstance(args[1], collections.Mapping) else {
+            name: str(value) for name, value in args[1].iteritems()
+        }
 
 
 class DBAPISelectEvent(DBAPIEvent):
