@@ -278,7 +278,8 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
         # TODO: and then move these lines after the 'super' call.
         self.RESPONSE_TO_FUNC.update(
             {'Scan': self.process_scan_response,
-             'GetItem': self.process_get_item_response}
+             'GetItem': self.process_get_item_response,
+             'ListTables': self.process_list_tables_response}
         )
 
         self.OPERATION_TO_FUNC.update(
@@ -300,8 +301,7 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
         )
 
         _, request_data = args
-        self.resource['name'] = request_data['TableName']
-
+        self.resource['name'] = request_data.get('TableName', 'DynamoDBEngine')
         self.OPERATION_TO_FUNC.get(
             self.resource['operation'],
             empty_func
@@ -320,37 +320,40 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
         )(response)
 
     def process_get_item_op(self, request_data):
-        self.resource['metadata']['key'] = request_data['Key']
+        self.resource['metadata']['Key'] = request_data['Key']
 
     def process_put_item_op(self, request_data):
-        self.resource['metadata']['item'] = request_data['Item']
+        self.resource['metadata']['Item'] = request_data['Item']
 
     def process_delete_item_op(self, request_data):
-        self.resource['metadata']['key'] = request_data['Key']
+        self.resource['metadata']['Key'] = request_data['Key']
 
     def process_update_item_op(self, request_data):
-        self.resource['metadata']['update_params'] = {
-            'key': request_data['Key'],
-            'expression_attribute_values': request_data.get(
+        self.resource['metadata']['Update Parameters'] = {
+            'Key': request_data['Key'],
+            'Expression Attribute Values': request_data.get(
                 'ExpressionAttributeValues', None),
-            'update_expression': request_data.get('UpdateExpression', None),
+            'Update Expression': request_data.get('UpdateExpression', None),
         }
 
     def process_scan_response(self, response):
-        self.resource['metadata']['items_count'] = response['Count']
-        self.resource['metadata']['items'] = response['Items']
-        self.resource['metadata']['scanned_count'] = \
+        self.resource['metadata']['Items Count'] = response['Count']
+        self.resource['metadata']['Items'] = response['Items']
+        self.resource['metadata']['Scanned Items Count'] = \
             response['ScannedCount']
 
     def process_get_item_response(self, response):
-        self.resource['metadata']['item'] = response['Item']
+        self.resource['metadata']['Item'] = response['Item']
+
+    def process_list_tables_response(self, response):
+        self.resource['metadata']['Table Names'] = \
+            ', '.join(response['TableNames'])
 
 
 class BotocoreSESEvent(BotocoreEvent):
     """
     Represents SES botocore event.
     """
-
     RESOURCE_TYPE = 'ses'
 
     def __init__(self, wrapped, instance, args, kwargs, start_time, response,
@@ -460,6 +463,4 @@ class BotocoreEventFactory(object):
             response,
             exception
         )
-        import ipdb
-        ipdb.set_trace()
         tracer.add_event(event)

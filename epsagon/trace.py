@@ -5,7 +5,7 @@ Trace object holds events and metadata
 from __future__ import absolute_import
 import sys
 import time
-import json
+import simplejson as json
 import warnings
 import requests
 from epsagon.event import BaseEvent
@@ -58,7 +58,8 @@ class Trace(object):
         """
 
         if self.token == '':
-            warnings.warn('Epsagon Error: Please initialize token, data won\'t be sent.')
+            warnings.warn(
+                'Epsagon Error: Please initialize token, data won\'t be sent.')
 
         self.events = []
         self.exceptions = []
@@ -129,8 +130,6 @@ class Trace(object):
             return
 
         try:
-            import ipdb
-            ipdb.set_trace()
             requests.post(
                 self.collector_url,
                 data=json.dumps(self.to_dict()),
