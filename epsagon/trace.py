@@ -129,6 +129,8 @@ class Trace(object):
             return
 
         try:
+            import ipdb
+            ipdb.set_trace()
             requests.post(
                 self.collector_url,
                 data=json.dumps(self.to_dict()),

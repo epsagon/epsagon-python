@@ -9,6 +9,10 @@ from ..trace import tracer
 from ..event import BaseEvent
 
 
+def empty_func(_):
+    return
+
+
 class BotocoreEvent(BaseEvent):
     """
     Represents base botocore event.
@@ -16,6 +20,8 @@ class BotocoreEvent(BaseEvent):
 
     ORIGIN = 'botocore'
     RESOURCE_TYPE = 'botocore'
+    RESPONSE_TO_FUNC = {}
+    OPERATION_TO_FUNC = {}
 
     def __init__(self, wrapped, instance, args, kwargs, start_time, response,
                  exception):
@@ -33,7 +39,8 @@ class BotocoreEvent(BaseEvent):
         super(BotocoreEvent, self).__init__(start_time)
 
         event_operation, _ = args
-
+        import ipdb
+        ipdb.set_trace()
         self.resource['operation'] = str(event_operation)
         self.resource['name'] = ''
 
@@ -252,7 +259,6 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
     """
     Represents DynamoDB botocore event.
     """
-
     RESOURCE_TYPE = 'dynamodb'
 
     def __init__(self, wrapped, instance, args, kwargs, start_time, response,
@@ -268,6 +274,21 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
         :param exception: Exception (if happened)
         """
 
+        # TODO: move everything from __init__ to a dedicated "run" function,
+        # TODO: and then move these lines after the 'super' call.
+        self.RESPONSE_TO_FUNC.update(
+            {'Scan': self.process_scan_response,
+             'GetItem': self.process_get_item_response}
+        )
+
+        self.OPERATION_TO_FUNC.update(
+            {'PutItem': self.process_put_item_op,
+             'UpdateItem': self.process_update_item_op,
+             'GetItem': self.process_get_item_op,
+             'DeleteItem': self.process_delete_item_op,
+             }
+        )
+
         super(BotocoreDynamoDBEvent, self).__init__(
             wrapped,
             instance,
@@ -281,19 +302,10 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
         _, request_data = args
         self.resource['name'] = request_data['TableName']
 
-        if self.resource['operation'] == 'PutItem':
-            self.resource['metadata']['item'] = request_data['Item']
-        elif self.resource['operation'] == 'UpdateItem':
-            self.resource['metadata']['update_params'] = {
-                'key': request_data['Key'],
-                'expression_attribute_values': request_data.get(
-                    'ExpressionAttributeValues', None),
-                'update_expression': request_data.get('UpdateExpression', None),
-            }
-        elif self.resource['operation'] == 'GetItem':
-            self.resource['metadata']['key'] = request_data['Key']
-        elif self.resource['operation'] == 'DeleteItem':
-            self.resource['metadata']['key'] = request_data['Key']
+        self.OPERATION_TO_FUNC.get(
+            self.resource['operation'],
+            empty_func
+        )(request_data)
 
     def update_response(self, response):
         """
@@ -301,16 +313,37 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
         :param response: Response from botocore
         :return: None
         """
-
         super(BotocoreDynamoDBEvent, self).update_response(response)
+        self.RESPONSE_TO_FUNC.get(
+            self.resource['operation'],
+            empty_func
+        )(response)
 
-        if self.resource['operation'] == 'Scan':
-            self.resource['metadata']['items_count'] = response['Count']
-            self.resource['metadata']['items'] = response['Items']
-            self.resource['metadata']['scanned_count'] = \
-                response['ScannedCount']
-        elif self.resource['operation'] == 'GetItem':
-            self.resource['metadata']['item'] = response['Item']
+    def process_get_item_op(self, request_data):
+        self.resource['metadata']['key'] = request_data['Key']
+
+    def process_put_item_op(self, request_data):
+        self.resource['metadata']['item'] = request_data['Item']
+
+    def process_delete_item_op(self, request_data):
+        self.resource['metadata']['key'] = request_data['Key']
+
+    def process_update_item_op(self, request_data):
+        self.resource['metadata']['update_params'] = {
+            'key': request_data['Key'],
+            'expression_attribute_values': request_data.get(
+                'ExpressionAttributeValues', None),
+            'update_expression': request_data.get('UpdateExpression', None),
+        }
+
+    def process_scan_response(self, response):
+        self.resource['metadata']['items_count'] = response['Count']
+        self.resource['metadata']['items'] = response['Items']
+        self.resource['metadata']['scanned_count'] = \
+            response['ScannedCount']
+
+    def process_get_item_response(self, response):
+        self.resource['metadata']['item'] = response['Item']
 
 
 class BotocoreSESEvent(BotocoreEvent):
@@ -427,4 +460,6 @@ class BotocoreEventFactory(object):
             response,
             exception
         )
+        import ipdb
+        ipdb.set_trace()
         tracer.add_event(event)
