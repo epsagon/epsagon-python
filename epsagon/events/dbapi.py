@@ -121,7 +121,7 @@ class DBAPISelectEvent(DBAPIEvent):
             exception
         )
 
-        if exception is not None:
+        if exception is None:
             self.update_response(cursor)
 
     def update_response(self, cursor):
