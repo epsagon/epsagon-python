@@ -112,11 +112,14 @@ class DBAPISelectEvent(DBAPIEvent):
         :param exception: Exception (if happened)
         """
 
-        table_name_index = args[0].lower().split().index('from') + 1
+        table_name = ' '.join(args[0].split()[1:]) # default anything but select keyword
+        if 'from' in args[0].lower():
+            table_name_index = args[0].lower().split().index('from') + 1
+            table_name = args[0].split()[table_name_index]
 
         super(DBAPISelectEvent, self).__init__(
             connection,
-            args[0].split()[table_name_index],
+            table_name,
             start_time,
             exception
         )
