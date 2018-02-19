@@ -51,7 +51,7 @@ class DBAPIEvent(BaseEvent):
 
         self.resource['metadata'] = {
             'url': dsn['host'],
-            'driver': connection.__module__.split('.')[-1],
+            'driver': connection.__class__.__module__.split('.')[0],
             'table_name': table_name
         }
 
