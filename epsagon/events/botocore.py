@@ -3,13 +3,16 @@ botocore events module.
 """
 
 from __future__ import absolute_import
+
+import hashlib
 import traceback
+import simplejson as json
 from botocore.exceptions import ClientError
 from ..trace import tracer
 from ..event import BaseEvent
 
 
-def empty_func(_):
+def empty_func():
     return
 
 
@@ -35,12 +38,9 @@ class BotocoreEvent(BaseEvent):
         :param response: response data
         :param exception: Exception (if happened)
         """
-
         super(BotocoreEvent, self).__init__(start_time)
 
         event_operation, _ = args
-        import ipdb
-        ipdb.set_trace()
         self.resource['operation'] = str(event_operation)
         self.resource['name'] = ''
 
@@ -61,7 +61,6 @@ class BotocoreEvent(BaseEvent):
         :param traceback_data: traceback string
         :return: None
         """
-
         super(BotocoreEvent, self).set_exception(exception, traceback_data)
 
         # Specific handling for botocore errors
@@ -82,7 +81,6 @@ class BotocoreEvent(BaseEvent):
         :param response: Response from botocore
         :return: None
         """
-
         self.event_id = response['ResponseMetadata']['RequestId']
         self.resource['metadata']['retry_attempts'] = \
             response['ResponseMetadata']['RetryAttempts']
@@ -109,7 +107,6 @@ class BotocoreS3Event(BotocoreEvent):
         :param response: response data
         :param exception: Exception (if happened)
         """
-
         super(BotocoreS3Event, self).__init__(
             wrapped,
             instance,
@@ -133,7 +130,6 @@ class BotocoreS3Event(BotocoreEvent):
         :param response: Response from botocore
         :return: None
         """
-
         super(BotocoreS3Event, self).update_response(response)
 
         if self.resource['operation'] == 'ListObjects':
@@ -159,7 +155,6 @@ class BotocoreKinesisEvent(BotocoreEvent):
     """
     Represents kinesis botocore event.
     """
-
     RESOURCE_TYPE = 'kinesis'
 
     def __init__(self, wrapped, instance, args, kwargs, start_time, response,
@@ -198,7 +193,6 @@ class BotocoreKinesisEvent(BotocoreEvent):
         :param response: Response from botocore
         :return: None
         """
-
         super(BotocoreKinesisEvent, self).update_response(response)
 
         if self.resource['operation'] == 'PutRecord':
@@ -211,7 +205,6 @@ class BotocoreSNSEvent(BotocoreEvent):
     """
     Represents SNS botocore event.
     """
-
     RESOURCE_TYPE = 'sns'
 
     def __init__(self, wrapped, instance, args, kwargs, start_time, response,
@@ -226,7 +219,6 @@ class BotocoreSNSEvent(BotocoreEvent):
         :param response: response data
         :param exception: Exception (if happened)
         """
-
         super(BotocoreSNSEvent, self).__init__(
             wrapped,
             instance,
@@ -236,7 +228,6 @@ class BotocoreSNSEvent(BotocoreEvent):
             response,
             exception
         )
-
         _, request_data = args
         self.resource['name'] = request_data['TopicArn'].split(':')[-1]
 
@@ -273,7 +264,6 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
         :param response: response data
         :param exception: Exception (if happened)
         """
-
         # TODO: move everything from __init__ to a dedicated "run" function,
         # TODO: and then move these lines after the 'super' call.
         self.RESPONSE_TO_FUNC.update(
@@ -301,11 +291,10 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
         )
 
         _, request_data = args
+        self.request_data = request_data
+        self.instance = instance
         self.resource['name'] = request_data.get('TableName', 'DynamoDBEngine')
-        self.OPERATION_TO_FUNC.get(
-            self.resource['operation'],
-            empty_func
-        )(request_data)
+        self.OPERATION_TO_FUNC.get(self.resource['operation'], empty_func)()
 
     def update_response(self, response):
         """
@@ -314,26 +303,28 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
         :return: None
         """
         super(BotocoreDynamoDBEvent, self).update_response(response)
-        self.RESPONSE_TO_FUNC.get(
-            self.resource['operation'],
-            empty_func
-        )(response)
+        self.RESPONSE_TO_FUNC.get(self.resource['operation'], empty_func)()
 
-    def process_get_item_op(self, request_data):
-        self.resource['metadata']['Key'] = request_data['Key']
+    def process_get_item_op(self):
+        self.resource['metadata']['Key'] = self.request_data['Key']
 
-    def process_put_item_op(self, request_data):
-        self.resource['metadata']['Item'] = request_data['Item']
+    def process_put_item_op(self):
+        self.resource['metadata']['Item'] = self.request_data['Item']
+        self.store_item_hash()
 
-    def process_delete_item_op(self, request_data):
-        self.resource['metadata']['Key'] = request_data['Key']
+    def process_delete_item_op(self):
+        self.resource['metadata']['Key'] = self.request_data['Key']
+        self.store_item_hash()
 
-    def process_update_item_op(self, request_data):
+    def process_update_item_op(self):
         self.resource['metadata']['Update Parameters'] = {
-            'Key': request_data['Key'],
-            'Expression Attribute Values': request_data.get(
+            'Key': self.request_data['Key'],
+            'Expression Attribute Values': self.request_data.get(
                 'ExpressionAttributeValues', None),
-            'Update Expression': request_data.get('UpdateExpression', None),
+            'Update Expression': self.request_data.get(
+                'UpdateExpression',
+                None
+            ),
         }
 
     def process_scan_response(self, response):
@@ -348,6 +339,39 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
     def process_list_tables_response(self, response):
         self.resource['metadata']['Table Names'] = \
             ', '.join(response['TableNames'])
+
+    def store_item_hash(self):
+        item = self.get_unified_item()
+        self.resource['metadata']['item_hash'] = hashlib.md5(
+            json.dumps(item, sort_keys=True)).hexdigest()
+
+
+    def get_unified_item(self):
+        """
+        DynamoDB can be accessed via Client and Resource interfaces, and each
+        one of them expects a different input item format.
+        Botocore uses '_convert_to_request_dict' method in order to convert the
+        item into an expected unified format.
+        In order to perform the Hash operation correctly, Epsagon's code should
+        only work with the unified format.
+        Therefore, this method uses the Botocore instance in order to convert
+        the dictionary.
+        """
+        instance = self.instance
+        operation_model = \
+            instance._service_model.operation_model(self.resource['operation'])
+        request_context = {
+            'client_region': instance.meta.region_name,
+            'client_config': instance.meta.config,
+            'has_streaming_input': operation_model.has_streaming_input,
+            'auth_type': operation_model.auth_type,
+        }
+        request_dict = instance._convert_to_request_dict(
+            self.request_data,
+            operation_model,
+            context=request_context
+        )
+        return request_dict['body']
 
 
 class BotocoreSESEvent(BotocoreEvent):
