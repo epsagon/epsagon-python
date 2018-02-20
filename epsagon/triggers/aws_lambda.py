@@ -58,7 +58,7 @@ class S3LambdaTrigger(BaseLambdaTrigger):
 
         super(S3LambdaTrigger, self).__init__(start_time)
 
-        self.event_id = event['Records'][0]['s3']['object']['sequencer']
+        self.event_id = event['Records'][0]['responseElements']['x-amz-request-id']
         self.resource['name'] = event['Records'][0]['s3']['bucket']['name']
         self.resource['operation'] = event['Records'][0]['eventName']
 
@@ -69,6 +69,7 @@ class S3LambdaTrigger(BaseLambdaTrigger):
             'object_key': event['Records'][0]['s3']['object']['key'],
             'object_size': event['Records'][0]['s3']['object']['size'],
             'object_etag': event['Records'][0]['s3']['object']['eTag'],
+            'object_sequencer': event['Records'][0]['s3']['object']['sequencer'],
         }
 
 
