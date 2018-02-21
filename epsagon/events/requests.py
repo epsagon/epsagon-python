@@ -111,7 +111,7 @@ class RequestsAuth0Event(RequestsEvent):
 
         prepared_request = args[0]
         url = prepared_request.path_url
-        self.resource['operation'] = \
+        self.resource['metadata']['endpoint'] = \
             url[url.find(self.API_TAG) + len(self.API_TAG):]
 
 
@@ -146,7 +146,8 @@ class RequestsTwilioEvent(RequestsEvent):
         )
 
         prepared_request = args[0]
-        self.resource['operation'] = prepared_request.path_url.split('/')[-1]
+        self.resource['metadata']['endpoint'] = \
+            prepared_request.path_url.split('/')[-1]
 
 
 class RequestsEventFactory(object):
