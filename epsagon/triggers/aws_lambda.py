@@ -6,6 +6,9 @@ from __future__ import absolute_import
 import simplejson as json
 import hashlib
 from uuid import uuid4
+
+from boto3.dynamodb.types import TypeDeserializer
+
 from ..event import BaseEvent
 
 
@@ -87,13 +90,24 @@ class DynamoDBLambdaTrigger(BaseLambdaTrigger):
         self.resource['name'] = record['eventSourceARN'].split('/')[-3]
         self.resource['operation'] = record['eventName']
         item = record['dynamodb']['NewImage']
+
+        # Deserialize the data in order to remove dynamoDB data types.
+        deser = TypeDeserializer()
+        des_item = item.copy()
+        for key in item:
+            des_item[key] = deser.deserialize(item[key])
+            # item = self.get_unified_item()
+            self.resource['metadata']['item_hash'] = hashlib.md5(
+                json.dumps(des_item, sort_keys=True)).hexdigest()
+
         self.resource['metadata'] = {
             'region': record['awsRegion'],
             'sequence_number': record['dynamodb']['SequenceNumber'],
             'item_hash': hashlib.md5(
-                json.dumps(item, sort_keys=True)
+                json.dumps(des_item, sort_keys=True)
             ).hexdigest()
         }
+
 
 class KinesisLambdaTrigger(BaseLambdaTrigger):
     """

@@ -7,6 +7,7 @@ from __future__ import absolute_import
 import hashlib
 import traceback
 import simplejson as json
+from boto3.dynamodb.types import TypeDeserializer
 from botocore.exceptions import ClientError
 from ..trace import tracer
 from ..event import BaseEvent
@@ -292,7 +293,6 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
 
         _, request_data = args
         self.request_data = request_data
-        self.instance = instance
         self.resource['name'] = request_data.get('TableName', 'DynamoDBEngine')
         self.OPERATION_TO_FUNC.get(self.resource['operation'], empty_func)()
 
@@ -341,37 +341,18 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
             ', '.join(response['TableNames'])
 
     def store_item_hash(self):
-        item = self.get_unified_item()
+        deser = TypeDeserializer()
+        item = self.resource['metadata']['Item']
+
+        # Try to deserialize the data in order to remove dynamoDB data types.
+        for key in item:
+            try:
+                item[key] = deser.deserialize(item[key])
+            except (TypeError, AttributeError):
+                break
+
         self.resource['metadata']['item_hash'] = hashlib.md5(
             json.dumps(item, sort_keys=True)).hexdigest()
-
-
-    def get_unified_item(self):
-        """
-        DynamoDB can be accessed via Client and Resource interfaces, and each
-        one of them expects a different input item format.
-        Botocore uses '_convert_to_request_dict' method in order to convert the
-        item into an expected unified format.
-        In order to perform the Hash operation correctly, Epsagon's code should
-        only work with the unified format.
-        Therefore, this method uses the Botocore instance in order to convert
-        the dictionary.
-        """
-        instance = self.instance
-        operation_model = \
-            instance._service_model.operation_model(self.resource['operation'])
-        request_context = {
-            'client_region': instance.meta.region_name,
-            'client_config': instance.meta.config,
-            'has_streaming_input': operation_model.has_streaming_input,
-            'auth_type': operation_model.auth_type,
-        }
-        request_dict = instance._convert_to_request_dict(
-            self.request_data,
-            operation_model,
-            context=request_context
-        )
-        return request_dict['body']
 
 
 class BotocoreSESEvent(BotocoreEvent):
