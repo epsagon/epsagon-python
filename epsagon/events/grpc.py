@@ -42,7 +42,7 @@ class GoogleRPCEvent(BaseEvent):
         self.resource['name'] = endpoint
 
         self.resource['metadata'] = {
-            'request_data': str(request_data),
+            'Request Data': str(request_data),
         }
 
         if response is not None:
@@ -58,7 +58,7 @@ class GoogleRPCEvent(BaseEvent):
         :return: None
         """
 
-        self.resource['metadata']['response'] = str(response)
+        self.resource['metadata']['Response Data'] = str(response)
 
 
 class GRPCNaturalLanguageEvent(GoogleRPCEvent):

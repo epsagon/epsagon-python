@@ -48,10 +48,10 @@ class PyMongoEvent(BaseEvent):
             documents = [documents]
 
         self.resource['metadata'] = {
-            'url': ':'.join([str(x) for x in address]),
-            'db_name': str(instance.database.name),
-            'collection_name': str(instance.name),
-            'items': documents,
+            'DB URL': ':'.join([str(x) for x in address]),
+            'DB Name': str(instance.database.name),
+            'Collection Name': str(instance.name),
+            'Items ': documents,
         }
 
         if response is not None:

@@ -159,8 +159,8 @@ class SNSLambdaTrigger(BaseLambdaTrigger):
         self.resource['operation'] = str(event['Records'][0]['Sns']['Type'])
 
         self.resource['metadata'] = {
-            'subject': str(event['Records'][0]['Sns']['Subject']),
-            'message': str(event['Records'][0]['Sns']['Message']),
+            'Notification Subject': str(event['Records'][0]['Sns']['Subject']),
+            'Notification Message': str(event['Records'][0]['Sns']['Message']),
         }
 
 
