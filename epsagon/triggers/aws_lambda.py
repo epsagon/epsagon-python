@@ -96,9 +96,8 @@ class DynamoDBLambdaTrigger(BaseLambdaTrigger):
         des_item = item.copy()
         for key in item:
             des_item[key] = deser.deserialize(item[key])
-            # item = self.get_unified_item()
-            self.resource['metadata']['item_hash'] = hashlib.md5(
-                json.dumps(des_item, sort_keys=True)).hexdigest()
+        self.resource['metadata']['item_hash'] = hashlib.md5(
+            json.dumps(des_item, sort_keys=True)).hexdigest()
 
         self.resource['metadata'] = {
             'region': record['awsRegion'],
