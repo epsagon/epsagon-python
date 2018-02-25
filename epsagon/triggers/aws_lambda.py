@@ -98,18 +98,18 @@ class DynamoDBLambdaTrigger(BaseLambdaTrigger):
         item = record['dynamodb']['NewImage']
 
         # Deserialize the data in order to remove dynamoDB data types.
-        deser = TypeDeserializer()
-        des_item = item.copy()
+        deserializer = TypeDeserializer()
+        deserialized_item = item.copy()
         for key in item:
             try:
-                des_item[key] = deser.deserialize(item[key])
+                deserialized_item[key] = deserializer.deserialize(item[key])
             except (TypeError, AttributeError):
                 break
         self.resource['metadata'] = {
             'region': record['awsRegion'],
             'sequence_number': record['dynamodb']['SequenceNumber'],
             'item_hash': hashlib.md5(
-                json.dumps(des_item, sort_keys=True).encode('utf-8')
+                json.dumps(deserialized_item, sort_keys=True).encode('utf-8')
             ).hexdigest()
         }
 
