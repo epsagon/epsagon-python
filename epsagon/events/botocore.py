@@ -341,18 +341,17 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
             ', '.join(response['TableNames'])
 
     def store_item_hash(self):
-        deser = TypeDeserializer()
+        deserializer  = TypeDeserializer()
         item = self.resource['metadata']['Item']
 
         # Try to deserialize the data in order to remove dynamoDB data types.
         for key in item:
             try:
-                item[key] = deser.deserialize(item[key])
+                item[key] = deserializer.deserialize(item[key])
             except (TypeError, AttributeError):
                 break
-
         self.resource['metadata']['item_hash'] = hashlib.md5(
-            json.dumps(item, sort_keys=True)).hexdigest()
+            json.dumps(item, sort_keys=True).encode('utf-8')).hexdigest()
 
 
 class BotocoreSESEvent(BotocoreEvent):

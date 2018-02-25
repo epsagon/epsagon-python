@@ -128,7 +128,6 @@ class Trace(object):
 
         if self.token == '':
             return
-
         try:
             requests.post(
                 self.collector_url,

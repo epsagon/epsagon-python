@@ -71,8 +71,10 @@ class S3LambdaTrigger(BaseLambdaTrigger):
             'object_key': event['Records'][0]['s3']['object']['key'],
             'object_size': event['Records'][0]['s3']['object']['size'],
             'object_etag': event['Records'][0]['s3']['object']['eTag'],
-            'object_sequencer': event['Records'][0]['s3']['object']['sequencer'],
-            'x-amz-request-id': event['Records'][0]['responseElements']['x-amz-request-id'],
+            'object_sequencer': event['Records'][0]['s3']['object'][
+                'sequencer'],
+            'x-amz-request-id': event['Records'][0]['responseElements'][
+                'x-amz-request-id'],
         }
 
 
@@ -96,18 +98,18 @@ class DynamoDBLambdaTrigger(BaseLambdaTrigger):
         item = record['dynamodb']['NewImage']
 
         # Deserialize the data in order to remove dynamoDB data types.
-        deser = TypeDeserializer()
-        des_item = item.copy()
+        deserializer = TypeDeserializer()
+        deserialized_item = item.copy()
         for key in item:
-            des_item[key] = deser.deserialize(item[key])
-        self.resource['metadata']['item_hash'] = hashlib.md5(
-            json.dumps(des_item, sort_keys=True)).hexdigest()
-
+            try:
+                deserialized_item[key] = deserializer.deserialize(item[key])
+            except (TypeError, AttributeError):
+                break
         self.resource['metadata'] = {
             'region': record['awsRegion'],
             'sequence_number': record['dynamodb']['SequenceNumber'],
             'item_hash': hashlib.md5(
-                json.dumps(des_item, sort_keys=True)
+                json.dumps(deserialized_item, sort_keys=True).encode('utf-8')
             ).hexdigest()
         }
 
@@ -245,8 +247,7 @@ class LambdaTriggerFactory(object):
             trigger_service = APIGatewayLambdaTrigger.RESOURCE_TYPE
         elif 'source' in event:
             trigger_service = str(event['source'].split('.')[-1])
-
-        return LambdaTriggerFactory.FACTORY.get(
-            trigger_service,
-            JSONLambdaTrigger
-        )(start_time, event)
+        return LambdaTriggerFactory.FACTORY.get(trigger_service)(
+            start_time,
+            event
+        )
