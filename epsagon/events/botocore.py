@@ -11,6 +11,7 @@ from boto3.dynamodb.types import TypeDeserializer
 from botocore.exceptions import ClientError
 from ..trace import tracer
 from ..event import BaseEvent
+from ..utils import add_data_if_needed
 
 
 def empty_func():
@@ -183,8 +184,11 @@ class BotocoreKinesisEvent(BotocoreEvent):
 
         _, request_data = args
         self.resource['name'] = request_data['StreamName']
-
-        self.resource['metadata']['data'] = request_data['Data']
+        add_data_if_needed(
+            self.resource['metadata'],
+            'data',
+            request_data['Data']
+        )
         self.resource['metadata']['partition_key'] = \
             request_data['PartitionKey']
 
@@ -231,8 +235,11 @@ class BotocoreSNSEvent(BotocoreEvent):
         )
         _, request_data = args
         self.resource['name'] = request_data['TopicArn'].split(':')[-1]
-
-        self.resource['metadata']['data'] = request_data['Message']
+        add_data_if_needed(
+            self.resource['metadata'],
+            'data',
+            request_data['Message']
+        )
 
     def update_response(self, response):
         """
@@ -309,12 +316,12 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
         self.resource['metadata']['Key'] = self.request_data['Key']
 
     def process_put_item_op(self):
-        self.resource['metadata']['Item'] = self.request_data['Item']
-        self.store_item_hash()
+        item = self.request_data['Item']
+        add_data_if_needed(self.resource['metadata'], 'Item', item)
+        self.store_item_hash(item)
 
     def process_delete_item_op(self):
         self.resource['metadata']['Key'] = self.request_data['Key']
-        self.store_item_hash()
 
     def process_update_item_op(self):
         self.resource['metadata']['Update Parameters'] = {
@@ -329,20 +336,23 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
 
     def process_scan_response(self, response):
         self.resource['metadata']['Items Count'] = response['Count']
-        self.resource['metadata']['Items'] = response['Items']
+        add_data_if_needed(
+            self.resource['metadata'],
+            'Items', response['Items']
+        )
         self.resource['metadata']['Scanned Items Count'] = \
             response['ScannedCount']
 
     def process_get_item_response(self, response):
-        self.resource['metadata']['Item'] = response['Item']
+        item = response['Item']
+        add_data_if_needed(self.resource['metadata'], 'Item', item)
 
     def process_list_tables_response(self, response):
         self.resource['metadata']['Table Names'] = \
             ', '.join(response['TableNames'])
 
-    def store_item_hash(self):
-        deserializer  = TypeDeserializer()
-        item = self.resource['metadata']['Item']
+    def store_item_hash(self, item):
+        deserializer = TypeDeserializer()
 
         # Try to deserialize the data in order to remove dynamoDB data types.
         for key in item:

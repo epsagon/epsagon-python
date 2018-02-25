@@ -28,6 +28,7 @@ class Trace(object):
         self.exceptions = []
         self.version = __version__
         self.collector_url = TRACE_COLLECTOR_URL
+        self.metadata_only = True
         self.platform = 'Python {}.{}'.format(
             sys.version_info.major,
             sys.version_info.minor
@@ -64,19 +65,21 @@ class Trace(object):
         self.events = []
         self.exceptions = []
 
-    def initialize(self, app_name, token, collector_url):
+    def initialize(self, app_name, token, collector_url, metadata_only):
         """
         Initializes trace with user's data.
         User can configure here trace parameters.
         :param app_name: application name
         :param token: user's token
-        :param collector_url: the url to send traces to
+        :param collector_url: the url to send traces to.
+        :param metadata_only: whether to send metadata only or not.
         :return: None
         """
 
         self.app_name = app_name
         self.token = token
         self.collector_url = collector_url
+        self.metadata_only = metadata_only
 
     @staticmethod
     def load_from_dict(trace_data):
@@ -144,13 +147,18 @@ class Trace(object):
 tracer = Trace()
 
 
-def init(token, app_name='default', collector_url=TRACE_COLLECTOR_URL):
+def init(token,
+         app_name='default',
+         collector_url=TRACE_COLLECTOR_URL,
+         metadata_only=True
+         ):
     """
     Initializes trace with user's data.
     User can configure here trace parameters.
     :param token: user's token
     :param app_name: application name
-    :param collector_url: the
+    :param collector_url: the url of the collector.
+    :param metadata_only: whether to send only the metadata, or also the data.
     :return: None
     """
 
@@ -158,4 +166,5 @@ def init(token, app_name='default', collector_url=TRACE_COLLECTOR_URL):
         token=token,
         app_name=app_name,
         collector_url=collector_url,
+        metadata_only=metadata_only
     )
