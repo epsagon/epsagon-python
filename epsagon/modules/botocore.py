@@ -17,7 +17,6 @@ def _wrapper(wrapped, instance, args, kwargs):
     :param kwargs: wrapt's kwargs
     :return: None
     """
-
     return wrapper(BotocoreEventFactory, wrapped, instance, args, kwargs)
 
 

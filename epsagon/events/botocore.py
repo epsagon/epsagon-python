@@ -350,9 +350,8 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
                 item[key] = deser.deserialize(item[key])
             except (TypeError, AttributeError):
                 break
-
         self.resource['metadata']['item_hash'] = hashlib.md5(
-            json.dumps(item, sort_keys=True)).hexdigest()
+            json.dumps(item, sort_keys=True).encode('utf-8')).hexdigest()
 
 
 class BotocoreSESEvent(BotocoreEvent):
