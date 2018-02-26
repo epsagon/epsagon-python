@@ -5,6 +5,8 @@ google events module.
 from __future__ import absolute_import
 from uuid import uuid4
 import traceback
+
+from epsagon.utils import add_data_if_needed
 from ..event import BaseEvent
 from ..trace import tracer
 
@@ -41,9 +43,11 @@ class GoogleRPCEvent(BaseEvent):
         self.resource['operation'] = operation
         self.resource['name'] = endpoint
 
-        self.resource['metadata'] = {
-            'Request Data': str(request_data),
-        }
+        add_data_if_needed(
+            self.resource['metadata'],
+            'Request Data',
+            str(request_data)
+        )
 
         if response is not None:
             self.update_response(response)
@@ -58,7 +62,11 @@ class GoogleRPCEvent(BaseEvent):
         :return: None
         """
 
-        self.resource['metadata']['Response Data'] = str(response)
+        add_data_if_needed(
+            self.resource['metadata'],
+            'Response Data',
+            str(response)
+        )
 
 
 class GRPCNaturalLanguageEvent(GoogleRPCEvent):
