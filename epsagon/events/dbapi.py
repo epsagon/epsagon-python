@@ -6,6 +6,9 @@ from __future__ import absolute_import
 import collections
 from uuid import uuid4
 import traceback
+
+from epsagon.utils import add_data_if_needed
+
 try:
     from psycopg2.extensions import parse_dsn
 
@@ -86,12 +89,13 @@ class DBAPIInsertEvent(DBAPIEvent):
             exception
         )
 
-        self.resource['metadata']['items'] = [{
-                name: str(value) for name, value in row.iteritems()
-            } for row in args[1]
+        items = [{
+            name: str(value) for name, value in row.iteritems()
+        } for row in args[1]
         ] if not isinstance(args[1], collections.Mapping) else {
             name: str(value) for name, value in args[1].iteritems()
         }
+        add_data_if_needed(self.resource['metadata'], 'items', items)
 
 
 class DBAPISelectEvent(DBAPIEvent):
@@ -112,7 +116,8 @@ class DBAPISelectEvent(DBAPIEvent):
         :param exception: Exception (if happened)
         """
 
-        table_name = ' '.join(args[0].split()[1:]) # default anything but select keyword
+        table_name = ' '.join(
+            args[0].split()[1:])  # default anything but select keyword
         if 'from' in args[0].lower():
             table_name_index = args[0].lower().split().index('from') + 1
             table_name = args[0].split()[table_name_index]
@@ -148,7 +153,8 @@ class DBAPIEventFactory(object):
     }
 
     @staticmethod
-    def create_event(wrapped, cursor_wrapper, args, kwargs, start_time, response, exception):
+    def create_event(wrapped, cursor_wrapper, args, kwargs, start_time,
+                     response, exception):
         operation = args[0].split()[0].lower()
         event_class = DBAPIEventFactory.FACTORY.get(
             operation,

@@ -5,6 +5,8 @@ pymongo events module.
 from __future__ import absolute_import
 from uuid import uuid4
 import traceback
+
+from epsagon.utils import add_data_if_needed
 from ..event import BaseEvent
 from ..trace import tracer
 
@@ -51,8 +53,8 @@ class PyMongoEvent(BaseEvent):
             'DB URL': ':'.join([str(x) for x in address]),
             'DB Name': str(instance.database.name),
             'Collection Name': str(instance.name),
-            'Items ': documents,
         }
+        add_data_if_needed(self.resource['metadata'], 'Items', documents)
 
         if response is not None:
             self.update_response(response)
@@ -66,8 +68,7 @@ class PyMongoEvent(BaseEvent):
         :param response: Response from botocore
         :return: None
         """
-
-        for i in xrange(len(self.resource['metadata']['items'])):
+        for i in xrange(len(self.resource['metadata'].get('items', []))):
             self.resource['metadata']['items'][i]['_id'] = str(
                 self.resource['metadata']['items'][i]['_id']
             )

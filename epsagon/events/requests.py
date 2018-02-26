@@ -6,6 +6,8 @@ from __future__ import absolute_import
 from urlparse import urlparse
 from uuid import uuid4
 import traceback
+
+from epsagon.utils import add_data_if_needed
 from ..trace import tracer
 from ..event import BaseEvent
 
@@ -45,10 +47,12 @@ class RequestsEvent(BaseEvent):
         prepared_request = args[0]
         self.resource['operation'] = prepared_request.method
 
-        self.resource['metadata'] = {
-            'url': prepared_request.url,
-            'request_body': prepared_request.body,
-        }
+        self.resource['metadata']['url'] = prepared_request.url
+        add_data_if_needed(
+            self.resource['metadata'],
+            'request_body',
+            prepared_request
+        )
 
         if response is not None:
             self.update_response(response)
@@ -69,7 +73,11 @@ class RequestsEvent(BaseEvent):
         # Extract only json responses
         self.resource['metadata']['response_body'] = None
         try:
-            self.resource['metadata']['response_body'] = response.json()
+            add_data_if_needed(
+                self.resource['metadata'],
+                'response_body',
+                response.json()
+            )
         except ValueError:
             pass
 

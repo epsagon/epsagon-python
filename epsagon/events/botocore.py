@@ -135,10 +135,12 @@ class BotocoreS3Event(BotocoreEvent):
         super(BotocoreS3Event, self).update_response(response)
 
         if self.resource['operation'] == 'ListObjects':
-            self.resource['metadata']['files'] = [
+            files = [
                 [str(x['Key']).strip('"'), x['Size'], x['ETag']]
                 for x in response['Contents']
             ]
+            add_data_if_needed(self.resource['metadata'], 'files', files)
+
         elif self.resource['operation'] == 'PutObject':
             self.resource['metadata']['etag'] = response['ETag'].strip('"')
         elif self.resource['operation'] == 'HeadObject':
@@ -237,7 +239,7 @@ class BotocoreSNSEvent(BotocoreEvent):
         self.resource['name'] = request_data['TopicArn'].split(':')[-1]
         add_data_if_needed(
             self.resource['metadata'],
-            'data',
+            'Notification Message',
             request_data['Message']
         )
 
@@ -397,7 +399,11 @@ class BotocoreSESEvent(BotocoreEvent):
 
         if self.resource['operation'] == 'SendEmail':
             self.resource['metadata']['source'] = request_data['Source']
-            self.resource['metadata']['message'] = request_data['Message']
+            add_data_if_needed(
+                self.resource['metadata'],
+                'message',
+                request_data['Message']
+            )
             self.resource['metadata']['destination'] = \
                 request_data['Destination']
 
@@ -447,7 +453,11 @@ class BotocoreLambdaEvent(BotocoreEvent):
         _, request_data = args
 
         self.resource['name'] = request_data['FunctionName']
-        self.resource['metadata']['payload'] = request_data['Payload']
+        add_data_if_needed(
+            self.resource['metadata'],
+            'payload',
+            request_data['Payload']
+        )
 
 
 class BotocoreEventFactory(object):
