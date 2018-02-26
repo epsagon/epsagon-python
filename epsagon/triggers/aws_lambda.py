@@ -9,6 +9,7 @@ from uuid import uuid4
 
 from boto3.dynamodb.types import TypeDeserializer
 
+from epsagon.utils import add_data_if_needed
 from ..event import BaseEvent
 
 
@@ -38,9 +39,9 @@ class JSONLambdaTrigger(BaseLambdaTrigger):
 
         self.resource['name'] = self.RESOURCE_TYPE
         self.resource['operation'] = self.RESOURCE_TYPE
-        self.resource['metadata'] = {
-            'data': event
-        }
+        self.resource['metadata'] = {}
+
+        add_data_if_needed(self.resource['metadata'], 'data', event)
 
 
 class S3LambdaTrigger(BaseLambdaTrigger):
@@ -97,6 +98,7 @@ class DynamoDBLambdaTrigger(BaseLambdaTrigger):
         self.resource['operation'] = record['eventName']
         item = record['dynamodb']['NewImage']
 
+        add_data_if_needed(self.resource['metadata'], 'New Image', item)
         # Deserialize the data in order to remove dynamoDB data types.
         deserializer = TypeDeserializer()
         deserialized_item = item.copy()
@@ -164,9 +166,14 @@ class SNSLambdaTrigger(BaseLambdaTrigger):
         self.resource['operation'] = str(event['Records'][0]['Sns']['Type'])
 
         self.resource['metadata'] = {
-            'Notification Subject': str(event['Records'][0]['Sns']['Subject']),
-            'Notification Message': str(event['Records'][0]['Sns']['Message']),
+            'Notification Subject': str(event['Records'][0]['Sns']['Subject'])
         }
+        message = str(event['Records'][0]['Sns']['Message'])
+        add_data_if_needed(
+            self.resource['metadata'],
+            'Notification Message',
+            message
+        )
 
 
 class APIGatewayLambdaTrigger(BaseLambdaTrigger):
@@ -190,11 +197,11 @@ class APIGatewayLambdaTrigger(BaseLambdaTrigger):
 
         self.resource['metadata'] = {
             'stage': event['requestContext']['stage'],
-            'body': event['body'],
             'headers': event['headers'],
             'query_string_parameters': event['queryStringParameters'],
             'path_parameters': event['pathParameters'],
         }
+        add_data_if_needed(self.resource['metadata'], 'body', event['body'])
 
 
 class EventsLambdaTrigger(BaseLambdaTrigger):
@@ -218,7 +225,8 @@ class EventsLambdaTrigger(BaseLambdaTrigger):
 
         self.resource['metadata'] = {
             'region': event['region'],
-            'detail': None if len(event['detail']) == 0 else event['detail'],
+            'detail': None if len(event['detail']) == 0 else event[
+                'detail'],
             'account': str(event['account']),
         }
 
