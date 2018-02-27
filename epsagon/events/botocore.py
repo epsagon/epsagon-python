@@ -236,7 +236,8 @@ class BotocoreSNSEvent(BotocoreEvent):
             exception
         )
         _, request_data = args
-        self.resource['name'] = request_data['TopicArn'].split(':')[-1]
+        arn = request_data.get('TopicArn', request_data.get('TargetArn', 'N/A'))
+        self.resource['name'] = arn.split(':')[-1]
         add_data_if_needed(
             self.resource['metadata'],
             'Notification Message',
@@ -287,6 +288,7 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
              'UpdateItem': self.process_update_item_op,
              'GetItem': self.process_get_item_op,
              'DeleteItem': self.process_delete_item_op,
+             'BatchWriteItem': self.process_batch_write_op,
              }
         )
 
@@ -302,7 +304,8 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
 
         _, request_data = args
         self.request_data = request_data
-        self.resource['name'] = request_data.get('TableName', 'DynamoDBEngine')
+        self.response = response
+
         self.OPERATION_TO_FUNC.get(self.resource['operation'], empty_func)()
 
     def update_response(self, response):
@@ -315,17 +318,21 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
         self.RESPONSE_TO_FUNC.get(self.resource['operation'], empty_func)()
 
     def process_get_item_op(self):
+        self.resource['name'] = self.request_data['TableName']
         self.resource['metadata']['Key'] = self.request_data['Key']
 
     def process_put_item_op(self):
+        self.resource['name'] = self.request_data['TableName']
         item = self.request_data['Item']
         add_data_if_needed(self.resource['metadata'], 'Item', item)
         self.store_item_hash(item)
 
     def process_delete_item_op(self):
+        self.resource['name'] = self.request_data['TableName']
         self.resource['metadata']['Key'] = self.request_data['Key']
 
     def process_update_item_op(self):
+        self.resource['name'] = self.request_data['TableName']
         self.resource['metadata']['Update Parameters'] = {
             'Key': self.request_data['Key'],
             'Expression Attribute Values': self.request_data.get(
@@ -336,22 +343,33 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
             ),
         }
 
-    def process_scan_response(self, response):
-        self.resource['metadata']['Items Count'] = response['Count']
+    def process_batch_write_op(self):
+        table_name = self.request_data['RequestItems'].keys()[0]
+        self.resource['name'] = table_name
+        items = []
+        for item in self.request_data['RequestItems'][table_name]:
+            items.append(item['PutRequest']['Item'])
+        add_data_if_needed(self.resource['metadata'], 'Items', items)
+
+    def process_scan_response(self):
+        self.resource['name'] = self.request_data['TableName']
+        self.resource['metadata']['Items Count'] = self.response['Count']
         add_data_if_needed(
             self.resource['metadata'],
-            'Items', response['Items']
+            'Items', self.response['Items']
         )
         self.resource['metadata']['Scanned Items Count'] = \
-            response['ScannedCount']
+            self.response['ScannedCount']
 
-    def process_get_item_response(self, response):
-        item = response['Item']
+    def process_get_item_response(self):
+        self.resource['name'] = self.request_data['TableName']
+        item = self.response['Item']
         add_data_if_needed(self.resource['metadata'], 'Item', item)
 
-    def process_list_tables_response(self, response):
+    def process_list_tables_response(self):
+        self.resource['name'] = 'DynamoDBEngine'
         self.resource['metadata']['Table Names'] = \
-            ', '.join(response['TableNames'])
+            ', '.join(self.response['TableNames'])
 
     def store_item_hash(self, item):
         deserializer = TypeDeserializer()
