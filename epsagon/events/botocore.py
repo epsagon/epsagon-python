@@ -344,7 +344,7 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
         }
 
     def process_batch_write_op(self):
-        table_name = self.request_data['RequestItems'].keys()[0]
+        table_name = list(self.request_data['RequestItems'].keys())[0]
         self.resource['name'] = table_name
         items = []
         for item in self.request_data['RequestItems'][table_name]:
