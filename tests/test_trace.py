@@ -56,7 +56,7 @@ def test_prepare():
     tracer.events = ['test_event']
     with warnings.catch_warnings(record=True) as w:
         tracer.prepare()
-        tracer.prepare() # this call should NOT trigger a warning
+        tracer.prepare()  # this call should NOT trigger a warning
         assert tracer.events == []
         assert tracer.exceptions == []
         assert len(w) == 1
@@ -66,24 +66,27 @@ def test_initialize():
     app_name = 'app-name'
     token = 'token'
     collector_url = 'collector_url'
-    tracer.initialize(app_name, token, collector_url)
+    metadata_only = False
+    tracer.initialize(app_name, token, collector_url, metadata_only)
     assert tracer.app_name == app_name
     assert tracer.token == token
     assert tracer.collector_url == collector_url
 
-    tracer.initialize(app_name, '', '')
+    tracer.initialize(app_name, '', '', False)
     assert tracer.app_name == app_name
     assert tracer.token == ''
     assert tracer.collector_url == ''
+    assert tracer.metadata_only == False
 
-    tracer.initialize('', '', '')
+    tracer.initialize('', '', '', True)
     assert tracer.app_name == ''
     assert tracer.token == ''
     assert tracer.collector_url == ''
+    assert tracer.metadata_only == True
 
 
 def test_load_from_dict():
-    for i in range(2): # validate a new trace is created each time
+    for i in range(2):  # validate a new trace is created each time
         number_of_events = 10
         trace_data = {
             'app_name': 'app_name',
@@ -93,7 +96,8 @@ def test_load_from_dict():
             'events': range(number_of_events)
         }
 
-        with mock.patch('epsagon.event.BaseEvent.load_from_dict', side_effect=(lambda x: x)):
+        with mock.patch('epsagon.event.BaseEvent.load_from_dict',
+                        side_effect=(lambda x: x)):
             new_trace = epsagon.trace.Trace.load_from_dict(trace_data)
             assert new_trace.app_name == trace_data['app_name']
             assert new_trace.token == trace_data['token']
@@ -104,7 +108,7 @@ def test_load_from_dict():
 
 
 def test_load_from_dict_with_exceptions():
-    for i in range(2): # validate a new trace is created each time
+    for i in range(2):  # validate a new trace is created each time
         number_of_events = 10
         trace_data = {
             'app_name': 'app_name',
@@ -115,7 +119,8 @@ def test_load_from_dict_with_exceptions():
             'exceptions': 'test_exceptions'
         }
 
-        with mock.patch('epsagon.event.BaseEvent.load_from_dict', side_effect=(lambda x: x)):
+        with mock.patch('epsagon.event.BaseEvent.load_from_dict',
+                        side_effect=(lambda x: x)):
             new_trace = epsagon.trace.Trace.load_from_dict(trace_data)
             assert new_trace.app_name == trace_data['app_name']
             assert new_trace.token == trace_data['token']
@@ -131,7 +136,7 @@ def test_add_event():
             self.terminated = True
 
     event = EventMock()
-    for i in range(10): # verify we can add more then 1 event
+    for i in range(10):  # verify we can add more then 1 event
         tracer.add_event(event)
         assert event is tracer.events[i]
         assert event.terminated
@@ -163,6 +168,7 @@ def test_to_dict():
     trace.platform = expected_dict['platform']
     trace_dict = trace.to_dict()
     assert trace_dict == trace.to_dict()
+
 
 def test_to_dict_empty():
     trace = epsagon.trace.Trace()
@@ -221,29 +227,42 @@ def test_send_traces_post_error(wrapped_post):
 
 @mock.patch('epsagon.trace.Trace.initialize')
 def test_init_sanity(wrapped_init):
-    epsagon.trace.init('token', 'app-name', 'collector')
+    epsagon.trace.init(
+        token='token',
+        app_name='app-name',
+        collector_url='collector',
+        metadata_only=False
+    )
     wrapped_init.assert_called_with(
         token='token',
         app_name='app-name',
-        collector_url='collector'
+        collector_url='collector',
+        metadata_only=False
     )
 
 
 @mock.patch('epsagon.trace.Trace.initialize')
 def test_init_empty_app_name(wrapped_init):
-    epsagon.trace.init('token', '', 'collector')
+    epsagon.trace.init(
+        token='token',
+        app_name='',
+        collector_url='collector',
+        metadata_only=False
+    )
     wrapped_init.assert_called_with(
         token='token',
         app_name='',
-        collector_url='collector'
+        collector_url='collector',
+        metadata_only=False
     )
 
 
 @mock.patch('epsagon.trace.Trace.initialize')
 def test_init_empty_collector_url(wrapped_init):
-    epsagon.trace.init('token', 'app-name')
+    epsagon.trace.init(token='token', app_name='app-name', metadata_only=False)
     wrapped_init.assert_called_with(
         token='token',
         app_name='app-name',
-        collector_url=epsagon.constants.TRACE_COLLECTOR_URL
+        collector_url=epsagon.constants.TRACE_COLLECTOR_URL,
+        metadata_only=False
     )
