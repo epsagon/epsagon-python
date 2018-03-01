@@ -42,7 +42,6 @@ class RequestsEvent(BaseEvent):
         prepared_request = args[0]
         self.resource['operation'] = prepared_request.method
 
-        import ipdb;ipdb.set_trace()
         self.resource['metadata']['url'] = prepared_request.url
         self.resource['metadata']['request_headers'] = prepared_request.headers
         add_data_if_needed(
