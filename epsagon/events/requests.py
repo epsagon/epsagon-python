@@ -43,7 +43,9 @@ class RequestsEvent(BaseEvent):
         self.resource['operation'] = prepared_request.method
 
         self.resource['metadata']['url'] = prepared_request.url
-        self.resource['metadata']['request_headers'] = prepared_request.headers
+        self.resource['metadata']['request_headers'] = dict(
+            prepared_request.headers
+        )
         add_data_if_needed(
             self.resource['metadata'],
             'request_body',
