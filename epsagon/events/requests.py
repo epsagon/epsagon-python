@@ -10,12 +10,7 @@ import traceback
 from epsagon.utils import add_data_if_needed
 from ..trace import tracer
 from ..event import BaseEvent
-
-BLACKLIST_URLS = [
-    'https://accounts.google.com/o/oauth2/token',
-    'http://tc.us-east-1.epsagon.com',
-    'http://tc.us-east-1.epsagon.com/'
-]
+from ..utils import is_blacklisted_url
 
 
 class RequestsEvent(BaseEvent):
@@ -48,10 +43,13 @@ class RequestsEvent(BaseEvent):
         self.resource['operation'] = prepared_request.method
 
         self.resource['metadata']['url'] = prepared_request.url
+        self.resource['metadata']['request_headers'] = dict(
+            prepared_request.headers
+        )
         add_data_if_needed(
             self.resource['metadata'],
             'request_body',
-            prepared_request
+            prepared_request.body
         )
 
         if response is not None:
@@ -171,8 +169,12 @@ class RequestsEventFactory(object):
     @staticmethod
     def create_event(wrapped, instance, args, kwargs, start_time, response,
                      exception):
-
         prepared_request = args[0]
+
+        # Detect if URL is blacklisted, and ignore.
+        if is_blacklisted_url(prepared_request.url):
+            return
+
         base_url = urlparse(prepared_request.url).netloc
 
         # Start with base event
@@ -192,5 +194,5 @@ class RequestsEventFactory(object):
             response,
             exception
         )
-        if event.resource['metadata']['url'] not in BLACKLIST_URLS:
-            tracer.add_event(event)
+
+        tracer.add_event(event)
