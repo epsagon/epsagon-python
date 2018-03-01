@@ -5,9 +5,9 @@ Trace object holds events and metadata
 from __future__ import absolute_import
 import sys
 import time
-import simplejson as json
 import warnings
 import requests
+import simplejson as json
 from epsagon.event import BaseEvent
 from .constants import TRACE_COLLECTOR_URL, SEND_TIMEOUT, __version__
 
@@ -123,6 +123,7 @@ class Trace(object):
             'platform': self.platform,
         }
 
+    # pylint: disable=W0702
     def send_traces(self):
         """
         Send trace to collector.
@@ -137,10 +138,10 @@ class Trace(object):
                 data=json.dumps(self.to_dict()),
                 timeout=SEND_TIMEOUT
             )
-        except requests.ReadTimeout as _:
-            # In future, send basic data
-            pass
-        except Exception as _:
+        # except requests.ReadTimeout as _:
+        #     # In future, send basic data
+        #     pass
+        except:  # noqa: E722
             pass
 
 

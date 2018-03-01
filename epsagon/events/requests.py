@@ -3,9 +3,9 @@ requests events module.
 """
 
 from __future__ import absolute_import
-from six.moves.urllib.parse import urlparse
-from uuid import uuid4
 import traceback
+from uuid import uuid4
+from six.moves import urllib
 
 from epsagon.utils import add_data_if_needed
 from ..trace import tracer
@@ -175,7 +175,7 @@ class RequestsEventFactory(object):
         if is_blacklisted_url(prepared_request.url):
             return
 
-        base_url = urlparse(prepared_request.url).netloc
+        base_url = urllib.parse.urlparse(prepared_request.url).netloc
 
         # Start with base event
         instance_type = RequestsEvent

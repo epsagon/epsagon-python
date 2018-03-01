@@ -3,9 +3,9 @@ psycopg2 patcher module
 """
 from __future__ import absolute_import
 import wrapt
+import epsagon.modules.general_wrapper
 
 from ..events.dbapi import DBAPIEventFactory
-import epsagon.modules.general_wrapper
 
 
 # TODO: this is a general dbapi wrapper. when we instrument another dbapi
@@ -23,7 +23,8 @@ class CursorWrapper(wrapt.ObjectProxy):
     def connection_wrapper(self):
         return self._self_connection
 
-    # TODO: handle arguments name correctly. might not be query in different libraries
+    # TODO: handle arguments name correctly. might not be query in different
+    # TODO: libraries.
     def execute(self, query, *args, **kwargs):
         epsagon.modules.general_wrapper.wrapper(
             DBAPIEventFactory,
@@ -33,7 +34,8 @@ class CursorWrapper(wrapt.ObjectProxy):
             kwargs,
         )
 
-    # TODO: handle arguments name correctly. might not be query in different libraries
+    # TODO: handle arguments name correctly. might not be query in different
+    # TODO: libraries.
     def executemany(self, query, *args, **kwargs):
         epsagon.modules.general_wrapper.wrapper(
             DBAPIEventFactory,
@@ -43,7 +45,8 @@ class CursorWrapper(wrapt.ObjectProxy):
             kwargs,
         )
 
-    # TODO: handle arguments name correctly. might not be query in different libraries
+    # TODO: handle arguments name correctly. might not be query in different
+    # TODO: libraries.
     def callproc(self, proc, args):
         epsagon.modules.general_wrapper.wrapper(
             DBAPIEventFactory,
@@ -55,7 +58,7 @@ class CursorWrapper(wrapt.ObjectProxy):
 
     def __enter__(self):
         # raise appropriate error if api not supported (should reach the user)
-        self.__wrapped__.__enter__
+        self.__wrapped__.__enter__ #pylint: disable=W0104
 
         return self
 
