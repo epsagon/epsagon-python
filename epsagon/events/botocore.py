@@ -292,6 +292,10 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
              }
         )
 
+        _, request_data = args
+        self.request_data = request_data
+        self.response = response
+
         super(BotocoreDynamoDBEvent, self).__init__(
             wrapped,
             instance,
@@ -301,10 +305,6 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
             response,
             exception
         )
-
-        _, request_data = args
-        self.request_data = request_data
-        self.response = response
 
         self.OPERATION_TO_FUNC.get(self.resource['operation'], empty_func)()
 
