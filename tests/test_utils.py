@@ -8,6 +8,11 @@ def setup_function(func):
 
 
 def test_blacklist_url():
+    """
+    Test is_blacklisted_url functionality.
+    :return: None
+    """
+
     epsagon.utils.BLACKLIST_URLS = {
         str.endswith: [
             '.com',
@@ -25,5 +30,10 @@ def test_blacklist_url():
 
 
 def test_original_blacklist_url():
+    """
+    Validate original needed URLs are in.
+    :return: None
+    """
+
     assert epsagon.utils.is_blacklisted_url('http://tc.us-east-1.epsagon.com')
     assert epsagon.utils.is_blacklisted_url('https://client.tc.epsagon.com')

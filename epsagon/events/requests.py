@@ -171,7 +171,7 @@ class RequestsEventFactory(object):
                      exception):
         prepared_request = args[0]
 
-        # Detect if url is blacklisted, and ignore
+        # Detect if URL is blacklisted, and ignore.
         if is_blacklisted_url(prepared_request.url):
             return
 

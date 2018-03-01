@@ -6,7 +6,7 @@ from __future__ import absolute_import
 from .trace import tracer
 from six.moves.urllib.parse import urlparse
 
-# Method to URL dict
+# Method to URL dict.
 BLACKLIST_URLS = {
     str.endswith: [
         'epsagon.com',
@@ -19,7 +19,7 @@ BLACKLIST_URLS = {
 
 def add_data_if_needed(dictionary, name, data):
     """
-    Adding data if not metadata only mode.
+    Add data to the given dictionary if metadata_only option is set to False.
     :param dictionary: dictionary to add the data to
     :param name: key name
     :param data: value
@@ -32,9 +32,10 @@ def add_data_if_needed(dictionary, name, data):
 
 def is_blacklisted_url(url):
     """
-    Return true if URL is blacklisted from inspection.
+    Return whether the URL blacklisted or not.
+    Using BLACKLIST_URLS methods against the URLs.
     :param url: url string
-    :return: bool
+    :return: True if URL is blacklisted, else False
     """
 
     url = urlparse(url).netloc
