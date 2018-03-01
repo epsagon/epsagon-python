@@ -1,11 +1,14 @@
 import os
 import mock
 import collections
+import importlib
+from imp import reload
+
 
 os.environ['DISABLE_EPSAGON_PATCH'] = 'TRUE'
 import epsagon.patcher
 
-@mock.patch('__builtin__.__import__', side_effect=[True])
+@mock.patch('epsagon.patcher.import_module', side_effect=[True])
 @mock.patch('epsagon.modules')
 def test_patch_all(patched_modules, _):
     module_mock = mock.NonCallableMagicMock(patch=mock.MagicMock())
@@ -13,16 +16,17 @@ def test_patch_all(patched_modules, _):
     epsagon.patcher.patch_all()
     module_mock.patch.assert_called()
 
-@mock.patch('__builtin__.__import__', side_effect=ImportError())
+@mock.patch('epsagon.patcher.import_module', side_effect=ImportError())
 @mock.patch('epsagon.modules')
-def test_patch_all_import_error(patched_modules, _):
+def test_patch_all_import_error(patched_modules, _,):
+    reload(importlib)
     module_mock = mock.NonCallableMagicMock(patch=mock.MagicMock())
     patched_modules.MODULES = {'test': module_mock}
     epsagon.patcher.patch_all()
     module_mock.patch.assert_not_called()
 
 
-@mock.patch('__builtin__.__import__')
+@mock.patch('epsagon.patcher.import_module')
 @mock.patch('epsagon.modules')
 def test_patch_all_import_ok_then_error(patched_modules, patched_import):
     def import_side_effect():

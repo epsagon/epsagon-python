@@ -3,6 +3,7 @@ Main patcher module
 """
 
 from __future__ import absolute_import
+from importlib import import_module
 import epsagon.modules
 
 
@@ -13,7 +14,7 @@ def _import_exists(module_name):
     :return: Bool
     """
     try:
-        __import__(module_name)
+        import_module(module_name)
         return True
     except ImportError:
         return False

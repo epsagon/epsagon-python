@@ -93,7 +93,7 @@ def test_load_from_dict():
             'token': 'token',
             'version': 'version',
             'platform': 'platform',
-            'events': range(number_of_events)
+            'events': [i for i in range(number_of_events)]
         }
 
         with mock.patch('epsagon.event.BaseEvent.load_from_dict',
@@ -115,7 +115,7 @@ def test_load_from_dict_with_exceptions():
             'token': 'token',
             'version': 'version',
             'platform': 'platform',
-            'events': range(number_of_events),
+            'events': [i for i in range(number_of_events)],
             'exceptions': 'test_exceptions'
         }
 
@@ -148,13 +148,13 @@ def test_to_dict():
             self.i = i
 
         def to_dict(self):
-            return i
+            return self.i
 
     trace = epsagon.trace.Trace()
     expected_dict = {
         'token': 'token',
         'app_name': 'app_name',
-        'events': range(10),
+        'events': [i for i in range(10)],
         'exceptions': 'exceptions',
         'version': 'version',
         'platform': 'platform'
