@@ -8,6 +8,7 @@ import time
 import simplejson as json
 import warnings
 import requests
+import requests.exceptions
 from epsagon.event import BaseEvent
 from .constants import TRACE_COLLECTOR_URL, SEND_TIMEOUT, __version__
 
@@ -137,7 +138,7 @@ class Trace(object):
                 data=json.dumps(self.to_dict()),
                 timeout=SEND_TIMEOUT
             )
-        except requests.ReadTimeout as _:
+        except requests.exceptions.ReadTimeout as _:
             # In future, send basic data
             pass
         except Exception as _:
