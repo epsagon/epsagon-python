@@ -4,6 +4,7 @@ python:
   - "3.6"
 install:
   - pip install -r requirements.txt
+  - pip install pylint
 before_script:
   - pylint --rcfile=.pylint --msg-template='{path}:{line}: [{msg_id}({symbol}) {obj}] {msg}' epsagon/
 script:
