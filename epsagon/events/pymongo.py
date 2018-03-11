@@ -5,6 +5,7 @@ pymongo events module.
 from __future__ import absolute_import
 from uuid import uuid4
 import traceback
+from past.builtins import range
 
 from epsagon.utils import add_data_if_needed
 from ..event import BaseEvent
@@ -19,6 +20,7 @@ class PyMongoEvent(BaseEvent):
     ORIGIN = 'pymongo'
     RESOURCE_TYPE = 'pymongo'
 
+    #pylint: disable=W0613
     def __init__(self, wrapped, instance, args, kwargs, start_time, response,
                  exception):
         """
@@ -68,7 +70,7 @@ class PyMongoEvent(BaseEvent):
         :param response: Response from botocore
         :return: None
         """
-        for i in xrange(len(self.resource['metadata'].get('items', []))):
+        for i in range(len(self.resource['metadata'].get('items', []))):
             self.resource['metadata']['items'][i]['_id'] = str(
                 self.resource['metadata']['items'][i]['_id']
             )
@@ -89,6 +91,17 @@ class PyMongoEventFactory(object):
     @staticmethod
     def create_event(wrapped, instance, args, kwargs, start_time, response,
                      exception):
+        """
+        Create a PyMongo event.
+        :param wrapped:
+        :param instance:
+        :param args:
+        :param kwargs:
+        :param start_time:
+        :param response:
+        :param exception:
+        :return:
+        """
         event = PyMongoEvent(
             wrapped,
             instance,

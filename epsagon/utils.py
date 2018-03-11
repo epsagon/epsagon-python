@@ -3,8 +3,9 @@ Utilities for Epsagon module.
 """
 
 from __future__ import absolute_import
+from six.moves import urllib
 from .trace import tracer
-from six.moves.urllib.parse import urlparse
+
 
 # Method to URL dict.
 BLACKLIST_URLS = {
@@ -38,7 +39,7 @@ def is_blacklisted_url(url):
     :return: True if URL is blacklisted, else False
     """
 
-    url = urlparse(url).netloc
+    url = urllib.parse.urlparse(url).netloc
 
     for method in BLACKLIST_URLS:
         for blacklist_url in BLACKLIST_URLS[method]:

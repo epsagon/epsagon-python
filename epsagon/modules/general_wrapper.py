@@ -2,6 +2,7 @@
 General wrapper for instrumentation.
 """
 
+#pylint: disable=W0703
 from __future__ import absolute_import
 import time
 import traceback

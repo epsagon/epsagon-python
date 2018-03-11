@@ -3,16 +3,16 @@ psycopg2 patcher module
 """
 from __future__ import absolute_import
 import wrapt
+import epsagon.modules.general_wrapper
 
 from ..events.dbapi import DBAPIEventFactory
-import epsagon.modules.general_wrapper
 
 
 # TODO: this is a general dbapi wrapper. when we instrument another dbapi
 # TODO: we should create a different module for it
 class CursorWrapper(wrapt.ObjectProxy):
     """
-    a dbapi cursor wrapper for tracing
+    A dbapi cursor wrapper for tracing
     """
 
     def __init__(self, cursor, connection_wrapper):
@@ -21,30 +21,56 @@ class CursorWrapper(wrapt.ObjectProxy):
 
     @property
     def connection_wrapper(self):
+        """
+        A property that holds that connection_wrapper.
+        :return: the connection wrapper.
+        """
         return self._self_connection
 
-    # TODO: handle arguments name correctly. might not be query in different libraries
+    # TODO: handle arguments name correctly. might not be query in different
+    # TODO: libraries.
     def execute(self, query, *args, **kwargs):
+        """
+        Execute the query.
+        :param query: the query to execute.
+        :param args: args.
+        :param kwargs: kwargs.
+        """
         epsagon.modules.general_wrapper.wrapper(
             DBAPIEventFactory,
             self.__wrapped__.execute,
             self,
-            (query, ) + args,
+            (query,) + args,
             kwargs,
         )
 
-    # TODO: handle arguments name correctly. might not be query in different libraries
+    # TODO: handle arguments name correctly. might not be query in different
+    # TODO: libraries.
     def executemany(self, query, *args, **kwargs):
+        """
+        Execute many queries.
+        :param query: queries to exectue.
+        :param args: args.
+        :param kwargs: kwargs.
+        :return:
+        """
         epsagon.modules.general_wrapper.wrapper(
             DBAPIEventFactory,
             self.__wrapped__.executemany,
             self,
-            (query, ) + args,
+            (query,) + args,
             kwargs,
         )
 
-    # TODO: handle arguments name correctly. might not be query in different libraries
+    # TODO: handle arguments name correctly. might not be query in different
+    # TODO: libraries.
     def callproc(self, proc, args):
+        """
+        Porcess the call
+        :param proc:
+        :param args:
+        :return:
+        """
         epsagon.modules.general_wrapper.wrapper(
             DBAPIEventFactory,
             self.__wrapped__.callproc,
@@ -55,7 +81,7 @@ class CursorWrapper(wrapt.ObjectProxy):
 
     def __enter__(self):
         # raise appropriate error if api not supported (should reach the user)
-        self.__wrapped__.__enter__
+        self.__wrapped__.__enter__  # pylint: disable=W0104
 
         return self
 
@@ -64,14 +90,21 @@ class CursorWrapper(wrapt.ObjectProxy):
 # TODO: we should create a different module for it
 class ConnectionWrapper(wrapt.ObjectProxy):
     """
-    a dbapi connection wrapper for tracing
+    A dbapi connection wrapper for tracing.
     """
 
     def cursor(self, *args, **kwargs):
+        """
+        Return cursor wrapper.
+        :param args: args.
+        :param kwargs: kwargs.
+        :return: Cursorwrapper.
+        """
         cursor = self.__wrapped__.cursor(*args, **kwargs)
         return CursorWrapper(cursor, self)
 
 
+#pylint: disable=W0613
 def _connect_wrapper(wrapped, instance, args, kwargs):
     """
     connect wrapper for psycopg2 instrumentation
@@ -85,7 +118,7 @@ def _connect_wrapper(wrapped, instance, args, kwargs):
     connection = wrapped(*args, **kwargs)
     return ConnectionWrapper(connection)
 
-
+#pylint: disable=W0613
 def _register_type_wrapper(wrapped, instance, args, kwargs):
     """
     register_type wrapper for psycopg2 instrumentation
@@ -116,6 +149,12 @@ class AdapterWrapper(wrapt.ObjectProxy):
     """
 
     def prepare(self, *args, **kwargs):
+        """
+        Prepare wrapper.
+        :param args:
+        :param kwargs:
+        :return:
+        """
         if not args:
             return self.__wrapped__.prepare(*args, **kwargs)
 

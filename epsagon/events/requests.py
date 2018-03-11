@@ -3,9 +3,9 @@ requests events module.
 """
 
 from __future__ import absolute_import
-from six.moves.urllib.parse import urlparse
-from uuid import uuid4
 import traceback
+from uuid import uuid4
+from six.moves import urllib
 
 from epsagon.utils import add_data_if_needed
 from ..trace import tracer
@@ -21,6 +21,7 @@ class RequestsEvent(BaseEvent):
     ORIGIN = 'requests'
     RESOURCE_TYPE = 'requests'
 
+    #pylint: disable=W0613
     def __init__(self, wrapped, instance, args, kwargs, start_time, response,
                  exception):
         """
@@ -169,13 +170,24 @@ class RequestsEventFactory(object):
     @staticmethod
     def create_event(wrapped, instance, args, kwargs, start_time, response,
                      exception):
+        """
+        Create an event according to the given api_name.
+        :param wrapped:
+        :param instance:
+        :param args:
+        :param kwargs:
+        :param start_time:
+        :param response:
+        :param exception:
+        :return:
+        """
         prepared_request = args[0]
 
         # Detect if URL is blacklisted, and ignore.
         if is_blacklisted_url(prepared_request.url):
             return
 
-        base_url = urlparse(prepared_request.url).netloc
+        base_url = urllib.parse.urlparse(prepared_request.url).netloc
 
         # Start with base event
         instance_type = RequestsEvent

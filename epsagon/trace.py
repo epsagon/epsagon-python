@@ -5,8 +5,9 @@ Trace object holds events and metadata
 from __future__ import absolute_import
 import sys
 import time
-import simplejson as json
 import warnings
+import simplejson as json
+
 import requests
 import requests.exceptions
 from epsagon.event import BaseEvent
@@ -124,6 +125,7 @@ class Trace(object):
             'platform': self.platform,
         }
 
+    # pylint: disable=W0703
     def send_traces(self):
         """
         Send trace to collector.
@@ -145,6 +147,7 @@ class Trace(object):
             pass
 
 
+# pylint: disable=C0103
 tracer = Trace()
 
 

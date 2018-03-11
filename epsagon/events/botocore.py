@@ -15,6 +15,10 @@ from ..utils import add_data_if_needed
 
 
 def empty_func():
+    """
+    A dummy function.
+    :return:
+    """
     return
 
 
@@ -28,6 +32,7 @@ class BotocoreEvent(BaseEvent):
     RESPONSE_TO_FUNC = {}
     OPERATION_TO_FUNC = {}
 
+    #pylint: disable=W0613
     def __init__(self, wrapped, instance, args, kwargs, start_time, response,
                  exception):
         """
@@ -312,26 +317,37 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
         """
         Adds response data to event.
         :param response: Response from botocore
-        :return: None
         """
         super(BotocoreDynamoDBEvent, self).update_response(response)
         self.RESPONSE_TO_FUNC.get(self.resource['operation'], empty_func)()
 
     def process_get_item_op(self):
+        """
+        Process the get item operation.
+        """
         self.resource['name'] = self.request_data['TableName']
         self.resource['metadata']['Key'] = self.request_data['Key']
 
     def process_put_item_op(self):
+        """
+        Process the put item operation.
+        """
         self.resource['name'] = self.request_data['TableName']
         item = self.request_data['Item']
         add_data_if_needed(self.resource['metadata'], 'Item', item)
         self.store_item_hash(item)
 
     def process_delete_item_op(self):
+        """
+        Process the delete item operation.
+        """
         self.resource['name'] = self.request_data['TableName']
         self.resource['metadata']['Key'] = self.request_data['Key']
 
     def process_update_item_op(self):
+        """
+        Process the update item operation.
+        """
         self.resource['name'] = self.request_data['TableName']
         self.resource['metadata']['Update Parameters'] = {
             'Key': self.request_data['Key'],
@@ -344,6 +360,9 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
         }
 
     def process_batch_write_op(self):
+        """
+        Process the batch write operation.
+        """
         table_name = list(self.request_data['RequestItems'].keys())[0]
         self.resource['name'] = table_name
         items = []
@@ -352,6 +371,9 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
         add_data_if_needed(self.resource['metadata'], 'Items', items)
 
     def process_scan_response(self):
+        """
+        Process the scan response.
+        """
         self.resource['name'] = self.request_data['TableName']
         self.resource['metadata']['Items Count'] = self.response['Count']
         add_data_if_needed(
@@ -362,16 +384,28 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
             self.response['ScannedCount']
 
     def process_get_item_response(self):
+        """
+        Process the get item response.
+        :return:
+        """
         self.resource['name'] = self.request_data['TableName']
         item = self.response['Item']
         add_data_if_needed(self.resource['metadata'], 'Item', item)
 
     def process_list_tables_response(self):
+        """
+        Process the list tables response.
+        :return:
+        """
         self.resource['name'] = 'DynamoDBEngine'
         self.resource['metadata']['Table Names'] = \
             ', '.join(self.response['TableNames'])
 
     def store_item_hash(self, item):
+        """
+        Store the item hash in the metadata.
+        :param item: The item to store the hash for.
+        """
         deserializer = TypeDeserializer()
 
         # Try to deserialize the data in order to remove dynamoDB data types.
@@ -491,6 +525,17 @@ class BotocoreEventFactory(object):
     @staticmethod
     def create_event(wrapped, instance, args, kwargs, start_time, response,
                      exception):
+        """
+        Create an event according to the given instance_type.
+        :param wrapped:
+        :param instance:
+        :param args:
+        :param kwargs:
+        :param start_time:
+        :param response:
+        :param exception:
+        :return:
+        """
         instance_type = instance.__class__.__name__.lower()
         event_class = BotocoreEventFactory.FACTORY.get(
             instance_type,

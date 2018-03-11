@@ -3,12 +3,11 @@ Triggers for aws_lambda
 """
 
 from __future__ import absolute_import
-import simplejson as json
-import hashlib
 from uuid import uuid4
 
+import hashlib
+import simplejson as json
 from boto3.dynamodb.types import TypeDeserializer
-
 from epsagon.utils import add_data_if_needed
 from ..event import BaseEvent
 
@@ -225,13 +224,16 @@ class EventsLambdaTrigger(BaseLambdaTrigger):
 
         self.resource['metadata'] = {
             'region': event['region'],
-            'detail': None if len(event['detail']) == 0 else event[
+            'detail': None if not event['detail'] else event[
                 'detail'],
             'account': str(event['account']),
         }
 
 
 class LambdaTriggerFactory(object):
+    """
+    Represents a Lambda Trigger Factory.
+    """
     FACTORY = {
         class_obj.RESOURCE_TYPE: class_obj
         for class_obj in BaseLambdaTrigger.__subclasses__()

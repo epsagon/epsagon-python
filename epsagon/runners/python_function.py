@@ -16,13 +16,20 @@ class PythonRunner(BaseEvent):
     RESOURCE_TYPE = 'python_function'
     OPERATION = 'invoke'
 
-    def __init__(self, start_time, wrapped_function, wrapped_args, wrapped_kwargs):
+    def __init__(
+            self,
+            start_time,
+            wrapped_function,
+            wrapped_args,
+            wrapped_kwargs
+    ):
         """
         Initialize.
-        :param start_time: event's start time (epoch)
-        :param wrapped_function: the function this runner is wrapping
-        :param wrapped_args: the arguments the function was called with
-        :param wrapped_kwargs: the keyword arguments the function was called with
+        :param start_time: event's start time (epoch).
+        :param wrapped_function: the function this runner is wrapping.
+        :param wrapped_args: the arguments the function was called with.
+        :param wrapped_kwargs: the keyword arguments the function was
+               called with.
         """
 
         super(PythonRunner, self).__init__(start_time)

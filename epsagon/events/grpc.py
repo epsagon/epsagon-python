@@ -19,6 +19,7 @@ class GoogleRPCEvent(BaseEvent):
     ORIGIN = 'grpc'
     RESOURCE_TYPE = 'grpc'
 
+    #pylint: disable=W0613
     def __init__(self, wrapped, instance, args, kwargs, start_time, response,
                  exception):
         """
@@ -90,6 +91,17 @@ class GRPCEventFactory(object):
     @staticmethod
     def create_event(wrapped, instance, args, kwargs, start_time, response,
                      exception):
+        """
+        Create an event according to the given endpoint.
+        :param wrapped:
+        :param instance:
+        :param args:
+        :param kwargs:
+        :param start_time:
+        :param response:
+        :param exception:
+        :return:
+        """
         _, endpoint, _ = getattr(instance, '_method').split('/')
         endpoint = endpoint.split('.')[-1]
 
