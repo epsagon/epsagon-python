@@ -5,6 +5,7 @@ pymongo events module.
 from __future__ import absolute_import
 from uuid import uuid4
 import traceback
+from past.builtins import range
 
 from epsagon.utils import add_data_if_needed
 from ..event import BaseEvent
@@ -68,7 +69,7 @@ class PyMongoEvent(BaseEvent):
         :param response: Response from botocore
         :return: None
         """
-        for i in xrange(len(self.resource['metadata'].get('items', []))):
+        for i in range(len(self.resource['metadata'].get('items', []))):
             self.resource['metadata']['items'][i]['_id'] = str(
                 self.resource['metadata']['items'][i]['_id']
             )
