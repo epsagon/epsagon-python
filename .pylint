@@ -1,0 +1,12 @@
+# Based on:
+# https://github.com/kpreid/shinysdr/blob/master/pylintrc
+
+[MASTER]
+# XXX should be changed to your project folder
+# see http://stackoverflow.com/a/37238692/3828891 for explanation
+init-hook='base_dir="epsagon"; import sys,os,re; _re=re.search(r".+\/" + base_dir, os.getcwd()); project_dir = _re.group() if _re else os.path.join(os.getcwd(), base_dir); sys.path.append(project_dir)'
+
+[MESSAGES CONTROL]
+# Find available symbolic names in:
+# https://docs.pylint.org/features.html
+disable=duplicate-code,too-few-public-methods,too-many-arguments,locally-disabled,trailing-whitespace,fixme,missing-docstring,protected-access,invalid-name,super-init-not-called,star-args,no-self-argument,inherit-non-class,no-method-argument,no-self-use,unused-argument,too-many-return-statements,too-many-branches,too-many-function-args,too-many-instance-attributes,too-many-locals,bad-continuation,unnecessary-lambda,redefined-variable-type,global-statement,line-too-long,mixed-indentation,bad-whitespace,missing-final-newline
