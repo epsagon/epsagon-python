@@ -14,6 +14,11 @@ try:
 
 except ImportError:
     def parse_dsn(dsn):
+        """
+        Parse the DSN.
+        :param dsn: input DSN.
+        :return:
+        """
         return dict(
             attribute.split("=") for attribute in dsn.split()
             if "=" in attribute
@@ -69,6 +74,7 @@ class DBAPIInsertEvent(DBAPIEvent):
 
     RESOURCE_OPERATION = 'insert'
 
+    # pylint: disable=W0613
     def __init__(self, connection, cursor, args, kwargs, start_time, exception):
         """
         Initialize.
@@ -105,6 +111,7 @@ class DBAPISelectEvent(DBAPIEvent):
 
     RESOURCE_OPERATION = 'select'
 
+    # pylint: disable=W0613
     def __init__(self, connection, cursor, args, kwargs, start_time, exception):
         """
         Initialize.
@@ -153,8 +160,20 @@ class DBAPIEventFactory(object):
     }
 
     @staticmethod
+    # pylint: disable=W0613
     def create_event(wrapped, cursor_wrapper, args, kwargs, start_time,
                      response, exception):
+        """
+        Create an event according to the given operation.
+        :param wrapped:
+        :param cursor_wrapper:
+        :param args:
+        :param kwargs:
+        :param start_time:
+        :param response:
+        :param exception:
+        :return:
+        """
         operation = args[0].split()[0].lower()
         event_class = DBAPIEventFactory.FACTORY.get(
             operation,

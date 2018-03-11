@@ -20,6 +20,7 @@ class PyMongoEvent(BaseEvent):
     ORIGIN = 'pymongo'
     RESOURCE_TYPE = 'pymongo'
 
+    #pylint: disable=W0613
     def __init__(self, wrapped, instance, args, kwargs, start_time, response,
                  exception):
         """
@@ -90,6 +91,17 @@ class PyMongoEventFactory(object):
     @staticmethod
     def create_event(wrapped, instance, args, kwargs, start_time, response,
                      exception):
+        """
+        Create a PyMongo event.
+        :param wrapped:
+        :param instance:
+        :param args:
+        :param kwargs:
+        :param start_time:
+        :param response:
+        :param exception:
+        :return:
+        """
         event = PyMongoEvent(
             wrapped,
             instance,

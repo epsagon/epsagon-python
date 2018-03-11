@@ -147,6 +147,7 @@ class Trace(object):
             pass
 
 
+# pylint: disable=C0103
 tracer = Trace()
 
 

@@ -231,6 +231,9 @@ class EventsLambdaTrigger(BaseLambdaTrigger):
 
 
 class LambdaTriggerFactory(object):
+    """
+    Represents a Lambda Trigger Factory.
+    """
     FACTORY = {
         class_obj.RESOURCE_TYPE: class_obj
         for class_obj in BaseLambdaTrigger.__subclasses__()

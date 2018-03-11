@@ -21,6 +21,7 @@ class RequestsEvent(BaseEvent):
     ORIGIN = 'requests'
     RESOURCE_TYPE = 'requests'
 
+    #pylint: disable=W0613
     def __init__(self, wrapped, instance, args, kwargs, start_time, response,
                  exception):
         """
@@ -169,6 +170,17 @@ class RequestsEventFactory(object):
     @staticmethod
     def create_event(wrapped, instance, args, kwargs, start_time, response,
                      exception):
+        """
+        Create an event according to the given api_name.
+        :param wrapped:
+        :param instance:
+        :param args:
+        :param kwargs:
+        :param start_time:
+        :param response:
+        :param exception:
+        :return:
+        """
         prepared_request = args[0]
 
         # Detect if URL is blacklisted, and ignore.
