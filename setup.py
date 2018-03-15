@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from pip.req import parse_requirements
 from pip.download import PipSession
-from setuptools import setup
+from setuptools import setup, find_packages
 import epsagon.constants
 
 install_reqs = parse_requirements('./requirements.txt', session=PipSession())
@@ -15,7 +15,7 @@ setup(
     author='Epsagon',
     author_email='support@epsagon.com',
     url='https://github.com/epsagon/epsagon',
-    packages=['epsagon'],
+    packages=find_packages(exclude=('tests', 'examples')),
     install_requires=reqs,
     extras_require={
         'dev': [
