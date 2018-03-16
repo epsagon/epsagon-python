@@ -9,7 +9,7 @@ reqs = [str(ir.req) for ir in install_reqs]
 
 setup(
     name='epsagon',
-    version=('0', '1', '1'),
+    version='0.1.1',
     description='Epsagon instrumentation for serverless Architecture Performance Monitoring',
     author='Epsagon',
     author_email='support@epsagon.com',
