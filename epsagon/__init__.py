@@ -5,7 +5,7 @@ Epsagon's init.
 from __future__ import absolute_import
 import os
 from .wrappers import lambda_wrapper, azure_wrapper, python_wrapper
-from .trace import init
+from .utils import init
 from .patcher import patch_all
 
 __all__ = ['lambda_wrapper', 'azure_wrapper', 'python_wrapper', 'init']

@@ -11,7 +11,7 @@ import simplejson as json
 import requests
 import requests.exceptions
 from epsagon.event import BaseEvent
-from .constants import TRACE_COLLECTOR_URL, SEND_TIMEOUT, __version__
+from .constants import SEND_TIMEOUT, __version__
 
 
 class Trace(object):
@@ -29,8 +29,9 @@ class Trace(object):
         self.events = []
         self.exceptions = []
         self.version = __version__
-        self.collector_url = TRACE_COLLECTOR_URL
+        self.collector_url = ''
         self.metadata_only = True
+        self.use_ssl = False
         self.platform = 'Python {}.{}'.format(
             sys.version_info.major,
             sys.version_info.minor
@@ -67,7 +68,8 @@ class Trace(object):
         self.events = []
         self.exceptions = []
 
-    def initialize(self, app_name, token, collector_url, metadata_only):
+    def initialize(self, app_name, token, collector_url, metadata_only,
+                   use_ssl):
         """
         Initializes trace with user's data.
         User can configure here trace parameters.
@@ -82,6 +84,7 @@ class Trace(object):
         self.token = token
         self.collector_url = collector_url
         self.metadata_only = metadata_only
+        self.use_ssl = use_ssl
 
     @staticmethod
     def load_from_dict(trace_data):
@@ -149,26 +152,3 @@ class Trace(object):
 
 # pylint: disable=C0103
 tracer = Trace()
-
-
-def init(token,
-         app_name='default',
-         collector_url=TRACE_COLLECTOR_URL,
-         metadata_only=True
-         ):
-    """
-    Initializes trace with user's data.
-    User can configure here trace parameters.
-    :param token: user's token
-    :param app_name: application name
-    :param collector_url: the url of the collector.
-    :param metadata_only: whether to send only the metadata, or also the data.
-    :return: None
-    """
-
-    tracer.initialize(
-        token=token,
-        app_name=app_name,
-        collector_url=collector_url,
-        metadata_only=metadata_only
-    )
