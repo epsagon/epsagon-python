@@ -8,6 +8,7 @@ __version__ = '.'.join(__version_info__)
 TC_REGIONS = [
     'us-east-1',
     'ap-southeast-2',
+    'ap-northeast-1',
 ]
 
 DEFAULT_REGION = 'us-east-1'
