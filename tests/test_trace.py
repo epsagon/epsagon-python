@@ -5,7 +5,9 @@ import requests
 import warnings
 import epsagon.trace
 import epsagon.constants
+from epsagon.constants import TRACE_COLLECTOR_URL, DEFAULT_REGION
 from epsagon.trace import tracer
+from epsagon.utils import get_tc_url
 
 
 def setup_function(func):
@@ -67,22 +69,26 @@ def test_initialize():
     token = 'token'
     collector_url = 'collector_url'
     metadata_only = False
-    tracer.initialize(app_name, token, collector_url, metadata_only)
+    use_ssl = True
+    tracer.initialize(app_name, token, collector_url, metadata_only, use_ssl)
     assert tracer.app_name == app_name
     assert tracer.token == token
     assert tracer.collector_url == collector_url
+    assert tracer.use_ssl == use_ssl
 
-    tracer.initialize(app_name, '', '', False)
+    tracer.initialize(app_name, '', '', False, False)
     assert tracer.app_name == app_name
     assert tracer.token == ''
     assert tracer.collector_url == ''
     assert tracer.metadata_only == False
+    assert tracer.use_ssl == False
 
-    tracer.initialize('', '', '', True)
+    tracer.initialize('', '', '', True, True)
     assert tracer.app_name == ''
     assert tracer.token == ''
     assert tracer.collector_url == ''
     assert tracer.metadata_only == True
+    assert tracer.use_ssl == True
 
 
 def test_load_from_dict():
@@ -191,7 +197,7 @@ def test_send_traces_sanity(wrapped_post):
     tracer.token = 'a'
     tracer.send_traces()
     wrapped_post.assert_called_with(
-        epsagon.constants.TRACE_COLLECTOR_URL,
+        '',
         data=json.dumps(tracer.to_dict()),
         timeout=epsagon.constants.SEND_TIMEOUT
     )
@@ -208,7 +214,7 @@ def test_send_traces_timeout(wrapped_post):
     tracer.token = 'a'
     tracer.send_traces()
     wrapped_post.assert_called_with(
-        epsagon.constants.TRACE_COLLECTOR_URL,
+        '',
         data=json.dumps(tracer.to_dict()),
         timeout=epsagon.constants.SEND_TIMEOUT
     )
@@ -219,7 +225,7 @@ def test_send_traces_post_error(wrapped_post):
     tracer.token = 'a'
     tracer.send_traces()
     wrapped_post.assert_called_with(
-        epsagon.constants.TRACE_COLLECTOR_URL,
+        '',
         data=json.dumps(tracer.to_dict()),
         timeout=epsagon.constants.SEND_TIMEOUT
     )
@@ -227,7 +233,7 @@ def test_send_traces_post_error(wrapped_post):
 
 @mock.patch('epsagon.trace.Trace.initialize')
 def test_init_sanity(wrapped_init):
-    epsagon.trace.init(
+    epsagon.utils.init(
         token='token',
         app_name='app-name',
         collector_url='collector',
@@ -237,32 +243,107 @@ def test_init_sanity(wrapped_init):
         token='token',
         app_name='app-name',
         collector_url='collector',
-        metadata_only=False
+        metadata_only=False,
+        use_ssl=False
     )
 
 
 @mock.patch('epsagon.trace.Trace.initialize')
 def test_init_empty_app_name(wrapped_init):
-    epsagon.trace.init(
+    epsagon.utils.init(
         token='token',
         app_name='',
         collector_url='collector',
-        metadata_only=False
+        metadata_only=False,
+        use_ssl=True
     )
     wrapped_init.assert_called_with(
         token='token',
         app_name='',
         collector_url='collector',
-        metadata_only=False
+        metadata_only=False,
+        use_ssl=True
     )
 
 
 @mock.patch('epsagon.trace.Trace.initialize')
 def test_init_empty_collector_url(wrapped_init):
-    epsagon.trace.init(token='token', app_name='app-name', metadata_only=False)
+    epsagon.utils.init(token='token', app_name='app-name', metadata_only=False)
     wrapped_init.assert_called_with(
         token='token',
         app_name='app-name',
-        collector_url=epsagon.constants.TRACE_COLLECTOR_URL,
-        metadata_only=False
+        collector_url=get_tc_url(False),
+        metadata_only=False,
+        use_ssl=False,
+    )
+
+
+@mock.patch('epsagon.trace.Trace.initialize')
+def test_init_no_ssl_no_url(wrapped_init):
+    epsagon.utils.init(token='token', app_name='app-name', metadata_only=False)
+    wrapped_init.assert_called_with(
+        token='token',
+        app_name='app-name',
+        metadata_only=False,
+        use_ssl=False,
+        collector_url=TRACE_COLLECTOR_URL.format(
+            region=DEFAULT_REGION,
+            protocol="http://"
+        )
+    )
+
+
+@mock.patch('epsagon.trace.Trace.initialize')
+def test_init_ssl_no_url(wrapped_init):
+    epsagon.utils.init(
+        token='token',
+        app_name='app-name',
+        metadata_only=False,
+        use_ssl=True
+    )
+    wrapped_init.assert_called_with(
+        token='token',
+        app_name='app-name',
+        metadata_only=False,
+        use_ssl=True,
+        collector_url=TRACE_COLLECTOR_URL.format(
+            region=DEFAULT_REGION,
+            protocol="https://"
+        )
+    )
+
+
+@mock.patch('epsagon.trace.Trace.initialize')
+def test_init_ssl_with_url(wrapped_init):
+    epsagon.utils.init(
+        token='token',
+        app_name='app-name',
+        collector_url="http://abc.com",
+        metadata_only=False,
+        use_ssl=True
+    )
+    wrapped_init.assert_called_with(
+        token='token',
+        app_name='app-name',
+        metadata_only=False,
+        use_ssl=True,
+        collector_url="http://abc.com"
+    )
+
+
+@mock.patch('epsagon.trace.Trace.initialize')
+def test_init_no_ssl_with_url(wrapped_init):
+    epsagon.utils.init(
+        token='token',
+        app_name='app-name',
+        collector_url="http://abc.com",
+        metadata_only=False,
+        use_ssl=False
+    )
+    wrapped_init.assert_called_with(
+        token='token',
+        app_name='app-name',
+        metadata_only=False,
+        use_ssl=False,
+        collector_url="http://abc.com"
     )
