@@ -95,12 +95,17 @@ class DBAPIInsertEvent(DBAPIEvent):
             exception
         )
 
-        items = [{
-            name: str(value) for name, value in row.iteritems()
-        } for row in args[1]
-        ] if not isinstance(args[1], collections.Mapping) else {
-            name: str(value) for name, value in args[1].iteritems()
-        }
+        if isinstance(args[1], (list, tuple, set)):
+            items = [{
+                    name: str(value) for name, value in row.iteritems()
+                } if isinstance(row, collections.Mapping)
+                else str(row)  # Making sure its JSON-able
+                for row in args[1]
+            ]
+        elif isinstance(args[1], collections.Mapping):
+            items = {name: str(value) for name, value in args[1].iteritems()}
+        else:
+            items = str(args[1])  # Making sure its JSON-able
         add_data_if_needed(self.resource['metadata'], 'items', items)
 
 
