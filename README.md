@@ -1,4 +1,4 @@
-# Epsagon Agent for Python
+# Epsagon Agent for Python [![Build Status](https://travis-ci.com/epsagon/epsagon-python.svg?token=wsveVqcNtBtmq6jpZfSf&branch=master)](https://travis-ci.com/epsagon/epsagon-python)
 
 This package provides an instrumentation to Python code running on functions for collection of distributed tracing and performance monitoring.
 
