@@ -25,18 +25,19 @@ class JSONLambdaTrigger(BaseLambdaTrigger):
     """
     RESOURCE_TYPE = 'json'
 
-    def __init__(self, start_time, event):
+    def __init__(self, start_time, event, context):
         """
         Initialize.
         :param start_time: event's start time (epoch)
         :param event: event dict from the entry point
+        :param context: the context dict from the entry point
         """
 
         super(JSONLambdaTrigger, self).__init__(start_time)
 
         self.event_id = 'trigger-{}'.format(str(uuid4()))
 
-        self.resource['name'] = self.RESOURCE_TYPE
+        self.resource['name'] = "trigger-{}".format(context.function_name)
         self.resource['operation'] = self.RESOURCE_TYPE
         self.resource['metadata'] = {}
 
@@ -49,11 +50,13 @@ class S3LambdaTrigger(BaseLambdaTrigger):
     """
     RESOURCE_TYPE = 's3'
 
-    def __init__(self, start_time, event):
+    # pylint: disable=W0613
+    def __init__(self, start_time, event, context):
         """
         Initialize.
         :param start_time: event's start time (epoch)
         :param event: event dict from the entry point
+        :param context: the context dict from the entry point
         """
 
         super(S3LambdaTrigger, self).__init__(start_time)
@@ -84,12 +87,15 @@ class DynamoDBLambdaTrigger(BaseLambdaTrigger):
     """
     RESOURCE_TYPE = 'dynamodb'
 
-    def __init__(self, start_time, event):
+    # pylint: disable=W0613
+    def __init__(self, start_time, event, context):
         """
         Initialize.
         :param start_time: event's start time (epoch)
         :param event: event dict from the entry point
+        :param context: the context dict from the entry point
         """
+
         super(DynamoDBLambdaTrigger, self).__init__(start_time)
         record = event['Records'][0]
         self.event_id = record['eventID']
@@ -121,11 +127,13 @@ class KinesisLambdaTrigger(BaseLambdaTrigger):
     """
     RESOURCE_TYPE = 'kinesis'
 
-    def __init__(self, start_time, event):
+    # pylint: disable=W0613
+    def __init__(self, start_time, event, context):
         """
         Initialize.
         :param start_time: event's start time (epoch)
         :param event: event dict from the entry point
+        :param context: the context dict from the entry point
         """
 
         super(KinesisLambdaTrigger, self).__init__(start_time)
@@ -150,11 +158,13 @@ class SNSLambdaTrigger(BaseLambdaTrigger):
     """
     RESOURCE_TYPE = 'sns'
 
-    def __init__(self, start_time, event):
+    # pylint: disable=W0613
+    def __init__(self, start_time, event, context):
         """
         Initialize.
         :param start_time: event's start time (epoch)
         :param event: event dict from the entry point
+        :param context: the context dict from the entry point
         """
 
         super(SNSLambdaTrigger, self).__init__(start_time)
@@ -181,11 +191,13 @@ class APIGatewayLambdaTrigger(BaseLambdaTrigger):
     """
     RESOURCE_TYPE = 'api_gateway'
 
-    def __init__(self, start_time, event):
+    # pylint: disable=W0613
+    def __init__(self, start_time, event, context):
         """
         Initialize.
         :param start_time: event's start time (epoch)
         :param event: event dict from the entry point
+        :param context: the context dict from the entry point
         """
 
         super(APIGatewayLambdaTrigger, self).__init__(start_time)
@@ -209,11 +221,13 @@ class EventsLambdaTrigger(BaseLambdaTrigger):
     """
     RESOURCE_TYPE = 'events'
 
-    def __init__(self, start_time, event):
+    # pylint: disable=W0613
+    def __init__(self, start_time, event, context):
         """
         Initialize.
         :param start_time: event's start time (epoch)
         :param event: event dict from the entry point
+        :param context: the context dict from the entry point
         """
 
         super(EventsLambdaTrigger, self).__init__(start_time)
@@ -240,11 +254,12 @@ class LambdaTriggerFactory(object):
     }
 
     @staticmethod
-    def factory(start_time, event):
+    def factory(start_time, event, context):
         """
         Creates trigger event object.
         :param start_time: event's start time (epoch)
         :param event: event dict from the entry point
+        :param context: the context dict from the entry point
         :return: Event
         """
         trigger_service = JSONLambdaTrigger.RESOURCE_TYPE
@@ -259,5 +274,6 @@ class LambdaTriggerFactory(object):
             trigger_service = str(event['source'].split('.')[-1])
         return LambdaTriggerFactory.FACTORY.get(trigger_service)(
             start_time,
-            event
+            event,
+            context
         )

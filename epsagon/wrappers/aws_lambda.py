@@ -24,7 +24,8 @@ def lambda_wrapper(func):
             epsagon.trace.tracer.events.append(
                 epsagon.triggers.aws_lambda.LambdaTriggerFactory.factory(
                     time.time(),
-                    event
+                    event,
+                    context
                 )
             )
         # pylint: disable=W0703
