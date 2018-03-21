@@ -30,8 +30,10 @@ def lambda_wrapper(func):
             )
         # pylint: disable=W0703
         except Exception as exception:
-            epsagon.trace.tracer.add_exception(exception,
-                                               traceback.format_exc())
+            epsagon.trace.tracer.add_exception(
+                exception,
+                traceback.format_exc()
+            )
 
         runner = epsagon.runners.aws_lambda.LambdaRunner(time.time(), context)
         constants.COLD_START = False

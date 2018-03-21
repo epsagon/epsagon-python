@@ -27,7 +27,8 @@ def wrapper(factory, wrapped, instance, args, kwargs):
     try:
         response = wrapped(*args, **kwargs)
         return response
-    except Exception as exception:
+    except Exception as operation_exception:
+        exception = operation_exception
         raise
     finally:
         try:
@@ -40,5 +41,8 @@ def wrapper(factory, wrapped, instance, args, kwargs):
                 response,
                 exception
             )
-        except Exception as exception:
-            tracer.add_exception(exception, traceback.format_exc())
+        except Exception as instrumentation_exception:
+            tracer.add_exception(
+                instrumentation_exception,
+                traceback.format_exc()
+            )
