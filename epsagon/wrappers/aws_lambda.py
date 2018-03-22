@@ -95,6 +95,8 @@ def step_lambda_wrapper(func):
                     steps_dict['step_num'] += 1
 
                 result[STEP_DICT_NAME] = steps_dict
+
+            runner.add_step_data(steps_dict)
             return result
         except Exception as exception:
             runner.set_exception(exception, traceback.format_exc())

@@ -37,3 +37,10 @@ class LambdaRunner(BaseEvent):
             'cold_start': constants.COLD_START,
             'region': os.environ.get('AWS_REGION', ''),
         }
+
+    def add_step_data(self, steps_dict):
+        """
+        Add steps function data.
+        :param steps_dict: The steps dictionary to add.
+        """
+        self.resource['steps_dict'] = steps_dict
