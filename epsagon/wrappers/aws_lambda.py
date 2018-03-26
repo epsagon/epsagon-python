@@ -11,6 +11,7 @@ from uuid import uuid4
 import epsagon.trace
 import epsagon.runners.aws_lambda
 import epsagon.triggers.aws_lambda
+from epsagon.runners.aws_lambda import StepLambdaRunner
 from .. import constants
 
 STEP_DICT_NAME = 'Epsagon'
@@ -78,7 +79,7 @@ def step_lambda_wrapper(func):
                 traceback.format_exc()
             )
 
-        runner = epsagon.runners.aws_lambda.LambdaRunner(time.time(), context)
+        runner = StepLambdaRunner(time.time(), context)
         constants.COLD_START = False
 
         try:
