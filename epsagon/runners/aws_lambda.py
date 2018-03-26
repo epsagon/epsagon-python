@@ -8,13 +8,12 @@ from ..event import BaseEvent
 from .. import constants
 
 
-class LambdaRunner(BaseEvent):
+class AbstractLambdaRunner(BaseEvent):
     """
     Represents Lambda event runner.
     """
-
     ORIGIN = 'runner'
-    RESOURCE_TYPE = 'lambda'
+    RESOURCE_TYPE = NotImplemented
     OPERATION = 'invoke'
 
     def __init__(self, start_time, context):
@@ -24,7 +23,7 @@ class LambdaRunner(BaseEvent):
         :param context: Lambda's context (passed from entry point)
         """
 
-        super(LambdaRunner, self).__init__(start_time)
+        super(AbstractLambdaRunner, self).__init__(start_time)
 
         self.event_id = context.aws_request_id
         self.resource['name'] = context.function_name
@@ -37,3 +36,24 @@ class LambdaRunner(BaseEvent):
             'cold_start': constants.COLD_START,
             'region': os.environ.get('AWS_REGION', ''),
         }
+
+
+class LambdaRunner(AbstractLambdaRunner):
+    """
+    Represents Lambda event runner.
+    """
+    RESOURCE_TYPE = 'lambda'
+
+
+class StepLambdaRunner(AbstractLambdaRunner):
+    """
+    Represents Lambda event runner.
+    """
+    RESOURCE_TYPE = 'step_function_lambda'
+
+    def add_step_data(self, steps_dict):
+        """
+        Add steps function data.
+        :param steps_dict: The steps dictionary to add.
+        """
+        self.resource['metadata']['steps_dict'] = steps_dict

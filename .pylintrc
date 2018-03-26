@@ -10,3 +10,10 @@ init-hook='base_dir="epsagon"; import sys,os,re; _re=re.search(r".+\/" + base_di
 # Find available symbolic names in:
 # https://docs.pylint.org/features.html
 disable=duplicate-code,too-few-public-methods,too-many-arguments,fixme,too-many-instance-attributes,bad-continuation
+
+[FORMAT]
+# Maximum number of characters on a single line.
+max-line-length=80
+
+# Maximum number of lines in a module
+max-module-lines=500
