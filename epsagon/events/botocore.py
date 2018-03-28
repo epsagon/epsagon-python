@@ -302,8 +302,8 @@ class BotocoreSQSEvent(BotocoreEvent):
 
         if 'QueueUrl' in request_data:
             self.resource['name'] = request_data['QueueUrl'].split('/')[-1]
-        elif 'GetQueueUrl' in request_data:
-            self.resource['name'] = request_data['GetQueueUrl']
+        elif 'QueueName' in request_data:
+            self.resource['name'] = request_data['QueueName']
 
         # Currently tracing only first entry
         entry = request_data['Entries'][0] if (
