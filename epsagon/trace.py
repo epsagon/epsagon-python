@@ -134,7 +134,6 @@ class Trace(object):
         Send trace to collector.
         :return: None
         """
-
         if self.token == '':
             return
         try:
