@@ -506,11 +506,19 @@ class BotocoreLambdaEvent(BotocoreEvent):
         _, request_data = args
 
         self.resource['name'] = request_data['FunctionName']
-        add_data_if_needed(
-            self.resource['metadata'],
-            'payload',
-            request_data['Payload']
-        )
+        if 'Payload' in request_data:
+            add_data_if_needed(
+                self.resource['metadata'],
+                'payload',
+                request_data['Payload']
+            )
+        if 'InvokeArgs' in request_data and \
+                isinstance(request_data['InvokeArgs'], str):
+            add_data_if_needed(
+                self.resource['metadata'],
+                'payload',
+                request_data['InvokeArgs']
+            )
 
 
 class BotocoreEventFactory(object):
