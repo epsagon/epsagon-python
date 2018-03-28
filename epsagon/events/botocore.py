@@ -540,15 +540,17 @@ class BotocoreEventFactory(object):
         instance_type = instance.__class__.__name__.lower()
         event_class = BotocoreEventFactory.FACTORY.get(
             instance_type,
-            BotocoreEvent
+            None
         )
-        event = event_class(
-            wrapped,
-            instance,
-            args,
-            kwargs,
-            start_time,
-            response,
-            exception
-        )
-        tracer.add_event(event)
+
+        if event_class is not None:
+            event = event_class(
+                wrapped,
+                instance,
+                args,
+                kwargs,
+                start_time,
+                response,
+                exception
+            )
+            tracer.add_event(event)
