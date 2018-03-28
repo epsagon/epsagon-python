@@ -244,11 +244,12 @@ class BotocoreSNSEvent(BotocoreEvent):
         _, request_data = args
         arn = request_data.get('TopicArn', request_data.get('TargetArn', 'N/A'))
         self.resource['name'] = arn.split(':')[-1]
-        add_data_if_needed(
-            self.resource['metadata'],
-            'Notification Message',
-            request_data['Message']
-        )
+        if 'Message' in request_data:
+            add_data_if_needed(
+                self.resource['metadata'],
+                'Notification Message',
+                request_data['Message']
+            )
 
     def update_response(self, response):
         """
@@ -262,6 +263,93 @@ class BotocoreSNSEvent(BotocoreEvent):
         if self.resource['operation'] == 'Publish':
             self.resource['metadata']['message_id'] = response['MessageId']
 
+
+class BotocoreSQSEvent(BotocoreEvent):
+    """
+    Represents SQS botocore event.
+    """
+    RESOURCE_TYPE = 'sqs'
+
+    def __init__(self, wrapped, instance, args, kwargs, start_time, response,
+                 exception):
+        """
+        Initialize.
+        :param wrapped: wrapt's wrapped
+        :param instance: wrapt's instance
+        :param args: wrapt's args
+        :param kwargs: wrapt's kwargs
+        :param start_time: Start timestamp (epoch)
+        :param response: response data
+        :param exception: Exception (if happened)
+        """
+        self.RESPONSE_TO_FUNC.update(
+            {'SendMessage': self.process_send_message_response,
+             'ReceiveMessage': self.process_receive_message_response}
+        )
+        _, request_data = args
+        self.request_data = request_data
+        self.response = response
+
+        super(BotocoreSQSEvent, self).__init__(
+            wrapped,
+            instance,
+            args,
+            kwargs,
+            start_time,
+            response,
+            exception
+        )
+
+        if 'QueueUrl' in request_data:
+            self.resource['name'] = request_data['QueueUrl'].split('/')[-1]
+        elif 'GetQueueUrl' in request_data:
+            self.resource['name'] = request_data['GetQueueUrl']
+
+        # Currently tracing only first entry
+        entry = request_data['Entries'][0] if (
+                'Entries' in request_data) else request_data
+        if 'MessageBody' in entry:
+            add_data_if_needed(
+                self.resource['metadata'],
+                'Message Body',
+                request_data['MessageBody']
+            )
+
+    def update_response(self, response):
+        """
+        Adds response data to event.
+        :param response: Response from botocore
+        """
+        super(BotocoreSQSEvent, self).update_response(response)
+        self.RESPONSE_TO_FUNC.get(self.resource['operation'], empty_func)()
+
+    def process_send_message_response(self):
+        """
+        Process the send message response
+        """
+        self.resource['metadata']['Message ID'] = self.response['MessageId']
+        self.resource['metadata']['MD5 Of Message Body'] = (
+            self.response['MD5OfMessageBody']
+        )
+
+    # pylint: disable=invalid-name
+    def process_receive_message_response(self):
+        """
+        Process the receive message response -
+            notice that only first message is traced
+        """
+        if 'Messages' in self.response:
+            messages_number = len(self.response['Messages'])
+            self.resource['metadata']['Message ID'] = (
+                self.response['Messages'][0]['MessageId']
+            )
+            self.resource['metadata']['MD5 Of Message Body'] = (
+                self.response['Messages'][0]['MD5OfBody']
+            )
+        else:
+            messages_number = 0
+
+        self.resource['metadata']['Number Of Messages'] = messages_number
 
 class BotocoreDynamoDBEvent(BotocoreEvent):
     """
