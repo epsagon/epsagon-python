@@ -185,9 +185,9 @@ class SNSLambdaTrigger(BaseLambdaTrigger):
         )
 
 
-class APIGatewayLambdaTrigger(BaseLambdaTrigger):
+class ProxyAPIGatewayLambdaTrigger(BaseLambdaTrigger):
     """
-    Represents API Gateway Lambda trigger
+    Represents a Proxy API Gateway Lambda trigger.
     """
     RESOURCE_TYPE = 'api_gateway'
 
@@ -200,7 +200,7 @@ class APIGatewayLambdaTrigger(BaseLambdaTrigger):
         :param context: the context dict from the entry point
         """
 
-        super(APIGatewayLambdaTrigger, self).__init__(start_time)
+        super(ProxyAPIGatewayLambdaTrigger, self).__init__(start_time)
 
         self.event_id = event['requestContext']['requestId']
         self.resource['name'] = event['resource']
@@ -213,6 +213,38 @@ class APIGatewayLambdaTrigger(BaseLambdaTrigger):
             'path_parameters': event['pathParameters'],
         }
         add_data_if_needed(self.resource['metadata'], 'body', event['body'])
+
+
+class NoProxyAPIGatewayLambdaTrigger(BaseLambdaTrigger):
+    """
+    Represents an API Gateway Lambda trigger that uses the API Gateway method
+    request passthrough template.
+    """
+    RESOURCE_TYPE = 'api_gateway_no_proxy'
+
+    # pylint: disable=W0613
+    def __init__(self, start_time, event, context):
+        """
+        Initialize.
+        :param start_time: event's start time (epoch)
+        :param event: event dict from the entry point
+        :param context: the context dict from the entry point
+        """
+
+        super(NoProxyAPIGatewayLambdaTrigger, self).__init__(start_time)
+
+        self.event_id = event['context']['request-id']
+        self.resource['name'] = event['context']['resource-path']
+        self.resource['operation'] = event['context']['http-method']
+
+        self.resource['metadata'] = {
+            'stage': event['context']['stage'],
+            'headers': event['params']['header'],
+            'query_string_parameters': event['params']['querystring'],
+            'path_parameters': event['params']['path'],
+        }
+        add_data_if_needed(self.resource['metadata'], 'body',
+                           event['body-json'])
 
 
 class EventsLambdaTrigger(BaseLambdaTrigger):
@@ -269,7 +301,9 @@ class LambdaTriggerFactory(object):
                 event_source = 'EventSource'
             trigger_service = event['Records'][0][event_source].split(':')[-1]
         elif 'httpMethod' in event:
-            trigger_service = APIGatewayLambdaTrigger.RESOURCE_TYPE
+            trigger_service = ProxyAPIGatewayLambdaTrigger.RESOURCE_TYPE
+        elif 'context' in event and 'http-method' in event['context']:
+            trigger_service = NoProxyAPIGatewayLambdaTrigger.RESOURCE_TYPE
         elif 'source' in event:
             trigger_service = str(event['source'].split('.')[-1])
         return LambdaTriggerFactory.FACTORY.get(trigger_service)(
