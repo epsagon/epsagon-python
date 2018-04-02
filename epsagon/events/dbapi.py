@@ -3,7 +3,6 @@ sqlalchemy events module.
 """
 
 from __future__ import absolute_import
-import collections
 from uuid import uuid4
 import traceback
 
@@ -37,11 +36,21 @@ class DBAPIEvent(BaseEvent):
     RESOURCE_TYPE = 'database'
     RESOURCE_OPERATION = None
 
-    def __init__(self, connection, table_name, start_time, exception):
+    def __init__(
+            self,
+            connection,
+            cursor,
+            _args,
+            _kwargs,
+            start_time,
+            exception
+    ):
         """
         Initialize.
         :param connection: The SQL engine the event is using
-        :param table_name: the table the event is occurring on
+        :param cursor: Cursor object used in the even
+        :param args: args passed to called function
+        :param kwargs: kwargs passed to called function
         :param start_time: Start timestamp (epoch)
         :param exception: Exception (if occurred)
         """
@@ -51,110 +60,59 @@ class DBAPIEvent(BaseEvent):
         self.event_id = 'dbapi-{}'.format(str(uuid4()))
         dsn = parse_dsn(connection.dsn)
         self.resource['name'] = dsn['dbname']
-        self.resource['operation'] = self.RESOURCE_OPERATION
+
+        query = cursor.query
+        # NOTE: The operation might not be identified properly when
+        # using 'WITH' clause
+        self.resource['operation'] = query.split()[0].lower()
 
         # override event type with the specific DB type
         if 'rds.amazonaws' in connection.dsn:
             self.resource['type'] = 'rds'
 
         self.resource['metadata'] = {
-            'url': dsn['host'],
-            'driver': connection.__class__.__module__.split('.')[0],
-            'table_name': table_name
+            'Host': dsn['host'] if 'host' in dsn else 'local',
+            'Driver': connection.__class__.__module__.split('.')[0],
+            'Table Name': self._extract_table_name(
+                query,
+                self.resource['operation']
+            )
         }
 
-        if exception is not None:
-            self.set_exception(exception, traceback.format_exc())
-
-
-class DBAPIInsertEvent(DBAPIEvent):
-    """
-    Represents sqlalchemy insert event.
-    """
-
-    RESOURCE_OPERATION = 'insert'
-
-    # pylint: disable=W0613
-    def __init__(self, connection, cursor, args, kwargs, start_time, exception):
-        """
-        Initialize.
-        :param connection: The SQL engine the event is using
-        :param cursor: The cursor from sqlalchemy
-        :param args: the arguments passed to the execution function
-        :param kwargs: the arguments to the execution function
-        :param start_time: Start timestamp (epoch)
-        :param exception: Exception (if happened)
-        """
-
-        table_name_index = args[0].lower().split().index('into') + 1
-
-        super(DBAPIInsertEvent, self).__init__(
-            connection,
-            args[0].split()[table_name_index],
-            start_time,
-            exception
-        )
-
-        if len(args) > 1:
-            if isinstance(args[1], (list, tuple, set)):
-                items = [{
-                        name: str(value) for name, value in row.iteritems()
-                    } if isinstance(row, collections.Mapping)
-                    else row  # Making sure its JSON-able
-                    for row in args[1]
-                ]
-            elif isinstance(args[1], collections.Mapping):
-                items = {
-                    name: str(value) for name, value in args[1].iteritems()
-                }
-            else:
-                items = [args[1]]  # Making sure its JSON-able
-            add_data_if_needed(self.resource['metadata'], 'items', items)
-
-
-class DBAPISelectEvent(DBAPIEvent):
-    """
-    Represents sqlalchemy select event.
-    """
-
-    RESOURCE_OPERATION = 'select'
-
-    # pylint: disable=W0613
-    def __init__(self, connection, cursor, args, kwargs, start_time, exception):
-        """
-        Initialize.
-        :param connection: The SQL engine the event is using
-        :param cursor: The cursor from sqlalchemy
-        :param args: the arguments passed to the execution function
-        :param kwargs: the arguments to the execution function
-        :param start_time: Start timestamp (epoch)
-        :param exception: Exception (if happened)
-        """
-
-        table_name = ' '.join(
-            args[0].split()[1:])  # default anything but select keyword
-        if 'from' in args[0].lower():
-            table_name_index = args[0].lower().split().index('from') + 1
-            table_name = args[0].split()[table_name_index]
-
-        super(DBAPISelectEvent, self).__init__(
-            connection,
-            table_name,
-            start_time,
-            exception
-        )
+        add_data_if_needed(self.resource['metadata'], 'Query', cursor.query)
 
         if exception is None:
-            self.update_response(cursor)
+            # Update response data
+            self.resource['metadata']['Related Rows Count'] = int(
+                cursor.rowcount
+            )
+        else:
+            self.set_exception(exception, traceback.format_exc())
 
-    def update_response(self, cursor):
+    @staticmethod
+    def _extract_table_name(query, operation):
         """
-        Adds response data to event.
-        :param cursor: The cursor to the response
-        :return: None
+        Extract the table name from the SQL query string
+        :param query: The SQL query string
+        :param operation: The SQL operation used in the query
+            (SELECT, INSERT, etc.)
+        :return: Table name (string), "" if couldn't find
         """
 
-        self.resource['metadata']['items_count'] = int(cursor.rowcount)
+        # NOTE: Not supporting advanced syntax of select and delete (as 'delete
+        # NOTE: from only ..')
+        operation_to_keyword = {
+            'select': 'from', 'insert': 'into', 'update': 'update',
+            'delete': 'from', 'create': 'table'
+        }
+
+        if operation in operation_to_keyword:
+            keyword = operation_to_keyword[operation]
+            query_words = query.lower().split()
+            if keyword in query_words:
+                return query.split()[query_words.index(keyword) + 1]
+
+        return ''
 
 
 class DBAPIEventFactory(object):
@@ -162,10 +120,10 @@ class DBAPIEventFactory(object):
     Factory class, generates dbapi event.
     """
 
-    FACTORY = {
-        class_obj.RESOURCE_OPERATION: class_obj
-        for class_obj in DBAPIEvent.__subclasses__()
-    }
+    # FACTORY = {
+    #     class_obj.RESOURCE_OPERATION: class_obj
+    #     for class_obj in DBAPIEvent.__subclasses__()
+    # }
 
     @staticmethod
     # pylint: disable=W0613
@@ -182,19 +140,12 @@ class DBAPIEventFactory(object):
         :param exception:
         :return:
         """
-        operation = args[0].split()[0].lower()
-        event_class = DBAPIEventFactory.FACTORY.get(
-            operation,
-            None
+        event = DBAPIEvent(
+            cursor_wrapper.connection_wrapper,
+            cursor_wrapper,
+            args,
+            kwargs,
+            start_time,
+            exception,
         )
-
-        if event_class is not None:
-            event = event_class(
-                cursor_wrapper.connection_wrapper,
-                cursor_wrapper,
-                args,
-                kwargs,
-                start_time,
-                exception,
-            )
-            tracer.add_event(event)
+        tracer.add_event(event)

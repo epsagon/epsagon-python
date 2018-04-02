@@ -2,10 +2,12 @@
 Trace object holds events and metadata
 """
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 import sys
+import os
 import time
 import warnings
+import pprint
 import simplejson as json
 
 import requests
@@ -143,6 +145,9 @@ class Trace(object):
                 data=json.dumps(self.to_dict()),
                 timeout=SEND_TIMEOUT
             )
+            if os.environ.get('EPSAGON_DEBUG') == 'TRUE':
+                print("Sending traces:")
+                pprint.pprint(self.to_dict())
         except requests.exceptions.ReadTimeout as _:
             # In future, send basic data
             pass
