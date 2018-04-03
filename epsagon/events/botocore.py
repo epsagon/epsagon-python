@@ -540,13 +540,16 @@ class BotocoreSESEvent(BotocoreEvent):
 
         if self.resource['operation'] == 'SendEmail':
             self.resource['metadata']['source'] = request_data['Source']
-            add_data_if_needed(
-                self.resource['metadata'],
-                'message',
-                request_data['Message']
-            )
             self.resource['metadata']['destination'] = \
                 request_data['Destination']
+            self.resource['metadata']['subject'] = \
+                request_data['Message']['Subject']
+
+            add_data_if_needed(
+                self.resource['metadata'],
+                'body',
+                request_data['Message']['Body']
+            )
 
     def update_response(self, response):
         """
