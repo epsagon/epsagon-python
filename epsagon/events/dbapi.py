@@ -6,8 +6,6 @@ from __future__ import absolute_import
 from uuid import uuid4
 import traceback
 
-from epsagon.utils import add_data_if_needed
-
 try:
     from psycopg2.extensions import parse_dsn
 
@@ -35,6 +33,18 @@ class DBAPIEvent(BaseEvent):
     ORIGIN = 'dbapi'
     RESOURCE_TYPE = 'database'
     RESOURCE_OPERATION = None
+
+    # mapping SQL commands to words preceding the table name in the query
+    # Note: Not supporting advanced syntax of select and delete (as 'delete
+    # from only ..')
+    _OPERATION_TO_TABLE_NAME_KEYWORD = {
+        'select': 'from',
+        'insert': 'into',
+        'update': 'update',
+        'delete': 'from',
+        'create': 'table'
+    }
+
 
     def __init__(
             self,
@@ -64,7 +74,8 @@ class DBAPIEvent(BaseEvent):
         query = cursor.query
         # NOTE: The operation might not be identified properly when
         # using 'WITH' clause
-        self.resource['operation'] = query.split()[0].lower()
+        operation = query.split()[0].lower()
+        self.resource['operation'] = operation
 
         # override event type with the specific DB type
         if 'rds.amazonaws' in connection.dsn:
@@ -73,13 +84,12 @@ class DBAPIEvent(BaseEvent):
         self.resource['metadata'] = {
             'Host': dsn['host'] if 'host' in dsn else 'local',
             'Driver': connection.__class__.__module__.split('.')[0],
-            'Table Name': self._extract_table_name(
-                query,
-                self.resource['operation']
-            )
+            'Table Name': self._extract_table_name(query, operation)
         }
 
-        add_data_if_needed(self.resource['metadata'], 'Query', cursor.query)
+        # for select we always want to save the query
+        if (operation == 'select') or (not tracer.metadata_only):
+            self.resource['metadata']['Query'] = cursor.query
 
         if exception is None:
             # Update response data
@@ -99,15 +109,8 @@ class DBAPIEvent(BaseEvent):
         :return: Table name (string), "" if couldn't find
         """
 
-        # NOTE: Not supporting advanced syntax of select and delete (as 'delete
-        # NOTE: from only ..')
-        operation_to_keyword = {
-            'select': 'from', 'insert': 'into', 'update': 'update',
-            'delete': 'from', 'create': 'table'
-        }
-
-        if operation in operation_to_keyword:
-            keyword = operation_to_keyword[operation]
+        if operation in DBAPIEvent._OPERATION_TO_TABLE_NAME_KEYWORD:
+            keyword = DBAPIEvent._OPERATION_TO_TABLE_NAME_KEYWORD[operation]
             query_words = query.lower().split()
             if keyword in query_words:
                 return query.split()[query_words.index(keyword) + 1]
@@ -119,11 +122,6 @@ class DBAPIEventFactory(object):
     """
     Factory class, generates dbapi event.
     """
-
-    # FACTORY = {
-    #     class_obj.RESOURCE_OPERATION: class_obj
-    #     for class_obj in DBAPIEvent.__subclasses__()
-    # }
 
     @staticmethod
     # pylint: disable=W0613
