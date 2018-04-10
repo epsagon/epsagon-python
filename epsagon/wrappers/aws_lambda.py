@@ -6,15 +6,21 @@ from __future__ import absolute_import
 import traceback
 import time
 import functools
+import warnings
 from uuid import uuid4
 
 import epsagon.trace
 import epsagon.runners.aws_lambda
 import epsagon.triggers.aws_lambda
+import epsagon.wrappers.python_function
 from epsagon.runners.aws_lambda import StepLambdaRunner
 from .. import constants
 
 STEP_DICT_NAME = 'Epsagon'
+
+
+class EpsagonWarning(Warning):
+    pass
 
 
 def lambda_wrapper(func):
@@ -22,9 +28,16 @@ def lambda_wrapper(func):
 
     @functools.wraps(func)
     def _lambda_wrapper(*args, **kwargs):
-        epsagon.trace.tracer.prepare()
         event, context = args
+        if context is None:
+            warnings.warn('Lambda context is None, using simple python wrapper')
+            return epsagon.wrappers.python_function.wrap_python_function(
+                func,
+                args,
+                kwargs
+            )
 
+        epsagon.trace.tracer.prepare()
         try:
             epsagon.trace.tracer.events.append(
                 epsagon.triggers.aws_lambda.LambdaTriggerFactory.factory(
@@ -61,9 +74,16 @@ def step_lambda_wrapper(func):
 
     @functools.wraps(func)
     def _lambda_wrapper(*args, **kwargs):
-        epsagon.trace.tracer.prepare()
         event, context = args
+        if context is None:
+            warnings.warn('Lambda context is None, using simple python wrapper')
+            return epsagon.wrappers.python_function.wrap_python_function(
+                func,
+                args,
+                kwargs
+            )
 
+        epsagon.trace.tracer.prepare()
         try:
             epsagon.trace.tracer.events.append(
                 epsagon.triggers.aws_lambda.LambdaTriggerFactory.factory(

@@ -1,5 +1,6 @@
 import mock
 import pytest
+import warnings
 import epsagon.wrappers.aws_lambda
 import epsagon.constants
 
@@ -116,4 +117,26 @@ def test_lambda_wrapper_trigger_exception(trigger_factory_mock, trace_mock):
     trace_mock.add_exception.assert_called()
 
     assert not epsagon.constants.COLD_START
-    assert len(epsagon.trace.tracer.events) == 0 # runner won't be added, checking call to add_event
+    assert len(epsagon.trace.tracer.events) == 0  # runner won't be added, checking call to add_event
+
+
+@mock.patch(
+    'epsagon.wrappers.python_function.wrap_python_function',
+    side_effect=['success']
+)
+def test_lambda_wrapper_none_context(wrap_python_function_mock):
+    @epsagon.wrappers.aws_lambda.lambda_wrapper
+    def wrapped_lambda(event, context):
+        return
+
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter('always')
+        lambda_runner_mock = mock.MagicMock(set_exception=mock.MagicMock())
+        with mock.patch(
+                'epsagon.runners.aws_lambda.LambdaRunner',
+                side_effect=[lambda_runner_mock]
+        ):
+            wrapped_lambda('a', None)
+        assert len(w) == 1
+
+    wrap_python_function_mock.assert_called()
