@@ -6,9 +6,9 @@ from __future__ import absolute_import
 import time
 import traceback
 import functools
+from epsagon import constants
 from ..trace import tracer
 from ..runners.python_function import PythonRunner
-from epsagon import constants
 
 
 def wrap_python_function(func, args, kwargs):
