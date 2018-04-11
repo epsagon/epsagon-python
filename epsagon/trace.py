@@ -13,8 +13,8 @@ import simplejson as json
 import requests
 import requests.exceptions
 from epsagon.event import BaseEvent
-from .constants import SEND_TIMEOUT, __version__
 from epsagon.common import EpsagonWarning
+from .constants import SEND_TIMEOUT, __version__
 
 
 class Trace(object):
