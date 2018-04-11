@@ -1,5 +1,5 @@
 """
-Simple example for Epsagon usage in AWS Lambda function
+Simple example for Epsagon usage in AWS Lambda function.
 """
 
 import epsagon
