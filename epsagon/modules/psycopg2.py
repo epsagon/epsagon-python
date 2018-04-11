@@ -27,12 +27,11 @@ class CursorWrapper(wrapt.ObjectProxy):
         """
         return self._self_connection
 
-    # TODO: handle arguments name correctly. might not be query in different
-    # TODO: libraries.
-    def execute(self, query, *args, **kwargs):
+    # NOTE: tracing other API calls currently not supported
+    # (as 'executemany' and 'callproc')
+    def execute(self, *args, **kwargs):
         """
         Execute the query.
-        :param query: the query to execute.
         :param args: args.
         :param kwargs: kwargs.
         """
@@ -40,43 +39,8 @@ class CursorWrapper(wrapt.ObjectProxy):
             DBAPIEventFactory,
             self.__wrapped__.execute,
             self,
-            (query,) + args,
+            args,
             kwargs,
-        )
-
-    # TODO: handle arguments name correctly. might not be query in different
-    # TODO: libraries.
-    def executemany(self, query, *args, **kwargs):
-        """
-        Execute many queries.
-        :param query: queries to exectue.
-        :param args: args.
-        :param kwargs: kwargs.
-        :return:
-        """
-        epsagon.modules.general_wrapper.wrapper(
-            DBAPIEventFactory,
-            self.__wrapped__.executemany,
-            self,
-            (query,) + args,
-            kwargs,
-        )
-
-    # TODO: handle arguments name correctly. might not be query in different
-    # TODO: libraries.
-    def callproc(self, proc, args):
-        """
-        Porcess the call
-        :param proc:
-        :param args:
-        :return:
-        """
-        epsagon.modules.general_wrapper.wrapper(
-            DBAPIEventFactory,
-            self.__wrapped__.callproc,
-            self,
-            [proc, args],
-            {}
         )
 
     def __enter__(self):
