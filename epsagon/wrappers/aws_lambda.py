@@ -26,51 +26,29 @@ class EpsagonWarning(Warning):
     pass
 
 
-def create_runner(runner_class, context, func, args, kwargs):
-    """
-    Creates a runner for the lambda.
-    :param runner_class: The default class of the runner to try and use
-    :param context: The context the lambda was triggered with.
-    :param func: The function wrapped.
-    :param args: The arguments to the function.
-    :param kwargs: The keyword arguments to the function.
-    :return: The created runner
-    """
-    try:
-        return runner_class(time.time(), context)
-    # pylint: disable=W0703
-    except Exception as exception:
-        epsagon.trace.tracer.add_exception(
-            exception,
-            traceback.format_exc()
-        )
-
-    # If we reached here, creating a regular Lambda runner failed.
-    warnings.warn(
-        'Lambda context is invalid, using simple python wrapper',
-        EpsagonWarning
-    )
-
-    # If we fail here, we should catch in the calling function and call the
-    # user's function without epsagon.
-    return epsagon.runners.python_function.PythonRunner(
-        time.time(),
-        func,
-        args,
-        kwargs
-    )
-
-
 def lambda_wrapper(func):
     """Epsagon's Lambda wrapper."""
 
     @functools.wraps(func)
     def _lambda_wrapper(*args, **kwargs):
+        epsagon.trace.tracer.prepare()
         event, context = args
-        if context is None:
+
+        try:
+            runner = epsagon.runners.aws_lambda.LambdaRunner(
+                time.time(),
+                context
+            )
+        # pylint: disable=W0703
+        except Exception as exception:
+            # Regress to python runner.
             warnings.warn(
-                'Lambda context is None, using simple python wrapper',
+                'Lambda context is invalid, using simple python wrapper',
                 EpsagonWarning
+            )
+            epsagon.trace.tracer.add_exception(
+                exception,
+                traceback.format_exc()
             )
             return epsagon.wrappers.python_function.wrap_python_function(
                 func,
@@ -78,7 +56,8 @@ def lambda_wrapper(func):
                 kwargs
             )
 
-        epsagon.trace.tracer.prepare()
+        constants.COLD_START = False
+
         try:
             epsagon.trace.tracer.add_event(
                 epsagon.triggers.aws_lambda.LambdaTriggerFactory.factory(
@@ -93,21 +72,6 @@ def lambda_wrapper(func):
                 exception,
                 traceback.format_exc()
             )
-
-        try:
-            runner = create_runner(
-                epsagon.runners.aws_lambda.LambdaRunner,
-                context,
-                func,
-                args,
-                kwargs
-            )
-        # pylint: disable=W0703
-        except Exception as exception:
-            # Don't disturb user execution if we failed
-            return func(*args, **kwargs)
-
-        constants.COLD_START = False
 
         try:
             result = func(*args, **kwargs)
@@ -127,16 +91,33 @@ def step_lambda_wrapper(func):
 
     @functools.wraps(func)
     def _lambda_wrapper(*args, **kwargs):
+        epsagon.trace.tracer.prepare()
         event, context = args
-        if context is None:
-            warnings.warn('Lambda context is None, using simple python wrapper')
+
+        try:
+            runner = epsagon.runners.aws_lambda.StepLambdaRunner(
+                time.time(),
+                context
+            )
+        # pylint: disable=W0703
+        except Exception as exception:
+            # Regress to python runner.
+            warnings.warn(
+                'Lambda context is invalid, using simple python wrapper',
+                EpsagonWarning
+            )
+            epsagon.trace.tracer.add_exception(
+                exception,
+                traceback.format_exc()
+            )
             return epsagon.wrappers.python_function.wrap_python_function(
                 func,
                 args,
                 kwargs
             )
 
-        epsagon.trace.tracer.prepare()
+        constants.COLD_START = False
+
         try:
             epsagon.trace.tracer.add_event(
                 epsagon.triggers.aws_lambda.LambdaTriggerFactory.factory(
@@ -153,21 +134,6 @@ def step_lambda_wrapper(func):
             )
 
         try:
-            runner = create_runner(
-                epsagon.runners.aws_lambda.StepLambdaRunner,
-                context,
-                func,
-                args,
-                kwargs
-            )
-        # pylint: disable=W0703
-        except Exception as exception:
-            # Don't disturb user execution if we failed
-            return func(*args, **kwargs)
-
-        constants.COLD_START = False
-
-        try:
             result = func(*args, **kwargs)
             # Add step functions data only if the result is a dictionary.
             if isinstance(result, dict):
@@ -181,8 +147,8 @@ def step_lambda_wrapper(func):
                     steps_dict['step_num'] += 1
 
                 result[STEP_DICT_NAME] = steps_dict
+                runner.add_step_data(steps_dict)
 
-            runner.add_step_data(steps_dict)
             return result
         except Exception as exception:
             runner.set_exception(exception, traceback.format_exc())
