@@ -1,11 +1,12 @@
 """
-Simple example for epsagon
+Simple example for Epsagon usage in AWS Lambda function.
 """
 
 import epsagon
 epsagon.init(
     token='my-secret-token',
-    app_name='my-app-name',  # Optional
+    app_name='my-app-name',
+    metadata_only=False
 )
 
 
