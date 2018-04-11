@@ -14,16 +14,10 @@ import epsagon.runners.aws_lambda
 import epsagon.triggers.aws_lambda
 import epsagon.wrappers.python_function
 import epsagon.runners.python_function
+from epsagon.common import EpsagonWarning
 from .. import constants
 
 STEP_DICT_NAME = 'Epsagon'
-
-
-class EpsagonWarning(Warning):
-    """
-    An Epsagon warning.
-    """
-    pass
 
 
 def lambda_wrapper(func):

@@ -119,10 +119,14 @@ def test_lambda_wrapper_trigger_exception(trigger_factory_mock, trace_mock):
 
 
 @mock.patch(
+    'epsagon.trace.tracer',
+    prepare=mock.MagicMock(),
+)
+@mock.patch(
     'epsagon.wrappers.python_function.wrap_python_function',
     side_effect=['success']
 )
-def test_lambda_wrapper_none_context(wrap_python_function_wrapper):
+def test_lambda_wrapper_none_context(wrap_python_function_wrapper, tracer_mock):
     @epsagon.wrappers.aws_lambda.lambda_wrapper
     def wrapped_lambda(event, context):
         # Doesn't matter, we are mocking wrap_python_function
@@ -138,14 +142,19 @@ def test_lambda_wrapper_none_context(wrap_python_function_wrapper):
             assert wrapped_lambda('a', None) == 'success'
         assert len(w) == 1
 
+    tracer_mock.prepare.assert_called()
     wrap_python_function_wrapper.assert_called()
 
 
 @mock.patch(
+    'epsagon.trace.tracer',
+    prepare=mock.MagicMock(),
+)
+@mock.patch(
     'epsagon.wrappers.python_function.wrap_python_function',
     side_effect=['success']
 )
-def test_lambda_wrapper_lambda_runner_factory_failed(wrap_python_function_wrapper):
+def test_lambda_wrapper_lambda_runner_factory_failed(wrap_python_function_wrapper, tracer_mock):
     @epsagon.wrappers.aws_lambda.lambda_wrapper
     def wrapped_lambda(event, context):
         # Doesn't matter, we are mocking wrap_python_function
@@ -160,6 +169,7 @@ def test_lambda_wrapper_lambda_runner_factory_failed(wrap_python_function_wrappe
             assert wrapped_lambda('a', 'b') == 'success'
         assert len(w) == 1
 
+    tracer_mock.prepare.assert_called()
     wrap_python_function_wrapper.assert_called()
 
 
@@ -350,10 +360,14 @@ def test_step_lambda_wrapper_trigger_exception(trigger_factory_mock, trace_mock)
 
 
 @mock.patch(
+    'epsagon.trace.tracer',
+    prepare=mock.MagicMock(),
+)
+@mock.patch(
     'epsagon.wrappers.python_function.wrap_python_function',
     side_effect=['success']
 )
-def test_step_lambda_wrapper_none_context(wrap_python_function_wrapper):
+def test_step_lambda_wrapper_none_context(wrap_python_function_wrapper, tracer_mock):
     @epsagon.wrappers.aws_lambda.step_lambda_wrapper
     def wrapped_lambda(event, context):
         # Doesn't matter, we are mocking wrap_python_function
@@ -369,14 +383,19 @@ def test_step_lambda_wrapper_none_context(wrap_python_function_wrapper):
             assert wrapped_lambda('a', None) == 'success'
         assert len(w) == 1
 
+    tracer_mock.prepare.assert_called()
     wrap_python_function_wrapper.assert_called()
 
 
 @mock.patch(
+    'epsagon.trace.tracer',
+    prepare=mock.MagicMock(),
+)
+@mock.patch(
     'epsagon.wrappers.python_function.wrap_python_function',
     side_effect=['success']
 )
-def test_step_lambda_wrapper_lambda_runner_factory_failed(wrap_python_function_wrapper):
+def test_step_lambda_wrapper_lambda_runner_factory_failed(wrap_python_function_wrapper, tracer_mock):
     @epsagon.wrappers.aws_lambda.step_lambda_wrapper
     def wrapped_lambda(event, context):
         # Doesn't matter, we are mocking wrap_python_function
@@ -391,4 +410,5 @@ def test_step_lambda_wrapper_lambda_runner_factory_failed(wrap_python_function_w
             assert wrapped_lambda('a', 'b') == 'success'
         assert len(w) == 1
 
+    tracer_mock.prepare.assert_called()
     wrap_python_function_wrapper.assert_called()

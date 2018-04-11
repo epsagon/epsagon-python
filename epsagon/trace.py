@@ -14,6 +14,7 @@ import requests
 import requests.exceptions
 from epsagon.event import BaseEvent
 from .constants import SEND_TIMEOUT, __version__
+from epsagon.common import EpsagonWarning
 
 
 class Trace(object):
@@ -65,7 +66,9 @@ class Trace(object):
 
         if self.token == '':
             warnings.warn(
-                'Epsagon Error: Please initialize token, data won\'t be sent.')
+                'Epsagon Error: Please initialize token, data won\'t be sent.',
+                EpsagonWarning
+            )
 
         self.events = []
         self.exceptions = []
