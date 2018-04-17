@@ -564,6 +564,24 @@ class BotocoreSESEvent(BotocoreEvent):
             self.resource['metadata']['message_id'] = response['MessageId']
 
 
+class BotocoreAthenaEvent(BotocoreEvent):
+    """
+    Represents Athena botocore event
+    """
+    RESOURCE_TYPE = 'athena'
+
+    def __init__(self, wrapped, instance, args, kwargs, start_time, response,
+                 exception):
+        super(BotocoreAthenaEvent, self).__init__(
+            wrapped,
+            instance,
+            args,
+            kwargs,
+            start_time,
+            response,
+            exception
+        )
+
 class BotocoreLambdaEvent(BotocoreEvent):
     """
     Represents lambda botocore event.
@@ -610,6 +628,7 @@ class BotocoreLambdaEvent(BotocoreEvent):
                 'payload',
                 request_data['InvokeArgs']
             )
+
 
 
 class BotocoreEventFactory(object):
