@@ -2,7 +2,7 @@
 botocore events module.
 """
 
-#pylint: disable=C0302
+# pylint: disable=C0302
 from __future__ import absolute_import
 
 import hashlib
@@ -12,10 +12,10 @@ from boto3.dynamodb.types import TypeDeserializer
 from botocore.exceptions import ClientError
 from ..trace import tracer
 from ..event import BaseEvent
-from ..utils import add_data_if_needed
+from ..utils import add_data_if_needed, add_optional_data
 
 
-def empty_func():
+def empty_func(*args):
     """
     A dummy function.
     :return:
@@ -33,7 +33,7 @@ class BotocoreEvent(BaseEvent):
     RESPONSE_TO_FUNC = {}
     OPERATION_TO_FUNC = {}
 
-    #pylint: disable=W0613
+    # pylint: disable=W0613
     def __init__(self, wrapped, instance, args, kwargs, start_time, response,
                  exception):
         """
@@ -280,6 +280,7 @@ class BotocoreSQSEvent(BotocoreEvent):
         :param kwargs: wrapt's kwargs
         :param start_time: Start timestamp (epoch)
         :param response: response data
+
         :param exception: Exception (if happened)
         """
         self.RESPONSE_TO_FUNC.update(
@@ -350,6 +351,7 @@ class BotocoreSQSEvent(BotocoreEvent):
             messages_number = 0
 
         self.resource['metadata']['Number Of Messages'] = messages_number
+
 
 class BotocoreDynamoDBEvent(BotocoreEvent):
     """
@@ -572,6 +574,21 @@ class BotocoreAthenaEvent(BotocoreEvent):
 
     def __init__(self, wrapped, instance, args, kwargs, start_time, response,
                  exception):
+        self.RESPONSE_TO_FUNC.update(
+            {'GetQueryExecution': self.process_get_query_response,
+             'GetQueryResults': self.process_query_results_response,
+             'StartQueryExecution': self.process_start_query_response,
+             }
+        )
+
+        self.OPERATION_TO_FUNC.update(
+            {'StartQueryExecution': self.process_start_query_operation,
+             'GetQueryExecution': self.process_general_query_operation,
+             'GetQueryResults': self.process_general_query_operation,
+             'StopQueryExecution': self.process_general_query_operation,
+             }
+        )
+
         super(BotocoreAthenaEvent, self).__init__(
             wrapped,
             instance,
@@ -581,6 +598,54 @@ class BotocoreAthenaEvent(BotocoreEvent):
             response,
             exception
         )
+
+        self.OPERATION_TO_FUNC.get(
+            self.resource['operation'], empty_func)(args, kwargs)
+
+    def update_response(self, response):
+        """
+        Adds response data to event.
+        :param response: Response from botocore's Athena Client
+        """
+        super(BotocoreAthenaEvent, self).update_response(response)
+
+        self.RESPONSE_TO_FUNC.get(
+            self.resource['operation'], empty_func)(response)
+
+    def process_start_query_operation(self, args, _):
+        _, request_args = args
+
+        add_optional_data(self.resource['metadata'], 'database',
+                          lambda:  request_args['QueryExecutionContext']
+                                               ['Database'])
+
+        add_data_if_needed(self.resource['metadata'], 'query',
+                           request_args['QueryString'])
+
+    def process_get_query_response(self, response):
+        metadata = self.resource['metadata']
+
+        response_details = response['QueryExecution']
+
+        add_optional_data(metadata, 'status',
+                          lambda: response_details['Status']['State'])
+        add_optional_data(metadata, 'output_location',
+                          lambda: response_details['ResultConfiguration']
+                                                  ['OutputLocation'])
+        metadata['query_id'] = response_details['QueryExecutionId']
+        add_data_if_needed(metadata, 'query', response_details['Query'])
+
+    def process_general_query_operation(self, args, _):
+        _, request_args = args
+        self.resource['metadata']['query_id'] = request_args['QueryExecutionId']
+
+    def process_query_results_response(self, response):
+        add_optional_data(self.resource['metadata'], 'result_rows_count',
+                          lambda: len(response['ResultSet']['Rows']))
+
+    def process_start_query_response(self, response):
+        self.resource['metadata']['query_id'] = response['QueryExecutionId']
+
 
 class BotocoreLambdaEvent(BotocoreEvent):
     """
@@ -628,7 +693,6 @@ class BotocoreLambdaEvent(BotocoreEvent):
                 'payload',
                 request_data['InvokeArgs']
             )
-
 
 
 class BotocoreEventFactory(object):
