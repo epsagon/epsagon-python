@@ -15,6 +15,7 @@ from ..event import BaseEvent
 from ..utils import add_data_if_needed, add_optional_data
 
 
+# pylint: disable=W0613
 def empty_func(*args):
     """
     A dummy function.
@@ -613,16 +614,27 @@ class BotocoreAthenaEvent(BotocoreEvent):
             self.resource['operation'], empty_func)(response)
 
     def process_start_query_operation(self, args, _):
+        """
+        Process StartQueryExecution operation
+        :param args: command arguments
+        :param _: unused, kwargs
+        :return: None
+        """
         _, request_args = args
 
         add_optional_data(self.resource['metadata'], 'database',
-                          lambda:  request_args['QueryExecutionContext']
-                                               ['Database'])
+                          lambda: request_args['QueryExecutionContext']
+                                              ['Database'])
 
         add_data_if_needed(self.resource['metadata'], 'query',
                            request_args['QueryString'])
 
     def process_get_query_response(self, response):
+        """
+        Process GetQueryExecution response
+        :param response: response from Athena Client
+        :return: None
+        """
         metadata = self.resource['metadata']
 
         response_details = response['QueryExecution']
@@ -636,14 +648,30 @@ class BotocoreAthenaEvent(BotocoreEvent):
         add_data_if_needed(metadata, 'query', response_details['Query'])
 
     def process_general_query_operation(self, args, _):
+        """
+        Process generic Athena Query operations
+        :param args: command arguments
+        :param _: unused, kwargs
+        :return: None
+        """
         _, request_args = args
         self.resource['metadata']['query_id'] = request_args['QueryExecutionId']
 
     def process_query_results_response(self, response):
+        """
+        Process GetQueryResults response
+        :param response: reponse from Athena Client
+        :return: None
+        """
         add_optional_data(self.resource['metadata'], 'result_rows_count',
                           lambda: len(response['ResultSet']['Rows']))
 
     def process_start_query_response(self, response):
+        """
+        Start query
+        :param response:
+        :return:
+        """
         self.resource['metadata']['query_id'] = response['QueryExecutionId']
 
 
