@@ -660,7 +660,7 @@ class BotocoreAthenaEvent(BotocoreEvent):
     def process_query_results_response(self, response):
         """
         Process GetQueryResults response
-        :param response: reponse from Athena Client
+        :param response: response from Athena Client
         :return: None
         """
         add_optional_data(self.resource['metadata'], 'result_rows_count',
@@ -668,9 +668,9 @@ class BotocoreAthenaEvent(BotocoreEvent):
 
     def process_start_query_response(self, response):
         """
-        Start query
-        :param response:
-        :return:
+        Process StartQueryExecution response
+        :param response: response from Athena Client
+        :return: None
         """
         self.resource['metadata']['query_id'] = response['QueryExecutionId']
 
