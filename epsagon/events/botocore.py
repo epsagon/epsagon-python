@@ -12,7 +12,7 @@ from boto3.dynamodb.types import TypeDeserializer
 from botocore.exceptions import ClientError
 from ..trace import tracer
 from ..event import BaseEvent
-from ..utils import add_data_if_needed, add_optional_data
+from ..utils import add_data_if_needed
 
 
 # pylint: disable=W0613
@@ -91,9 +91,9 @@ class BotocoreEvent(BaseEvent):
         :return: None
         """
         self.event_id = response['ResponseMetadata']['RequestId']
-        self.resource['metadata']['retry_attempts'] = \
+        self.resource['metadata']['Retry Attempts'] = \
             response['ResponseMetadata']['RetryAttempts']
-        self.resource['metadata']['status_code'] = \
+        self.resource['metadata']['Status Code'] = \
             response['ResponseMetadata']['HTTPStatusCode']
 
 
@@ -281,7 +281,6 @@ class BotocoreSQSEvent(BotocoreEvent):
         :param kwargs: wrapt's kwargs
         :param start_time: Start timestamp (epoch)
         :param response: response data
-
         :param exception: Exception (if happened)
         """
         self.RESPONSE_TO_FUNC.update(
@@ -622,11 +621,10 @@ class BotocoreAthenaEvent(BotocoreEvent):
         """
         _, request_args = args
 
-        add_optional_data(self.resource['metadata'], 'database',
-                          lambda: request_args['QueryExecutionContext']
-                                              ['Database'])
+        self.resource['metadata']['Database'] = \
+            request_args.get('QueryExecutionContext', {}).get('Database', None)
 
-        add_data_if_needed(self.resource['metadata'], 'query',
+        add_data_if_needed(self.resource['metadata'], 'Query',
                            request_args['QueryString'])
 
     def process_get_query_response(self, response):
@@ -639,13 +637,15 @@ class BotocoreAthenaEvent(BotocoreEvent):
 
         response_details = response['QueryExecution']
 
-        add_optional_data(metadata, 'status',
-                          lambda: response_details['Status']['State'])
-        add_optional_data(metadata, 'output_location',
-                          lambda: response_details['ResultConfiguration']
-                                                  ['OutputLocation'])
-        metadata['query_id'] = response_details['QueryExecutionId']
-        add_data_if_needed(metadata, 'query', response_details['Query'])
+        metadata['Query Status'] = \
+            response_details.get('Status', {}).get('State', None)
+
+        metadata['Result Location'] = \
+            response_details.get('ResultConfiguration', {}).\
+                get('OutputLocation', None)
+
+        metadata['Query ID'] = response_details['QueryExecutionId']
+        add_data_if_needed(metadata, 'Query', response_details['Query'])
 
     def process_general_query_operation(self, args, _):
         """
@@ -655,7 +655,7 @@ class BotocoreAthenaEvent(BotocoreEvent):
         :return: None
         """
         _, request_args = args
-        self.resource['metadata']['query_id'] = request_args['QueryExecutionId']
+        self.resource['metadata']['Query ID'] = request_args['QueryExecutionId']
 
     def process_query_results_response(self, response):
         """
@@ -663,8 +663,8 @@ class BotocoreAthenaEvent(BotocoreEvent):
         :param response: response from Athena Client
         :return: None
         """
-        add_optional_data(self.resource['metadata'], 'result_rows_count',
-                          lambda: len(response['ResultSet']['Rows']))
+        self.resource['metadata']['Query Rows Count'] =\
+            len(response.get('ResultSet', {}).get('Rows', []))
 
     def process_start_query_response(self, response):
         """
@@ -672,7 +672,7 @@ class BotocoreAthenaEvent(BotocoreEvent):
         :param response: response from Athena Client
         :return: None
         """
-        self.resource['metadata']['query_id'] = response['QueryExecutionId']
+        self.resource['metadata']['Query ID'] = response['QueryExecutionId']
 
 
 class BotocoreLambdaEvent(BotocoreEvent):

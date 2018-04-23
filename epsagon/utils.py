@@ -19,22 +19,6 @@ BLACKLIST_URLS = {
 }
 
 
-def add_optional_data(dictionary, name, data_get_func):
-    """
-    Add optional data to the given dictionary from the data getter function
-    :param dictionary: dictionary to add the data to
-    :param name: key name
-    :param data_get_func: function that returns the data
-    :return: data inserted
-    """
-    value = None
-    try:
-        value = data_get_func()
-    except KeyError:
-        pass
-    dictionary[name] = value
-
-
 def add_data_if_needed(dictionary, name, data):
     """
     Add data to the given dictionary if metadata_only option is set to False.
