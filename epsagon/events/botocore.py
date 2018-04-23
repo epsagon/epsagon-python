@@ -2,7 +2,7 @@
 botocore events module.
 """
 
-#pylint: disable=C0302
+# pylint: disable=C0302
 from __future__ import absolute_import
 
 import hashlib
@@ -15,7 +15,8 @@ from ..event import BaseEvent
 from ..utils import add_data_if_needed
 
 
-def empty_func():
+# pylint: disable=W0613
+def empty_func(*args):
     """
     A dummy function.
     :return:
@@ -33,7 +34,7 @@ class BotocoreEvent(BaseEvent):
     RESPONSE_TO_FUNC = {}
     OPERATION_TO_FUNC = {}
 
-    #pylint: disable=W0613
+    # pylint: disable=W0613
     def __init__(self, wrapped, instance, args, kwargs, start_time, response,
                  exception):
         """
@@ -90,9 +91,9 @@ class BotocoreEvent(BaseEvent):
         :return: None
         """
         self.event_id = response['ResponseMetadata']['RequestId']
-        self.resource['metadata']['retry_attempts'] = \
+        self.resource['metadata']['Retry Attempts'] = \
             response['ResponseMetadata']['RetryAttempts']
-        self.resource['metadata']['status_code'] = \
+        self.resource['metadata']['Status Code'] = \
             response['ResponseMetadata']['HTTPStatusCode']
 
 
@@ -351,6 +352,7 @@ class BotocoreSQSEvent(BotocoreEvent):
 
         self.resource['metadata']['Number Of Messages'] = messages_number
 
+
 class BotocoreDynamoDBEvent(BotocoreEvent):
     """
     Represents DynamoDB botocore event.
@@ -562,6 +564,115 @@ class BotocoreSESEvent(BotocoreEvent):
 
         if self.resource['operation'] == 'SendEmail':
             self.resource['metadata']['message_id'] = response['MessageId']
+
+
+class BotocoreAthenaEvent(BotocoreEvent):
+    """
+    Represents Athena botocore event
+    """
+    RESOURCE_TYPE = 'athena'
+
+    def __init__(self, wrapped, instance, args, kwargs, start_time, response,
+                 exception):
+        self.RESPONSE_TO_FUNC.update(
+            {'GetQueryExecution': self.process_get_query_response,
+             'GetQueryResults': self.process_query_results_response,
+             'StartQueryExecution': self.process_start_query_response,
+             }
+        )
+
+        self.OPERATION_TO_FUNC.update(
+            {'StartQueryExecution': self.process_start_query_operation,
+             'GetQueryExecution': self.process_general_query_operation,
+             'GetQueryResults': self.process_general_query_operation,
+             'StopQueryExecution': self.process_general_query_operation,
+             }
+        )
+
+        super(BotocoreAthenaEvent, self).__init__(
+            wrapped,
+            instance,
+            args,
+            kwargs,
+            start_time,
+            response,
+            exception
+        )
+
+        self.OPERATION_TO_FUNC.get(
+            self.resource['operation'], empty_func)(args, kwargs)
+
+    def update_response(self, response):
+        """
+        Adds response data to event.
+        :param response: Response from botocore's Athena Client
+        """
+        super(BotocoreAthenaEvent, self).update_response(response)
+
+        self.RESPONSE_TO_FUNC.get(
+            self.resource['operation'], empty_func)(response)
+
+    def process_start_query_operation(self, args, _):
+        """
+        Process StartQueryExecution operation
+        :param args: command arguments
+        :param _: unused, kwargs
+        :return: None
+        """
+        _, request_args = args
+
+        self.resource['metadata']['Database'] = \
+            request_args.get('QueryExecutionContext', {}).get('Database', None)
+
+        add_data_if_needed(self.resource['metadata'], 'Query',
+                           request_args['QueryString'])
+
+    def process_get_query_response(self, response):
+        """
+        Process GetQueryExecution response
+        :param response: response from Athena Client
+        :return: None
+        """
+        metadata = self.resource['metadata']
+
+        response_details = response['QueryExecution']
+
+        metadata['Query Status'] = \
+            response_details.get('Status', {}).get('State', None)
+
+        metadata['Result Location'] = \
+            response_details.get('ResultConfiguration', {}).\
+                get('OutputLocation', None)
+
+        metadata['Query ID'] = response_details['QueryExecutionId']
+        add_data_if_needed(metadata, 'Query', response_details['Query'])
+
+    def process_general_query_operation(self, args, _):
+        """
+        Process generic Athena Query operations
+        :param args: command arguments
+        :param _: unused, kwargs
+        :return: None
+        """
+        _, request_args = args
+        self.resource['metadata']['Query ID'] = request_args['QueryExecutionId']
+
+    def process_query_results_response(self, response):
+        """
+        Process GetQueryResults response
+        :param response: response from Athena Client
+        :return: None
+        """
+        self.resource['metadata']['Query Rows Count'] =\
+            len(response.get('ResultSet', {}).get('Rows', []))
+
+    def process_start_query_response(self, response):
+        """
+        Process StartQueryExecution response
+        :param response: response from Athena Client
+        :return: None
+        """
+        self.resource['metadata']['Query ID'] = response['QueryExecutionId']
 
 
 class BotocoreLambdaEvent(BotocoreEvent):
