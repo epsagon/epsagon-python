@@ -3,3 +3,4 @@
 .pypirc
 .coverage
 .cache
+publish.sh
