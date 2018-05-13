@@ -208,11 +208,16 @@ class ProxyAPIGatewayLambdaTrigger(BaseLambdaTrigger):
 
         self.resource['metadata'] = {
             'stage': event['requestContext']['stage'],
-            'headers': event['headers'],
             'query_string_parameters': event['queryStringParameters'],
             'path_parameters': event['pathParameters'],
         }
+
         add_data_if_needed(self.resource['metadata'], 'body', event['body'])
+        add_data_if_needed(
+            self.resource['metadata'],
+            'headers',
+            event['headers']
+        )
 
 
 class NoProxyAPIGatewayLambdaTrigger(BaseLambdaTrigger):
@@ -239,12 +244,20 @@ class NoProxyAPIGatewayLambdaTrigger(BaseLambdaTrigger):
 
         self.resource['metadata'] = {
             'stage': event['context']['stage'],
-            'headers': event['params']['header'],
             'query_string_parameters': event['params']['querystring'],
             'path_parameters': event['params']['path'],
         }
-        add_data_if_needed(self.resource['metadata'], 'body',
-                           event['body-json'])
+
+        add_data_if_needed(
+            self.resource['metadata'],
+            'body',
+            event['body-json']
+        )
+        add_data_if_needed(
+            self.resource['metadata'],
+            'headers',
+            event['params']['header']
+        )
 
 
 class EventsLambdaTrigger(BaseLambdaTrigger):
@@ -270,8 +283,7 @@ class EventsLambdaTrigger(BaseLambdaTrigger):
 
         self.resource['metadata'] = {
             'region': event['region'],
-            'detail': None if not event['detail'] else event[
-                'detail'],
+            'detail': None if not event['detail'] else event['detail'],
             'account': str(event['account']),
         }
 
