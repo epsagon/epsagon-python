@@ -40,11 +40,13 @@ class Trace(object):
             sys.version_info.minor
         )
 
-    def add_exception(self, exception, stack_trace):
+    def add_exception(self, exception, stack_trace, additional_data=''):
         """
         add an exception to the trace
         :param exception: the exception to add
         :param stack_trace: the traceback at the moment of the event
+        :param additional_data: a json serializable object that contains
+            additional data regarding the exception
         :return: None
         """
 
@@ -52,7 +54,8 @@ class Trace(object):
             'type': str(type(exception)),
             'message': str(exception),
             'traceback': stack_trace,
-            'time': time.time()
+            'time': time.time(),
+            'additional_data': additional_data
         }
 
         self.exceptions.append(exception_dict)

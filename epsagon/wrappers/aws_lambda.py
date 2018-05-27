@@ -64,7 +64,8 @@ def lambda_wrapper(func):
         except Exception as exception:
             epsagon.trace.tracer.add_exception(
                 exception,
-                traceback.format_exc()
+                traceback.format_exc(),
+                additional_data={'event': event}
             )
 
         try:
