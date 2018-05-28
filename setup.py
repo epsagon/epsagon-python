@@ -1,6 +1,12 @@
 #!/usr/bin/env python
-from pip.req import parse_requirements
-from pip.download import PipSession
+try:
+    # For pip >= 10.
+    from pip._internal.req import parse_requirements
+    from pip._internal.download import PipSession
+except ImportError:
+    # For pip <= 9.0.3.
+    from pip.req import parse_requirements
+    from pip.download import PipSession
 from setuptools import setup, find_packages
 
 install_reqs = parse_requirements('./requirements.txt', session=PipSession())
