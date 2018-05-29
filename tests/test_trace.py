@@ -39,6 +39,33 @@ def test_add_exception():
         assert type(current_exception['time']) == float
 
 
+def test_add_exception_with_additional_data():
+    stack_trace_format = 'stack trace %d'
+    message_format = 'message %d'
+    tested_exception_types = [
+        ZeroDivisionError,
+        RuntimeError,
+        NameError,
+        TypeError
+    ]
+
+    additional_data = {'key': 'value', 'key2': 'othervalue'}
+    for i, exception_type in enumerate(tested_exception_types):
+        try:
+            raise exception_type(message_format % i)
+        except exception_type as e:
+            tracer.add_exception(e, stack_trace_format % i, additional_data)
+
+    assert len(tracer.exceptions) == len(tested_exception_types)
+    for i, exception_type in enumerate(tested_exception_types):
+        current_exception = tracer.exceptions[i]
+        assert current_exception['type'] == str(exception_type)
+        assert current_exception['message'] == message_format % i
+        assert current_exception['traceback'] == stack_trace_format % i
+        assert type(current_exception['time']) == float
+        assert current_exception['additional_data'] == additional_data
+
+
 def test_prepare():
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter('always')
