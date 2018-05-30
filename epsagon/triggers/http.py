@@ -49,7 +49,7 @@ class HTTPTriggerFactory(object):
         Creates trigger event object.
         :param start_time: event's start time (epoch)
         :param request: HTTP request.
-        :return: Event
+        :return: Event or None.
         """
 
         if request.headers.get('X-aws-sqsd-msgid'):

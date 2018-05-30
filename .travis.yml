@@ -5,7 +5,7 @@ python:
   - "2.7"
   - "3.6"
 install:
-  - pip install -r requirements.txt
+  - pip install -r requirements-dev.txt
   - pip install pylint
 before_script:
   - "pylint --msg-template='{path}:{line}: [{msg_id}({symbol}) {obj}] {msg}' epsagon/"

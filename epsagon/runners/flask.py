@@ -84,4 +84,3 @@ class FlaskRunner(BaseEvent):
 
         if response.status_code >= 300:
             self.set_error()
-

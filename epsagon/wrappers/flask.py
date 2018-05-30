@@ -4,12 +4,11 @@ Wrapper for Python Flask.
 
 from __future__ import absolute_import
 
-from flask import request
-
 import traceback
 import time
 import warnings
 
+from flask import request
 import epsagon.trace
 import epsagon.triggers.http
 import epsagon.runners.flask
