@@ -52,6 +52,6 @@ class HTTPTriggerFactory(object):
         :return: Event or None.
         """
 
-        if request.headers.get('X-aws-sqsd-msgid'):
+        if request.headers.get('X-Aws-Sqsd-Msgid'):
             return SQSHTTPTrigger(start_time, request)
         return None
