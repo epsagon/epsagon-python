@@ -15,7 +15,7 @@ import epsagon.runners.flask
 from epsagon.common import EpsagonWarning
 
 
-class EpsagonFlask(object):
+class FlaskWrapper(object):
     """
     Wraps Flask wsgi application.
     """

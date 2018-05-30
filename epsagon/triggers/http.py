@@ -17,7 +17,7 @@ class SQSHTTPTrigger(BaseHTTPTrigger):
     """
     Represents SQS HTTP trigger
     """
-    RESOURCE_TYPE = 'http_sqs'
+    RESOURCE_TYPE = 'sqs'
 
     # pylint: disable=W0613
     def __init__(self, start_time, request):

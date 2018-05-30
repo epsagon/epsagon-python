@@ -13,7 +13,7 @@ epsagon.init(
 
 
 app = Flask(__name__)
-epsagon.EpsagonFlask(app)
+epsagon.flask_wrapper(app)
 
 
 @app.route('/')
