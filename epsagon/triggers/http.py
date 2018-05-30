@@ -29,8 +29,8 @@ class SQSHTTPTrigger(BaseHTTPTrigger):
 
         super(SQSHTTPTrigger, self).__init__(start_time)
 
-        self.event_id = request.headers.get('X-aws-sqsd-msgid')
-        self.resource['name'] = request.headers.get('X-aws-sqsd-queue', 'N/A')
+        self.event_id = request.headers.get('X-Aws-Sqsd-Msgid')
+        self.resource['name'] = request.headers.get('X-Aws-Sqsd-Queue', 'N/A')
         self.resource['operation'] = 'SendMessage'
 
 
