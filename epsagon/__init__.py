@@ -23,13 +23,25 @@ if os.environ.get('DISABLE_EPSAGON') == 'TRUE':
     step_lambda_wrapper = dummy_wrapper  # pylint: disable=C0103
     azure_wrapper = dummy_wrapper  # pylint: disable=C0103
     python_wrapper = dummy_wrapper  # pylint: disable=C0103
+    EpsagonFlask = dummy_wrapper  # pylint: disable=C0103
 else:
-    from .wrappers import (lambda_wrapper, step_lambda_wrapper, azure_wrapper,
-                           python_wrapper)
+    # Environments.
+    from .wrappers import (
+        lambda_wrapper,
+        step_lambda_wrapper,
+        azure_wrapper,
+        python_wrapper
+    )
+
+    # Frameworks.
+    try:
+        from .wrappers.flask import EpsagonFlask
+    except ImportError:
+        EpsagonFlask = dummy_wrapper
 
 
 __all__ = ['lambda_wrapper', 'azure_wrapper', 'python_wrapper', 'init',
-           'step_lambda_wrapper']
+           'step_lambda_wrapper', 'EpsagonFlask']
 
 
 # The modules are patched only if DISABLE_EPSAGON_PATCH variable is NOT 'TRUE'
