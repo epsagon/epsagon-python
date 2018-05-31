@@ -72,4 +72,4 @@ def test_flask_wrapper_teardown_excpetion(exception_mock, _, client):
     with pytest.raises(Exception):
         client.get('/error')
 
-    exception_mock.assert_called_once()
+        exception_mock.assert_called_once()
