@@ -1,32 +1,75 @@
-import mock
 import pytest
-import epsagon.wrappers.flask
-import epsagon.constants
-from flask import Flask
+import mock
+from flask import Flask, request
+import epsagon
+from epsagon.wrappers.flask import FlaskWrapper
 
 
-app = Flask('test')
+# Setting demo Flask app
+epsagon.init(token='test', app_name='FlaskApp')
+RETURN_VALUE = 'a'
+app_test = Flask('test')
+FlaskWrapper(app_test)
 
-@mock.patch(
-    'epsagon.trace.tracer',
-    prepare=mock.MagicMock(),
-    send_traces=mock.MagicMock(),
-    events=[],
-    add_events=mock.MagicMock(),
-    add_exception=mock.MagicMock()
-)
-def test_function_wrapper_sanity(trace_mock):
-    runner_mock = mock.MagicMock(set_exception=mock.MagicMock())
-    with mock.patch(
-            'epsagon.runners.flask.FlaskRunner',
-            side_effect=[runner_mock]
-    ):
-        epsagon.wrappers.flask.FlaskWrapper(app)
-        app.before_request_funcs[None][0]()
-        app.after_request_funcs[None][0](mock.MagicMock())
-        app.teardown_request_funcs[None][0](None)
 
-    runner_mock.set_exception.assert_not_called()
-    trace_mock.prepare.assert_called()
-    trace_mock.add_event.assert_called()
-    trace_mock.send_traces.assert_called()
+@app_test.route('/')
+def test():
+    return RETURN_VALUE
+
+
+@app_test.route('/error')
+def error():
+    raise Exception('test')
+
+
+@pytest.fixture
+def client():
+    """ A test client that has the Authorization header """
+    app_test.testing = True
+    app = app_test.test_client()
+    return app
+
+###
+
+
+@mock.patch('warnings.warn')
+@mock.patch('epsagon.triggers.http.HTTPTriggerFactory')
+@mock.patch('epsagon.runners.flask.FlaskRunner')
+@mock.patch('time.time', return_value=1)
+def test_flask_wrapper_before_request(_, runner_mock, trigger_mock, __, client):
+    """Test runner and trigger init on new request."""
+    result = client.get('/')
+
+    runner_mock.assert_called_with(1, app_test, request)
+    trigger_mock.factory.assert_called_once()
+
+    assert result.data.decode('ascii') == RETURN_VALUE
+
+
+@mock.patch('warnings.warn')
+@mock.patch('epsagon.runners.flask.FlaskRunner.update_response')
+def test_flask_wrapper_after_request(runner_mock, _, client):
+    """Test update response called on new request."""
+    client.get('/')
+
+    runner_mock.assert_called_once()
+
+
+@mock.patch('warnings.warn')
+@mock.patch('epsagon.trace.tracer')
+def test_flask_wrapper_teardown_request(trace_mock, _, client):
+    """Test tracer gets new event and send it on new request."""
+    client.get('/')
+
+    trace_mock.add_event.assert_called_once()
+    trace_mock.send_traces.assert_called_once()
+
+
+@mock.patch('warnings.warn')
+@mock.patch('epsagon.runners.flask.FlaskRunner.set_exception')
+def test_flask_wrapper_teardown_excpetion(exception_mock, _, client):
+    """Test runner gets an exception on error request."""
+    with pytest.raises(Exception):
+        client.get('/error')
+
+    exception_mock.assert_called_once()
