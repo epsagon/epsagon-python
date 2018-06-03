@@ -2,7 +2,7 @@
 
 import os
 
-__version_info__ = ('0', '1', '2')
+__version_info__ = ('0', '1', '4')
 __version__ = '.'.join(__version_info__)
 
 DEFAULT_REGION = 'us-east-1'

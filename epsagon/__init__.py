@@ -6,6 +6,7 @@ from __future__ import absolute_import
 import os
 from .utils import init
 from .patcher import patch_all
+from .constants import __version__
 
 
 def dummy_wrapper(func):
