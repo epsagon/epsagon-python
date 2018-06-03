@@ -8,10 +8,12 @@ except ImportError:
     from pip.req import parse_requirements
     from pip.download import PipSession
 from setuptools import setup, find_packages
-from epsagon import __version__
+
 install_reqs = parse_requirements('./requirements.txt', session=PipSession())
 reqs = [str(ir.req) for ir in install_reqs]
 
+__version_info__ = ('0', '1', '4')
+__version__ = '.'.join(__version_info__)
 
 setup(
     name='epsagon',
