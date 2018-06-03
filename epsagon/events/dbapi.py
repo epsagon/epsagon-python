@@ -45,7 +45,6 @@ class DBAPIEvent(BaseEvent):
         'create': 'table'
     }
 
-
     def __init__(
             self,
             connection,
@@ -80,6 +79,8 @@ class DBAPIEvent(BaseEvent):
         # override event type with the specific DB type
         if 'rds.amazonaws' in connection.dsn:
             self.resource['type'] = 'rds'
+        elif 'redshift.amazonaws' in connection.dsn:
+            self.resource['type'] = 'redshift'
 
         self.resource['metadata'] = {
             'Host': dsn['host'] if 'host' in dsn else 'local',
