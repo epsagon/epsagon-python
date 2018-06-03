@@ -3,10 +3,11 @@ Wrapper for Python Flask.
 """
 
 from __future__ import absolute_import
-
+import sys
 import traceback
 import time
 import warnings
+import six
 
 from flask import request
 import epsagon.trace
@@ -33,6 +34,10 @@ class FlaskWrapper(object):
         self.app.after_request(self._after_request)
         self.app.teardown_request(self._teardown_request)
 
+        self.exception_handler = {
+            2: self._collect_exception_python2,
+            3: self._collect_exception_python3,
+        }
         self.runner = None
 
     def _before_request(self):
@@ -82,6 +87,31 @@ class FlaskWrapper(object):
         self.runner.update_response(response)
         return response
 
+    def _collect_exception_python3(self, exception):
+        """
+        Collect exception from exception __traceback__.
+        :param exception: Exception from Flask.
+        :return: None
+        """
+
+        traceback_data = ''.join(traceback.format_exception(
+            type(exception),
+            exception,
+            exception.__traceback__,
+        ))
+        self.runner.set_exception(exception, traceback_data)
+
+    def _collect_exception_python2(self, exception):
+        """
+        Collect exception from exception sys.exc_info.
+        :param exception: Exception from Flask.
+        :return: None
+        """
+
+        traceback_data = six.StringIO()
+        traceback.print_exception(*sys.exc_info(), file=traceback_data)
+        self.runner.set_exception(exception, traceback_data.getvalue())
+
     def _teardown_request(self, exception):
         """
         Runs at the end of the request. Exception will be passed if happens.
@@ -90,12 +120,7 @@ class FlaskWrapper(object):
         """
 
         if exception:
-            traceback_data = ''.join(traceback.format_exception(
-                type(exception),
-                exception,
-                exception.__traceback__,
-            ))
-            self.runner.set_exception(exception, traceback_data)
+            self.exception_handler[sys.version_info.major](exception)
 
         epsagon.trace.tracer.add_event(self.runner)
         epsagon.trace.tracer.send_traces()
