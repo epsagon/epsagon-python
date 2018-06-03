@@ -2,6 +2,8 @@
 
 import os
 
+__version__ = '0.1.4'
+
 DEFAULT_REGION = 'us-east-1'
 REGION = os.environ.get('AWS_REGION', DEFAULT_REGION)
 

@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+import re
+import os
+from setuptools import setup, find_packages
+
 try:
     # For pip >= 10.
     from pip._internal.req import parse_requirements
@@ -7,17 +11,18 @@ except ImportError:
     # For pip <= 9.0.3.
     from pip.req import parse_requirements
     from pip.download import PipSession
-from setuptools import setup, find_packages
 
 install_reqs = parse_requirements('./requirements.txt', session=PipSession())
 reqs = [str(ir.req) for ir in install_reqs]
 
-__version_info__ = ('0', '1', '4')
-__version__ = '.'.join(__version_info__)
+
+# Get version
+with open(os.path.join('epsagon', 'constants.py'), 'rt') as consts_file:
+    version = re.search(r'__version__ = \'(.*?)\'', consts_file.read()).group(1)
 
 setup(
     name='epsagon',
-    version=__version__,
+    version=version,
     description='Epsagon instrumentation for serverless Architecture Performance Monitoring',
     author='Epsagon',
     author_email='support@epsagon.com',
