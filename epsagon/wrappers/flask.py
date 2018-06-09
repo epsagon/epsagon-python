@@ -52,6 +52,8 @@ class FlaskWrapper(object):
             3: self._collect_exception_python3,
         }
         self.runner = None
+
+        # Whether we ignore this request or not.
         self.ignored_request = False
 
     def _before_request(self):
