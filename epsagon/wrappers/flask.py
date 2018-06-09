@@ -21,6 +21,19 @@ class FlaskWrapper(object):
     Wraps Flask wsgi application.
     """
 
+    IGNORED_CONTENT_TYPES = [
+        'image',
+        'audio',
+        'video',
+        'font',
+        'zip',
+        'css',
+    ]
+    IGNORED_FILE_TYPES = [
+        '.js',
+        '.jsx',
+    ]
+
     def __init__(self, app):
         """
         WSGI app wrapper for flask application.
@@ -39,6 +52,7 @@ class FlaskWrapper(object):
             3: self._collect_exception_python3,
         }
         self.runner = None
+        self.ignored_request = False
 
     def _before_request(self):
         """
@@ -46,6 +60,22 @@ class FlaskWrapper(object):
         :return: None.
         """
         epsagon.trace.tracer.prepare()
+        self.ignored_request = False
+
+        # Ignoring non relevant mime / content types.
+        if request.accept_mimetypes:
+            for content_type in self.IGNORED_CONTENT_TYPES:
+                for mime_type, _ in request.accept_mimetypes:
+                    if content_type in mime_type:
+                        self.ignored_request = True
+                        return
+
+        ignored_type = any([
+            request.path.lower().endswith(x) for x in self.IGNORED_FILE_TYPES
+        ])
+        if ignored_type:
+            self.ignored_request = True
+            return
 
         # Create flask runner with current request.
         try:
@@ -84,6 +114,16 @@ class FlaskWrapper(object):
         :param response: The current Response object.
         :return: Response.
         """
+
+        if self.ignored_request:
+            return response
+
+        # Ignoring non relevant content types.
+        content_type = response.content_type.lower()
+        if any([x in content_type for x in self.IGNORED_CONTENT_TYPES]):
+            self.ignored_request = True
+            return response
+
         self.runner.update_response(response)
         return response
 
@@ -118,6 +158,9 @@ class FlaskWrapper(object):
         :param exception: Exception (or None).
         :return: None.
         """
+
+        if self.ignored_request:
+            return
 
         if exception:
             self.exception_handler[sys.version_info.major](exception)

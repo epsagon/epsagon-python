@@ -67,7 +67,7 @@ def test_flask_wrapper_teardown_request(trace_mock, _, client):
 
 @mock.patch('warnings.warn')
 @mock.patch('epsagon.runners.flask.FlaskRunner.set_exception')
-def test_flask_wrapper_teardown_excpetion(exception_mock, _, client):
+def test_flask_wrapper_teardown_exception(exception_mock, _, client):
     """Test runner gets an exception on error request."""
     with pytest.raises(Exception):
         client.get('/error')
