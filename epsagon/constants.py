@@ -10,5 +10,5 @@ REGION = os.environ.get('AWS_REGION', DEFAULT_REGION)
 TRACE_COLLECTOR_URL = "{protocol}{region}.tc.epsagon.com"
 COLD_START = True
 
-# How long we try to send traces
+# How long we try to send traces.
 SEND_TIMEOUT = 1
