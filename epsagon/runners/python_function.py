@@ -54,5 +54,4 @@ class PythonRunner(BaseEvent):
                 wrapped_args
             )
         except TypeError:
-            print("Unable to serialize the object")
             pass
