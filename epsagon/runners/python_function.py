@@ -4,7 +4,9 @@ Runner for a general python function
 
 from __future__ import absolute_import
 import uuid
+import json
 from ..event import BaseEvent
+from ..utils import add_data_if_needed
 
 
 class PythonRunner(BaseEvent):
@@ -42,3 +44,14 @@ class PythonRunner(BaseEvent):
             'args_length': len(wrapped_args),
             'kwargs_length': len(wrapped_kwargs)
         }
+
+        # Add arguments only if they are serializable.
+        try:
+            json.dumps(wrapped_args)
+            add_data_if_needed(
+                self.resource['metadata'],
+                'Arguments',
+                wrapped_args
+            )
+        except TypeError:
+            pass
