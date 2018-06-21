@@ -3,6 +3,10 @@ requests events module.
 """
 
 from __future__ import absolute_import
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
 import traceback
 from uuid import uuid4
 from six.moves import urllib
@@ -71,6 +75,14 @@ class RequestsEvent(BaseEvent):
         """
 
         self.resource['metadata']['status_code'] = response.status_code
+        if 'x-amzn-requestid' in response.headers:
+            # This is a request to AWS API Gateway
+            url = urlparse(self.resource['metadata']['url'])
+            self.resource['type'] = 'api_gateway'
+            self.resource['name'] = url.path
+            self.resource['metadata']['request_trace_id'] = (
+                response.headers['x-amzn-requestid']
+            )
 
         add_data_if_needed(
             self.resource['metadata'],
