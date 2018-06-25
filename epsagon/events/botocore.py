@@ -247,7 +247,10 @@ class BotocoreSNSEvent(BotocoreEvent):
         if self.resource['operation'] == 'CreateTopic':
             self.resource['name'] = request_data.get('Name', 'N/A')
         else:
-            arn = request_data.get('TopicArn', request_data.get('TargetArn', 'N/A'))
+            arn = request_data.get(
+                'TopicArn',
+                request_data.get('TargetArn', 'N/A')
+            )
             self.resource['name'] = arn.split(':')[-1]
 
         if 'Message' in request_data:
