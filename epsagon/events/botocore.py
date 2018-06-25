@@ -243,8 +243,13 @@ class BotocoreSNSEvent(BotocoreEvent):
             exception
         )
         _, request_data = args
-        arn = request_data.get('TopicArn', request_data.get('TargetArn', 'N/A'))
-        self.resource['name'] = arn.split(':')[-1]
+
+        if self.resource['operation'] == 'CreateTopic':
+            self.resource['name'] = request_data.get('Name', 'N/A')
+        else:
+            arn = request_data.get('TopicArn', request_data.get('TargetArn', 'N/A'))
+            self.resource['name'] = arn.split(':')[-1]
+
         if 'Message' in request_data:
             add_data_if_needed(
                 self.resource['metadata'],
