@@ -32,6 +32,10 @@ class FlaskWrapper(object):
     IGNORED_FILE_TYPES = [
         '.js',
         '.jsx',
+        '.woff',
+        '.woff2',
+        '.ttf',
+        '.eot',
     ]
 
     def __init__(self, app):
@@ -71,7 +75,6 @@ class FlaskWrapper(object):
                     if content_type in mime_type:
                         self.ignored_request = True
                         return
-
         ignored_type = any([
             request.path.lower().endswith(x) for x in self.IGNORED_FILE_TYPES
         ])
