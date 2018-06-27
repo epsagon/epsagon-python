@@ -32,6 +32,10 @@ class FlaskWrapper(object):
     IGNORED_FILE_TYPES = [
         '.js',
         '.jsx',
+        '.woff',
+        '.woff2',
+        '.ttf',
+        '.eot',
     ]
 
     def __init__(self, app):
