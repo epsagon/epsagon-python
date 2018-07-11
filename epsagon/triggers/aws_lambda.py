@@ -185,6 +185,47 @@ class SNSLambdaTrigger(BaseLambdaTrigger):
         )
 
 
+class SQSLambdaTrigger(BaseLambdaTrigger):
+    """
+    Represents SQS Lambda trigger
+    """
+    RESOURCE_TYPE = 'sqs'
+
+    # pylint: disable=W0613
+    def __init__(self, start_time, event, context):
+        """
+        Initialize.
+        :param start_time: event's start time (epoch)
+        :param event: event dict from the entry point
+        :param context: the context dict from the entry point
+        """
+
+        super(SQSLambdaTrigger, self).__init__(start_time)
+
+        record = event['Records'][0]
+        self.event_id = record['messageId']
+        self.resource['name'] = record['eventSourceARN'].split(':')[-1]
+        self.resource['operation'] = 'ReceiveMessage'
+
+        self.resource['metadata'] = {
+            'MD5 Of Message Body': record['md5OfBody'],
+            'Sender ID': record['attributes']['SenderId'],
+            'Approximate Receive Count': record['attributes'][
+                'ApproximateReceiveCount'
+            ],
+            'Sent Timestamp': record['attributes']['SentTimestamp'],
+            'Approximate First Receive Timestamp': record['attributes'][
+                'ApproximateFirstReceiveTimestamp'
+            ],
+        }
+
+        add_data_if_needed(
+            self.resource['metadata'],
+            'Message Body',
+            str(record['body'])
+        )
+
+
 class ProxyAPIGatewayLambdaTrigger(BaseLambdaTrigger):
     """
     Represents a Proxy API Gateway Lambda trigger.

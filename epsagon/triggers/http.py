@@ -31,7 +31,7 @@ class SQSHTTPTrigger(BaseHTTPTrigger):
 
         self.event_id = request.headers.get('X-Aws-Sqsd-Msgid')
         self.resource['name'] = request.headers.get('X-Aws-Sqsd-Queue', 'N/A')
-        self.resource['operation'] = 'SendMessage'
+        self.resource['operation'] = 'ReceiveMessage'
 
 
 class HTTPTriggerFactory(object):
