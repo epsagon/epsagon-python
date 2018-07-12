@@ -38,13 +38,17 @@ class FlaskWrapper(object):
         '.eot',
     ]
 
-    def __init__(self, app):
+    def __init__(self, app, ignored_endpoints=None):
         """
         WSGI app wrapper for flask application.
         :param app: the :class:`flask.Flask` application object.
+        :param ignored_endpoints: endpoint paths to ignore.
         """
 
         self.app = app
+        self.ignored_endpoints = []
+        if ignored_endpoints:
+            self.ignored_endpoints = ignored_endpoints
 
         # Override request handling.
         self.app.before_request(self._before_request)
@@ -170,6 +174,10 @@ class FlaskWrapper(object):
 
         if exception:
             self.exception_handler[sys.version_info.major](exception)
+
+        # Ignoring endpoint, only if no error happened.
+        if not exception and request.path in self.ignored_endpoints:
+            return
 
         epsagon.trace.tracer.add_event(self.runner)
         epsagon.trace.tracer.send_traces()
