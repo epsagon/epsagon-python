@@ -187,7 +187,7 @@ class SNSLambdaTrigger(BaseLambdaTrigger):
 
 class SQSLambdaTrigger(BaseLambdaTrigger):
     """
-    Represents SQS Lambda trigger
+    Represents SQS Lambda trigger.
     """
     RESOURCE_TYPE = 'sqs'
 
@@ -195,9 +195,9 @@ class SQSLambdaTrigger(BaseLambdaTrigger):
     def __init__(self, start_time, event, context):
         """
         Initialize.
-        :param start_time: event's start time (epoch)
-        :param event: event dict from the entry point
-        :param context: the context dict from the entry point
+        :param start_time: event's start time (epoch).
+        :param event: event dict from the entry point.
+        :param context: the context dict from the entry point.
         """
 
         super(SQSLambdaTrigger, self).__init__(start_time)
