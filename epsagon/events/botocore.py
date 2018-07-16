@@ -19,9 +19,8 @@ from ..utils import add_data_if_needed
 def empty_func(*args):
     """
     A dummy function.
-    :return:
+    :return: None
     """
-    return
 
 
 class BotocoreEvent(BaseEvent):

@@ -9,7 +9,7 @@ init-hook='base_dir="epsagon"; import sys,os,re; _re=re.search(r".+\/" + base_di
 [MESSAGES CONTROL]
 # Find available symbolic names in:
 # https://docs.pylint.org/features.html
-disable=duplicate-code,too-few-public-methods,too-many-arguments,fixme,too-many-instance-attributes,bad-continuation
+disable=duplicate-code,too-few-public-methods,too-many-arguments,fixme,too-many-instance-attributes,bad-continuation,useless-object-inheritance
 
 [FORMAT]
 # Maximum number of characters on a single line.
