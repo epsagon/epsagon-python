@@ -144,7 +144,7 @@ class BotocoreS3Event(BotocoreEvent):
         if self.resource['operation'] == 'ListObjects':
             files = [
                 [str(x['Key']).strip('"'), x['Size'], x['ETag']]
-                for x in response['Contents']
+                for x in response.get('Contents', [])
             ]
             add_data_if_needed(self.resource['metadata'], 'files', files)
 

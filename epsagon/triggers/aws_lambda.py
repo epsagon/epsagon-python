@@ -73,11 +73,13 @@ class S3LambdaTrigger(BaseLambdaTrigger):
             'user_identity': event['Records'][0]['userIdentity'],
             'object_key': event['Records'][0]['s3']['object']['key'],
             'object_size': event['Records'][0]['s3']['object']['size'],
-            'object_etag': event['Records'][0]['s3']['object']['eTag'],
+            'object_etag': event['Records'][0]['s3']['object'].get('eTag', ''),
             'object_sequencer': event['Records'][0]['s3']['object'][
-                'sequencer'],
+                'sequencer'
+            ],
             'x-amz-request-id': event['Records'][0]['responseElements'][
-                'x-amz-request-id'],
+                'x-amz-request-id'
+            ],
         }
 
 
