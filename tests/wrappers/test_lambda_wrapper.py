@@ -90,6 +90,37 @@ def test_lambda_wrapper_lambda_exception(trigger_factory_mock, trace_mock):
     add_events=mock.MagicMock(),
     add_exception=mock.MagicMock()
 )
+def test_lambda_wrapper_lambda_exception_args(trace_mock):
+    """
+    Tests that when user invoking Lambda's handler manually with kwargs,
+    trace won't be sent, and return value is ok.
+    """
+    @epsagon.wrappers.aws_lambda.lambda_wrapper
+    def wrapped_lambda(event, context):
+        return 'success'
+
+    lambda_runner_mock = mock.MagicMock(set_exception=mock.MagicMock())
+    with mock.patch(
+        'epsagon.runners.aws_lambda.LambdaRunner',
+        side_effect=[lambda_runner_mock]
+    ):
+        assert wrapped_lambda(event='a', context='b') == 'success'
+
+    trace_mock.prepare.assert_called()
+    trace_mock.add_event.assert_not_called()
+    trace_mock.send_traces.assert_not_called()
+    trace_mock.add_exception.assert_not_called()
+    assert epsagon.constants.COLD_START
+
+
+@mock.patch(
+    'epsagon.trace.tracer',
+    prepare=mock.MagicMock(),
+    send_traces=mock.MagicMock(),
+    events=[],
+    add_events=mock.MagicMock(),
+    add_exception=mock.MagicMock()
+)
 @mock.patch(
     'epsagon.triggers.aws_lambda.LambdaTriggerFactory.factory',
     side_effect=TypeError()
