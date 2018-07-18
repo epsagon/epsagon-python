@@ -26,7 +26,13 @@ def lambda_wrapper(func):
     @functools.wraps(func)
     def _lambda_wrapper(*args, **kwargs):
         epsagon.trace.tracer.prepare()
-        event, context = args
+
+        try:
+            event, context = args
+        except ValueError:
+            # This can happen when someone manually calls handler without
+            # parameters / sends kwargs. In such case we ignore this trace.
+            return func(*args, **kwargs)
 
         try:
             runner = epsagon.runners.aws_lambda.LambdaRunner(
