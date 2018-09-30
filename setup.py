@@ -23,6 +23,8 @@ setup(
     name='epsagon',
     version=version,
     description='Epsagon Instrumentation for Python',
+    long_description=open('README.md').read(),
+    long_description_content_type='text/markdown',
     author='Epsagon',
     author_email='support@epsagon.com',
     url='https://github.com/epsagon/epsagon-python',
