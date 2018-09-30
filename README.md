@@ -11,9 +11,6 @@ This package provides an instrumentation to Python code running on functions for
 From your project directory:
 
 ```
-$ pip install epsagon -t .
-
-# If running in virtualenv:
 $ pip install epsagon
 ```
 
@@ -27,7 +24,7 @@ Simply use our decorator to report metrics:
 import epsagon
 epsagon.init(
     token='my-secret-token',
-    app_name='my-app-name',  # Optional, used in the dashboard
+    app_name='my-app-name',
     metadata_only=False,  # Optional, send more trace data
 )
 
