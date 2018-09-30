@@ -1,0 +1,19 @@
+# Based on:
+# https://github.com/kpreid/shinysdr/blob/master/pylintrc
+
+[MASTER]
+# XXX should be changed to your project folder
+# see http://stackoverflow.com/a/37238692/3828891 for explanation
+init-hook='base_dir="epsagon"; import sys,os,re; _re=re.search(r".+\/" + base_dir, os.getcwd()); project_dir = _re.group() if _re else os.path.join(os.getcwd(), base_dir); sys.path.append(project_dir)'
+
+[MESSAGES CONTROL]
+# Find available symbolic names in:
+# https://docs.pylint.org/features.html
+disable=duplicate-code,too-few-public-methods,too-many-arguments,fixme,too-many-instance-attributes,bad-continuation,useless-object-inheritance
+
+[FORMAT]
+# Maximum number of characters on a single line.
+max-line-length=80
+
+# Maximum number of lines in a module
+max-module-lines=500

@@ -1,0 +1,10 @@
+.idea
+*.pyc
+.pypirc
+.coverage
+.cache
+dist
+.eggs
+.pytest_cache
+build
+epsagon.egg-info
