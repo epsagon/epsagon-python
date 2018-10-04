@@ -2,7 +2,6 @@ language: python
 notifications:
     slack: epsagon:Q0XcrHSJRI5YkYftfUzl83Lx
 python:
-  - "2.7"
   - "3.6"
 install:
   - pip install -r requirements-dev.txt
@@ -10,4 +9,9 @@ install:
 before_script:
   - "pylint --msg-template='{path}:{line}: [{msg_id}({symbol}) {obj}] {msg}' epsagon/"
 script:
-  - pytest
+  - tox
+deploy:
+  provider: pypi
+  user: epsagon
+  password:
+    secure: vO6RcTUnTuAfuQ7Wn5R+3hHjDXmCYOr2W7WJxSkf1tbL6hzlrpZY5cQITBSHkPWClQ9Q/Ee9QBeaPxQ4zPiWVBVQmLW6M6maBL12dERH/f+yoH+FHMD3VFEqN+7kR0/rYNP9OL8OTjBxiccvk/afRo7zc7Dixvwa2zeXfHzca86vlNQi++zaem8VChX3s/3WkMzc+d7lgJc5UikTRHwaFj1s6txp2OhVWKNEFAwsCVk4EaEtl49Tv3BsZBI9POPsLsPRjFwLHqWxiWmTP36+exrkQgvn66OXeV4toRgUdaXZakkQCa864goeEigjyNjxwTqJlCGtv3FY2fhEh3s5ges9fxUGbYi58Zl2cxo0vj1b08Qz55Figm5usIFi6U7bKK5p8Cxuz41jG94jU4UJWzQrqx+KTcuORQjYQ4EtoVtzrEXO5V5RJKegQ4BrRod5FPfv5NxbSLGhAxzHAtJx1o/DupppELyk3u7lY1rV2ruwSAx/h70cv9LDvjYz3N4M/9bE9KWeo1nNtMiAF0Qem6UNuxuQtvShvU9mGZzxj7BQ376bwyIzuY5Ql9li8BUhMy+jMLVAA183oYA1HXIyEtMCiWcC9mvIiNIMIrbu4Cp+cOXqzgE1WUIxNCRvAeNsxYlgkbOzJ7nBGefuiuskLwcEde5KA83kB82X9dCrXJA=

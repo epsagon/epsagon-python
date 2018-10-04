@@ -1,0 +1,8 @@
+CHANGES
+=======
+
+* Use PBR for versioning and packaging
+* adding tox for multi environment testing
+* Updating README
+* Updating description
+* Initial commit

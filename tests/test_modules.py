@@ -40,7 +40,6 @@ def test_request_wrapper_failsafe(_):
     _test(_request_wrapper)
 
 
-
 @mock.patch('epsagon.events.pymongo.PyMongoEventFactory.create_event',
             side_effect=raise_exception)
 def test_pymongo_wrapper_failsafe(_):
