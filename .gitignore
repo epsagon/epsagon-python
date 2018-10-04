@@ -10,3 +10,5 @@ build
 epsagon.egg-info
 publish.sh
 .tox
+AUTHORS
+ChangeLog
