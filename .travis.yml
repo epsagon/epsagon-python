@@ -13,8 +13,7 @@ script:
 deploy:
   provider: pypi
   user: epsagon
-  distribution: bdist_wheel sdist
-  skip_existing: true
+  skip_cleanup: true
   password: ${PYPI_PASSWORD}
   on:
     branch: testing_travis_pypi_deployment
