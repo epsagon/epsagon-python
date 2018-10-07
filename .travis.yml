@@ -15,8 +15,7 @@ deploy:
   user: epsagon
   distribution: bdist_wheel sdist
   skip_existing: true
-  password:
-    secure: qBSAP0kruo8YAqDnCZD2AU0WsluNrJO+SwIKBJblRKhXbzEbB39SiDIfsGv7xjIljMNaVH+2vFsfIdPgvw6RME0uVjVHo8n5Og63fRk4EiCrkOzkkg2WeWj4ZpSNsCU6kOxB375HLFP1IJTj/JWJdfLp2qdLe2cf0CzzzppotSSm/R5st1gZeIec0WUWb7SEY2ZOVt9S9MuI5tVNsWDoqXxjVEjkl9qnzrXlZrNv8UiBuMXH7ZjC/2wt1KMiA2kYg4DeSFO6jRma0TVlez4IhDktgToTLpHGPUp0iRYlkDVYLaZCWAdMqaC1uLKwDK1W79m4+RhPb/4MVRB+ICeSp8V6jYQmlokwcQqWTLP1SJb3tAapMS79DVzrzT7UNsWNIgF/dZmqCJUfx0Lw8F1vMQNJGYOTTjXGO2SoV28ChOcMec4bi+T1idqX2aYlD2W/hFwF7buOsbvTzboYXfHcPv6sYxOoaFwQmmY21UZQUV6p2wwBtQGNYphCRukSNpMIV0hKPZcGvdHo2FnxUEJlMBwl8SN1Xb7lzrmXstW5mq1bt/8QylLIIqh4yyY2yhrITz36U7LziwcxScfRoa1m//3epFN7qdQO6Z5O69+tdOeOq1dfmXEg9JM7DR02n+nSRKkMWj7HGPC8te8Be3cv/3odY1aaKbZNeSNpUwJ8KXY=
+  password: ${PYPI_PASSWORD}
   on:
     branch: testing_travis_pypi_deployment
   server: https://test.pypi.org/legacy/
