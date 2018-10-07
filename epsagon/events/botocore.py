@@ -192,13 +192,15 @@ class BotocoreKinesisEvent(BotocoreEvent):
 
         _, request_data = args
         self.resource['name'] = request_data['StreamName']
-        add_data_if_needed(
-            self.resource['metadata'],
-            'data',
-            request_data['Data']
-        )
-        self.resource['metadata']['partition_key'] = \
-            request_data['PartitionKey']
+        if 'Data' in request_data:
+            add_data_if_needed(
+                self.resource['metadata'],
+                'data',
+                request_data['Data']
+            )
+        if 'PartitionKey' in request_data:
+            self.resource['metadata']['partition_key'] = \
+                request_data['PartitionKey']
 
     def update_response(self, response):
         """
@@ -430,9 +432,10 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
         Process the put item operation.
         """
         self.resource['name'] = self.request_data['TableName']
-        item = self.request_data['Item']
-        add_data_if_needed(self.resource['metadata'], 'Item', item)
-        self.store_item_hash(item)
+        if 'Item' in self.request_data:
+            item = self.request_data['Item']
+            add_data_if_needed(self.resource['metadata'], 'Item', item)
+            self.store_item_hash(item)
 
     def process_delete_item_op(self):
         """
@@ -486,8 +489,12 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
         :return:
         """
         self.resource['name'] = self.request_data['TableName']
-        item = self.response['Item']
-        add_data_if_needed(self.resource['metadata'], 'Item', item)
+        if 'Item' in self.response:
+            add_data_if_needed(
+                self.resource['metadata'],
+                'Item',
+                self.response['Item']
+            )
 
     def process_list_tables_response(self):
         """
@@ -795,7 +802,7 @@ class BotocoreLambdaEvent(BotocoreEvent):
 
         _, request_data = args
 
-        self.resource['name'] = request_data['FunctionName']
+        self.resource['name'] = request_data.get('FunctionName', '')
         if 'Payload' in request_data:
             add_data_if_needed(
                 self.resource['metadata'],
