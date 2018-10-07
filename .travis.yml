@@ -14,7 +14,8 @@ deploy:
   provider: pypi
   user: epsagon
   skip_cleanup: true
-  password: ${PYPI_PASSWORD}
+  password:
+    secure: "s9oiNgOGFGwwBO4a1vUKDoxi8EqmfawTSVVkwBptjUSnjCARTJaEW5UqsRiOPGOtYGXnVhT/0BeDbBt4QaSrdPt9icejx5yMAjuBhuL2f8tJ/KM96jx0yHivVcrCkgVg+iZwD/Yv7u2yKGS2dCntdPnOzk1Prz+FUpPi85yKFWc/ssrL3paJq2sJMb5Nt+sv0gmVDQPTEt4IG/MWrm7H7mChQCSaZVsoz/RsTnjRXOaS5YxeeO2wH5xZZSxY2An6gPE4GmT6WbsVW7c7Os+kQF+8WRAz9MdRnBiGsYXkOwo5exHQIPDegHGQ4iZqExoe7MUiYUWfNLgqf+2KTQfnIpWr9UpWIrQscSjANQLvONTHvf/yIqSPT8mdjoa/FqagO4ZjON9S7mRQgtezCngFQJQv7O8wjsHdJ5CH3Hui9oEkHEMByopBiD3EjVG+L/8od/93qSpqhj+Q5qQ751qCghodw4gXPie43efXkAWB+t803Hmu5PD7LxLMrRiWDOJ49NhvelllpNBc6XqD5fT4qTKNCQj2MSNzNTOT12c2a93UrHZ4iJPuGQ4kJB88aQHx3UMWTT+03iTU8v28ArNCk8GlemULOWp1/hL5m3gHDgbZhbvImo6Rh3zHkWPywvKKFZpW6xDIq7hgt3fxU49i2ph7VKv9hS7crHHP/grgCfQ="
   on:
     branch: testing_travis_pypi_deployment
   server: https://test.pypi.org/legacy/
