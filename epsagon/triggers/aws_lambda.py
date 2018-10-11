@@ -85,7 +85,7 @@ class S3LambdaTrigger(BaseLambdaTrigger):
 
 class DynamoDBLambdaTrigger(BaseLambdaTrigger):
     """
-    Represents S3 Lambda trigger
+    Represents DynamoDB Lambda trigger
     """
     RESOURCE_TYPE = 'dynamodb'
 
