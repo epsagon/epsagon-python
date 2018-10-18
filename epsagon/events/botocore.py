@@ -695,6 +695,8 @@ class BotocoreStepFunctionEvent(BotocoreEvent):
     RESOURCE_TYPE = 'sfn'
     REAL_RESOURCE_TYPE = 'stepfunctions'
 
+    DEFAULT_EXECTUTION_NAME = 'Unnamed Execution'
+
     def __init__(self, wrapped, instance, args, kwargs, start_time, response,
                  exception):
         self.RESPONSE_TO_FUNC.update({
@@ -748,7 +750,7 @@ class BotocoreStepFunctionEvent(BotocoreEvent):
             request_args['stateMachineArn']
         )
         self.resource['metadata']['Execution Name'] = (
-            request_args['name']
+            request_args.get('name', self.DEFAULT_EXECTUTION_NAME)
         )
 
         add_data_if_needed(
