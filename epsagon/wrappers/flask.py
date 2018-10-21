@@ -181,3 +181,4 @@ class FlaskWrapper(object):
 
         epsagon.trace.tracer.add_event(self.runner)
         epsagon.trace.tracer.send_traces()
+        epsagon.trace.tracer.prepare()
