@@ -467,7 +467,7 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
         self.resource['name'] = table_name
         items = []
         for item in self.request_data['RequestItems'][table_name]:
-            items.append(item['PutRequest']['Item'])
+            items.append(item.get('PutRequest', item['DeleteRequest'])['Item'])
         add_data_if_needed(self.resource['metadata'], 'Items', items)
 
     def process_scan_response(self):
