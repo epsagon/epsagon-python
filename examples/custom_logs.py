@@ -13,5 +13,5 @@ epsagon.init(
 @epsagon.lambda_wrapper
 def handle(event, context):
     epsagon.log('Doing something')
-    epsagon.error('Something ad happened')
+    epsagon.error('Something bad happened')
     return 'It worked!'
