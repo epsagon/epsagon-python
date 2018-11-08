@@ -380,11 +380,12 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
         :param response: response data
         :param exception: Exception (if happened)
         """
-
         self.RESPONSE_TO_FUNC.update(
-            {'Scan': self.process_scan_response,
+            {'Scan': self.process_query_and_scan_response,
+             'Query': self.process_query_and_scan_response,
              'GetItem': self.process_get_item_response,
-             'ListTables': self.process_list_tables_response}
+             'ListTables': self.process_list_tables_response
+             }
         )
 
         self.OPERATION_TO_FUNC.update(
@@ -393,6 +394,8 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
              'GetItem': self.process_get_item_op,
              'DeleteItem': self.process_delete_item_op,
              'BatchWriteItem': self.process_batch_write_op,
+             'Scan': self.process_scan_op,
+             'Query': self.process_query_op
              }
         )
 
@@ -465,28 +468,72 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
         """
         table_name = list(self.request_data['RequestItems'].keys())[0]
         self.resource['name'] = table_name
-        items = []
+        added_items = []
+        deleted_keys = []
         for item in self.request_data['RequestItems'][table_name]:
-            items.append(item.get('PutRequest', item['DeleteRequest'])['Item'])
-        add_data_if_needed(self.resource['metadata'], 'Items', items)
+            if 'PutRequest' in item:
+                added_items.append(item['Item'])
+            if 'DeleteRequest' in item:
+                deleted_keys.append(item['Key'])
 
-    def process_scan_response(self):
+        # If there were no requests at all, explicitly tracing it
+        no_requests = (not added_items and not deleted_keys)
+        if deleted_keys or no_requests:
+            add_data_if_needed(
+                self.resource['metadata'],
+                'Deleted Keys',
+                deleted_keys
+            )
+        if added_items or no_requests:
+            add_data_if_needed(
+                self.resource['metadata'],
+                'Added Items',
+                added_items
+            )
+
+    def process_query_op(self):
         """
-        Process the scan response.
+        Process the query operation.
         """
         self.resource['name'] = self.request_data['TableName']
-        self.resource['metadata']['Items Count'] = self.response['Count']
-        add_data_if_needed(
-            self.resource['metadata'],
-            'Items', self.response['Items']
-        )
-        self.resource['metadata']['Scanned Items Count'] = \
-            self.response['ScannedCount']
+        request_data = self.request_data.copy()
+        if tracer.metadata_only:
+            # Remove parameters containing non-metadata
+            data_parameters = [
+                'KeyConditions',
+                'QueryFilter',
+                'ExclusiveStartKey',
+                'ProjectionExpression',
+                'FilterExpression',
+                'KeyConditionExpression',
+                'ExpressionAttributeValues'
+            ]
+            for parameter in data_parameters:
+                request_data.pop(parameter, None)
+        self.resource['metadata']['Parameters'] = request_data
+
+    def process_scan_op(self):
+        """
+        Process the scan operation.
+        """
+        self.resource['name'] = self.request_data['TableName']
+        request_data = self.request_data.copy()
+        if tracer.metadata_only:
+            # Remove parameters containing non-metadata
+            data_parameters = [
+                'ScanFilter'
+                'ExclusiveStartKey',
+                'ProjectionExpression',
+                'FilterExpression',
+                'ExpressionAttributeValues'
+            ]
+            for parameter in data_parameters:
+                request_data.pop(parameter, None)
+        self.resource['metadata']['Parameters'] = request_data
 
     def process_get_item_response(self):
         """
         Process the get item response.
-        :return:
         """
         self.resource['name'] = self.request_data['TableName']
         if 'Item' in self.response:
@@ -499,11 +546,21 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
     def process_list_tables_response(self):
         """
         Process the list tables response.
-        :return:
         """
         self.resource['name'] = 'DynamoDBEngine'
         self.resource['metadata']['Table Names'] = \
             ', '.join(self.response['TableNames'])
+
+    def process_query_and_scan_response(self):
+        """
+        Process the query/scan response
+        """
+        response_data = self.response.copy()
+        if tracer.metadata_only:
+            # Remove parameters containing non-metadata
+            response_data.pop('Items', None)
+            response_data.pop('LastEvaluatedKey', None)
+        self.resource['metadata']['Response'] = response_data
 
     def store_item_hash(self, item):
         """
