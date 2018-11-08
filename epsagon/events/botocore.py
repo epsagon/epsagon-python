@@ -472,19 +472,17 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
         deleted_keys = []
         for item in self.request_data['RequestItems'][table_name]:
             if 'PutRequest' in item:
-                added_items.append(item['Item'])
+                added_items.append(item['PutRequest']['Item'])
             if 'DeleteRequest' in item:
-                deleted_keys.append(item['Key'])
+                deleted_keys.append(item['DeleteRequest']['Key'])
 
-        # If there were no requests at all, explicitly tracing it
-        no_requests = (not added_items and not deleted_keys)
-        if deleted_keys or no_requests:
+        if deleted_keys:
             add_data_if_needed(
                 self.resource['metadata'],
                 'Deleted Keys',
                 deleted_keys
             )
-        if added_items or no_requests:
+        if added_items:
             add_data_if_needed(
                 self.resource['metadata'],
                 'Added Items',
