@@ -54,15 +54,20 @@ class Trace(object):
         :return: None
         """
 
-        exception_dict = {
-            'type': str(type(exception)),
-            'message': str(exception),
-            'traceback': stack_trace,
-            'time': time.time(),
-            'additional_data': additional_data
-        }
+        try:
+            exception_dict = {
+                'type': str(type(exception)),
+                'message': str(exception),
+                'traceback': stack_trace,
+                'time': time.time(),
+                'additional_data': additional_data
+            }
 
-        self.exceptions.append(exception_dict)
+            self.exceptions.append(exception_dict)
+        # Making sure that tracing inner exception won't crash
+        # pylint: disable=W0703
+        except Exception:
+            pass
 
     def prepare(self):
         """

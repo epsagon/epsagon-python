@@ -8,6 +8,7 @@ import traceback
 import functools
 import epsagon.trace
 import epsagon.runners.python_function
+from epsagon.wrappers.return_value import add_return_value
 from epsagon import constants
 
 
@@ -35,15 +36,31 @@ def wrap_python_function(func, args, kwargs):
 
     # settings in case we are in a lambda and context is None
     constants.COLD_START = False
+
+    result = None
     try:
         result = func(*args, **kwargs)
         return result
+    # pylint: disable=W0703
     except Exception as exception:
         runner.set_exception(exception, traceback.format_exc())
         raise
     finally:
-        epsagon.trace.tracer.add_event(runner)
-        epsagon.trace.tracer.send_traces()
+        try:
+            if not epsagon.trace.tracer.metadata_only:
+                add_return_value(runner, result)
+        # pylint: disable=W0703
+        except Exception as exception:
+            epsagon.trace.tracer.add_exception(
+                exception,
+                traceback.format_exc(),
+            )
+        try:
+            epsagon.trace.tracer.add_event(runner)
+            epsagon.trace.tracer.send_traces()
+        # pylint: disable=W0703
+        except Exception:
+            pass
 
 
 def python_wrapper(func):
