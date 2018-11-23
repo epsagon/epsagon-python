@@ -1,13 +1,15 @@
 language: python
-notifications:
-    slack: epsagon:Q0XcrHSJRI5YkYftfUzl83Lx
+
 python:
   - "3.6"
+ 
 install:
   - pip install -r requirements-dev.txt
   - pip install pylint
+
 before_script:
   - "pylint --msg-template='{path}:{line}: [{msg_id}({symbol}) {obj}] {msg}' epsagon/"
+
 script:
   - tox
 
