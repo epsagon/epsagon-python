@@ -14,4 +14,3 @@ class EpsagonWarning(Warning):
     """
     An Epsagon warning.
     """
-    pass
