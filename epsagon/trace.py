@@ -39,6 +39,7 @@ class Trace(object):
         self.collector_url = ''
         self.metadata_only = True
         self.use_ssl = False
+        self.debug = False
         self.platform = 'Python {}.{}'.format(
             sys.version_info.major,
             sys.version_info.minor
@@ -88,7 +89,7 @@ class Trace(object):
         self.has_custom_error = False
 
     def initialize(self, app_name, token, collector_url, metadata_only,
-                   use_ssl):
+                   use_ssl, debug):
         """
         Initializes trace with user's data.
         User can configure here trace parameters.
@@ -96,6 +97,8 @@ class Trace(object):
         :param token: user's token
         :param collector_url: the url to send traces to.
         :param metadata_only: whether to send metadata only or not.
+        :param use_ssl: whether to use SSL or not.
+        :param debug: debug flag
         :return: None
         """
 
@@ -104,6 +107,7 @@ class Trace(object):
         self.collector_url = collector_url
         self.metadata_only = metadata_only
         self.use_ssl = use_ssl
+        self.debug = debug | (os.environ.get('EPSAGON_DEBUG') == 'TRUE')
 
     @staticmethod
     def load_from_dict(trace_data):
@@ -236,14 +240,15 @@ class Trace(object):
                 data=json.dumps(self.to_dict()),
                 timeout=SEND_TIMEOUT
             )
-            if os.environ.get('EPSAGON_DEBUG') == 'TRUE':
+            if self.debug:
                 print("Sending traces:")
                 pprint.pprint(self.to_dict())
-        except requests.exceptions.ReadTimeout as _:
-            # In future, send basic data
-            pass
-        except Exception as _:
-            pass
+        except requests.exceptions.ReadTimeout as e:
+            if self.debug:
+                print("Failed to send traces (timeout): ", e)
+        except Exception as e:
+            if self.debug:
+                print("Failed to send traces: ", e)
 
 
 # pylint: disable=C0103
