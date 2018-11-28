@@ -108,25 +108,31 @@ def test_initialize():
     collector_url = 'collector_url'
     metadata_only = False
     use_ssl = True
-    tracer.initialize(app_name, token, collector_url, metadata_only, use_ssl)
+    debug = True
+    tracer.initialize(
+        app_name, token, collector_url, metadata_only, use_ssl, debug
+    )
     assert tracer.app_name == app_name
     assert tracer.token == token
     assert tracer.collector_url == collector_url
     assert tracer.use_ssl == use_ssl
+    assert tracer.debug == debug
 
-    tracer.initialize(app_name, '', '', False, False)
+    tracer.initialize(app_name, '', '', False, False, False)
     assert tracer.app_name == app_name
     assert tracer.token == ''
     assert tracer.collector_url == ''
     assert tracer.metadata_only == False
     assert tracer.use_ssl == False
+    assert tracer.debug == False
 
-    tracer.initialize('', '', '', True, True)
+    tracer.initialize('', '', '', True, True, False)
     assert tracer.app_name == ''
     assert tracer.token == ''
     assert tracer.collector_url == ''
     assert tracer.metadata_only == True
     assert tracer.use_ssl == True
+    assert tracer.debug == False
 
 
 def test_load_from_dict():
