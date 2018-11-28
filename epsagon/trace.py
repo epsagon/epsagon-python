@@ -243,12 +243,12 @@ class Trace(object):
             if self.debug:
                 print("Sending traces:")
                 pprint.pprint(self.to_dict())
-        except requests.exceptions.ReadTimeout as e:
+        except requests.exceptions.ReadTimeout as exception:
             if self.debug:
-                print("Failed to send traces (timeout): ", e)
-        except Exception as e:
+                print("Failed to send traces (timeout): ", exception)
+        except Exception as exception:
             if self.debug:
-                print("Failed to send traces: ", e)
+                print("Failed to send traces: ", exception)
 
 
 # pylint: disable=C0103
