@@ -483,7 +483,8 @@ def test_init_sanity(wrapped_init):
         app_name='app-name',
         collector_url='collector',
         metadata_only=False,
-        use_ssl=False
+        use_ssl=False,
+        debug=False
     )
 
 
@@ -494,14 +495,15 @@ def test_init_empty_app_name(wrapped_init):
         app_name='',
         collector_url='collector',
         metadata_only=False,
-        use_ssl=True
+        use_ssl=True,
     )
     wrapped_init.assert_called_with(
         token='token',
         app_name='',
         collector_url='collector',
         metadata_only=False,
-        use_ssl=True
+        use_ssl=True,
+        debug=False
     )
 
 
@@ -514,6 +516,7 @@ def test_init_empty_collector_url(wrapped_init):
         collector_url=get_tc_url(False),
         metadata_only=False,
         use_ssl=False,
+        debug=False
     )
 
 
@@ -528,7 +531,8 @@ def test_init_no_ssl_no_url(wrapped_init):
         collector_url=TRACE_COLLECTOR_URL.format(
             region=DEFAULT_REGION,
             protocol="http://"
-        )
+        ),
+        debug=False
     )
 
 
@@ -548,7 +552,8 @@ def test_init_ssl_no_url(wrapped_init):
         collector_url=TRACE_COLLECTOR_URL.format(
             region=DEFAULT_REGION,
             protocol="https://"
-        )
+        ),
+        debug=False
     )
 
 
@@ -566,7 +571,8 @@ def test_init_ssl_with_url(wrapped_init):
         app_name='app-name',
         metadata_only=False,
         use_ssl=True,
-        collector_url="http://abc.com"
+        collector_url="http://abc.com",
+        debug=False
     )
 
 
@@ -584,5 +590,6 @@ def test_init_no_ssl_with_url(wrapped_init):
         app_name='app-name',
         metadata_only=False,
         use_ssl=False,
-        collector_url="http://abc.com"
+        collector_url="http://abc.com",
+        debug=False
     )
