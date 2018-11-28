@@ -65,7 +65,8 @@ def init(token,
          app_name='default',
          collector_url=None,
          metadata_only=True,
-         use_ssl=False
+         use_ssl=False,
+         debug=False
          ):
     """
     Initializes trace with user's data.
@@ -74,7 +75,8 @@ def init(token,
     :param app_name: application name
     :param collector_url: the url of the collector.
     :param metadata_only: whether to send only the metadata, or also the data.
-    :param use_ssl:L whether to use SSL or not.
+    :param use_ssl: whether to use SSL or not.
+    :param debug: debug mode flag
     :return: None
     """
     if not collector_url:
@@ -84,5 +86,6 @@ def init(token,
         app_name=app_name,
         collector_url=collector_url,
         metadata_only=metadata_only,
-        use_ssl=use_ssl
+        use_ssl=use_ssl,
+        debug=debug
     )
