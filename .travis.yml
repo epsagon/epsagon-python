@@ -1,14 +1,10 @@
 language: python
-dist: xenial
-sudo: required
 python:
     - "3.6"
- 
+
 install:
   - pip install -r requirements-dev.txt
   - pip install pylint
-  - sudo apt-get update
-  - sudo apt-get install python3.7
 
 before_script:
   - "pylint --msg-template='{path}:{line}: [{msg_id}({symbol}) {obj}] {msg}' epsagon/"
