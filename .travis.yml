@@ -7,7 +7,7 @@ python:
 install:
   - pip install -r requirements-dev.txt
   - pip install pylint
-  - apt-get install python3.7
+  - sudo apt-get install python3.7
 
 before_script:
   - "pylint --msg-template='{path}:{line}: [{msg_id}({symbol}) {obj}] {msg}' epsagon/"
