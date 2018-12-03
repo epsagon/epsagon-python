@@ -37,7 +37,7 @@ class JSONLambdaTrigger(BaseLambdaTrigger):
 
         self.event_id = 'trigger-{}'.format(str(uuid4()))
 
-        self.resource['name'] = "trigger-{}".format(context.function_name)
+        self.resource['name'] = 'trigger-{}'.format(context.function_name)
         self.resource['operation'] = self.RESOURCE_TYPE
         self.resource['metadata'] = {}
 

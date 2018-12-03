@@ -3,10 +3,12 @@ Utilities for Epsagon module.
 """
 
 from __future__ import absolute_import
+import os
 from six.moves import urllib
 
 from epsagon.constants import TRACE_COLLECTOR_URL, REGION
 from .trace import tracer
+from .constants import EPSAGON_HANDLER
 
 # Method to URL dict.
 BLACKLIST_URLS = {
@@ -17,6 +19,16 @@ BLACKLIST_URLS = {
         'accounts.google.com',
     ],
 }
+
+
+def get_env_or_val(env_key, value):
+    """
+    return environment variable if exists, otherwise value.
+    :param env_key: environment key
+    :param value: value
+    :return: env or value
+    """
+    return os.getenv(env_key) if os.getenv(env_key) else value
 
 
 def add_data_if_needed(dictionary, name, data):
@@ -54,20 +66,19 @@ def get_tc_url(use_ssl):
     Get the TraceCollector URL.
     :return: TraceCollector URL.
     """
-    protocol = "http://"
-    if use_ssl:
-        protocol = "https://"
+    protocol = 'https://' if use_ssl else 'http://'
 
     return TRACE_COLLECTOR_URL.format(protocol=protocol, region=REGION)
 
 
-def init(token,
-         app_name='default',
-         collector_url=None,
-         metadata_only=True,
-         use_ssl=False,
-         debug=False
-         ):
+def init(
+    token='',
+    app_name='default',
+    collector_url=None,
+    metadata_only=True,
+    use_ssl=False,
+    debug=False
+):
     """
     Initializes trace with user's data.
     User can configure here trace parameters.
@@ -80,12 +91,39 @@ def init(token,
     :return: None
     """
     if not collector_url:
-        collector_url = get_tc_url(use_ssl)
+        collector_url = get_tc_url(
+            (get_env_or_val('EPSAGON_SSL', '') == 'TRUE') | use_ssl
+        )
     tracer.initialize(
-        token=token,
-        app_name=app_name,
-        collector_url=collector_url,
-        metadata_only=metadata_only,
-        use_ssl=use_ssl,
-        debug=debug
+        token=get_env_or_val('EPSAGON_TOKEN', token),
+        app_name=get_env_or_val('EPSAGON_APP_NAME', app_name),
+        collector_url=get_env_or_val('EPSAGON_URL', collector_url),
+        metadata_only=(
+          (get_env_or_val('EPSAGON_METADATA', '') == 'TRUE') | metadata_only
+        ),
+        debug=(get_env_or_val('EPSAGON_DEBUG', '') == 'TRUE') | debug
     )
+
+
+def import_original_module():
+    """
+    Imports original module
+    :return:
+    """
+    original_handler = os.getenv(EPSAGON_HANDLER)
+    if not original_handler:
+        raise ValueError(
+            'EPSAGON_HANDLER value not specified in environment variable'
+        )
+
+    try:
+        module_path, handler_name = original_handler.rsplit('.', 1)
+    except ValueError:
+        raise ValueError('wrong handler formatted: {}'.format(original_handler))
+
+    module_path = module_path.replace('/', '.')
+
+    try:
+        return __import__(module_path), module_path, handler_name
+    except ImportError:
+        raise ImportError('Failed to import module: {}'.format(module_path))

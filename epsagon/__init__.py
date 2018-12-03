@@ -6,8 +6,11 @@ from __future__ import absolute_import
 import os
 from .utils import init
 from .patcher import patch_all
-from .constants import __version__
+from .constants import __version__, EPSAGON_HANDLER
 from .trace import tracer
+
+if os.getenv(EPSAGON_HANDLER):
+    from .handler import wrapper
 
 
 def dummy_wrapper(func):
@@ -19,7 +22,7 @@ def dummy_wrapper(func):
     return func
 
 
-if os.environ.get('DISABLE_EPSAGON') == 'TRUE':
+if os.getenv('DISABLE_EPSAGON') == 'TRUE':
     os.environ['DISABLE_EPSAGON_PATCH'] = 'TRUE'
     lambda_wrapper = dummy_wrapper  # pylint: disable=C0103
     step_lambda_wrapper = dummy_wrapper  # pylint: disable=C0103
@@ -48,9 +51,9 @@ log = tracer.add_log
 error = tracer.add_error
 
 __all__ = ['lambda_wrapper', 'azure_wrapper', 'python_wrapper', 'init',
-           'step_lambda_wrapper', 'flask_wrapper', 'log', 'error']
+           'step_lambda_wrapper', 'flask_wrapper', 'log', 'error', 'wrapper']
 
 
 # The modules are patched only if DISABLE_EPSAGON_PATCH variable is NOT 'TRUE'
-if os.environ.get('DISABLE_EPSAGON_PATCH') != 'TRUE':
+if os.getenv('DISABLE_EPSAGON_PATCH') != 'TRUE':
     patch_all()

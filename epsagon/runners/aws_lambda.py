@@ -35,7 +35,7 @@ class AbstractLambdaRunner(BaseEvent):
             'memory': context.memory_limit_in_mb,
             'aws_account': context.invoked_function_arn.split(':')[4],
             'cold_start': constants.COLD_START,
-            'region': os.environ.get('AWS_REGION', ''),
+            'region': os.getenv('AWS_REGION', ''),
         }
 
 

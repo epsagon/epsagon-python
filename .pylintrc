@@ -1,19 +1,122 @@
-# Based on:
-# https://github.com/kpreid/shinysdr/blob/master/pylintrc
+# Based on https://github.com/tensorflow/tensorflow/blob/master/tensorflow/tools/ci_build/pylintrc
 
 [MASTER]
-# XXX should be changed to your project folder
-# see http://stackoverflow.com/a/37238692/3828891 for explanation
-init-hook='base_dir="epsagon"; import sys,os,re; _re=re.search(r".+\/" + base_dir, os.getcwd()); project_dir = _re.group() if _re else os.path.join(os.getcwd(), base_dir); sys.path.append(project_dir)'
+
+# Profiled execution.
+profile=no
+
+# Don't pickle collected data for later comparisons.
+persistent=no
+
+# List of plugins (as comma separated values of python modules names) to load,
+# usually to register additional checkers.
+load-plugins=pylint_quotes
+
 
 [MESSAGES CONTROL]
-# Find available symbolic names in:
-# https://docs.pylint.org/features.html
-disable=duplicate-code,too-few-public-methods,too-many-arguments,fixme,too-many-instance-attributes,bad-continuation,useless-object-inheritance
+
+disable=duplicate-code,too-few-public-methods,too-many-arguments,fixme,too-many-instance-attributes,bad-continuation,too-many-locals,logging-format-interpolation,too-many-branches,useless-object-inheritance,assignment-from-no-return,useless-import-alias
+
+# Ignore no member when source is unavailable
+extension-pkg-whitelist=ujson
+
+[REPORT]
+
+msg-template='{abspath}:{line}: [{msg_id}({symbol}) {obj}] {msg}'
+
+output-format=parseable
+
+# Tells whether to display a full report or only the messages
+reports=no
+
+# Python expression which should return a note less than 10 (10 is the highest
+# note). You have access to the variables errors warning, statement which
+# respectively contain the number of errors / warnings messages and the total
+# number of statements analyzed. This is used by the global evaluation report
+# (RP0004).
+evaluation=10.0 - ((float(5 * error + warning + refactor + convention) / statement) * 10)
+
+# Add a comment according to your evaluation note. This is used by the global
+# evaluation report (RP0004).
+comment=no
+
+
+[BASIC]
+
+# Required attributes for module, separated by a comma
+required-attributes=
+
+# List of builtins function names that should not be used, separated by a comma
+bad-functions=apply,input,reduce
+
+# Regular expression which should only match correct module names
+module-rgx=(([a-z_][a-z0-9_]*)|([A-Z][a-zA-Z0-9]+))$
+
+# Regular expression which should only match correct module level names
+const-rgx=^(_?[A-Z][A-Z0-9_]*|__[a-z0-9_]+__|_?[a-z][a-z0-9_]*)$
+
+# Regular expression which should only match correct class names
+class-rgx=^_?[A-Z][a-zA-Z0-9]*$
+
+# Regular expression which should only match correct function names
+function-rgx=^(?:(?P<camel_case>_?[A-Z][a-zA-Z0-9]*)|(?P<snake_case>_?[a-z][a-z0-9_]*))$
+
+# Regular expression which should only match correct method names
+method-rgx=^(?:(?P<exempt>__[a-z0-9_]+__|next)|(?P<camel_case>_{0,2}[A-Z][a-zA-Z0-9]*)|(?P<snake_case>_{0,2}[a-z][a-z0-9_]*))$
+
+# Regular expression which should only match correct instance attribute names
+attr-rgx=^_{0,2}[a-z][a-z0-9_]*$
+
+# Regular expression which should only match correct argument names
+argument-rgx=^[_a-z][a-z0-9_]*$
+
+# Regular expression which should only match correct variable names
+variable-rgx=^[a-z][a-z0-9_]*$
+
+# Regular expression which should only match correct attribute names in class
+# bodies
+class-attribute-rgx=^(_?[A-Z][A-Z0-9_]*|__[a-z0-9_]+__|_?[a-z][a-z0-9_]*)$
+
+# Regular expression which should only match correct list comprehension /
+# generator expression variable names
+inlinevar-rgx=^[a-z][a-z0-9_]*$
+
+# Good variable names which should always be accepted, separated by a comma
+good-names=main,_
+
+# Regular expression which should only match function or class names that do
+# not require a docstring.
+no-docstring-rgx=(__.*__|main)
+
+# Minimum line length for functions/classes that require docstrings, shorter
+# ones are exempt.
+docstring-min-length=10
+
 
 [FORMAT]
 # Maximum number of characters on a single line.
 max-line-length=80
 
+
 # Maximum number of lines in a module
 max-module-lines=500
+
+# Allow the body of an if to be on the same line as the test if there is no
+# else.
+single-line-if-stmt=y
+
+# String used as indentation unit. This is usually " " (4 spaces) or "\t" (1
+# tab).
+indent-string='    '
+
+# Set the linting for string quotes
+string-quote=single
+triple-quote=double
+docstring-quote=double
+
+
+[TOKENS]
+
+# Number of spaces of indent required when the last token on the preceding line
+# is an open (, [, or {.
+indent-after-paren=4

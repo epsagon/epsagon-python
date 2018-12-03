@@ -17,8 +17,8 @@ except ImportError:
         :return:
         """
         return dict(
-            attribute.split("=") for attribute in dsn.split()
-            if "=" in attribute
+            attribute.split('=') for attribute in dsn.split()
+            if '=' in attribute
         )
 
 from ..trace import tracer

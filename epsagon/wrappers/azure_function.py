@@ -15,6 +15,9 @@ def azure_wrapper(func):
 
     @functools.wraps(func)
     def _azure_wrapper(*args, **kwargs):
+        """
+        general Azure function wrapper
+        """
         tracer.prepare()
 
         # Trigger event is not supported yet.

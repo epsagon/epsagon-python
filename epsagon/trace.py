@@ -4,7 +4,6 @@ Trace object holds events and metadata
 
 from __future__ import absolute_import, print_function
 import sys
-import os
 import time
 import traceback
 import warnings
@@ -38,7 +37,6 @@ class Trace(object):
         self.version = __version__
         self.collector_url = ''
         self.metadata_only = True
-        self.use_ssl = False
         self.debug = False
         self.platform = 'Python {}.{}'.format(
             sys.version_info.major,
@@ -88,8 +86,7 @@ class Trace(object):
         self.custom_logs = []
         self.has_custom_error = False
 
-    def initialize(self, app_name, token, collector_url, metadata_only,
-                   use_ssl, debug):
+    def initialize(self, app_name, token, collector_url, metadata_only, debug):
         """
         Initializes trace with user's data.
         User can configure here trace parameters.
@@ -97,7 +94,6 @@ class Trace(object):
         :param token: user's token
         :param collector_url: the url to send traces to.
         :param metadata_only: whether to send metadata only or not.
-        :param use_ssl: whether to use SSL or not.
         :param debug: debug flag
         :return: None
         """
@@ -106,8 +102,7 @@ class Trace(object):
         self.token = token
         self.collector_url = collector_url
         self.metadata_only = metadata_only
-        self.use_ssl = use_ssl
-        self.debug = debug | (os.environ.get('EPSAGON_DEBUG') == 'TRUE')
+        self.debug = debug
 
     @staticmethod
     def load_from_dict(trace_data):
@@ -241,14 +236,14 @@ class Trace(object):
                 timeout=SEND_TIMEOUT
             )
             if self.debug:
-                print("Sending traces:")
+                print('Sending traces:')
                 pprint.pprint(self.to_dict())
         except requests.exceptions.ReadTimeout as exception:
             if self.debug:
-                print("Failed to send traces (timeout): ", exception)
+                print('Failed to send traces (timeout): ', exception)
         except Exception as exception:
             if self.debug:
-                print("Failed to send traces: ", exception)
+                print('Failed to send traces: ', exception)
 
 
 # pylint: disable=C0103

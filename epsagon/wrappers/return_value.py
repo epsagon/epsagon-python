@@ -23,7 +23,7 @@ def _decimal_serializer(o):
     """ Taken from `bootstrap.py` of AWS Lambda Python runtime """
     if isinstance(o, decimal.Decimal):
         return _number_str(o)
-    raise TypeError(repr(o) + " is not JSON serializable")
+    raise TypeError(repr(o) + ' is not JSON serializable')
 
 
 def add_return_value(runner, return_value):
