@@ -2,3 +2,4 @@
 tox
 mock
 Flask
+pylint-quotes
