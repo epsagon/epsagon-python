@@ -97,7 +97,7 @@ def init(
     tracer.initialize(
         token=get_env_or_val('EPSAGON_TOKEN', token),
         app_name=get_env_or_val('EPSAGON_APP_NAME', app_name),
-        collector_url=get_env_or_val('EPSAGON_URL', collector_url),
+        collector_url=get_env_or_val('EPSAGON_COLLECTOR_URL', collector_url),
         metadata_only=(
           (get_env_or_val('EPSAGON_METADATA', '') == 'TRUE') | metadata_only
         ),

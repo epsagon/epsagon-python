@@ -64,7 +64,7 @@ def test_epsagon_disable_epsagon_and_disable_patch(wrapped_get, wrapped_patch):
     'EPSAGON_SSL': 'FALSE',
     'EPSAGON_TOKEN': 'FALSE',
     'EPSAGON_APP_NAME': 'FALSE',
-    'EPSAGON_URL': 'FALSE',
+    'EPSAGON_COLLECTOR_URL': 'FALSE',
     'EPSAGON_METADATA': 'FALSE',
     'EPSAGON_DEBUG': 'FALSE',
 }[x]))
@@ -77,7 +77,7 @@ def test_epsagon_wrapper_env_init(wrapped_get, wrapped_init):
         mock.call('EPSAGON_SSL'),
         mock.call('EPSAGON_TOKEN'),
         mock.call('EPSAGON_APP_NAME'),
-        mock.call('EPSAGON_URL'),
+        mock.call('EPSAGON_COLLECTOR_URL'),
         mock.call('EPSAGON_METADATA'),
         mock.call('EPSAGON_DEBUG'),
     ])
@@ -92,7 +92,7 @@ def test_epsagon_wrapper_env_init(wrapped_get, wrapped_init):
     'EPSAGON_SSL': 'FALSE',
     'EPSAGON_TOKEN': '1234',
     'EPSAGON_APP_NAME': 'test',
-    'EPSAGON_URL': 'epsagon',
+    'EPSAGON_COLLECTOR_URL': 'epsagon',
     'EPSAGON_METADATA': 'TRUE',
     'EPSAGON_DEBUG': 'FALSE',
 }[x]))
