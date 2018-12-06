@@ -7,8 +7,7 @@ import epsagon.trace
 import epsagon.constants
 from epsagon.constants import (
     TRACE_COLLECTOR_URL,
-    DEFAULT_REGION,
-    MAX_MESSAGE_SIZE
+    DEFAULT_REGION
 )
 from epsagon.trace import tracer
 from epsagon.utils import get_tc_url
@@ -77,8 +76,6 @@ def test_prepare():
         tracer.prepare()
         assert tracer.events == []
         assert tracer.exceptions == []
-        assert tracer.custom_logs == []
-        assert tracer.has_custom_error == False
         assert len(w) == 1
 
     tracer.events = ['test_event']
@@ -87,8 +84,6 @@ def test_prepare():
         tracer.prepare()
         assert tracer.events == []
         assert tracer.exceptions == []
-        assert tracer.custom_logs == []
-        assert tracer.has_custom_error == False
         assert len(w) == 1
 
     tracer.events = ['test_event']
@@ -97,8 +92,6 @@ def test_prepare():
         tracer.prepare()  # this call should NOT trigger a warning
         assert tracer.events == []
         assert tracer.exceptions == []
-        assert tracer.custom_logs == []
-        assert tracer.has_custom_error == False
         assert len(w) == 1
 
 
@@ -220,7 +213,7 @@ def test_to_dict():
     assert trace_dict == trace.to_dict()
 
 
-def test_custom_logs_add_log():
+def test_custom_labels_sanity():
     class EventMock(object):
         def __init__(self):
             self.origin = 'runner'
@@ -239,146 +232,14 @@ def test_custom_logs_add_log():
 
     event = EventMock()
     tracer.add_event(event)
-    tracer.add_log('test')
-
-    _, severity, message = (
-        tracer.to_dict()['events'][0]['resource']['metadata']['Custom Logs'][0]
-    )
-
-    assert severity == 'log'
-    assert message == 'test'
-
-
-def test_custom_logs_verify_log_type():
-    class EventMock(object):
-        def __init__(self):
-            self.origin = 'runner'
-            self.terminated = True
-            self.resource = {
-                'metadata': {}
-            }
-
-        def to_dict(self):
-            return {
-                'resource': self.resource
-            }
-
-        def terminate(self):
-            pass
-
-    event = EventMock()
-    tracer.add_event(event)
-    message_int = 1
-    tracer.add_log(message_int)
-    message_dict = {'a': 1}
-    tracer.add_log(message_dict)
-
-    log_messages = [
-        message for _, _, message
-        in tracer.to_dict()['events'][0]['resource']['metadata']['Custom Logs']
-    ]
-
-    assert str(message_int) in log_messages
-    assert str(message_dict) in log_messages
-
-
-def test_custom_logs_verify_log_size_limit():
-    class EventMock(object):
-        def __init__(self):
-            self.origin = 'runner'
-            self.terminated = True
-            self.resource = {
-                'metadata': {}
-            }
-
-        def to_dict(self):
-            return {
-                'resource': self.resource
-            }
-
-        def terminate(self):
-            pass
-
-    event = EventMock()
-    tracer.add_event(event)
-    small_message = 'a' * (MAX_MESSAGE_SIZE - 1)
-    exact_message = 'a' * MAX_MESSAGE_SIZE
-    large_message = 'a' * (MAX_MESSAGE_SIZE + 1)
-    tracer.add_log(small_message)
-    tracer.add_log(exact_message)
-    tracer.add_log(large_message)
-
-    log_messages = [
-        message for _, _, message
-        in tracer.to_dict()['events'][0]['resource']['metadata']['Custom Logs']
-    ]
-
-    assert small_message in log_messages
-    assert exact_message in log_messages
-    assert large_message not in log_messages
-
-
-def test_custom_logs_add_error():
-    class EventMock(object):
-        def __init__(self):
-            self.origin = 'runner'
-            self.terminated = True
-            self.error_code = ErrorCode.OK
-            self.resource = {
-                'metadata': {}
-            }
-
-        def to_dict(self):
-            return {
-                'resource': self.resource,
-                'error_code': self.error_code
-            }
-
-        def terminate(self):
-            pass
-
-    event = EventMock()
-    tracer.add_event(event)
-    tracer.add_error('bad')
-
-    _, severity, message = (
-        tracer.to_dict()['events'][0]['resource']['metadata']['Custom Logs'][0]
-    )
-
-    assert severity == 'error'
-    assert message == 'bad'
-    assert tracer.to_dict()['events'][0]['error_code'] == ErrorCode.ERROR
-
-
-def test_custom_logs_verify_error_limit():
-    class EventMock(object):
-        def __init__(self):
-            self.origin = 'runner'
-            self.terminated = True
-            self.error_code = ErrorCode.OK
-            self.resource = {
-                'metadata': {}
-            }
-
-        def to_dict(self):
-            return {
-                'resource': self.resource,
-                'error_code': self.error_code
-            }
-
-        def terminate(self):
-            pass
-
-    event = EventMock()
-    tracer.add_event(event)
-    tracer.add_error('b' * (MAX_MESSAGE_SIZE + 1))
+    tracer.add_label('test_label', 'test_value')
     trace_metadata = tracer.to_dict()['events'][0]['resource']['metadata']
 
-    assert 'Custom Logs' not in trace_metadata
-    assert tracer.to_dict()['events'][0]['error_code'] == ErrorCode.OK
+    assert trace_metadata.get('labels') is not None
+    assert json.loads(trace_metadata['labels']) == {'test_label': 'test_value'}
 
 
-def test_custom_logs_verify_type_exception():
+def test_custom_labels_override_trace():
     class EventMock(object):
         def __init__(self):
             self.origin = 'runner'
@@ -395,24 +256,14 @@ def test_custom_logs_verify_type_exception():
         def terminate(self):
             pass
 
-    class CantBeSTRed(object):
-        def __str__(self):
-            raise Exception
-
     event = EventMock()
     tracer.add_event(event)
-    tracer.add_error(CantBeSTRed())
+    tracer.add_label('test_label', 'test_value1')
+    tracer.add_label('test_label', 'test_value2')
     trace_metadata = tracer.to_dict()['events'][0]['resource']['metadata']
 
-    assert 'Custom Logs' not in trace_metadata
-
-
-def test_custom_logs_failsafe():
-    # In case there is no runner.
-    tracer.add_log('test')
-    tracer.to_dict()
-
-    assert len(tracer.exceptions) == 1
+    assert trace_metadata.get('labels') is not None
+    assert json.loads(trace_metadata['labels']) == {'test_label': 'test_value2'}
 
 
 def test_to_dict_empty():

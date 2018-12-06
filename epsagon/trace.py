@@ -15,8 +15,7 @@ import requests
 import requests.exceptions
 from epsagon.event import BaseEvent
 from epsagon.common import EpsagonWarning
-from .constants import SEND_TIMEOUT, MAX_MESSAGE_SIZE, __version__
-from .common import ErrorCode
+from .constants import SEND_TIMEOUT, MAX_LABEL_SIZE, __version__
 
 
 class Trace(object):
@@ -33,7 +32,8 @@ class Trace(object):
         self.token = ''
         self.events = []
         self.exceptions = []
-        self.custom_logs = []
+        self.custom_labels = {}
+        self.custom_labels_size = 0
         self.has_custom_error = False
         self.version = __version__
         self.collector_url = ''
@@ -85,7 +85,8 @@ class Trace(object):
 
         self.events = []
         self.exceptions = []
-        self.custom_logs = []
+        self.custom_labels = {}
+        self.custom_labels_size = 0
         self.has_custom_error = False
 
     def initialize(self, app_name, token, collector_url, metadata_only,
@@ -136,70 +137,57 @@ class Trace(object):
         event.terminate()
         self.events.append(event)
 
-    @staticmethod
-    def verify_custom_log(message):
+    def verify_custom_label(self, key, value):
         """
-        Verifies custom log message is valid, both in size and type.
-        :param message: custom message.
+        Verifies custom label is valid, both in size and type.
+        :param key: Key for the label data (string)
+        :param value: Value for the label data (string)
         :return: True/False
         """
-
-        try:
-            str_message = str(message)
-        # pylint: disable=broad-except
-        except Exception:
+        if not isinstance(key, str) or not isinstance(value, str):
             return False
 
-        if len(str_message) > MAX_MESSAGE_SIZE:
+        if len(key) + len(value) > MAX_LABEL_SIZE:
             return False
+
+        if (
+            len(key) +
+            len(value) +
+            self.custom_labels_size > MAX_LABEL_SIZE
+        ):
+            return False
+
+        self.custom_labels_size += len(key) + len(value)
 
         return True
 
-    def add_custom_log(self, severity, message):
+    def add_label(self, key, value):
         """
-        Add custom log row. The format is (timestamp, severity, message).
-        :param severity: log / error
-        :param message: Log message
-        :return: True if message added, else False.
+        Adds a custom label given by the user to the runner
+        of the current trace
+        :param key: Key for the label data (string)
+        :param value: Value for the label data (string)
         """
-        if not Trace.verify_custom_log(message):
-            return False
-        self.custom_logs.append([time.time(), severity, str(message)])
-        return True
-
-    def add_log(self, message):
-        """
-        Adds log message.
-        :param message: Log message
-        :return: None
-        """
-        self.add_custom_log('log', message)
-
-    def add_error(self, message):
-        """
-        Adds error message and sets error status.
-        :param message: Log message
-        :return: None
-        """
-        if self.add_custom_log('error', message):
-            self.has_custom_error = True
-
-    def update_runner_with_custom_logs(self):
-        """
-        Insert custom logs to runner event.
-        :return: None
-        """
-        if not self.custom_logs:
+        if not self.verify_custom_label(key, value):
             return
 
-        ind, runner = [
-            (ind, ev) for (ind, ev) in enumerate(self.events)
+        self.custom_labels[key] = value
+
+    def update_runner_with_custom_labels(self):
+        """
+        Adds the custom labels to the runner of the trace
+        """
+        if not self.custom_labels:
+            return
+
+        index, runner = [
+            (index, ev) for (index, ev) in enumerate(self.events)
             if ev.origin == 'runner'
         ][0]
-        runner.resource['metadata']['Custom Logs'] = self.custom_logs
-        if self.has_custom_error and runner.error_code != ErrorCode.EXCEPTION:
-            runner.error_code = ErrorCode.ERROR
-        self.events[ind] = runner
+
+        runner.resource['metadata']['labels'] = json.dumps(self.custom_labels)
+
+        self.events[index] = runner
 
     def to_dict(self):
         """
@@ -208,7 +196,7 @@ class Trace(object):
         """
 
         try:
-            self.update_runner_with_custom_logs()
+            self.update_runner_with_custom_labels()
         # pylint: disable=W0703
         except Exception as exception:
             # Ignore custom logs in case of error.

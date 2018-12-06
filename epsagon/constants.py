@@ -13,4 +13,4 @@ COLD_START = True
 # How long we try to send traces.
 SEND_TIMEOUT = 1
 
-MAX_MESSAGE_SIZE = 512
+MAX_LABEL_SIZE = 100 * 1024
