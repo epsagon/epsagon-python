@@ -483,7 +483,7 @@ def test_init_sanity(wrapped_init):
         app_name='app-name',
         collector_url='collector',
         metadata_only=False,
-        use_ssl=False,
+        use_ssl=True,
         debug=False
     )
 
@@ -513,16 +513,17 @@ def test_init_empty_collector_url(wrapped_init):
     wrapped_init.assert_called_with(
         token='token',
         app_name='app-name',
-        collector_url=get_tc_url(False),
+        collector_url=get_tc_url(True),
         metadata_only=False,
-        use_ssl=False,
+        use_ssl=True,
         debug=False
     )
 
 
 @mock.patch('epsagon.trace.Trace.initialize')
 def test_init_no_ssl_no_url(wrapped_init):
-    epsagon.utils.init(token='token', app_name='app-name', metadata_only=False)
+    epsagon.utils.init(token='token', app_name='app-name', metadata_only=False,
+                       use_ssl=False)
     wrapped_init.assert_called_with(
         token='token',
         app_name='app-name',
