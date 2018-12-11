@@ -65,7 +65,7 @@ def init(token,
          app_name='default',
          collector_url=None,
          metadata_only=True,
-         use_ssl=False,
+         use_ssl=True,
          debug=False
          ):
     """
