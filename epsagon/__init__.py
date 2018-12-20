@@ -43,12 +43,10 @@ else:
 
 
 # pylint: disable=C0103
-log = tracer.add_log
-# pylint: disable=C0103
-error = tracer.add_error
+label = tracer.add_label
 
 __all__ = ['lambda_wrapper', 'azure_wrapper', 'python_wrapper', 'init',
-           'step_lambda_wrapper', 'flask_wrapper', 'log', 'error']
+           'step_lambda_wrapper', 'flask_wrapper']
 
 
 # The modules are patched only if DISABLE_EPSAGON_PATCH variable is NOT 'TRUE'

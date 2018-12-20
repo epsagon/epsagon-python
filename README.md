@@ -33,6 +33,18 @@ def handler(event, context):
   pass
 ```
 
+## Custom labels
+
+You can add custom labels to your traces. Filters can later be used for filtering
+traces that contains specific labels:
+```python
+@epsagon.lambda_wrapper
+def handler(event, context):
+  epsagon.label('first_label', 'value1')
+  epsagon.label('second_label', 'value2')
+  pass
+```
+
 ## Copyright
 
 Provided under the MIT license. See LICENSE for details.
