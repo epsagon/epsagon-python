@@ -42,11 +42,11 @@ class RequestsEvent(BaseEvent):
         super(RequestsEvent, self).__init__(start_time)
 
         self.event_id = 'requests-{}'.format(str(uuid4()))
-        self.resource['name'] = self.RESOURCE_TYPE
 
         prepared_request = args[0]
+        url_obj = urlparse(prepared_request.url)
+        self.resource['name'] = url_obj.hostname
         self.resource['operation'] = prepared_request.method
-
         self.resource['metadata']['url'] = prepared_request.url
 
         add_data_if_needed(
@@ -77,9 +77,7 @@ class RequestsEvent(BaseEvent):
         self.resource['metadata']['status_code'] = response.status_code
         if 'x-amzn-requestid' in response.headers:
             # This is a request to AWS API Gateway
-            url = urlparse(self.resource['metadata']['url'])
             self.resource['type'] = 'api_gateway'
-            self.resource['name'] = url.path
             self.resource['metadata']['request_trace_id'] = (
                 response.headers['x-amzn-requestid']
             )
