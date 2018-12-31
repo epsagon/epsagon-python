@@ -859,7 +859,11 @@ class BotocoreLambdaEvent(BotocoreEvent):
 
         _, request_data = args
 
-        self.resource['name'] = request_data.get('FunctionName', '')
+        func_name = request_data.get('FunctionName', '')
+        if ':' in func_name:
+            func_name = func_name.split(':')[-1]
+
+        self.resource['name'] = func_name
         if 'Payload' in request_data:
             add_data_if_needed(
                 self.resource['metadata'],

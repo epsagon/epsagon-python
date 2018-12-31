@@ -2,7 +2,7 @@
 
 import os
 
-__version__ = '1.0.19'
+__version__ = '1.0.23'
 
 DEFAULT_REGION = 'us-east-1'
 REGION = os.getenv('AWS_REGION', DEFAULT_REGION)
@@ -16,4 +16,4 @@ EPSAGON_HANDLER = 'EPSAGON_HANDLER'
 # How long we try to send traces.
 SEND_TIMEOUT = 1
 
-MAX_MESSAGE_SIZE = 512
+MAX_LABEL_SIZE = 100 * 1024
