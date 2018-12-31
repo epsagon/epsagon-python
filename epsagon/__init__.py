@@ -49,7 +49,7 @@ else:
 label = tracer.add_label
 
 __all__ = ['lambda_wrapper', 'azure_wrapper', 'python_wrapper', 'init',
-           'step_lambda_wrapper', 'flask_wrapper', 'log', 'error', 'wrapper']
+           'step_lambda_wrapper', 'flask_wrapper', 'wrapper']
 
 
 # The modules are patched only if DISABLE_EPSAGON_PATCH variable is NOT 'TRUE'
