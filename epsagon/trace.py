@@ -173,7 +173,7 @@ class Trace(object):
 
         self.custom_labels[key] = value
 
-    def update_runner_with_custom_labels(self):
+    def update_runner_with_labels(self):
         """
         Adds the custom labels to the runner of the trace
         """
@@ -196,7 +196,7 @@ class Trace(object):
         """
 
         try:
-            self.update_runner_with_custom_labels()
+            self.update_runner_with_labels()
         # pylint: disable=W0703
         except Exception as exception:
             # Ignore custom logs in case of error.
