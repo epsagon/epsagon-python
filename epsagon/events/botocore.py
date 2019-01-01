@@ -745,7 +745,7 @@ class BotocoreAthenaEvent(BotocoreEvent):
 
 class BotocoreFirehoseEvent(BotocoreEvent):
     """
-    Represents Athena botocore event
+    Represents Firehose botocore event
     """
     RESOURCE_TYPE = 'firehose'
 
@@ -779,7 +779,7 @@ class BotocoreFirehoseEvent(BotocoreEvent):
     def update_response(self, response):
         """
         Adds response data to event.
-        :param response: Response from botocore's Athena Client
+        :param response: Response from botocore's Firehose Client
         """
         super(BotocoreFirehoseEvent, self).update_response(response)
 
