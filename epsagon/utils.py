@@ -18,6 +18,24 @@ BLACKLIST_URLS = {
     ],
 }
 
+# Ignored content types for web frameworks.
+IGNORED_CONTENT_TYPES = [
+    'image',
+    'audio',
+    'video',
+    'font',
+    'zip',
+    'css',
+]
+IGNORED_FILE_TYPES = [
+    '.js',
+    '.jsx',
+    '.woff',
+    '.woff2',
+    '.ttf',
+    '.eot',
+]
+
 
 def add_data_if_needed(dictionary, name, data):
     """
@@ -47,6 +65,20 @@ def is_blacklisted_url(url):
             if method(url, blacklist_url):
                 return True
     return False
+
+
+def ignore_request(content, path):
+    """
+    Return true if HTTP request in web frameworks should be omitted.
+    :param content: accept mimetype header
+    :param path: request path
+    :return: Bool
+    """
+
+    return (
+        any([x in content for x in IGNORED_CONTENT_TYPES]) or
+        any([path.endswith(x) for x in IGNORED_FILE_TYPES])
+    )
 
 
 def get_tc_url(use_ssl):

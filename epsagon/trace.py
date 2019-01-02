@@ -173,7 +173,7 @@ class Trace(object):
 
         self.custom_labels[key] = value
 
-    def update_runner_with_custom_labels(self):
+    def update_runner_with_labels(self):
         """
         Adds the custom labels to the runner of the trace
         """
@@ -196,7 +196,7 @@ class Trace(object):
         """
 
         try:
-            self.update_runner_with_custom_labels()
+            self.update_runner_with_labels()
         # pylint: disable=W0703
         except Exception as exception:
             # Ignore custom logs in case of error.
@@ -222,18 +222,22 @@ class Trace(object):
         """
         if self.token == '':
             return
+        trace = ''
         try:
+            trace = json.dumps(self.to_dict())
             requests.post(
                 self.collector_url,
-                data=json.dumps(self.to_dict()),
+                data=trace,
                 timeout=SEND_TIMEOUT
             )
             if self.debug:
                 print("Sending traces:")
                 pprint.pprint(self.to_dict())
         except requests.exceptions.ReadTimeout as exception:
-            if self.debug:
-                print("Failed to send traces (timeout): ", exception)
+            print("Failed to send trace (size: {}) (timeout): {}".format(
+                len(trace),
+                exception
+            ))
         except Exception as exception:
             if self.debug:
                 print("Failed to send traces: ", exception)

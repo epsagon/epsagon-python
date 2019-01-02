@@ -1,3 +1,4 @@
+# pylint: disable=protected-access
 """
 Runner for a Flask Python function
 """
@@ -65,5 +66,5 @@ class TornadoRunner(BaseEvent):
         self.resource['metadata']['Status'] = response._status_code
         self.resource['metadata']['etag'] = headers.get('Etag')
 
-        if response._status_code >= 300:
+        if not self.error_code and response._status_code >= 300:
             self.set_error()
