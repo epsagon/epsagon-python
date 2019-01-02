@@ -19,6 +19,7 @@ def init_module():
             'No handler {} in module {}'.format(handler_name, module_path)
         )
 
+
 init()
 WRAPPER_HANDLER = init_module()
 
