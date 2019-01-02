@@ -1,6 +1,6 @@
 # pylint: disable=protected-access
 """
-Runner for a Flask Python function
+Runner for a Tornado Python framework
 """
 
 from __future__ import absolute_import
@@ -22,7 +22,6 @@ class TornadoRunner(BaseEvent):
         """
         Initialize.
         :param start_time: event's start time (epoch).
-        :param app: the flask application.
         :param request: the incoming request.
         """
 
