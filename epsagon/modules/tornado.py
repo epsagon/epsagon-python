@@ -31,7 +31,7 @@ class TornadoWrapper(object):
             ignored = ignore_request('', instance.request.path)
             if not ignored:
                 cls.RUNNER = TornadoRunner(time.time(), instance.request)
-        except Exception as instrumentation_exception:
+        except Exception as instrumentation_exception:  # pylint: disable=W0703
             epsagon.trace.tracer.add_exception(
                 instrumentation_exception,
                 traceback.format_exc()
@@ -59,7 +59,7 @@ class TornadoWrapper(object):
                 epsagon.trace.tracer.add_event(cls.RUNNER)
                 epsagon.trace.tracer.send_traces()
             epsagon.trace.tracer.prepare()
-        except Exception as instrumentation_exception:
+        except Exception as instrumentation_exception:  # pylint: disable=W0703
             epsagon.trace.tracer.add_exception(
                 instrumentation_exception,
                 traceback.format_exc()
@@ -80,7 +80,7 @@ class TornadoWrapper(object):
             if cls.RUNNER:
                 _, exception, _ = args
                 cls.RUNNER.set_exception(exception, traceback.format_exc())
-        except Exception as instrumentation_exception:
+        except Exception as instrumentation_exception:  # pylint: disable=W0703
             epsagon.trace.tracer.add_exception(
                 instrumentation_exception,
                 traceback.format_exc()
