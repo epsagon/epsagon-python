@@ -743,6 +743,94 @@ class BotocoreAthenaEvent(BotocoreEvent):
         self.resource['metadata']['Query ID'] = response['QueryExecutionId']
 
 
+class BotocoreFirehoseEvent(BotocoreEvent):
+    """
+    Represents Firehose botocore event
+    """
+    RESOURCE_TYPE = 'firehose'
+
+    def __init__(self, wrapped, instance, args, kwargs, start_time, response,
+                 exception):
+        self.RESPONSE_TO_FUNC.update({
+            'PutRecord': self.put_record_response,
+            'PutRecordBatch': self.put_record_batch_response,
+        })
+
+        self.OPERATION_TO_FUNC.update({
+            'PutRecord': self.put_record_operation,
+            'PutRecordBatch': self.put_record_batch_operation,
+        })
+
+        super(BotocoreFirehoseEvent, self).__init__(
+            wrapped,
+            instance,
+            args,
+            kwargs,
+            start_time,
+            response,
+            exception
+        )
+
+        self.OPERATION_TO_FUNC.get(self.resource['operation'], empty_func)(
+            args,
+            kwargs
+        )
+
+    def update_response(self, response):
+        """
+        Adds response data to event.
+        :param response: Response from botocore's Firehose Client
+        """
+        super(BotocoreFirehoseEvent, self).update_response(response)
+
+        self.RESPONSE_TO_FUNC.get(self.resource['operation'], empty_func)(
+            response
+        )
+
+    def put_record_operation(self, args, _):
+        """
+        Process PutRecord operation
+        :param args: command arguments
+        :param _: unused, kwargs
+        :return: None
+        """
+        _, request_args = args
+        self.resource['name'] = request_args['DeliveryStreamName']
+
+    def put_record_response(self, response):
+        """
+        Process PutRecord response
+        :param response: response from Firehose Client
+        :return: None
+        """
+        self.resource['metadata']['record_id'] = response['RecordId']
+
+    def put_record_batch_operation(self, args, _):
+        """
+        Process PutRecordBatch operation
+        :param args: command arguments
+        :param _: unused, kwargs
+        :return: None
+        """
+        _, request_args = args
+        self.resource['name'] = request_args['DeliveryStreamName']
+        self.resource['metadata']['records_count'] = len(
+            request_args['Records']
+        )
+
+    def put_record_batch_response(self, response):
+        """
+        Process PutRecordBatch response
+        :param response: response from Firehose Client
+        :return: None
+        """
+        metadata = self.resource['metadata']
+        metadata['Failed Put Count'] = response['FailedPutCount']
+        self.resource['metadata']['record_ids'] = [
+            res['RecordId'] for res in response['RequestResponses']
+        ]
+
+
 class BotocoreStepFunctionEvent(BotocoreEvent):
     """
     Represents Step Function botocore event
