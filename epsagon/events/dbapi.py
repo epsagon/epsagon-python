@@ -24,6 +24,8 @@ except ImportError:
 from ..trace import tracer
 from ..event import BaseEvent
 
+MAX_QUERY_SIZE = 256
+
 
 class DBAPIEvent(BaseEvent):
     """
@@ -67,30 +69,40 @@ class DBAPIEvent(BaseEvent):
         super(DBAPIEvent, self).__init__(start_time)
 
         self.event_id = 'dbapi-{}'.format(str(uuid4()))
-        dsn = parse_dsn(connection.dsn)
-        self.resource['name'] = dsn['dbname']
 
-        query = cursor.query
+        # in case of pg instrumentation we extract data from the dsn property
+        if hasattr(connection, 'dsn'):
+            dsn = parse_dsn(connection.dsn)
+            db_name = dsn['dbname']
+            host = dsn.get('host', 'local')
+            query = cursor.query
+        else:
+            query = _args[0]
+            host = connection.extract_hostname
+            db_name = connection.extract_dbname
+
+        self.resource['name'] = db_name
+
         # NOTE: The operation might not be identified properly when
         # using 'WITH' clause
         operation = query.split()[0].lower()
         self.resource['operation'] = operation
 
         # override event type with the specific DB type
-        if 'rds.amazonaws' in connection.dsn:
+        if 'rds.amazonaws' in host:
             self.resource['type'] = 'rds'
-        elif 'redshift.amazonaws' in connection.dsn:
+        elif 'redshift.amazonaws' in host:
             self.resource['type'] = 'redshift'
 
         self.resource['metadata'] = {
-            'Host': dsn['host'] if 'host' in dsn else 'local',
+            'Host': host,
             'Driver': connection.__class__.__module__.split('.')[0],
             'Table Name': self._extract_table_name(query, operation)
         }
 
         # for select we always want to save the query
         if (operation == 'select') or (not tracer.metadata_only):
-            self.resource['metadata']['Query'] = cursor.query
+            self.resource['metadata']['Query'] = query[:MAX_QUERY_SIZE]
 
         if exception is None:
             # Update response data

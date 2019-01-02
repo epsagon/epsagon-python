@@ -2,7 +2,7 @@
 
 import os
 
-__version__ = '1.0.23'
+__version__ = '1.0.27'
 
 DEFAULT_REGION = 'us-east-1'
 REGION = os.getenv('AWS_REGION', DEFAULT_REGION)
@@ -13,7 +13,7 @@ COLD_START = True
 # Customer original handler.
 EPSAGON_HANDLER = 'EPSAGON_HANDLER'
 
-# How long we try to send traces.
-SEND_TIMEOUT = 1
+# How long we try to send traces in seconds.
+SEND_TIMEOUT = 0.5
 
 MAX_LABEL_SIZE = 100 * 1024

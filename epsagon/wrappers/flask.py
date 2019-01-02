@@ -14,29 +14,13 @@ import epsagon.trace
 import epsagon.triggers.http
 import epsagon.runners.flask
 from epsagon.common import EpsagonWarning
+from .http_filters import ignore_request
 
 
 class FlaskWrapper(object):
     """
     Wraps Flask wsgi application.
     """
-
-    IGNORED_CONTENT_TYPES = [
-        'image',
-        'audio',
-        'video',
-        'font',
-        'zip',
-        'css',
-    ]
-    IGNORED_FILE_TYPES = [
-        '.js',
-        '.jsx',
-        '.woff',
-        '.woff2',
-        '.ttf',
-        '.eot',
-    ]
 
     def __init__(self, app, ignored_endpoints=None):
         """
@@ -70,21 +54,11 @@ class FlaskWrapper(object):
         :return: None.
         """
         epsagon.trace.tracer.prepare()
-        self.ignored_request = False
 
-        # Ignoring non relevant mime / content types.
-        if request.accept_mimetypes:
-            for content_type in self.IGNORED_CONTENT_TYPES:
-                for mime_type, _ in request.accept_mimetypes:
-                    if content_type in mime_type:
-                        self.ignored_request = True
-                        return
+        # Ignoring non relevant content types.
+        self.ignored_request = ignore_request('', request.path.lower())
 
-        ignored_type = any([
-            request.path.lower().endswith(x) for x in self.IGNORED_FILE_TYPES
-        ])
-        if ignored_type:
-            self.ignored_request = True
+        if self.ignored_request:
             return
 
         # Create flask runner with current request.
@@ -129,8 +103,7 @@ class FlaskWrapper(object):
             return response
 
         # Ignoring non relevant content types.
-        content_type = response.content_type.lower()
-        if any([x in content_type for x in self.IGNORED_CONTENT_TYPES]):
+        if ignore_request(response.content_type.lower(), ''):
             self.ignored_request = True
             return response
 
