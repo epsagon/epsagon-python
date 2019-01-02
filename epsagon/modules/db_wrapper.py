@@ -53,7 +53,6 @@ class ConnectionWrapper(wrapt.ObjectProxy):
     """
     def __init__(self, connection, args, kwargs):
         super(ConnectionWrapper, self).__init__(connection)
-        print(kwargs)
         self._self_args = args
         self._self_kwargs = kwargs
 

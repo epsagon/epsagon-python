@@ -24,6 +24,8 @@ except ImportError:
 from ..trace import tracer
 from ..event import BaseEvent
 
+MAX_QUERY_SIZE = 256
+
 
 class DBAPIEvent(BaseEvent):
     """
@@ -68,6 +70,7 @@ class DBAPIEvent(BaseEvent):
 
         self.event_id = 'dbapi-{}'.format(str(uuid4()))
 
+        # in case of pg instrumentation we extract data from the dsn property
         if hasattr(connection, 'dsn'):
             dsn = parse_dsn(connection.dsn)
             db_name = dsn['dbname']
@@ -99,7 +102,7 @@ class DBAPIEvent(BaseEvent):
 
         # for select we always want to save the query
         if (operation == 'select') or (not tracer.metadata_only):
-            self.resource['metadata']['Query'] = query
+            self.resource['metadata']['Query'] = query[:MAX_QUERY_SIZE]
 
         if exception is None:
             # Update response data
