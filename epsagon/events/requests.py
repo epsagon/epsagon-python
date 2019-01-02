@@ -14,7 +14,7 @@ from six.moves import urllib
 from epsagon.utils import add_data_if_needed
 from ..trace import tracer
 from ..event import BaseEvent
-from ..utils import is_blacklisted_url
+from ..wrappers.http_filters import is_blacklisted_url
 
 
 class RequestsEvent(BaseEvent):

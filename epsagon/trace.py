@@ -233,10 +233,12 @@ class Trace(object):
         """
         if self.token == '':
             return
+        trace = ''
         try:
+            trace = json.dumps(self.to_dict(), cls=TraceEncoder)
             requests.post(
                 self.collector_url,
-                data=json.dumps(self.to_dict(), cls=TraceEncoder),
+                data=trace,
                 timeout=SEND_TIMEOUT
             )
             if self.debug:
@@ -244,7 +246,10 @@ class Trace(object):
                 pprint.pprint(self.to_dict())
         except requests.exceptions.ReadTimeout as exception:
             if self.debug:
-                print("Failed to send traces (timeout): ", exception)
+                print("Failed to send trace (size: {}) (timeout): {}".format(
+                    len(trace),
+                    exception
+                ))
         except Exception as exception:
             if self.debug:
                 print("Failed to send traces: ", exception)
