@@ -31,7 +31,7 @@ class TornadoRunner(BaseEvent):
         self.event_id = str(uuid.uuid4())
 
         # Since Tornado doesn't has app name, we use the tracer app name.
-        self.resource['name'] = tracer.app_name
+        self.resource['name'] = ' '.join((tracer.app_name, request.path))
         self.resource['operation'] = request.method
 
         self.resource['metadata'] = {
