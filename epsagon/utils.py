@@ -4,7 +4,6 @@ Utilities for Epsagon module.
 
 from __future__ import absolute_import
 import os
-from six.moves import urllib
 from epsagon.constants import TRACE_COLLECTOR_URL, REGION
 from .trace import tracer
 from .constants import EPSAGON_HANDLER

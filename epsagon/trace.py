@@ -241,7 +241,7 @@ class Trace(object):
                 pprint.pprint(self.to_dict())
         except requests.exceptions.ReadTimeout as exception:
             if self.debug:
-                print("Failed to send trace (size: {}) (timeout): {}".format(
+                print('Failed to send trace (size: {}) (timeout): {}'.format(
                     len(trace),
                     exception
                 ))
