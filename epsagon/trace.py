@@ -18,6 +18,17 @@ from epsagon.common import EpsagonWarning
 from .constants import SEND_TIMEOUT, MAX_LABEL_SIZE, __version__
 
 
+class TraceEncoder(json.JSONEncoder):
+    """
+    An encoder for the trace json
+    """
+    def default(self, o):  # pylint: disable=method-hidden
+        if isinstance(o, set):
+            return list(o)
+        return json.JSONEncoder.default(self, o)
+
+
+
 class Trace(object):
     """
     Represents runtime trace
@@ -224,7 +235,7 @@ class Trace(object):
             return
         trace = ''
         try:
-            trace = json.dumps(self.to_dict())
+            trace = json.dumps(self.to_dict(), cls=TraceEncoder)
             requests.post(
                 self.collector_url,
                 data=trace,
