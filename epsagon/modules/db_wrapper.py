@@ -95,8 +95,7 @@ def connect_wrapper(wrapped, instance, args, kwargs):
     connect wrapper for psycopg2 instrumentation
     :param wrapped: wrapt's wrapped
     :param instance: wrapt's instance
-    :param args: wrapt's args    print(args)
-    print(kwargs)
+    :param args: wrapt's args
     :param kwargs: wrapt's kwargs
     :return: None
     """
