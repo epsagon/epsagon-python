@@ -21,14 +21,4 @@ def init_module():
 
 
 init()
-WRAPPER_HANDLER = init_module()
-
-
-def wrapper(event, context):
-    """
-    Generic wrapper for Lambda functions.
-    :param event: Lambda's event
-    :param context: Lambda's context
-    :return: Original handler
-    """
-    return lambda_wrapper(WRAPPER_HANDLER)(event, context)
+wrapper = lambda_wrapper(init_module())
