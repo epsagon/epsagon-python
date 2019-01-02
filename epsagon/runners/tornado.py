@@ -16,7 +16,6 @@ class TornadoRunner(BaseEvent):
 
     ORIGIN = 'runner'
     RESOURCE_TYPE = 'python_tornado'
-    OPERATION = 'request'
 
     def __init__(self, start_time, request):
         """
