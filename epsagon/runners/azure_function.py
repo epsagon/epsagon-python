@@ -24,14 +24,14 @@ class AzureFunctionRunner(BaseEvent):
 
         super(AzureFunctionRunner, self).__init__(start_time)
 
-        self.event_id = os.environ.get('EXECUTION_CONTEXT_INVOCATIONID', '')
-        self.resource['name'] = os.environ.get(
+        self.event_id = os.getenv('EXECUTION_CONTEXT_INVOCATIONID', '')
+        self.resource['name'] = os.getenv(
             'EXECUTION_CONTEXT_FUNCTIONNAME',
             ''
         )
         self.resource['operation'] = self.OPERATION
 
         self.resource['metadata'] = {
-            'region': os.environ.get('REGION_NAME', ''),
-            'memory': os.environ.get('WEBSITE_MEMORY_LIMIT_MB', ''),
+            'region': os.getenv('REGION_NAME', ''),
+            'memory': os.getenv('WEBSITE_MEMORY_LIMIT_MB', ''),
         }

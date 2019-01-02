@@ -26,6 +26,9 @@ def lambda_wrapper(func):
 
     @functools.wraps(func)
     def _lambda_wrapper(*args, **kwargs):
+        """
+        Generic Lambda function wrapper
+        """
         epsagon.trace.tracer.prepare()
 
         try:
@@ -108,6 +111,9 @@ def step_lambda_wrapper(func):
 
     @functools.wraps(func)
     def _lambda_wrapper(*args, **kwargs):
+        """
+        Generic Step Function wrapper
+        """
         epsagon.trace.tracer.prepare()
 
         try:
