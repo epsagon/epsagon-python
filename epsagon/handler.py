@@ -5,8 +5,22 @@ Epsagon generic wrapper used only in Lambda environments.
 from .utils import init, import_original_module
 from .wrappers import lambda_wrapper
 
+
+def init_module():
+    """
+    Initialize user's module handler.
+    :return: wrapper handler.
+    """
+    original_module, module_path, handler_name = import_original_module()
+    try:
+        return getattr(original_module, handler_name)
+    except AttributeError:
+        raise AttributeError(
+            'No handler {} in module {}'.format(handler_name, module_path)
+        )
+
 init()
-ORIGINAL_MODULE = import_original_module()
+WRAPPER_HANDLER = init_module()
 
 
 def wrapper(event, context):
@@ -16,13 +30,4 @@ def wrapper(event, context):
     :param context: Lambda's context
     :return: Original handler
     """
-    original_module, module_path, handler_name = ORIGINAL_MODULE
-
-    try:
-        wrapped_handler = getattr(original_module, handler_name)
-    except AttributeError:
-        raise AttributeError(
-            'No handler {} in module {}'.format(handler_name, module_path)
-        )
-
-    return lambda_wrapper(wrapped_handler)(event, context)
+    return lambda_wrapper(WRAPPER_HANDLER)(event, context)
