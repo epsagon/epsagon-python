@@ -245,10 +245,11 @@ class Trace(object):
                 print("Sending traces:")
                 pprint.pprint(self.to_dict())
         except requests.exceptions.ReadTimeout as exception:
-            print("Failed to send trace (size: {}) (timeout): {}".format(
-                len(trace),
-                exception
-            ))
+            if self.debug:
+                print("Failed to send trace (size: {}) (timeout): {}".format(
+                    len(trace),
+                    exception
+                ))
         except Exception as exception:
             if self.debug:
                 print("Failed to send traces: ", exception)

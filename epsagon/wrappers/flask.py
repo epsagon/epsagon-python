@@ -14,7 +14,7 @@ import epsagon.trace
 import epsagon.triggers.http
 import epsagon.runners.flask
 from epsagon.common import EpsagonWarning
-from epsagon.utils import ignore_request
+from .http_filters import ignore_request
 
 
 class FlaskWrapper(object):

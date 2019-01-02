@@ -11,7 +11,7 @@ from ..utils import add_data_if_needed
 
 class TornadoRunner(BaseEvent):
     """
-    Represents Python Flask event runner.
+    Represents Python Tornado event runner.
     """
 
     ORIGIN = 'runner'
@@ -52,7 +52,6 @@ class TornadoRunner(BaseEvent):
         """
         Adds response data to event.
         :param response: WSGI Response
-        :return: None
         """
 
         headers = dict(response._headers.get_all())

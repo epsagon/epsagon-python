@@ -8,7 +8,7 @@ import traceback
 import wrapt
 import epsagon.trace
 from epsagon.runners.tornado import TornadoRunner
-from epsagon.utils import ignore_request
+from epsagon.wrappers.http_filters import ignore_request
 
 
 class TornadoWrapper(object):
@@ -48,7 +48,7 @@ class TornadoWrapper(object):
             ''
         )
         ignored = ignore_request(content, '')
-        if not ignored:
+        if not ignored and cls.RUNNER:
             cls.RUNNER.update_response(instance)
             epsagon.trace.tracer.add_event(cls.RUNNER)
             epsagon.trace.tracer.send_traces()
@@ -74,7 +74,6 @@ class TornadoWrapper(object):
 def patch():
     """
     Patch module.
-    :return: None
     """
 
     wrapt.wrap_function_wrapper(
