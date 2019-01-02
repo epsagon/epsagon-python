@@ -5,7 +5,6 @@ from __future__ import absolute_import
 
 import wrapt
 from .db_wrapper import connect_wrapper
-from ..events.dbapi import DBAPIEventFactory
 
 
 #pylint: disable=W0613
