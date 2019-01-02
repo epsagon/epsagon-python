@@ -58,7 +58,7 @@ def test_epsagon_disable_epsagon_and_disable_patch(wrapped_get, wrapped_patch):
 
 @mock.patch('epsagon.utils.init')
 @mock.patch('os.getenv', side_effect=(lambda x: {
-    'EPSAGON_HANDLER': 'test.test',
+    'EPSAGON_HANDLER': 'epsagon.lambda_wrapper',
     'DISABLE_EPSAGON': 'FALSE',
     'DISABLE_EPSAGON_PATCH': 'FALSE',
     'EPSAGON_SSL': 'FALSE',
@@ -86,7 +86,7 @@ def test_epsagon_wrapper_env_init(wrapped_get, wrapped_init):
 
 @mock.patch('epsagon.trace.Trace.initialize')
 @mock.patch('os.getenv', side_effect=(lambda x: {
-    'EPSAGON_HANDLER': 'test.test',
+    'EPSAGON_HANDLER': 'epsagon.lambda_wrapper',
     'DISABLE_EPSAGON': 'FALSE',
     'DISABLE_EPSAGON_PATCH': 'FALSE',
     'EPSAGON_SSL': 'FALSE',
