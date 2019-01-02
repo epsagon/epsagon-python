@@ -21,16 +21,6 @@ BLACKLIST_URLS = {
 }
 
 
-def get_env_or_val(env_key, value):
-    """
-    return environment variable if exists, otherwise value.
-    :param env_key: environment key
-    :param value: value
-    :return: env or value
-    """
-    return os.getenv(env_key) if os.getenv(env_key) else value
-
-
 def add_data_if_needed(dictionary, name, data):
     """
     Add data to the given dictionary if metadata_only option is set to False.
@@ -90,25 +80,26 @@ def init(
     :param debug: debug mode flag
     :return: None
     """
+
     if not collector_url:
         collector_url = get_tc_url(
-            (get_env_or_val('EPSAGON_SSL', '') == 'TRUE') | use_ssl
+            ((os.getenv('EPSAGON_SSL') or '') == 'TRUE') | use_ssl
         )
     tracer.initialize(
-        token=get_env_or_val('EPSAGON_TOKEN', token),
-        app_name=get_env_or_val('EPSAGON_APP_NAME', app_name),
-        collector_url=get_env_or_val('EPSAGON_COLLECTOR_URL', collector_url),
+        token=os.getenv('EPSAGON_TOKEN') or token,
+        app_name=os.getenv('EPSAGON_APP_NAME') or app_name,
+        collector_url=os.getenv('EPSAGON_COLLECTOR_URL') or collector_url,
         metadata_only=(
-          (get_env_or_val('EPSAGON_METADATA', '') == 'TRUE') | metadata_only
+          ((os.getenv('EPSAGON_METADATA') or '') == 'TRUE') | metadata_only
         ),
-        debug=(get_env_or_val('EPSAGON_DEBUG', '') == 'TRUE') | debug
+        debug=((os.getenv('EPSAGON_DEBUG') or '') == 'TRUE') | debug
     )
 
 
 def import_original_module():
     """
-    Imports original module
-    :return:
+    Imports original user's handler using the `EPSAGON_HANDLER` env.
+    :return: Module or Exception
     """
     original_handler = os.getenv(EPSAGON_HANDLER)
     if not original_handler:

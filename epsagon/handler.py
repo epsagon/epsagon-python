@@ -9,7 +9,6 @@ init()
 ORIGINAL_MODULE = import_original_module()
 
 
-@lambda_wrapper
 def wrapper(event, context):
     """
     Generic wrapper for Lambda functions.
@@ -26,4 +25,4 @@ def wrapper(event, context):
             'No handler {} in module {}'.format(handler_name, module_path)
         )
 
-    return wrapped_handler(event, context)
+    return lambda_wrapper(wrapped_handler)(event, context)
