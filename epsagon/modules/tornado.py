@@ -25,12 +25,17 @@ class TornadoWrapper(object):
         :param instance: wrapt's instance
         :param args: wrapt's args
         :param kwargs: wrapt's kwargs
-        :return: None
         """
-        epsagon.trace.tracer.prepare()
-        ignored = ignore_request('', instance.request.path)
-        if not ignored:
-            cls.RUNNER = TornadoRunner(time.time(), instance.request)
+        try:
+            epsagon.trace.tracer.prepare()
+            ignored = ignore_request('', instance.request.path)
+            if not ignored:
+                cls.RUNNER = TornadoRunner(time.time(), instance.request)
+        except Exception as instrumentation_exception:
+            epsagon.trace.tracer.add_exception(
+                instrumentation_exception,
+                traceback.format_exc()
+            )
         return wrapped(*args, *kwargs)
 
     @classmethod
@@ -41,18 +46,24 @@ class TornadoWrapper(object):
         :param instance: wrapt's instance
         :param args: wrapt's args
         :param kwargs: wrapt's kwargs
-        :return: None
         """
-        content = instance._headers.get(  # pylint: disable=protected-access
-            'Content-Type',
-            ''
-        )
-        ignored = ignore_request(content, '')
-        if not ignored and cls.RUNNER:
-            cls.RUNNER.update_response(instance)
-            epsagon.trace.tracer.add_event(cls.RUNNER)
-            epsagon.trace.tracer.send_traces()
-        epsagon.trace.tracer.prepare()
+
+        try:
+            content = instance._headers.get(  # pylint: disable=protected-access
+                'Content-Type',
+                ''
+            )
+            ignored = ignore_request(content, '')
+            if not ignored and cls.RUNNER:
+                cls.RUNNER.update_response(instance)
+                epsagon.trace.tracer.add_event(cls.RUNNER)
+                epsagon.trace.tracer.send_traces()
+            epsagon.trace.tracer.prepare()
+        except Exception as instrumentation_exception:
+            epsagon.trace.tracer.add_exception(
+                instrumentation_exception,
+                traceback.format_exc()
+            )
         cls.RUNNER = None
         return wrapped(*args, *kwargs)
 
@@ -64,10 +75,17 @@ class TornadoWrapper(object):
         :param _: wrapt's instance
         :param args: wrapt's args
         :param kwargs: wrapt's kwargs
-        :return: None
         """
-        _, exception, _ = args
-        cls.RUNNER.set_exception(exception, traceback.format_exc())
+        try:
+            if cls.RUNNER:
+                _, exception, _ = args
+                cls.RUNNER.set_exception(exception, traceback.format_exc())
+        except Exception as instrumentation_exception:
+            epsagon.trace.tracer.add_exception(
+                instrumentation_exception,
+                traceback.format_exc()
+            )
+
         return wrapped(*args, *kwargs)
 
 

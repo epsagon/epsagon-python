@@ -7,6 +7,7 @@ from __future__ import absolute_import
 import uuid
 from ..event import BaseEvent
 from ..utils import add_data_if_needed
+from ..trace import tracer
 
 
 class TornadoRunner(BaseEvent):
@@ -29,7 +30,8 @@ class TornadoRunner(BaseEvent):
 
         self.event_id = str(uuid.uuid4())
 
-        self.resource['name'] = 'Tornado'
+        # Since Tornado doesn't has app name, we use the tracer app name.
+        self.resource['name'] = tracer.app_name
         self.resource['operation'] = request.method
 
         self.resource['metadata'] = {

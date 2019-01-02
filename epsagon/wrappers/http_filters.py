@@ -20,6 +20,7 @@ IGNORED_FILE_TYPES = [
     '.woff2',
     '.ttf',
     '.eot',
+    '.ico',
 ]
 
 # Method to URL dict.
