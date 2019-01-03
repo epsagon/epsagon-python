@@ -27,7 +27,6 @@ class TraceEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, o)
 
 
-
 class Trace(object):
     """
     Represents runtime trace
