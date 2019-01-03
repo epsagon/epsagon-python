@@ -36,7 +36,7 @@ class TornadoWrapper(object):
                 instrumentation_exception,
                 traceback.format_exc()
             )
-        return wrapped(*args, *kwargs)
+        return wrapped(*args, **kwargs)
 
     @classmethod
     def after_request(cls, wrapped, instance, args, kwargs):
@@ -65,7 +65,7 @@ class TornadoWrapper(object):
                 traceback.format_exc()
             )
         cls.RUNNER = None
-        return wrapped(*args, *kwargs)
+        return wrapped(*args, **kwargs)
 
     @classmethod
     def collect_exception(cls, wrapped, _, args, kwargs):
@@ -86,7 +86,7 @@ class TornadoWrapper(object):
                 traceback.format_exc()
             )
 
-        return wrapped(*args, *kwargs)
+        return wrapped(*args, **kwargs)
 
 
 def patch():
