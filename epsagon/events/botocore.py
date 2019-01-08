@@ -826,9 +826,8 @@ class BotocoreFirehoseEvent(BotocoreEvent):
         """
         metadata = self.resource['metadata']
         metadata['Failed Put Count'] = response['FailedPutCount']
-        self.resource['metadata']['record_ids'] = [
-            res['RecordId'] for res in response['RequestResponses']
-        ]
+        if response['RequestResponses']:
+            metadata['record_id'] = response['RequestResponses'][0]['RecordId']
 
 
 class BotocoreStepFunctionEvent(BotocoreEvent):
@@ -1007,4 +1006,5 @@ class BotocoreEventFactory(object):
                 response,
                 exception
             )
-            tracer.add_event(event)
+            if not event.skip:
+                tracer.add_event(event)
