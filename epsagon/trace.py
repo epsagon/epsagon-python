@@ -235,18 +235,21 @@ class Trace(object):
                 data=trace,
                 timeout=SEND_TIMEOUT
             )
+            print('Trace sent (size: {})'.format(
+                len(trace)
+            ))
             if self.debug:
                 print('Sending traces:')
                 pprint.pprint(self.to_dict())
-        except requests.exceptions.ReadTimeout as exception:
-            if self.debug:
-                print('Failed to send trace (size: {}) (timeout): {}'.format(
-                    len(trace),
-                    exception
-                ))
+        except requests.exceptions.ReadTimeout:
+            print('Failed to send trace (size: {}) (timeout)'.format(
+                len(trace)
+            ))
         except Exception as exception:
-            if self.debug:
-                print('Failed to send traces: ', exception)
+            print('Failed to send trace (size: {}): {}'.format(
+                len(trace),
+                exception
+            ))
 
 
 # pylint: disable=C0103
