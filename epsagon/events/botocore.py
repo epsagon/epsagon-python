@@ -1006,5 +1006,4 @@ class BotocoreEventFactory(object):
                 response,
                 exception
             )
-            if not event.skip:
-                tracer.add_event(event)
+            tracer.add_event(event)
