@@ -830,6 +830,96 @@ class BotocoreFirehoseEvent(BotocoreEvent):
             metadata['record_id'] = response['RequestResponses'][0]['RecordId']
 
 
+class BotocoreKMSEvent(BotocoreEvent):
+    """
+    Represents KMS botocore event
+    """
+    RESOURCE_TYPE = 'kms'
+
+    def __init__(self, wrapped, instance, args, kwargs, start_time, response,
+                 exception):
+        self.RESPONSE_TO_FUNC.update({
+            'Decrypt': self.decrypt_response,
+            'Encrypt': self.encrypt_response,
+        })
+
+        self.OPERATION_TO_FUNC.update({
+            'Decrypt': self.decrypt_operation,
+            'Encrypt': self.encrypt_operation,
+        })
+
+        super(BotocoreKMSEvent, self).__init__(
+            wrapped,
+            instance,
+            args,
+            kwargs,
+            start_time,
+            response,
+            exception
+        )
+
+        self.resource['name'] = 'KMS'
+        self.OPERATION_TO_FUNC.get(self.resource['operation'], empty_func)(
+            args,
+            kwargs
+        )
+
+    def update_response(self, response):
+        """
+        Adds response data to event.
+        :param response: Response from botocore's KMS Client
+        """
+        super(BotocoreKMSEvent, self).update_response(response)
+
+        self.RESPONSE_TO_FUNC.get(self.resource['operation'], empty_func)(
+            response
+        )
+
+    def decrypt_operation(self, args, _):
+        """
+        Process Decrypt operation
+        :param args: command arguments
+        :param _: unused, kwargs
+        :return: None
+        """
+        _, request_args = args
+        self.resource['metadata']['cipher_blob_size'] = len(
+            request_args['CiphertextBlob']
+        )
+
+    def decrypt_response(self, response):
+        """
+        Process Decrypt response
+        :param response: response from KMS Client
+        :return: None
+        """
+        self.resource['metadata']['key_id'] = response['KeyId']
+        self.resource['metadata']['plaintext_size'] = len(response['Plaintext'])
+
+    def encrypt_operation(self, args, _):
+        """
+        Process Encrypt operation
+        :param args: command arguments
+        :param _: unused, kwargs
+        :return: None
+        """
+        _, request_args = args
+        self.resource['metadata']['key_id'] = request_args['KeyId']
+        self.resource['metadata']['plaintext_size'] = len(
+            request_args['Plaintext']
+        )
+
+    def encrypt_response(self, response):
+        """
+        Process Encrypt response
+        :param response: response from KMS Client
+        :return: None
+        """
+        self.resource['metadata']['cipher_blob_size'] = len(
+            response['CiphertextBlob']
+        )
+
+
 class BotocoreStepFunctionEvent(BotocoreEvent):
     """
     Represents Step Function botocore event
