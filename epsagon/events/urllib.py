@@ -46,7 +46,7 @@ class UrllibEvent(BaseEvent):
         url_obj = urlparse(prepared_request.full_url)
         self.resource['name'] = url_obj.hostname
         self.resource['operation'] = prepared_request.get_method()
-        self.resource['metadata']['url'] = url_obj
+        self.resource['metadata']['url'] = prepared_request.full_url
 
         add_data_if_needed(
             self.resource['metadata'],
