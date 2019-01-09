@@ -54,16 +54,17 @@ def init(
 
     if not collector_url:
         collector_url = get_tc_url(
-            ((os.getenv('EPSAGON_SSL') or '') == 'TRUE') | use_ssl
+            ((os.getenv('EPSAGON_SSL') or '').upper() == 'TRUE') | use_ssl
         )
     tracer.initialize(
         token=os.getenv('EPSAGON_TOKEN') or token,
         app_name=os.getenv('EPSAGON_APP_NAME') or app_name,
         collector_url=os.getenv('EPSAGON_COLLECTOR_URL') or collector_url,
         metadata_only=(
-          ((os.getenv('EPSAGON_METADATA') or '') == 'TRUE') | metadata_only
+          ((os.getenv('EPSAGON_METADATA') or '').upper() == 'TRUE') |
+          metadata_only
         ),
-        debug=((os.getenv('EPSAGON_DEBUG') or '') == 'TRUE') | debug
+        debug=((os.getenv('EPSAGON_DEBUG') or '').upper() == 'TRUE') | debug
     )
 
 
