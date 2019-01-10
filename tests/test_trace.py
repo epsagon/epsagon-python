@@ -43,6 +43,15 @@ class RunnerEventMock(EventMock):
         pass
 
 
+class EventMockWithCounter(EventMock):
+    def __init__(self, i):
+        super(EventMockWithCounter, self).__init__()
+        self.i = i
+
+    def to_dict(self):
+        return self.i
+
+
 def setup_function(func):
     tracer.__init__()
 
@@ -161,7 +170,7 @@ def test_load_from_dict():
             'token': 'token',
             'version': 'version',
             'platform': 'platform',
-            'events': [i for i in range(number_of_events)]
+            'events': [EventMockWithCounter(i) for i in range(number_of_events)]
         }
 
         with mock.patch('epsagon.event.BaseEvent.load_from_dict',
@@ -183,7 +192,8 @@ def test_load_from_dict_with_exceptions():
             'token': 'token',
             'version': 'version',
             'platform': 'platform',
-            'events': [i for i in range(number_of_events)],
+            'events': [EventMockWithCounter(i)
+                       for i in range(number_of_events)],
             'exceptions': 'test_exceptions'
         }
 
@@ -215,19 +225,13 @@ def test_add_too_many_events():
 
 
 def test_to_dict():
-    class EventMockWithCounter(EventMock):
-        def __init__(self, i):
-            super(EventMockWithCounter, self).__init__()
-            self.i = i
-
-        def to_dict(self):
-            return self.i
 
     trace = epsagon.trace.Trace()
     expected_dict = {
         'token': 'token',
         'app_name': 'app_name',
-        'events': [i for i in range(10)],
+        'events': [EventMockWithCounter(i)
+                   for i in range(10)],
         'exceptions': 'exceptions',
         'version': 'version',
         'platform': 'platform'
