@@ -134,9 +134,7 @@ class Trace(object):
         trace.exceptions = trace_data.get('exceptions', [])
         trace.events_map = {}
         for event in trace_data['events']:
-            trace.events_map.get(
-                event.identifier(), []
-            ).append(BaseEvent.load_from_dict(event))
+            trace.add_event(BaseEvent.load_from_dict(event))
         return trace
 
     def clear_events(self):
