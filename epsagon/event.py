@@ -102,3 +102,10 @@ class BaseEvent(object):
         self.exception['message'] = str(exception)
         self.exception['traceback'] = traceback_data
         self.exception['time'] = time.time()
+
+    def identifier(self):
+        """
+        Return event identifier
+        :return: event identifier
+        """
+        return '{}|{}'.format(self.ORIGIN, self.RESOURCE_TYPE)

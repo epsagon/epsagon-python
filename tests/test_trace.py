@@ -9,7 +9,7 @@ from epsagon.constants import (
     TRACE_COLLECTOR_URL,
     DEFAULT_REGION
 )
-from epsagon.trace import tracer
+from epsagon.trace import tracer, MAX_EVENTS_PER_TYPE
 from epsagon.utils import get_tc_url
 from epsagon.common import ErrorCode
 
@@ -74,7 +74,7 @@ def test_prepare():
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter('always')
         tracer.prepare()
-        assert tracer.events == []
+        assert not list(tracer.events())
         assert tracer.exceptions == []
         assert len(w) == 1
 
@@ -82,7 +82,7 @@ def test_prepare():
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter('always')
         tracer.prepare()
-        assert tracer.events == []
+        assert not list(tracer.events())
         assert tracer.exceptions == []
         assert len(w) == 1
 
@@ -90,7 +90,7 @@ def test_prepare():
     with warnings.catch_warnings(record=True) as w:
         tracer.prepare()
         tracer.prepare()  # this call should NOT trigger a warning
-        assert tracer.events == []
+        assert not list(tracer.events())
         assert tracer.exceptions == []
         assert len(w) == 1
 
@@ -142,7 +142,7 @@ def test_load_from_dict():
             assert new_trace.token == trace_data['token']
             assert new_trace.version == trace_data['version']
             assert new_trace.platform == trace_data['platform']
-            assert new_trace.events == trace_data['events']
+            assert list(new_trace.events()) == trace_data['events']
             assert new_trace.exceptions == []
 
 
@@ -165,7 +165,7 @@ def test_load_from_dict_with_exceptions():
             assert new_trace.token == trace_data['token']
             assert new_trace.version == trace_data['version']
             assert new_trace.platform == trace_data['platform']
-            assert new_trace.events == trace_data['events']
+            assert list(new_trace.events()) == trace_data['events']
             assert new_trace.exceptions == trace_data['exceptions']
 
 
@@ -177,8 +177,23 @@ def test_add_event():
     event = EventMock()
     for i in range(10):  # verify we can add more then 1 event
         tracer.add_event(event)
-        assert event is tracer.events[i]
+        assert event is len(tracer.events())[i]
         assert event.terminated
+
+
+def test_add_too_many_events():
+    class EventMock(object):
+        ORIGIN = 'mock'
+        RESOURCE_TYPE = 'mock'
+
+        def terminate(self):
+            self.terminated = True
+
+    event = EventMock()
+    for _ in range(MAX_EVENTS_PER_TYPE * 2):  # verify we can add more then 1 event
+        tracer.add_event(event)
+
+    assert len(trace.to_dict()['events']) == MAX_EVENTS_PER_TYPE
 
 
 def test_to_dict():
@@ -201,7 +216,8 @@ def test_to_dict():
 
     trace.token = expected_dict['token']
     trace.app_name = expected_dict['app_name']
-    trace.events = [EventMock(i) for i in range(10)]
+    for event in [EventMock(i) for i in range(10)]:
+        trace.add_event(event)
     trace.exceptions = expected_dict['exceptions']
     trace.version = expected_dict['version']
     trace.platform = expected_dict['platform']
