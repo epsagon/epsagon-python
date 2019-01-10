@@ -14,6 +14,32 @@ from epsagon.utils import get_tc_url
 from epsagon.common import ErrorCode
 
 
+class EventMock(object):
+    ORIGIN = 'mock'
+    RESOURCE_TYPE = 'mock'
+
+    def terminate(self):
+        self.terminated = True
+
+
+class RunnerEventMock(EventMock):
+    def __init__(self, i):
+        super(EventMockWithCounter, self).__init__()
+        self.origin = 'runner'
+        self.terminated = True
+        self.resource = {
+            'metadata': {}
+        }
+
+    def to_dict(self):
+        return {
+            'resource': self.resource
+        }
+
+    def terminate(self):
+        pass
+
+
 def setup_function(func):
     tracer.__init__()
 
@@ -170,10 +196,6 @@ def test_load_from_dict_with_exceptions():
 
 
 def test_add_event():
-    class EventMock(object):
-        def terminate(self):
-            self.terminated = True
-
     event = EventMock()
     for i in range(10):  # verify we can add more then 1 event
         tracer.add_event(event)
@@ -182,13 +204,6 @@ def test_add_event():
 
 
 def test_add_too_many_events():
-    class EventMock(object):
-        ORIGIN = 'mock'
-        RESOURCE_TYPE = 'mock'
-
-        def terminate(self):
-            self.terminated = True
-
     event = EventMock()
     for _ in range(MAX_EVENTS_PER_TYPE * 2):  # verify we can add more then 1 event
         tracer.add_event(event)
@@ -197,8 +212,9 @@ def test_add_too_many_events():
 
 
 def test_to_dict():
-    class EventMock(object):
+    class EventMockWithCounter(EventMock):
         def __init__(self, i):
+            super(EventMockWithCounter, self).__init__()
             self.i = i
 
         def to_dict(self):
@@ -216,7 +232,7 @@ def test_to_dict():
 
     trace.token = expected_dict['token']
     trace.app_name = expected_dict['app_name']
-    for event in [EventMock(i) for i in range(10)]:
+    for event in [EventMockWithCounter(i) for i in range(10)]:
         trace.add_event(event)
     trace.exceptions = expected_dict['exceptions']
     trace.version = expected_dict['version']
@@ -226,23 +242,7 @@ def test_to_dict():
 
 
 def test_custom_labels_sanity():
-    class EventMock(object):
-        def __init__(self):
-            self.origin = 'runner'
-            self.terminated = True
-            self.resource = {
-                'metadata': {}
-            }
-
-        def to_dict(self):
-            return {
-                'resource': self.resource
-            }
-
-        def terminate(self):
-            pass
-
-    event = EventMock()
+    event = RunnerEventMock()
     tracer.add_event(event)
     tracer.add_label('test_label', 'test_value')
     trace_metadata = tracer.to_dict()['events'][0]['resource']['metadata']
@@ -252,23 +252,7 @@ def test_custom_labels_sanity():
 
 
 def test_custom_labels_override_trace():
-    class EventMock(object):
-        def __init__(self):
-            self.origin = 'runner'
-            self.terminated = True
-            self.resource = {
-                'metadata': {}
-            }
-
-        def to_dict(self):
-            return {
-                'resource': self.resource
-            }
-
-        def terminate(self):
-            pass
-
-    event = EventMock()
+    event = RunnerEventMock()
     tracer.add_event(event)
     tracer.add_label('test_label', 'test_value1')
     tracer.add_label('test_label', 'test_value2')
