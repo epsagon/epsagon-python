@@ -6,6 +6,7 @@ import decimal
 
 
 FAILED_TO_SERIALIZE_MESSAGE = 'Failed to serialize returned object to JSON'
+MAX_SIZE_LIMIT = 1024 * 3
 
 
 # pylint: disable=invalid-name
@@ -39,4 +40,4 @@ def add_return_value(runner, return_value):
     except Exception:
         json_value = FAILED_TO_SERIALIZE_MESSAGE
 
-    runner.resource['metadata']['return_value'] = json_value
+    runner.resource['metadata']['return_value'] = json_value[:MAX_SIZE_LIMIT]
