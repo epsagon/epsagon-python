@@ -78,7 +78,7 @@ def test_prepare():
         assert tracer.exceptions == []
         assert len(w) == 1
 
-    tracer.events = ['test_event']
+    tracer.add_event(EventMock())
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter('always')
         tracer.prepare()
@@ -86,7 +86,7 @@ def test_prepare():
         assert tracer.exceptions == []
         assert len(w) == 1
 
-    tracer.events = ['test_event']
+    tracer.add_event(EventMock())
     with warnings.catch_warnings(record=True) as w:
         tracer.prepare()
         tracer.prepare()  # this call should NOT trigger a warning

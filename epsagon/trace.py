@@ -139,6 +139,13 @@ class Trace(object):
             ).append(BaseEvent.load_from_dict(event))
         return trace
 
+    def clear_events(self):
+        """
+        Clears the events list
+        :return: None
+        """
+        self.events_map = {}
+
     def add_event(self, event):
         """
         Add event to events list.
