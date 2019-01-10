@@ -185,7 +185,7 @@ class Trace(object):
         :return: events iterator
         """
         return itertools.chain(
-            self.events_map.values()
+            *self.events_map.values()
         )
 
     def add_label(self, key, value):
