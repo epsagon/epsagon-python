@@ -24,6 +24,11 @@ class EventMock(object):
     def identifier(self):
         return '{}{}'.format(self.ORIGIN, self.RESOURCE_TYPE)
 
+    def to_dict(self):
+        return {
+            'resource': self.resource
+        }
+
 
 class RunnerEventMock(EventMock):
     def __init__(self):
