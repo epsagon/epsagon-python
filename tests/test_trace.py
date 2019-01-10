@@ -26,7 +26,7 @@ class EventMock(object):
 
 
 class RunnerEventMock(EventMock):
-    def __init__(self, i):
+    def __init__(self):
         super(EventMockWithCounter, self).__init__()
         self.origin = 'runner'
         self.terminated = True
@@ -212,7 +212,7 @@ def test_add_event():
     event = EventMock()
     for i in range(10):  # verify we can add more then 1 event
         tracer.add_event(event)
-        assert event is len(tracer.events())[i]
+        assert event is len(list(tracer.events()))[i]
         assert event.terminated
 
 
@@ -221,7 +221,7 @@ def test_add_too_many_events():
     for _ in range(MAX_EVENTS_PER_TYPE * 2):  # verify we can add more then 1 event
         tracer.add_event(event)
 
-    assert len(trace.to_dict()['events']) == MAX_EVENTS_PER_TYPE
+    assert len(tracer.to_dict()['events']) == MAX_EVENTS_PER_TYPE
 
 
 def test_to_dict():
