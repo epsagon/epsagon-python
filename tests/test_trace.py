@@ -19,7 +19,6 @@ class EventMock(object):
     RESOURCE_TYPE = 'mock'
 
     def __init__(self):
-        super(RunnerEventMock, self).__init__()
         self.terminated = False
         self.resource = {
             'metadata': {}
