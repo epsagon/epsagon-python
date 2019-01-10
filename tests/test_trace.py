@@ -40,6 +40,7 @@ class RunnerEventMock(EventMock):
     def __init__(self):
         super(RunnerEventMock, self).__init__()
         self.terminated = True
+        self.origin = 'runner'
 
     def terminate(self):
         pass
@@ -119,7 +120,7 @@ def test_prepare():
         assert not list(tracer.events())
         assert tracer.exceptions == []
         assert len(w) == 1
-
+    tracer.clear_events()
     tracer.add_event(EventMock())
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter('always')
@@ -128,6 +129,7 @@ def test_prepare():
         assert tracer.exceptions == []
         assert len(w) == 1
 
+    tracer.clear_events()
     tracer.add_event(EventMock())
     with warnings.catch_warnings(record=True) as w:
         tracer.prepare()
@@ -214,14 +216,17 @@ def test_load_from_dict_with_exceptions():
 
 def test_add_event():
     event = EventMock()
+    tracer.clear_events()
     for i in range(10):  # verify we can add more then 1 event
         tracer.add_event(event)
-        assert event is len(list(tracer.events()))[i]
+
+        assert event is list(tracer.events())[i]
         assert event.terminated
 
 
 def test_add_too_many_events():
     event = EventMock()
+    tracer.clear_events()
     for _ in range(MAX_EVENTS_PER_TYPE * 2):  # verify we can add more then 1 event
         tracer.add_event(event)
 
@@ -229,7 +234,6 @@ def test_add_too_many_events():
 
 
 def test_to_dict():
-
     trace = epsagon.trace.Trace()
     expected_dict = {
         'token': 'token',
@@ -254,6 +258,7 @@ def test_to_dict():
 
 def test_custom_labels_sanity():
     event = RunnerEventMock()
+    tracer.clear_events()
     tracer.add_event(event)
     tracer.add_label('test_label', 'test_value')
     trace_metadata = tracer.to_dict()['events'][0]['resource']['metadata']
@@ -264,6 +269,7 @@ def test_custom_labels_sanity():
 
 def test_custom_labels_override_trace():
     event = RunnerEventMock()
+    tracer.clear_events()
     tracer.add_event(event)
     tracer.add_label('test_label', 'test_value1')
     tracer.add_label('test_label', 'test_value2')

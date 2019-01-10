@@ -152,7 +152,7 @@ class Trace(object):
         """
         event.terminate()
         events = self.events_map.setdefault(event.identifier(), [])
-        if len(events) <= MAX_EVENTS_PER_TYPE:
+        if len(events) < MAX_EVENTS_PER_TYPE:
             events.append(event)
 
     def verify_custom_label(self, key, value):
@@ -197,7 +197,6 @@ class Trace(object):
         """
         if not self.verify_custom_label(key, value):
             return
-
         self.custom_labels[key] = value
 
     def update_runner_with_labels(self):
@@ -208,7 +207,7 @@ class Trace(object):
             return
 
         runner = [
-            event for event in enumerate(self.events())
+            event for event in list(self.events())
             if event.origin == 'runner'
         ][0]
 
@@ -219,7 +218,6 @@ class Trace(object):
         Convert trace to dict.
         :return: Trace dict
         """
-
         try:
             self.update_runner_with_labels()
         # pylint: disable=W0703
