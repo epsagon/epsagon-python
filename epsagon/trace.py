@@ -5,6 +5,7 @@ Trace object holds events and metadata
 from __future__ import absolute_import, print_function
 import sys
 import time
+import itertools
 import traceback
 import warnings
 import pprint
@@ -146,7 +147,7 @@ class Trace(object):
         """
         event.terminate()
         events = self.events_map.setdefault(event.identifer(), [])
-        if len(events) <= self.MAX_EVENTS_PER_TYPE:
+        if len(events) <= MAX_EVENTS_PER_TYPE:
             events.append(event)
 
     def verify_custom_label(self, key, value):
@@ -201,9 +202,9 @@ class Trace(object):
         if not self.custom_labels:
             return
 
-        index, runner = [
-            (index, ev) for (index, ev) in enumerate(self.events())
-            if ev.origin == 'runner'
+        runner = [
+            event for event in enumerate(self.events())
+            if event.origin == 'runner'
         ][0]
 
         runner.resource['metadata']['labels'] = json.dumps(self.custom_labels)
