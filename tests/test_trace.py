@@ -21,6 +21,9 @@ class EventMock(object):
     def terminate(self):
         self.terminated = True
 
+    def identifier(self):
+        return '{}{}'.format(self.ORIGIN, self.RESOURCE_TYPE)
+
 
 class RunnerEventMock(EventMock):
     def __init__(self, i):
