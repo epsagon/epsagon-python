@@ -151,7 +151,7 @@ class Trace(object):
         :return: None
         """
         event.terminate()
-        events = self.events_map.setdefault(event.identifer(), [])
+        events = self.events_map.setdefault(event.identifier(), [])
         if len(events) <= MAX_EVENTS_PER_TYPE:
             events.append(event)
 
