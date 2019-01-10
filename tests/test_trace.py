@@ -9,9 +9,52 @@ from epsagon.constants import (
     TRACE_COLLECTOR_URL,
     DEFAULT_REGION
 )
-from epsagon.trace import tracer
+from epsagon.trace import tracer, MAX_EVENTS_PER_TYPE
 from epsagon.utils import get_tc_url
 from epsagon.common import ErrorCode
+
+
+class EventMock(object):
+    ORIGIN = 'mock'
+    RESOURCE_TYPE = 'mock'
+
+    def __init__(self):
+        self.terminated = False
+        self.resource = {
+            'metadata': {}
+        }
+
+    def terminate(self):
+        self.terminated = True
+
+    def identifier(self):
+        return '{}{}'.format(self.ORIGIN, self.RESOURCE_TYPE)
+
+    def to_dict(self):
+        return {
+            'resource': self.resource
+        }
+
+
+class RunnerEventMock(EventMock):
+    def __init__(self):
+        super(RunnerEventMock, self).__init__()
+        self.terminated = True
+        self.origin = 'runner'
+
+    def terminate(self):
+        pass
+
+
+class EventMockWithCounter(EventMock):
+    def __init__(self, i):
+        super(EventMockWithCounter, self).__init__()
+        self.i = i
+
+    def to_dict(self):
+        return {
+            'i', self.i
+        }
 
 
 def setup_function(func):
@@ -74,23 +117,24 @@ def test_prepare():
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter('always')
         tracer.prepare()
-        assert tracer.events == []
+        assert not list(tracer.events())
         assert tracer.exceptions == []
         assert len(w) == 1
-
-    tracer.events = ['test_event']
+    tracer.clear_events()
+    tracer.add_event(EventMock())
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter('always')
         tracer.prepare()
-        assert tracer.events == []
+        assert not list(tracer.events())
         assert tracer.exceptions == []
         assert len(w) == 1
 
-    tracer.events = ['test_event']
+    tracer.clear_events()
+    tracer.add_event(EventMock())
     with warnings.catch_warnings(record=True) as w:
         tracer.prepare()
         tracer.prepare()  # this call should NOT trigger a warning
-        assert tracer.events == []
+        assert not list(tracer.events())
         assert tracer.exceptions == []
         assert len(w) == 1
 
@@ -132,7 +176,7 @@ def test_load_from_dict():
             'token': 'token',
             'version': 'version',
             'platform': 'platform',
-            'events': [i for i in range(number_of_events)]
+            'events': [EventMockWithCounter(i) for i in range(number_of_events)]
         }
 
         with mock.patch('epsagon.event.BaseEvent.load_from_dict',
@@ -142,7 +186,7 @@ def test_load_from_dict():
             assert new_trace.token == trace_data['token']
             assert new_trace.version == trace_data['version']
             assert new_trace.platform == trace_data['platform']
-            assert new_trace.events == trace_data['events']
+            assert list(new_trace.events()) == trace_data['events']
             assert new_trace.exceptions == []
 
 
@@ -154,7 +198,8 @@ def test_load_from_dict_with_exceptions():
             'token': 'token',
             'version': 'version',
             'platform': 'platform',
-            'events': [i for i in range(number_of_events)],
+            'events': [EventMockWithCounter(i)
+                       for i in range(number_of_events)],
             'exceptions': 'test_exceptions'
         }
 
@@ -165,35 +210,36 @@ def test_load_from_dict_with_exceptions():
             assert new_trace.token == trace_data['token']
             assert new_trace.version == trace_data['version']
             assert new_trace.platform == trace_data['platform']
-            assert new_trace.events == trace_data['events']
+            assert list(new_trace.events()) == trace_data['events']
             assert new_trace.exceptions == trace_data['exceptions']
 
 
 def test_add_event():
-    class EventMock(object):
-        def terminate(self):
-            self.terminated = True
-
     event = EventMock()
+    tracer.clear_events()
     for i in range(10):  # verify we can add more then 1 event
         tracer.add_event(event)
-        assert event is tracer.events[i]
+
+        assert event is list(tracer.events())[i]
         assert event.terminated
 
 
+def test_add_too_many_events():
+    event = EventMock()
+    tracer.clear_events()
+    for _ in range(MAX_EVENTS_PER_TYPE * 2):  # verify we can add more then 1 event
+        tracer.add_event(event)
+
+    assert len(tracer.to_dict()['events']) == MAX_EVENTS_PER_TYPE
+
+
 def test_to_dict():
-    class EventMock(object):
-        def __init__(self, i):
-            self.i = i
-
-        def to_dict(self):
-            return self.i
-
     trace = epsagon.trace.Trace()
     expected_dict = {
         'token': 'token',
         'app_name': 'app_name',
-        'events': [i for i in range(10)],
+        'events': [EventMockWithCounter(i)
+                   for i in range(10)],
         'exceptions': 'exceptions',
         'version': 'version',
         'platform': 'platform'
@@ -201,7 +247,8 @@ def test_to_dict():
 
     trace.token = expected_dict['token']
     trace.app_name = expected_dict['app_name']
-    trace.events = [EventMock(i) for i in range(10)]
+    for event in [EventMockWithCounter(i) for i in range(10)]:
+        trace.add_event(event)
     trace.exceptions = expected_dict['exceptions']
     trace.version = expected_dict['version']
     trace.platform = expected_dict['platform']
@@ -210,23 +257,8 @@ def test_to_dict():
 
 
 def test_custom_labels_sanity():
-    class EventMock(object):
-        def __init__(self):
-            self.origin = 'runner'
-            self.terminated = True
-            self.resource = {
-                'metadata': {}
-            }
-
-        def to_dict(self):
-            return {
-                'resource': self.resource
-            }
-
-        def terminate(self):
-            pass
-
-    event = EventMock()
+    event = RunnerEventMock()
+    tracer.clear_events()
     tracer.add_event(event)
     tracer.add_label('test_label', 'test_value')
     trace_metadata = tracer.to_dict()['events'][0]['resource']['metadata']
@@ -236,23 +268,8 @@ def test_custom_labels_sanity():
 
 
 def test_custom_labels_override_trace():
-    class EventMock(object):
-        def __init__(self):
-            self.origin = 'runner'
-            self.terminated = True
-            self.resource = {
-                'metadata': {}
-            }
-
-        def to_dict(self):
-            return {
-                'resource': self.resource
-            }
-
-        def terminate(self):
-            pass
-
-    event = EventMock()
+    event = RunnerEventMock()
+    tracer.clear_events()
     tracer.add_event(event)
     tracer.add_label('test_label', 'test_value1')
     tracer.add_label('test_label', 'test_value2')

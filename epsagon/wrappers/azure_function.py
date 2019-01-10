@@ -23,7 +23,7 @@ def azure_wrapper(func):
         # Trigger event is not supported yet.
 
         runner = AzureFunctionRunner(time.time())
-        tracer.events.append(runner)
+        tracer.add_event(runner)
 
         try:
             result = func(*args, **kwargs)

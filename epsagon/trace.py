@@ -5,6 +5,7 @@ Trace object holds events and metadata
 from __future__ import absolute_import, print_function
 import sys
 import time
+import itertools
 import traceback
 import warnings
 import pprint
@@ -15,6 +16,8 @@ import requests.exceptions
 from epsagon.event import BaseEvent
 from epsagon.common import EpsagonWarning
 from .constants import SEND_TIMEOUT, MAX_LABEL_SIZE, __version__
+
+MAX_EVENTS_PER_TYPE = 20
 
 
 class TraceEncoder(json.JSONEncoder):
@@ -39,7 +42,7 @@ class Trace(object):
 
         self.app_name = ''
         self.token = ''
-        self.events = []
+        self.events_map = {}
         self.exceptions = []
         self.custom_labels = {}
         self.custom_labels_size = 0
@@ -91,7 +94,7 @@ class Trace(object):
                 EpsagonWarning
             )
 
-        self.events = []
+        self.events_map = {}
         self.exceptions = []
         self.custom_labels = {}
         self.custom_labels_size = 0
@@ -129,9 +132,17 @@ class Trace(object):
         trace.version = trace_data['version']
         trace.platform = trace_data['platform']
         trace.exceptions = trace_data.get('exceptions', [])
+        trace.events_map = {}
         for event in trace_data['events']:
-            trace.events.append(BaseEvent.load_from_dict(event))
+            trace.add_event(BaseEvent.load_from_dict(event))
         return trace
+
+    def clear_events(self):
+        """
+        Clears the events list
+        :return: None
+        """
+        self.events_map = {}
 
     def add_event(self, event):
         """
@@ -140,7 +151,9 @@ class Trace(object):
         :return: None
         """
         event.terminate()
-        self.events.append(event)
+        events = self.events_map.setdefault(event.identifier(), [])
+        if len(events) < MAX_EVENTS_PER_TYPE:
+            events.append(event)
 
     def verify_custom_label(self, key, value):
         """
@@ -166,6 +179,15 @@ class Trace(object):
 
         return True
 
+    def events(self):
+        """
+        Returns events iterator
+        :return: events iterator
+        """
+        return itertools.chain(
+            *self.events_map.values()
+        )
+
     def add_label(self, key, value):
         """
         Adds a custom label given by the user to the runner
@@ -175,7 +197,6 @@ class Trace(object):
         """
         if not self.verify_custom_label(key, value):
             return
-
         self.custom_labels[key] = value
 
     def update_runner_with_labels(self):
@@ -185,21 +206,18 @@ class Trace(object):
         if not self.custom_labels:
             return
 
-        index, runner = [
-            (index, ev) for (index, ev) in enumerate(self.events)
-            if ev.origin == 'runner'
+        runner = [
+            event for event in list(self.events())
+            if event.origin == 'runner'
         ][0]
 
         runner.resource['metadata']['labels'] = json.dumps(self.custom_labels)
-
-        self.events[index] = runner
 
     def to_dict(self):
         """
         Convert trace to dict.
         :return: Trace dict
         """
-
         try:
             self.update_runner_with_labels()
         # pylint: disable=W0703
@@ -213,7 +231,7 @@ class Trace(object):
         return {
             'token': self.token,
             'app_name': self.app_name,
-            'events': [event.to_dict() for event in self.events],
+            'events': [event.to_dict() for event in self.events()],
             'exceptions': self.exceptions,
             'version': self.version,
             'platform': self.platform,
