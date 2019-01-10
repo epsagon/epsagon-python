@@ -18,6 +18,13 @@ class EventMock(object):
     ORIGIN = 'mock'
     RESOURCE_TYPE = 'mock'
 
+    def __init__(self):
+        super(RunnerEventMock, self).__init__()
+        self.terminated = False
+        self.resource = {
+            'metadata': {}
+        }
+
     def terminate(self):
         self.terminated = True
 
@@ -32,17 +39,8 @@ class EventMock(object):
 
 class RunnerEventMock(EventMock):
     def __init__(self):
-        super(EventMockWithCounter, self).__init__()
-        self.origin = 'runner'
+        super(RunnerEventMock, self).__init__()
         self.terminated = True
-        self.resource = {
-            'metadata': {}
-        }
-
-    def to_dict(self):
-        return {
-            'resource': self.resource
-        }
 
     def terminate(self):
         pass
@@ -54,7 +52,9 @@ class EventMockWithCounter(EventMock):
         self.i = i
 
     def to_dict(self):
-        return self.i
+        return {
+            'i', self.i
+        }
 
 
 def setup_function(func):
