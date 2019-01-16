@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 echo "releasing new version..." &&
 ./scripts/semantic_release.sh &&
 sleep 1 &&
