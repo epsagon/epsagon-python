@@ -1,5 +1,7 @@
-git config --global user.name "semantic-release (via TravisCI)"
-git config --global user.email "semantic-release@travis"
-pip install --upgrade wheel setuptools twine pkginfo
-pip install python-semantic-release
-semantic-release publish
+#!/bin/sh
+echo "releasing new version..." &&
+./scripts/semantic_release.sh &&
+sleep 1 &&
+echo "publishing layer..." &&
+./scripts/publish_layer.sh &&
+echo "deployment successful"
