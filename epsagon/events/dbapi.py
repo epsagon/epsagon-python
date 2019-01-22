@@ -24,7 +24,7 @@ except ImportError:
 from ..trace import tracer
 from ..event import BaseEvent
 
-MAX_QUERY_SIZE = 256
+MAX_QUERY_SIZE = 2048
 
 
 class DBAPIEvent(BaseEvent):
