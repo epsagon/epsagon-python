@@ -2,7 +2,7 @@
 
 import os
 
-__version__ = '1.0.39'
+__version__ = '1.0.40'
 
 DEFAULT_REGION = 'us-east-1'
 REGION = os.getenv('AWS_REGION', DEFAULT_REGION)
