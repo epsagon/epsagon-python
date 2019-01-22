@@ -12,10 +12,11 @@ epsagon.init(
 
 @epsagon.lambda_wrapper
 def handle():
-    epsagon.label('first_label', 'value1')
-    epsagon.label('second_label', 'value2')
+    epsagon.label('label', 'something_to_filter_afterwards')
+    epsagon.label('number_of_records_parsed_successfully', 42)
 
     return 'It worked!'
+
 
 if __name__ == '__main__':
     handle()

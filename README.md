@@ -40,8 +40,8 @@ traces that contains specific labels:
 ```python
 @epsagon.lambda_wrapper
 def handler(event, context):
-  epsagon.label('first_label', 'value1')
-  epsagon.label('second_label', 'value2')
+  epsagon.label('label', 'something_to_filter_afterwards')
+  epsagon.label('number_of_records_parsed_successfully', 42)
   pass
 ```
 
