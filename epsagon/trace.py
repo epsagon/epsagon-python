@@ -195,6 +195,10 @@ class Trace(object):
         :param key: Key for the label data (string)
         :param value: Value for the label data (string)
         """
+        # Convert numbers to string.
+        if isinstance(value, (int, float)):
+            value = str(value)
+
         if not self.verify_custom_label(key, value):
             return
         self.custom_labels[key] = value

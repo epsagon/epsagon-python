@@ -261,10 +261,17 @@ def test_custom_labels_sanity():
     tracer.clear_events()
     tracer.add_event(event)
     tracer.add_label('test_label', 'test_value')
+    tracer.add_label('test_label_2', 42)
+    tracer.add_label('test_label_3', 42.2)
+    tracer.add_label('test_label_invalid', {})
     trace_metadata = tracer.to_dict()['events'][0]['resource']['metadata']
 
     assert trace_metadata.get('labels') is not None
-    assert json.loads(trace_metadata['labels']) == {'test_label': 'test_value'}
+    assert json.loads(trace_metadata['labels']) == {
+        'test_label': 'test_value',
+        'test_label_2': '42',
+        'test_label_3': '42.2',
+    }
 
 
 def test_custom_labels_override_trace():
