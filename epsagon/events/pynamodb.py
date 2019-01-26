@@ -57,7 +57,7 @@ class PynamoDBEventAdapter(object):
             new_response,
             exception
         )
-        event.ORIGIN = 'pynamodb'  # pylint: disable=invalid-name
+        event.origin = 'pynamodb'
         event.resource['metadata'].pop('Retry Attempts')
 
         tracer.add_event(event)
