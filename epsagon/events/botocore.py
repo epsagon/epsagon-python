@@ -380,24 +380,23 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
         :param response: response data
         :param exception: Exception (if happened)
         """
-        self.RESPONSE_TO_FUNC.update(
-            {'Scan': self.process_query_and_scan_response,
-             'Query': self.process_query_and_scan_response,
-             'GetItem': self.process_get_item_response,
-             'ListTables': self.process_list_tables_response
-             }
-        )
+        self.RESPONSE_TO_FUNC.update({
+            'Scan': self.process_query_and_scan_response,
+            'Query': self.process_query_and_scan_response,
+            'GetItem': self.process_get_item_response,
+            'ListTables': self.process_list_tables_response
+        })
 
-        self.OPERATION_TO_FUNC.update(
-            {'PutItem': self.process_put_item_op,
-             'UpdateItem': self.process_update_item_op,
-             'GetItem': self.process_get_item_op,
-             'DeleteItem': self.process_delete_item_op,
-             'BatchWriteItem': self.process_batch_write_op,
-             'Scan': self.process_scan_op,
-             'Query': self.process_query_op
-             }
-        )
+        self.OPERATION_TO_FUNC.update({
+            'PutItem': self.process_put_item_op,
+            'UpdateItem': self.process_update_item_op,
+            'GetItem': self.process_get_item_op,
+            'DescribeTable': self.process_describe_table_op,
+            'DeleteItem': self.process_delete_item_op,
+            'BatchWriteItem': self.process_batch_write_op,
+            'Scan': self.process_scan_op,
+            'Query': self.process_query_op
+        })
 
         _, request_data = args
         self.request_data = request_data
@@ -446,6 +445,12 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
         """
         self.resource['name'] = self.request_data['TableName']
         self.resource['metadata']['Key'] = self.request_data['Key']
+
+    def process_describe_table_op(self):
+        """
+        Process the describe tables operation.
+        """
+        self.resource['name'] = self.request_data['TableName']
 
     def process_update_item_op(self):
         """
