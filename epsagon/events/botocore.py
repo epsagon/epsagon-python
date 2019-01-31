@@ -322,7 +322,7 @@ class BotocoreSQSEvent(BotocoreEvent):
             add_data_if_needed(
                 self.resource['metadata'],
                 'Message Body',
-                request_data['MessageBody']
+                entry['MessageBody']
             )
 
     def update_response(self, response):
