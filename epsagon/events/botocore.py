@@ -592,9 +592,9 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
 
     def _deserialize_item(self, item):
         """
-
-        :param item:
-        :return:
+        Deserialize DynamoDB Item in order to remove types definitions.
+        :param item: The item to deserialize.
+        :return: Deserialized item.
         """
         deserialized_item = item.copy()
         for key in item:
