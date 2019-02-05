@@ -401,6 +401,7 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
         _, request_data = args
         self.request_data = request_data
         self.response = response
+        self.deserializer = TypeDeserializer()
 
         super(BotocoreDynamoDBEvent, self).__init__(
             wrapped,
@@ -444,7 +445,15 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
         Process the delete item operation.
         """
         self.resource['name'] = self.request_data['TableName']
-        self.resource['metadata']['Key'] = self.request_data['Key']
+        deserialized_key = self._deserialize_item(self.request_data['Key'])
+        self.resource['metadata']['item_hash'] = hashlib.md5(
+            json.dumps(deserialized_key).encode('utf-8')
+        ).hexdigest()
+        add_data_if_needed(
+            self.resource['metadata'],
+            'Key',
+            self.request_data['Key']
+        )
 
     def process_describe_table_op(self):
         """
@@ -457,6 +466,11 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
         Process the update item operation.
         """
         self.resource['name'] = self.request_data['TableName']
+        deserialized_key = self._deserialize_item(self.request_data['Key'])
+        self.resource['metadata']['item_hash'] = hashlib.md5(
+            json.dumps(deserialized_key).encode('utf-8')
+        ).hexdigest()
+
         self.resource['metadata']['Update Parameters'] = {
             'Key': self.request_data['Key'],
             'Expression Attribute Values': self.request_data.get(
@@ -580,6 +594,22 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
                 break
         self.resource['metadata']['item_hash'] = hashlib.md5(
             json.dumps(item, sort_keys=True).encode('utf-8')).hexdigest()
+
+    def _deserialize_item(self, item):
+        """
+        Deserialize DynamoDB Item in order to remove types definitions.
+        :param item: The item to deserialize.
+        :return: Deserialized item.
+        """
+        deserialized_item = item.copy()
+        for key in item:
+            try:
+                deserialized_item[key] = self.deserializer.deserialize(
+                    item[key]
+                )
+            except (TypeError, AttributeError):
+                break
+        return deserialized_item
 
 
 class BotocoreSESEvent(BotocoreEvent):
@@ -714,7 +744,7 @@ class BotocoreAthenaEvent(BotocoreEvent):
             response_details.get('Status', {}).get('State', None)
 
         metadata['Result Location'] = \
-            response_details.get('ResultConfiguration', {}).\
+            response_details.get('ResultConfiguration', {}). \
                 get('OutputLocation', None)
 
         metadata['Query ID'] = response_details['QueryExecutionId']
@@ -736,7 +766,7 @@ class BotocoreAthenaEvent(BotocoreEvent):
         :param response: response from Athena Client
         :return: None
         """
-        self.resource['metadata']['Query Rows Count'] =\
+        self.resource['metadata']['Query Rows Count'] = \
             len(response.get('ResultSet', {}).get('Rows', []))
 
     def process_start_query_response(self, response):

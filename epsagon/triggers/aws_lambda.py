@@ -99,21 +99,26 @@ class DynamoDBLambdaTrigger(BaseLambdaTrigger):
         """
 
         super(DynamoDBLambdaTrigger, self).__init__(start_time)
+        self.deserializer = TypeDeserializer()
+
         record = event['Records'][0]
         self.event_id = record['eventID']
         self.resource['name'] = record['eventSourceARN'].split('/')[-3]
         self.resource['operation'] = record['eventName']
-        item = record['dynamodb']['NewImage']
 
-        add_data_if_needed(self.resource['metadata'], 'New Image', item)
-        # Deserialize the data in order to remove dynamoDB data types.
-        deserializer = TypeDeserializer()
-        deserialized_item = item.copy()
-        for key in item:
-            try:
-                deserialized_item[key] = deserializer.deserialize(item[key])
-            except (TypeError, AttributeError):
-                break
+        if record['eventName'] == 'REMOVE':
+            deserialized_item = self._deserialize_item(
+                record['dynamodb']['Keys']
+            )
+        elif record['eventName'] == 'MODIFY':
+            deserialized_item = self._deserialize_item(
+                record['dynamodb']['Keys']
+            )
+        else:
+            item = record['dynamodb']['NewImage']
+            deserialized_item = self._deserialize_item(item)
+            add_data_if_needed(self.resource['metadata'], 'New Image', item)
+
         self.resource['metadata'] = {
             'region': record['awsRegion'],
             'sequence_number': record['dynamodb']['SequenceNumber'],
@@ -121,6 +126,22 @@ class DynamoDBLambdaTrigger(BaseLambdaTrigger):
                 json.dumps(deserialized_item, sort_keys=True).encode('utf-8')
             ).hexdigest()
         }
+
+    def _deserialize_item(self, item):
+        """
+        Deserialize DynamoDB Item in order to remove types definitions.
+        :param item: The item to deserialize.
+        :return: Deserialized item.
+        """
+        deserialized_item = item.copy()
+        for key in item:
+            try:
+                deserialized_item[key] = self.deserializer.deserialize(
+                    item[key]
+                )
+            except (TypeError, AttributeError):
+                break
+        return deserialized_item
 
 
 class KinesisLambdaTrigger(BaseLambdaTrigger):
