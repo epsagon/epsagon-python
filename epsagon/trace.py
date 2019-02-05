@@ -8,6 +8,7 @@ import time
 import itertools
 import traceback
 import warnings
+import signal
 import pprint
 import simplejson as json
 
@@ -15,7 +16,12 @@ import requests
 import requests.exceptions
 from epsagon.event import BaseEvent
 from epsagon.common import EpsagonWarning
-from .constants import SEND_TIMEOUT, MAX_LABEL_SIZE, __version__
+from .constants import (
+    TIMEOUT_GRACE_TIME_MS,
+    SEND_TIMEOUT,
+    MAX_LABEL_SIZE,
+    __version__
+)
 
 MAX_EVENTS_PER_TYPE = 20
 
@@ -55,6 +61,51 @@ class Trace(object):
             sys.version_info.major,
             sys.version_info.minor
         )
+        self.runner = None
+        self.trace_sent = False
+
+    # pylint: disable=unused-argument, unused-variable
+    def timeout_handler(self, signum, frame):
+        """
+        Send a trace in case of timeout.
+        Invoked by a pre-set alarm.
+        """
+        try:
+            self.runner.set_timeout()
+            self.send_traces()
+
+            # pylint: disable=W0703
+        except Exception:
+            pass
+
+    @staticmethod
+    def reset_timeout_handler():
+        """
+        Cancel an already set alarm.
+        """
+        signal.alarm(0)
+
+    def set_timeout_handler(self, context):
+        """
+        Sets a timeout handler for the current tracer.
+        :param context: context, as received by Lambda.
+        """
+        try:
+            if not hasattr(context, 'get_remaining_time_in_millis'):
+                return
+
+            original_timeout = context.get_remaining_time_in_millis()
+            if original_timeout <= TIMEOUT_GRACE_TIME_MS:
+                return
+
+            modified_timeout = (
+                original_timeout - TIMEOUT_GRACE_TIME_MS) / 1000.0
+
+            signal.setitimer(signal.ITIMER_REAL, modified_timeout)
+            signal.signal(signal.SIGALRM, self.timeout_handler)
+        # pylint: disable=W0703
+        except Exception:
+            pass
 
     def add_exception(self, exception, stack_trace, additional_data=''):
         """
@@ -99,6 +150,8 @@ class Trace(object):
         self.custom_labels = {}
         self.custom_labels_size = 0
         self.has_custom_error = False
+        self.runner = None
+        self.trace_sent = False
 
     def initialize(self, app_name, token, collector_url, metadata_only, debug):
         """
@@ -136,6 +189,14 @@ class Trace(object):
         for event in trace_data['events']:
             trace.add_event(BaseEvent.load_from_dict(event))
         return trace
+
+    def set_runner(self, runner):
+        """
+        Sets the runner of the current tracer
+        :param runner: Runner to set
+        """
+        self.add_event(runner)
+        self.runner = runner
 
     def clear_events(self):
         """
@@ -210,12 +271,9 @@ class Trace(object):
         if not self.custom_labels:
             return
 
-        runner = [
-            event for event in list(self.events())
-            if event.origin == 'runner'
-        ][0]
-
-        runner.resource['metadata']['labels'] = json.dumps(self.custom_labels)
+        self.runner.resource['metadata']['labels'] = json.dumps(
+            self.custom_labels
+        )
 
     def to_dict(self):
         """
@@ -247,7 +305,7 @@ class Trace(object):
         Send trace to collector.
         :return: None
         """
-        if self.token == '':
+        if self.token == '' or self.trace_sent:
             return
         trace = ''
         try:
@@ -257,6 +315,9 @@ class Trace(object):
                 data=trace,
                 timeout=SEND_TIMEOUT
             )
+
+            self.trace_sent = True
+
             if self.debug:
                 print('Trace sent (size: {})'.format(
                     len(trace)

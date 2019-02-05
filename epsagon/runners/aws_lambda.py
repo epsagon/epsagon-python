@@ -6,6 +6,7 @@ from __future__ import absolute_import
 import os
 from ..event import BaseEvent
 from .. import constants
+from ..common import ErrorCode
 
 
 class AbstractLambdaRunner(BaseEvent):
@@ -37,6 +38,15 @@ class AbstractLambdaRunner(BaseEvent):
             'cold_start': constants.COLD_START,
             'region': os.getenv('AWS_REGION', ''),
         }
+
+    def set_timeout(self):
+        """
+        Sets timeout error code.
+        :return: None
+        """
+        # Don't override exceptions
+        if self.error_code != ErrorCode.EXCEPTION:
+            self.error_code = ErrorCode.TIMEOUT
 
 
 class LambdaRunner(AbstractLambdaRunner):

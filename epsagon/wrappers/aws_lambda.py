@@ -43,6 +43,7 @@ def lambda_wrapper(func):
                 time.time(),
                 context
             )
+            epsagon.trace.tracer.set_runner(runner)
         # pylint: disable=W0703
         except Exception as exception:
             # Regress to python runner.
@@ -78,6 +79,8 @@ def lambda_wrapper(func):
                 additional_data={'event': event}
             )
 
+        epsagon.trace.tracer.set_timeout_handler(context)
+
         result = None
         try:
             result = func(*args, **kwargs)
@@ -97,7 +100,11 @@ def lambda_wrapper(func):
                     traceback.format_exc(),
                 )
             try:
-                epsagon.trace.tracer.add_event(runner)
+                epsagon.trace.Trace.reset_timeout_handler()
+            # pylint: disable=W0703
+            except Exception:
+                pass
+            try:
                 epsagon.trace.tracer.send_traces()
             # pylint: disable=W0703
             except Exception:
@@ -128,6 +135,7 @@ def step_lambda_wrapper(func):
                 time.time(),
                 context
             )
+            epsagon.trace.tracer.set_runner(runner)
         # pylint: disable=W0703
         except Exception as exception:
             # Regress to python runner.
@@ -162,6 +170,8 @@ def step_lambda_wrapper(func):
                 traceback.format_exc(),
                 additional_data={'event': event}
             )
+
+        epsagon.trace.tracer.set_timeout_handler(context)
 
         result = None
         try:
@@ -194,7 +204,11 @@ def step_lambda_wrapper(func):
                     traceback.format_exc(),
                 )
             try:
-                epsagon.trace.tracer.add_event(runner)
+                epsagon.trace.Trace.reset_timeout_handler()
+            # pylint: disable=W0703
+            except Exception:
+                pass
+            try:
                 epsagon.trace.tracer.send_traces()
             # pylint: disable=W0703
             except Exception:

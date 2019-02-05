@@ -13,7 +13,8 @@ COLD_START = True
 # Customer original handler.
 EPSAGON_HANDLER = 'EPSAGON_HANDLER'
 
+TIMEOUT_GRACE_TIME_MS = 200
 # How long we try to send traces in seconds.
-SEND_TIMEOUT = 0.5
+SEND_TIMEOUT = TIMEOUT_GRACE_TIME_MS / 1000.0
 
 MAX_LABEL_SIZE = 100 * 1024
