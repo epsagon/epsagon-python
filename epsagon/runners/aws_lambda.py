@@ -4,6 +4,7 @@ Runner for AWS Lambda.
 
 from __future__ import absolute_import
 import os
+from uuid import uuid4
 from ..event import BaseEvent
 from .. import constants
 
@@ -25,7 +26,12 @@ class AbstractLambdaRunner(BaseEvent):
 
         super(AbstractLambdaRunner, self).__init__(start_time)
 
-        self.event_id = context.aws_request_id
+        # Creating a unique ID for local runs.
+        self.event_id = (
+            context.aws_request_id
+            if context.aws_request_id != '1234567890'
+            else 'local-{}'.format(str(uuid4()))
+        )
         self.resource['name'] = context.function_name
         self.resource['operation'] = self.OPERATION
         self.resource['metadata'] = {
