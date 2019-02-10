@@ -13,7 +13,10 @@ def init_module():
     """
     original_module, module_path, handler_name = import_original_module()
     try:
-        return getattr(original_module, handler_name)
+        handler = original_module
+        for name in module_path.split('.')[1:] + [handler_name]:
+            handler = getattr(handler, name)
+        return handler
     except AttributeError:
         raise AttributeError(
             'No handler {} in module {}'.format(handler_name, module_path)
