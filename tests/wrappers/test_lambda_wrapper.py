@@ -14,7 +14,7 @@ def setup_function(func):
 
 
 def _get_runner_event(trace_mock, runner_type=LambdaRunner):
-    for args, _ in trace_mock.add_event.call_args_list:
+    for args, _ in trace_mock.set_runner.call_args_list:
         event = args[0]
         if isinstance(event, runner_type):
             return event
@@ -65,6 +65,8 @@ def test_lambda_wrapper_sanity(
 
     trigger_factory_mock.assert_called()
     set_exception_mock.assert_not_called()
+
+    trace_mock.set_timeout_handler.assert_called()
 
     trace_mock.send_traces.assert_called()
     trace_mock.add_exception.assert_not_called()
@@ -158,7 +160,7 @@ def test_lambda_wrapper_trigger_exception(trigger_factory_mock, trace_mock):
     lambda_runner_mock.set_exception.assert_not_called()
 
     trace_mock.prepare.assert_called()
-    trace_mock.add_event.assert_called()
+    trace_mock.set_runner.assert_called()
     trace_mock.send_traces.assert_called()
     trace_mock.add_exception.assert_called()
 
@@ -241,7 +243,6 @@ def test_lambda_wrapper_invalid_return_value(trace_mock):
         FAILED_TO_SERIALIZE_MESSAGE
     )
 
-
 # step_lambda_wrapper tests
 
 @mock.patch.object(StepLambdaRunner, 'set_exception')
@@ -275,6 +276,8 @@ def test_step_lambda_wrapper_sanity_first_step(
 
     trace_mock.prepare.assert_called()
     trace_mock.add_event.assert_called()
+    trace_mock.set_runner.assert_called()
+    trace_mock.set_timeout_handler.assert_called()
     runner = _get_runner_event(trace_mock, runner_type=StepLambdaRunner)
     trace_mock.send_traces.assert_called()
     trace_mock.add_exception.assert_not_called()
@@ -413,7 +416,7 @@ def test_step_lambda_wrapper_trigger_exception(trigger_factory_mock, trace_mock)
     lambda_runner_mock.set_exception.assert_not_called()
 
     trace_mock.prepare.assert_called()
-    trace_mock.add_event.assert_called()
+    trace_mock.set_runner.assert_called()
     trace_mock.send_traces.assert_called()
     trace_mock.add_exception.assert_called()
 

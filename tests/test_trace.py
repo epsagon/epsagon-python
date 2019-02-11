@@ -1,6 +1,7 @@
 import sys
 import mock
 import json
+import time
 import requests
 import warnings
 import epsagon.trace
@@ -13,6 +14,12 @@ from epsagon.trace import tracer, MAX_EVENTS_PER_TYPE
 from epsagon.utils import get_tc_url
 from epsagon.common import ErrorCode
 
+class ContextMock:
+    def __init__(self, timeout):
+        self.timeout = timeout
+
+    def get_remaining_time_in_millis(self):
+        return self.timeout
 
 class EventMock(object):
     ORIGIN = 'mock'
@@ -43,6 +50,9 @@ class RunnerEventMock(EventMock):
         self.origin = 'runner'
 
     def terminate(self):
+        pass
+
+    def set_timeout(self):
         pass
 
 
@@ -259,7 +269,7 @@ def test_to_dict():
 def test_custom_labels_sanity():
     event = RunnerEventMock()
     tracer.clear_events()
-    tracer.add_event(event)
+    tracer.set_runner(event)
     tracer.add_label('test_label', 'test_value')
     tracer.add_label('test_label_2', 42)
     tracer.add_label('test_label_3', 42.2)
@@ -277,7 +287,7 @@ def test_custom_labels_sanity():
 def test_custom_labels_override_trace():
     event = RunnerEventMock()
     tracer.clear_events()
-    tracer.add_event(event)
+    tracer.set_runner(event)
     tracer.add_label('test_label', 'test_value1')
     tracer.add_label('test_label', 'test_value2')
     trace_metadata = tracer.to_dict()['events'][0]['resource']['metadata']
@@ -300,6 +310,64 @@ def test_to_dict_empty():
         )
 
     }
+
+
+def test_set_timeout_handler_emtpy_context():
+    # Has no 'get_remaining_time_in_millis' attribute
+    tracer.set_timeout_handler({})
+
+
+@mock.patch('requests.post')
+def test_timeout_handler_called(wrapped_post):
+    """
+    Sanity
+    """
+    context = ContextMock(300)
+    runner = RunnerEventMock()
+    tracer.token = 'a'
+    tracer.set_timeout_handler(context)
+    tracer.set_runner(runner)
+    time.sleep(0.5)
+
+    assert tracer.trace_sent
+    assert wrapped_post.called
+
+
+@mock.patch('requests.post')
+def test_timeout_send_not_called_twice(wrapped_post):
+    """
+    In case of a timeout send trace, validate no trace
+    is sent afterwards (if the flow continues)
+    """
+    context = ContextMock(300)
+    runner = RunnerEventMock()
+    tracer.token = 'a'
+    tracer.set_timeout_handler(context)
+    tracer.set_runner(runner)
+    time.sleep(0.5)
+
+    assert tracer.trace_sent
+    assert wrapped_post.call_count == 1
+
+
+@mock.patch('requests.post')
+def test_timeout_happyflow_handler_call(wrapped_post):
+    """
+    Test in case we already sent the traces on happy flow,
+    that timeout handler call won't send them again.
+    """
+    context = ContextMock(300)
+    runner = RunnerEventMock()
+    tracer.set_runner(runner)
+
+    tracer.token = 'a'
+    tracer.send_traces()
+
+    tracer.set_timeout_handler(context)
+    time.sleep(0.5)
+
+    assert tracer.trace_sent
+    assert wrapped_post.call_count == 1
 
 
 @mock.patch('requests.post')

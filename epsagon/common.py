@@ -8,6 +8,7 @@ class ErrorCode(object):
     OK = 0
     ERROR = 1
     EXCEPTION = 2
+    TIMEOUT = 3
 
 
 class EpsagonWarning(Warning):
