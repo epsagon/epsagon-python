@@ -54,6 +54,7 @@ def test_epsagon_disable_epsagon_and_disable_patch(wrapped_get, wrapped_patch):
     assert epsagon.step_lambda_wrapper(dummy) is dummy
     assert epsagon.azure_wrapper(dummy) is dummy
     assert epsagon.python_wrapper(dummy) is dummy
+    assert epsagon.gcp_wrapper(dummy) is dummy
 
 
 @mock.patch('epsagon.utils.init')
