@@ -47,22 +47,6 @@ def gcp_wrapper(func):
             )
 
         constants.COLD_START = False
-        # TODO: Identify triggers
-        # try:
-        #     epsagon.trace.tracer.add_event(
-        #             <gcp-trigger-factory>.os.getenv('FUNCTION_TRIGGER_TYPE')
-        #             time.time(),
-        #             event,
-        #             context
-        #         )
-        #     )
-        # # pylint: disable=W0703
-        # except Exception as exception:
-        #     epsagon.trace.tracer.add_exception(
-        #         exception,
-        #         traceback.format_exc(),
-        #         additional_data={'event': event}
-        #     )
 
         result = None
         try:
