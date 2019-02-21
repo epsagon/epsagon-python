@@ -332,6 +332,8 @@ class Trace(object):
                 len(trace),
                 exception
             ))
+            if self.debug:
+                pprint.pprint(self.to_dict())
 
 
 # pylint: disable=C0103
