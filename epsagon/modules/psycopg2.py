@@ -31,6 +31,7 @@ def _register_type_wrapper(wrapped, instance, args, kwargs):
     return wrapped(obj)
 
 
+# pylint: disable=abstract-method
 class AdapterWrapper(wrapt.ObjectProxy):
     """
     a wrapper for an adapter, to strip the connection out of the objectProxy

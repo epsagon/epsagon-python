@@ -1,6 +1,6 @@
-wrapt==1.10.11
-requests==2.20.0
+wrapt
+requests
 boto3
-simplejson==3.13.2
-six==1.11.0
-future==0.16.0
+simplejson
+six
+future
