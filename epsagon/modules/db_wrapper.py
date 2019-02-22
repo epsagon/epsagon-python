@@ -7,6 +7,7 @@ import epsagon.modules.general_wrapper
 from ..events.dbapi import DBAPIEventFactory
 
 
+# pylint: disable=abstract-method
 class CursorWrapper(wrapt.ObjectProxy):
     """
     A dbapi cursor wrapper for tracing
