@@ -309,6 +309,8 @@ class Trace(object):
             return
         trace = ''
         try:
+            if self.runner:
+                self.runner.terminate()
             trace = json.dumps(self.to_dict(), cls=TraceEncoder)
             requests.post(
                 self.collector_url,
