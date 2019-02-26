@@ -264,6 +264,16 @@ class Trace(object):
             return
         self.custom_labels[key] = value
 
+    def set_error(self, exception: Exception, traceback_data=None):
+        """
+        Sets the error value of the runner
+        :param exception: Exception object to set.
+        :param traceback_data: traceback string
+        """
+        if not traceback_data:
+            traceback_data = ''.join(traceback.extract_stack().format())
+        self.runner.set_exception(exception, traceback_data)
+
     def update_runner_with_labels(self):
         """
         Adds the custom labels to the runner of the trace
