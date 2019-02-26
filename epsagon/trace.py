@@ -264,7 +264,7 @@ class Trace(object):
             return
         self.custom_labels[key] = value
 
-    def set_error(self, exception: Exception, traceback_data=None):
+    def set_error(self, exception, traceback_data=None):
         """
         Sets the error value of the runner
         :param exception: Exception object to set.
