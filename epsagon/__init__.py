@@ -49,6 +49,7 @@ else:
 
 # pylint: disable=C0103
 label = tracer.add_label
+error = tracer.set_error
 
 __all__ = ['lambda_wrapper', 'azure_wrapper', 'python_wrapper', 'init',
            'step_lambda_wrapper', 'flask_wrapper', 'wrapper', 'gcp_wrapper']

@@ -27,6 +27,7 @@ class EventMock(object):
 
     def __init__(self):
         self.terminated = False
+        self.exception = {}
         self.resource = {
             'metadata': {}
         }
@@ -38,9 +39,12 @@ class EventMock(object):
         return '{}{}'.format(self.ORIGIN, self.RESOURCE_TYPE)
 
     def to_dict(self):
-        return {
+        result = {
             'resource': self.resource
         }
+        if self.exception:
+            result['exception'] = self.exception
+        return result
 
 
 class RunnerEventMock(EventMock):
@@ -54,6 +58,13 @@ class RunnerEventMock(EventMock):
 
     def set_timeout(self):
         pass
+
+    def set_exception(self, exception, traceback_data):
+        self.error_code = ErrorCode.EXCEPTION
+        self.exception['type'] = type(exception).__name__
+        self.exception['message'] = str(exception)
+        self.exception['traceback'] = traceback_data
+        self.exception['time'] = time.time()
 
 
 class EventMockWithCounter(EventMock):
@@ -283,6 +294,15 @@ def test_custom_labels_sanity():
         'test_label_3': '42.2',
     }
 
+
+def test_set_error_sanity():
+    event = RunnerEventMock()
+    tracer.clear_events()
+    tracer.set_runner(event)
+    msg = 'oops'
+    tracer.set_error(ValueError(msg), 'test_value')
+
+    assert tracer.to_dict()['events'][0]['exception']['message'] == msg
 
 def test_custom_labels_override_trace():
     event = RunnerEventMock()

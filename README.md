@@ -45,6 +45,17 @@ def handler(event, context):
   pass
 ```
 
+## Set Error
+
+Set a custom error, maybe without even failing the function:
+```python
+@epsagon.lambda_wrapper
+def handler(event, context):
+  if 'my_param' not in event:
+      epsagon.error(ValueError('event missing my_param'))
+  pass
+```
+
 ## Copyright
 
 Provided under the MIT license. See LICENSE for details.
