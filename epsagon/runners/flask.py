@@ -29,7 +29,11 @@ class FlaskRunner(BaseEvent):
 
         self.event_id = str(uuid.uuid4())
 
-        self.resource['name'] = ' '.join((app.name, request.endpoint))
+        self.resource['name'] = (
+            ' '.join((app.name, request.url_rule.rule))
+            if request.url_rule
+            else app.name
+        )
         self.resource['operation'] = request.method
 
         self.resource['metadata'] = {
