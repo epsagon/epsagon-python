@@ -22,6 +22,22 @@ def add_data_if_needed(dictionary, name, data):
         dictionary[name] = data
 
 
+def update_api_gateway_headers(resource_data, response_headers):
+    """
+    Updats resource data dict with API Gateway if matching header found.
+    :param resource_data: event's resource data dict
+    :param response_headers: response headers from HTTP request
+    :return: update resource data dict
+    """
+    if 'x-amzn-requestid' in response_headers:
+        # This is a request to AWS API Gateway
+        resource_data['type'] = 'api_gateway'
+        resource_data['metadata']['request_trace_id'] = (
+            response_headers['x-amzn-requestid']
+        )
+    return resource_data
+
+
 def get_tc_url(use_ssl):
     """
     Get the TraceCollector URL.

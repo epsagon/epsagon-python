@@ -15,6 +15,7 @@ from epsagon.utils import add_data_if_needed
 from ..trace import tracer
 from ..event import BaseEvent
 from ..wrappers.http_filters import is_blacklisted_url
+from ..utils import update_api_gateway_headers
 
 
 class Httplib2Event(BaseEvent):
@@ -87,12 +88,10 @@ class Httplib2Event(BaseEvent):
         response_headers, response_body = response
 
         self.resource['metadata']['status'] = int(response_headers['status'])
-        if 'x-amzn-requestid' in response_headers:
-            # This is a request to AWS API Gateway
-            self.resource['type'] = 'api_gateway'
-            self.resource['metadata']['request_trace_id'] = (
-                response_headers['x-amzn-requestid']
-            )
+        self.resource = update_api_gateway_headers(
+            self.resource,
+            response_headers
+        )
 
         add_data_if_needed(
             self.resource['metadata'],
