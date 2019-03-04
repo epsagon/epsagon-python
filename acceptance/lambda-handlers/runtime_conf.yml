@@ -1,0 +1,11 @@
+py27:
+  Name: 'py27'
+  Runtime: 'python2.7'
+
+py36:
+  Name: 'py36'
+  Runtime: 'python3.6'
+
+py37:
+  Name: 'py37'
+  Runtime: 'python3.7'
