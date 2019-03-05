@@ -8,7 +8,7 @@
   },
   "author": "",
   "license": "ISC",
-  "dependencies": {
+  "devDependencies": {
     "serverless": "^1.32.0",
     "serverless-package-external": "^1.1.0",
     "serverless-python-requirements": "^4.3.0"
