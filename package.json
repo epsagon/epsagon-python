@@ -9,6 +9,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@semantic-release/exec": "^3.3.2",
+    "semantic-release": "^15.13.3",
     "serverless": "^1.32.0",
     "serverless-package-external": "^1.1.0",
     "serverless-python-requirements": "^4.3.0"
