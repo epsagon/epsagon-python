@@ -1,9 +1,9 @@
-service: epsagon-acceptance-${self:custom.serviceName}-${self:custom.buildNumber}
+service: epsagon-acceptance-${self:custom.buildNumber}
 
 provider:
   name: aws
-  runtime: ${self:custom.runtime}
-  region: ${opt:region, 'eu-west-1'}
+  runtime: ${opt:runtime}
+  region: ${opt:region, 'us-east-1'}
   stage: dev
   environment:
     STAGE: dev
@@ -15,15 +15,9 @@ provider:
 
 custom:
   buildNumber: ${opt:buildNumber}
-  runtime: ${file(runtime_conf.yml):${opt:runtime}.Runtime}
-  serviceName: ${file(runtime_conf.yml):${opt:runtime}.Name}
   pythonRequirements:
     dockerizePip: non-linux
     dockerSsh: true
-  packageExternal:
-    external:
-      - '../../epsagon'
-      - '../../requirements.txt'
 
 functions:
   sanity:
@@ -32,5 +26,4 @@ functions:
     handler: handler.labels
 
 plugins:
-  - serverless-package-external
   - serverless-python-requirements
