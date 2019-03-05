@@ -5,12 +5,12 @@ python:
 install:
   - pip install -r requirements-dev.txt
   - pip install pylint
-  - npm install && export PATH=$(pwd)/node_modules/.bin:$PATH
 
 script:
   - "pylint --msg-template='{path}:{line}: [{msg_id}({symbol}) {obj}] {msg}' epsagon/"
   - tox
-  -  ./acceptance/run.sh $TRAVIS_BUILD_NUMBER
+  - npm install && export PATH=$(pwd)/node_modules/.bin:$PATH
+  - ./acceptance/run.sh $TRAVIS_BUILD_NUMBER
 
 deploy:
   provider: script
