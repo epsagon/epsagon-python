@@ -384,6 +384,7 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
             'Scan': self.process_query_and_scan_response,
             'Query': self.process_query_and_scan_response,
             'GetItem': self.process_get_item_response,
+            'BatchGetItem': self.process_batch_get_response,
             'ListTables': self.process_list_tables_response
         })
 
@@ -394,6 +395,7 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
             'DescribeTable': self.process_describe_table_op,
             'DeleteItem': self.process_delete_item_op,
             'BatchWriteItem': self.process_batch_write_op,
+            'BatchGetItem': self.process_batch_get_op,
             'Scan': self.process_scan_op,
             'Query': self.process_query_op
         })
@@ -412,7 +414,6 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
             response,
             exception
         )
-
         self.OPERATION_TO_FUNC.get(self.resource['operation'], empty_func)()
 
     def update_response(self, response):
@@ -508,6 +509,19 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
                 added_items
             )
 
+    def process_batch_get_op(self):
+        """
+        Process the batch get item operation.
+        """
+        table_name = list(self.request_data['RequestItems'].keys())[0]
+        self.resource['name'] = table_name
+        keys = [
+            key for key in
+            self.request_data['RequestItems'][table_name]['Keys']
+        ]
+
+        self.resource['metadata']['Keys'] = keys
+
     def process_query_op(self):
         """
         Process the query operation.
@@ -559,6 +573,18 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
                 'Item',
                 self.response['Item']
             )
+
+    def process_batch_get_response(self):
+        """
+        Process the batch get item response.
+        """
+        table_name = list(self.request_data['RequestItems'].keys())[0]
+        self.resource['name'] = table_name
+        add_data_if_needed(
+            self.resource['metadata'],
+            'Items',
+            self.response['Responses'][table_name]
+        )
 
     def process_list_tables_response(self):
         """
