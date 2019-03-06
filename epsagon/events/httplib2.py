@@ -9,7 +9,7 @@ except ImportError:
     from urlparse import urlparse
 import traceback
 from uuid import uuid4
-import simplejson
+import simplejson as json
 
 from epsagon.utils import add_data_if_needed
 from ..trace import tracer
@@ -44,10 +44,7 @@ class Httplib2Event(BaseEvent):
         self.event_id = 'httplib2-{}'.format(str(uuid4()))
 
         # Params can be set via args or kwargs.
-        url = kwargs.get('uri', args[0] if len(args) >= 1 else 'N/A')
-        method = kwargs.get('method', args[1] if len(args) > 1 else 'N/A')
-        body = kwargs.get('body', args[2] if len(args) > 2 else None)
-        headers = kwargs.get('headers', args[3] if len(args) > 3 else None)
+        url, method, body, headers = Httplib2Event.unroller(*args, **kwargs)
 
         url_obj = urlparse(url)
         self.resource['name'] = url_obj.hostname
@@ -66,7 +63,7 @@ class Httplib2Event(BaseEvent):
                 add_data_if_needed(
                     self.resource['metadata'],
                     'request_body',
-                    simplejson.loads(body)
+                    json.loads(body)
                 )
         except (TypeError, ValueError):
             # Skip if it is not a JSON body
@@ -105,7 +102,7 @@ class Httplib2Event(BaseEvent):
                 add_data_if_needed(
                     self.resource['metadata'],
                     'response_body',
-                    simplejson.loads(response_body)
+                    json.loads(response_body)
                 )
         except (TypeError, ValueError):
             # Skip if it is not a JSON body
@@ -114,6 +111,10 @@ class Httplib2Event(BaseEvent):
         # Detect errors based on status code
         if int(response_headers['status']) >= 300:
             self.set_error()
+
+    @staticmethod
+    def unroller(uri='N/A', method='N/A', body=None, headers=None):
+        return uri, method, body, headers
 
 
 class Httplib2EventFactory(object):
@@ -127,7 +128,7 @@ class Httplib2EventFactory(object):
         """
         Create an event according to the given api_name.
         """
-        url = kwargs.get('uri', args[0] if len(args) >= 1 else None)
+        url, _, _, _ = Httplib2Event.unroller(*args, **kwargs)
 
         # Detect if URL is blacklisted, and ignore.
         if is_blacklisted_url(url):
