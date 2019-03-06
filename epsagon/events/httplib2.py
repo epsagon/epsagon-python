@@ -1,5 +1,5 @@
 """
-requests events module.
+httplib2 events module.
 """
 
 from __future__ import absolute_import
@@ -9,6 +9,7 @@ except ImportError:
     from urlparse import urlparse
 import traceback
 from uuid import uuid4
+import simplejson as json
 
 from epsagon.utils import add_data_if_needed
 from ..trace import tracer
@@ -17,13 +18,13 @@ from ..wrappers.http_filters import is_blacklisted_url
 from ..utils import update_api_gateway_headers
 
 
-class RequestsEvent(BaseEvent):
+class Httplib2Event(BaseEvent):
     """
-    Represents base requests event.
+    Represents base gttplib2 event.
     """
 
-    ORIGIN = 'requests'
-    RESOURCE_TYPE = 'requests'
+    ORIGIN = 'httplib2'
+    RESOURCE_TYPE = 'http'
 
     #pylint: disable=W0613
     def __init__(self, wrapped, instance, args, kwargs, start_time, response,
@@ -39,27 +40,34 @@ class RequestsEvent(BaseEvent):
         :param exception: Exception (if happened)
         """
 
-        super(RequestsEvent, self).__init__(start_time)
+        super(Httplib2Event, self).__init__(start_time)
+        self.event_id = 'httplib2-{}'.format(str(uuid4()))
 
-        self.event_id = 'requests-{}'.format(str(uuid4()))
+        # Params can be set via args or kwargs.
+        url, method, body, headers = Httplib2Event.unroller(*args, **kwargs)
 
-        prepared_request = args[0]
-        url_obj = urlparse(prepared_request.url)
+        url_obj = urlparse(url)
         self.resource['name'] = url_obj.hostname
-        self.resource['operation'] = prepared_request.method
-        self.resource['metadata']['url'] = prepared_request.url
+        self.resource['operation'] = method
+        self.resource['metadata']['url'] = url
 
-        add_data_if_needed(
-            self.resource['metadata'],
-            'request_headers',
-            dict(prepared_request.headers)
-        )
+        if headers:
+            add_data_if_needed(
+                self.resource['metadata'],
+                'request_headers',
+                headers
+            )
 
-        add_data_if_needed(
-            self.resource['metadata'],
-            'request_body',
-            prepared_request.body
-        )
+        try:
+            if body:
+                add_data_if_needed(
+                    self.resource['metadata'],
+                    'request_body',
+                    json.loads(body)
+                )
+        except (TypeError, json.errors.JSONDecodeError):
+            # Skip if it is not a JSON body
+            pass
 
         if response is not None:
             self.update_response(response)
@@ -74,37 +82,44 @@ class RequestsEvent(BaseEvent):
         :return: None
         """
 
-        self.resource['metadata']['status_code'] = response.status_code
+        response_headers, response_body = response
+
+        self.resource['metadata']['status'] = int(response_headers['status'])
         self.resource = update_api_gateway_headers(
             self.resource,
-            response.headers
+            response_headers
         )
 
         add_data_if_needed(
             self.resource['metadata'],
             'response_headers',
-            dict(response.headers)
+            dict(response_headers)
         )
 
         # Extract only json responses
-        self.resource['metadata']['response_body'] = None
         try:
-            add_data_if_needed(
-                self.resource['metadata'],
-                'response_body',
-                response.json()
-            )
-        except ValueError:
+            if response_body:
+                add_data_if_needed(
+                    self.resource['metadata'],
+                    'response_body',
+                    json.loads(response_body)
+                )
+        except (TypeError, json.errors.JSONDecodeError):
+            # Skip if it is not a JSON body
             pass
 
         # Detect errors based on status code
-        if response.status_code >= 300:
+        if int(response_headers['status']) >= 300:
             self.set_error()
 
+    @staticmethod
+    def unroller(uri='N/A', method='N/A', body=None, headers=None):
+        return uri, method, body, headers
 
-class RequestsEventFactory(object):
+
+class Httplib2EventFactory(object):
     """
-    Factory class, generates requests event.
+    Factory class, generates Httplib2 event.
     """
 
     @staticmethod
@@ -113,13 +128,13 @@ class RequestsEventFactory(object):
         """
         Create an event according to the given api_name.
         """
-        prepared_request = args[0]
+        url, _, _, _ = Httplib2Event.unroller(*args, **kwargs)
 
         # Detect if URL is blacklisted, and ignore.
-        if is_blacklisted_url(prepared_request.url):
+        if is_blacklisted_url(url):
             return
 
-        event = RequestsEvent(
+        event = Httplib2Event(
             wrapped,
             instance,
             args,

@@ -28,7 +28,7 @@ if os.getenv('DISABLE_EPSAGON') == 'TRUE':
     step_lambda_wrapper = dummy_wrapper  # pylint: disable=C0103
     azure_wrapper = dummy_wrapper  # pylint: disable=C0103
     python_wrapper = dummy_wrapper  # pylint: disable=C0103
-    EpsagonFlask = dummy_wrapper  # pylint: disable=C0103
+    flask_wrapper = dummy_wrapper  # pylint: disable=C0103
     gcp_wrapper = dummy_wrapper  # pylint: disable=C0103
 else:
     # Environments.
