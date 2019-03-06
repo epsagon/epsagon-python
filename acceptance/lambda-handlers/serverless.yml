@@ -24,6 +24,8 @@ functions:
     handler: handler.sanity
   labels:
     handler: handler.labels
+  ron-yishai:
+    handler: handler.ron
 
 plugins:
   - serverless-python-requirements

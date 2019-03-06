@@ -63,3 +63,20 @@ def labels(event, _):
     epsagon.label('12', None)
 
     return response
+
+
+def ron(event, _):
+    """
+    ron yisahi
+    """
+    body = {
+        'message': 'hen peretz',
+        'input': event
+    }
+
+    response = {
+        'statusCode': 200,
+        'body': json.dumps(body)
+    }
+
+    return response
