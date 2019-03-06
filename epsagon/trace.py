@@ -321,7 +321,11 @@ class Trace(object):
         try:
             if self.runner:
                 self.runner.terminate()
-            trace = json.dumps(self.to_dict(), cls=TraceEncoder)
+            trace = json.dumps(
+                self.to_dict(),
+                cls=TraceEncoder,
+                encoding='latin1'
+            )
             requests.post(
                 self.collector_url,
                 data=trace,
