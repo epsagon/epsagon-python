@@ -324,6 +324,44 @@ class NoProxyAPIGatewayLambdaTrigger(BaseLambdaTrigger):
         )
 
 
+class ElasticLoadBalancerLambdaTrigger(BaseLambdaTrigger):
+    """
+    Represents an Elastic Load Balancer trigger.
+    """
+    RESOURCE_TYPE = 'elastic_load_balancer'
+
+    # pylint: disable=W0613
+    def __init__(self, start_time, event, context):
+        """
+        Initialize.
+        :param start_time: event's start time (epoch)
+        :param event: event dict from the entry point
+        :param context: the context dict from the entry point
+        """
+
+        super(ElasticLoadBalancerLambdaTrigger, self).__init__(start_time)
+
+        self.event_id = 'elb-{}'.format(str(uuid4()))
+        self.resource['name'] = event['path']
+        self.resource['operation'] = event['httpMethod']
+
+        self.resource['metadata'] = {
+            'query_string_parameters': event['queryStringParameters'],
+            'target_group_arn': event['requestContext']['elb']['targetGroupArn']
+        }
+
+        add_data_if_needed(
+            self.resource['metadata'],
+            'body',
+            event['body']
+        )
+        add_data_if_needed(
+            self.resource['metadata'],
+            'headers',
+            event['headers']
+        )
+
+
 class EventsLambdaTrigger(BaseLambdaTrigger):
     """
     Represents Events (schedule) Lambda trigger
@@ -376,6 +414,8 @@ class LambdaTriggerFactory(object):
             if event_source not in event['Records'][0]:
                 event_source = 'EventSource'
             trigger_service = event['Records'][0][event_source].split(':')[-1]
+        elif 'requestContext' in event and 'elb' in event['requestContext']:
+            trigger_service = ElasticLoadBalancerLambdaTrigger.RESOURCE_TYPE
         elif 'httpMethod' in event:
             trigger_service = ProxyAPIGatewayLambdaTrigger.RESOURCE_TYPE
         elif 'context' in event and 'http-method' in event['context']:
