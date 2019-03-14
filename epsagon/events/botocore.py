@@ -981,6 +981,74 @@ class BotocoreKMSEvent(BotocoreEvent):
         )
 
 
+class BotocoreSSMEvent(BotocoreEvent):
+    """
+    Represents SSM botocore event
+    """
+    RESOURCE_TYPE = 'ssm'
+
+    def __init__(self, wrapped, instance, args, kwargs, start_time, response,
+                 exception):
+        self.RESPONSE_TO_FUNC.update({
+            'GetParameters': self.get_params_response,
+        })
+
+        self.OPERATION_TO_FUNC.update({
+            'GetParameters': self.get_params_operation,
+        })
+
+        super(BotocoreSSMEvent, self).__init__(
+            wrapped,
+            instance,
+            args,
+            kwargs,
+            start_time,
+            response,
+            exception
+        )
+
+        self.resource['name'] = 'SSM'
+        self.OPERATION_TO_FUNC.get(self.resource['operation'], empty_func)(
+            args,
+            kwargs
+        )
+
+    def update_response(self, response):
+        """
+        Adds response data to event.
+        :param response: Response from botocore's SSM Client
+        """
+        super(BotocoreSSMEvent, self).update_response(response)
+
+        self.RESPONSE_TO_FUNC.get(self.resource['operation'], empty_func)(
+            response
+        )
+
+    def get_params_operation(self, args, _):
+        """
+        Process GetParameters operation
+        :param args: command arguments
+        :param _: unused, kwargs
+        :return: None
+        """
+        _, request_args = args
+        self.resource['metadata']['Names'] = str(request_args.get('Names', ''))
+        self.resource['metadata']['With Decryption'] = (
+            request_args.get('WithDecryption', True)
+        )
+
+    def get_params_response(self, response):
+        """
+        Process GetParameters response
+        :param response: response from SSM Client
+        :return: None
+        """
+        self.resource['metadata']['Parameters'] = response['Parameters']
+        self.resource['metadata']['Invalid Parameters'] = str(
+            response.get('InvalidParameters', '')
+        )
+
+
 class BotocoreStepFunctionEvent(BotocoreEvent):
     """
     Represents Step Function botocore event
