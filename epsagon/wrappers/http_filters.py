@@ -30,6 +30,7 @@ BLACKLIST_URLS = {
     ],
     str.__contains__: [
         'accounts.google.com',
+        '.amazonaws.com',
     ],
 }
 
