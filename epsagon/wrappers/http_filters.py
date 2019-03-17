@@ -27,10 +27,10 @@ IGNORED_FILE_TYPES = [
 BLACKLIST_URLS = {
     str.endswith: [
         'epsagon.com',
+        '.amazonaws.com',
     ],
     str.__contains__: [
         'accounts.google.com',
-        '.amazonaws.com',
     ],
 }
 
