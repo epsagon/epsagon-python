@@ -337,7 +337,7 @@ def test_set_timeout_handler_emtpy_context():
     tracer.set_timeout_handler({})
 
 
-@mock.patch('requests.post')
+@mock.patch('requests.Session.post')
 def test_timeout_handler_called(wrapped_post):
     """
     Sanity
@@ -353,7 +353,7 @@ def test_timeout_handler_called(wrapped_post):
     assert wrapped_post.called
 
 
-@mock.patch('requests.post')
+@mock.patch('requests.Session.post')
 def test_timeout_send_not_called_twice(wrapped_post):
     """
     In case of a timeout send trace, validate no trace
@@ -370,7 +370,7 @@ def test_timeout_send_not_called_twice(wrapped_post):
     assert wrapped_post.call_count == 1
 
 
-@mock.patch('requests.post')
+@mock.patch('requests.Session.post')
 def test_timeout_happyflow_handler_call(wrapped_post):
     """
     Test in case we already sent the traces on happy flow,
@@ -390,7 +390,7 @@ def test_timeout_happyflow_handler_call(wrapped_post):
     assert wrapped_post.call_count == 1
 
 
-@mock.patch('requests.post')
+@mock.patch('requests.Session.post')
 def test_send_traces_sanity(wrapped_post):
     tracer.token = 'a'
     tracer.send_traces()
@@ -401,13 +401,13 @@ def test_send_traces_sanity(wrapped_post):
     )
 
 
-@mock.patch('requests.post')
+@mock.patch('requests.Session.post')
 def test_send_traces_no_token(wrapped_post):
     tracer.send_traces()
     wrapped_post.assert_not_called()
 
 
-@mock.patch('requests.post', side_effect=requests.ReadTimeout)
+@mock.patch('requests.Session.post', side_effect=requests.ReadTimeout)
 def test_send_traces_timeout(wrapped_post):
     tracer.token = 'a'
     tracer.send_traces()
@@ -418,7 +418,7 @@ def test_send_traces_timeout(wrapped_post):
     )
 
 
-@mock.patch('requests.post', side_effect=Exception)
+@mock.patch('requests.Session.post', side_effect=Exception)
 def test_send_traces_post_error(wrapped_post):
     tracer.token = 'a'
     tracer.send_traces()
