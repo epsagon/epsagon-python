@@ -24,6 +24,7 @@ from .constants import (
 )
 
 MAX_EVENTS_PER_TYPE = 20
+SESSION = requests.Session()
 
 
 class TraceEncoder(json.JSONEncoder):
@@ -326,7 +327,7 @@ class Trace(object):
                 cls=TraceEncoder,
                 encoding='latin1'
             )
-            requests.post(
+            SESSION.post(
                 self.collector_url,
                 data=trace,
                 timeout=SEND_TIMEOUT
