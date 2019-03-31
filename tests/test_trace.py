@@ -165,27 +165,31 @@ def test_initialize():
     token = 'token'
     collector_url = 'collector_url'
     metadata_only = False
+    disable_on_timeout = False
     debug = True
     tracer.initialize(
-        app_name, token, collector_url, metadata_only, debug
+        app_name, token, collector_url, metadata_only, disable_on_timeout, debug
     )
     assert tracer.app_name == app_name
     assert tracer.token == token
     assert tracer.collector_url == collector_url
+    assert tracer.disable_timeout_send == disable_on_timeout
     assert tracer.debug == debug
 
-    tracer.initialize(app_name, '', '', False, False)
+    tracer.initialize(app_name, '', '', False, False, False)
     assert tracer.app_name == app_name
     assert tracer.token == ''
     assert tracer.collector_url == ''
     assert tracer.metadata_only == False
+    assert tracer.disable_timeout_send == False
     assert tracer.debug == False
 
-    tracer.initialize('', '', '', True, False)
+    tracer.initialize('', '', '', True, True, False)
     assert tracer.app_name == ''
     assert tracer.token == ''
     assert tracer.collector_url == ''
     assert tracer.metadata_only == True
+    assert tracer.disable_timeout_send == True
     assert tracer.debug == False
 
 
@@ -442,6 +446,7 @@ def test_init_sanity(wrapped_init):
         app_name='app-name',
         collector_url='collector',
         metadata_only=False,
+        disable_timeout_send=False,
         debug=False
     )
 
@@ -460,6 +465,7 @@ def test_init_empty_app_name(wrapped_init):
         app_name='',
         collector_url='collector',
         metadata_only=False,
+        disable_timeout_send=False,
         debug=False
     )
 
@@ -472,6 +478,7 @@ def test_init_empty_collector_url(wrapped_init):
         app_name='app-name',
         collector_url=get_tc_url(True),
         metadata_only=False,
+        disable_timeout_send=False,
         debug=False
     )
 
@@ -488,6 +495,7 @@ def test_init_no_ssl_no_url(wrapped_init):
             region=DEFAULT_REGION,
             protocol="http://"
         ),
+        disable_timeout_send=False,
         debug=False
     )
 
@@ -508,6 +516,7 @@ def test_init_ssl_no_url(wrapped_init):
             region=DEFAULT_REGION,
             protocol="https://"
         ),
+        disable_timeout_send=False,
         debug=False
     )
 
@@ -526,6 +535,7 @@ def test_init_ssl_with_url(wrapped_init):
         app_name='app-name',
         metadata_only=False,
         collector_url="http://abc.com",
+        disable_timeout_send=False,
         debug=False
     )
 
@@ -544,5 +554,6 @@ def test_init_no_ssl_with_url(wrapped_init):
         app_name='app-name',
         metadata_only=False,
         collector_url="http://abc.com",
+        disable_timeout_send=False,
         debug=False
     )
