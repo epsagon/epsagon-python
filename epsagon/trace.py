@@ -112,7 +112,11 @@ class Trace(object):
                 self.timeout_handler
             )
 
-            if original_handler and original_handler != self.timeout_handler:
+            # pylint: disable=comparison-with-callable
+            if (
+                original_handler and
+                original_handler == self.timeout_handler
+            ):
                 warnings.warn(
                     'Epsagon Warning: Overriding existing '
                     'SIGALRM handler {!r}'.format(original_handler)
