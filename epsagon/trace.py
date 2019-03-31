@@ -73,8 +73,9 @@ class Trace(object):
         Invoked by a pre-set alarm.
         """
         try:
-            print('Epsagon timeout handler called. Stack trace:')
-            traceback.print_stack(limit=100)
+            if self.debug:
+                print('Epsagon timeout handler called. Stack trace:')
+                traceback.print_stack(limit=100)
 
             self.runner.set_timeout()
             self.send_traces()
