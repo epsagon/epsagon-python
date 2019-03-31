@@ -53,6 +53,7 @@ def init(
     app_name='default',
     collector_url=None,
     metadata_only=True,
+    disable_timeout_send=False,
     use_ssl=True,
     debug=False
 ):
@@ -63,6 +64,8 @@ def init(
     :param app_name: application name
     :param collector_url: the url of the collector.
     :param metadata_only: whether to send only the metadata, or also the data.
+    :param disable_timeout_send: whether to disable traces send on timeout
+     (when enabled, is t done using a signal handler).
     :param use_ssl: whether to use SSL or not.
     :param debug: debug mode flag
     :return: None
@@ -79,6 +82,10 @@ def init(
         metadata_only=(
           ((os.getenv('EPSAGON_METADATA') or '').upper() == 'TRUE') |
           metadata_only
+        ),
+        disable_timeout_send=(
+            ((os.getenv('EPSAGON_DISABLE_ON_TIMEOUT') or '').upper() == 'TRUE')
+            | disable_timeout_send
         ),
         debug=((os.getenv('EPSAGON_DEBUG') or '').upper() == 'TRUE') | debug
     )

@@ -7,6 +7,7 @@ import mock
 def get_tracer_patch_kwargs():
     return {
         'metadata_only': False,
+        'disable_timeout_send': False,
         'prepare': mock.MagicMock(),
         'send_traces': mock.MagicMock(),
         'events': [],

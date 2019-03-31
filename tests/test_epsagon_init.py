@@ -67,6 +67,7 @@ def test_epsagon_disable_epsagon_and_disable_patch(wrapped_get, wrapped_patch):
     'EPSAGON_APP_NAME': 'FALSE',
     'EPSAGON_COLLECTOR_URL': 'FALSE',
     'EPSAGON_METADATA': 'FALSE',
+    'EPSAGON_DISABLE_ON_TIMEOUT': 'FALSE',
     'EPSAGON_DEBUG': 'FALSE',
 }[x]))
 def test_epsagon_wrapper_env_init(wrapped_get, wrapped_init):
@@ -80,6 +81,7 @@ def test_epsagon_wrapper_env_init(wrapped_get, wrapped_init):
         mock.call('EPSAGON_APP_NAME'),
         mock.call('EPSAGON_COLLECTOR_URL'),
         mock.call('EPSAGON_METADATA'),
+        mock.call('EPSAGON_DISABLE_ON_TIMEOUT'),
         mock.call('EPSAGON_DEBUG'),
     ])
     wrapped_init.assert_called()
@@ -95,6 +97,7 @@ def test_epsagon_wrapper_env_init(wrapped_get, wrapped_init):
     'EPSAGON_APP_NAME': 'test',
     'EPSAGON_COLLECTOR_URL': 'epsagon',
     'EPSAGON_METADATA': 'TRUE',
+    'EPSAGON_DISABLE_ON_TIMEOUT': 'FALSE',
     'EPSAGON_DEBUG': 'FALSE',
 }[x]))
 def test_epsagon_wrapper_env_init(_wrapped_get, wrapped_init):
@@ -104,5 +107,6 @@ def test_epsagon_wrapper_env_init(_wrapped_get, wrapped_init):
         token='1234',
         collector_url='epsagon',
         metadata_only=True,
+        disable_timeout_send=False,
         debug=False
     )

@@ -79,7 +79,8 @@ def lambda_wrapper(func):
                 additional_data={'event': event}
             )
 
-        epsagon.trace.tracer.set_timeout_handler(context)
+        if not epsagon.trace.tracer.disable_timeout_send:
+            epsagon.trace.tracer.set_timeout_handler(context)
 
         result = None
         try:
@@ -100,7 +101,8 @@ def lambda_wrapper(func):
                     traceback.format_exc(),
                 )
             try:
-                epsagon.trace.Trace.reset_timeout_handler()
+                if not epsagon.trace.tracer.disable_timeout_send:
+                    epsagon.trace.Trace.reset_timeout_handler()
             # pylint: disable=W0703
             except Exception:
                 pass

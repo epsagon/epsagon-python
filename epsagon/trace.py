@@ -57,6 +57,7 @@ class Trace(object):
         self.version = __version__
         self.collector_url = ''
         self.metadata_only = True
+        self.disable_timeout_send = False
         self.debug = False
         self.platform = 'Python {}.{}'.format(
             sys.version_info.major,
@@ -72,6 +73,9 @@ class Trace(object):
         Invoked by a pre-set alarm.
         """
         try:
+            print('Epsagon timeout handler called. Stack trace:')
+            traceback.print_stack(limit=100)
+
             self.runner.set_timeout()
             self.send_traces()
 
@@ -103,7 +107,21 @@ class Trace(object):
                 original_timeout - TIMEOUT_GRACE_TIME_MS) / 1000.0
 
             signal.setitimer(signal.ITIMER_REAL, modified_timeout)
-            signal.signal(signal.SIGALRM, self.timeout_handler)
+            original_handler = signal.signal(
+                signal.SIGALRM,
+                self.timeout_handler
+            )
+
+            # pylint: disable=comparison-with-callable
+            if (
+                original_handler and
+                original_handler == self.timeout_handler
+            ):
+                warnings.warn(
+                    'Epsagon Warning: Overriding existing '
+                    'SIGALRM handler {!r}'.format(original_handler)
+                )
+
         # pylint: disable=W0703
         except Exception:
             pass
@@ -154,7 +172,15 @@ class Trace(object):
         self.runner = None
         self.trace_sent = False
 
-    def initialize(self, app_name, token, collector_url, metadata_only, debug):
+    def initialize(
+        self,
+        app_name,
+        token,
+        collector_url,
+        metadata_only,
+        disable_timeout_send,
+        debug
+    ):
         """
         Initializes trace with user's data.
         User can configure here trace parameters.
@@ -162,6 +188,8 @@ class Trace(object):
         :param token: user's token
         :param collector_url: the url to send traces to.
         :param metadata_only: whether to send metadata only or not.
+        :param disable_timeout_send: whether to disable traces send on timeout
+         (when enabled, is done using a signal handler).
         :param debug: debug flag
         :return: None
         """
@@ -170,6 +198,7 @@ class Trace(object):
         self.token = token
         self.collector_url = collector_url
         self.metadata_only = metadata_only
+        self.disable_timeout_send = disable_timeout_send
         self.debug = debug
 
     @staticmethod
