@@ -360,7 +360,8 @@ class Trace(object):
             SESSION.post(
                 self.collector_url,
                 data=trace,
-                timeout=SEND_TIMEOUT
+                timeout=SEND_TIMEOUT,
+                headers={'Authorization': 'Bearer {}'.format(self.token)}
             )
 
             self.trace_sent = True
