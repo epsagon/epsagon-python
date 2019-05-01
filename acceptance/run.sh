@@ -11,9 +11,9 @@ function run_acceptance_test() {
     serverless remove --runtime ${runtime} --buildNumber ${build_num}
 }
 
+run_acceptance_test python2.7
 run_acceptance_test python3.6
 #run_acceptance_test python3.7
-run_acceptance_test python2.7
 
 cd -
 exit ${result}
