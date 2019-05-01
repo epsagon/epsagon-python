@@ -401,7 +401,8 @@ def test_send_traces_sanity(wrapped_post):
     wrapped_post.assert_called_with(
         '',
         data=json.dumps(tracer.to_dict()),
-        timeout=epsagon.constants.SEND_TIMEOUT
+        timeout=epsagon.constants.SEND_TIMEOUT,
+        headers={'Authorization': 'Bearer {}'.format(tracer.token)}
     )
 
 
@@ -418,7 +419,8 @@ def test_send_traces_timeout(wrapped_post):
     wrapped_post.assert_called_with(
         '',
         data=json.dumps(tracer.to_dict()),
-        timeout=epsagon.constants.SEND_TIMEOUT
+        timeout=epsagon.constants.SEND_TIMEOUT,
+        headers={'Authorization': 'Bearer {}'.format(tracer.token)}
     )
 
 
@@ -429,7 +431,8 @@ def test_send_traces_post_error(wrapped_post):
     wrapped_post.assert_called_with(
         '',
         data=json.dumps(tracer.to_dict()),
-        timeout=epsagon.constants.SEND_TIMEOUT
+        timeout=epsagon.constants.SEND_TIMEOUT,
+        headers={'Authorization': 'Bearer {}'.format(tracer.token)}
     )
 
 
