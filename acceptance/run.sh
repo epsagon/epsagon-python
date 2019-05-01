@@ -8,7 +8,7 @@ function run_acceptance_test() {
     runtimeName=$2
     echo "deploying of ${runtime} [build: ${build_num}]"
     serverless deploy --runtime ${runtime} --runtimeName ${runtimeName} --buildNumber ${build_num} || {  echo "deployment of ${runtime} [build: ${build_num}] failed" ; result=1; }
-    pytest ../acceptance.py ${runtimeName} || {  echo "tests ${runtime} [build: ${build_num}] failed" ; result=1; }
+    runtimeName=${runtimeName} pytest ../acceptance.py || {  echo "tests ${runtime} [build: ${build_num}] failed" ; result=1; }
     serverless remove --runtime ${runtime} --runtimeName ${runtimeName} --buildNumber ${build_num}
 }
 
