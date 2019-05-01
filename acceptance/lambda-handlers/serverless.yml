@@ -31,7 +31,7 @@ resources:
     pythonAcceptanceRole:
       Type: AWS::IAM::Role
       Properties:
-        RoleName: pythonAcceptanceRole
+        RoleName: pythonAcceptanceRole-${self:custom.buildNumber}
         AssumeRolePolicyDocument:
           Version: '2012-10-17'
           Statement:
