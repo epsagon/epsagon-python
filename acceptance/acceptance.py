@@ -3,7 +3,10 @@ import json
 import pytest
 import boto3
 
-SERVICE_PREFIX = 'epsagon-acceptance-{}-dev'.format(os.environ.get('TRAVIS_BUILD_NUMBER', ''))
+SERVICE_PREFIX = 'epsagon-acceptance-{}-{}-dev'.format(
+    os.environ.get('TRAVIS_BUILD_NUMBER', ''),
+    os.environ.get('runtimeName', '')
+)
 
 
 def invoke(name, payload):
