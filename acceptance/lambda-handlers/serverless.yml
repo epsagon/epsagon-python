@@ -1,4 +1,4 @@
-service: epsagon-acceptance-${self:custom.buildNumber}
+service: epsagon-acceptance-${self:custom.buildNumber}-${self:custom:runtime}
 
 provider:
   name: aws
@@ -16,6 +16,7 @@ provider:
 
 custom:
   buildNumber: ${opt:buildNumber}
+  runtime: ${opt:runtime}
   pythonRequirements:
     dockerizePip: non-linux
     dockerSsh: true
@@ -31,7 +32,7 @@ resources:
     pythonAcceptanceRole:
       Type: AWS::IAM::Role
       Properties:
-        RoleName: pythonAcceptanceRole-${self:custom.buildNumber}
+        RoleName: pythonAcceptanceRole-${self:custom.buildNumber}-${self:custom:runtime}
         AssumeRolePolicyDocument:
           Version: '2012-10-17'
           Statement:
