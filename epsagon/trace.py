@@ -5,6 +5,7 @@ Trace object holds events and metadata
 from __future__ import absolute_import, print_function
 import sys
 import time
+from datetime import date, datetime
 import itertools
 import traceback
 import warnings
@@ -34,6 +35,8 @@ class TraceEncoder(json.JSONEncoder):
     def default(self, o):  # pylint: disable=method-hidden
         if isinstance(o, set):
             return list(o)
+        if isinstance(o, (datetime, date)):
+            return o.isoformat()
         return json.JSONEncoder.default(self, o)
 
 

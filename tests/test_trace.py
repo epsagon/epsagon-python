@@ -2,6 +2,7 @@ import sys
 import mock
 import json
 import time
+from datetime import datetime
 import requests
 import warnings
 import epsagon.trace
@@ -10,7 +11,7 @@ from epsagon.constants import (
     TRACE_COLLECTOR_URL,
     DEFAULT_REGION
 )
-from epsagon.trace import tracer, MAX_EVENTS_PER_TYPE
+from epsagon.trace import tracer, MAX_EVENTS_PER_TYPE, TraceEncoder
 from epsagon.utils import get_tc_url
 from epsagon.common import ErrorCode
 
@@ -556,4 +557,18 @@ def test_init_no_ssl_with_url(wrapped_init):
         collector_url="http://abc.com",
         disable_timeout_send=False,
         debug=False
+    )
+
+
+@mock.patch('requests.Session.post', side_effect=requests.ReadTimeout)
+def test_event_with_datetime(wrapped_post):
+    tracer.token = 'a'
+    event = EventMock()
+    event.resource['metadata'] = datetime.fromtimestamp(1000)
+    tracer.add_event(event)
+    tracer.send_traces()
+    wrapped_post.assert_called_with(
+        '',
+        data=json.dumps(tracer.to_dict(), cls=TraceEncoder),
+        timeout=epsagon.constants.SEND_TIMEOUT
     )
