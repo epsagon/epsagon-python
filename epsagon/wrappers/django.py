@@ -6,6 +6,7 @@ from __future__ import absolute_import
 import time
 import traceback
 import warnings
+import epsagon
 import epsagon.trace
 import epsagon.triggers.http
 import epsagon.runners.django
@@ -29,6 +30,9 @@ class DjangoMiddleware(object):
 
     def __call__(self, request):
         self.request = request
+
+        # Link epsagon to the request object for easy-access to epsagon library.
+        self.request.epsagon = epsagon
         self._before_request()
 
         self.response = self.get_response(request)
