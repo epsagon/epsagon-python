@@ -41,8 +41,6 @@ class DjangoMiddleware(object):
         """
         Runs before process of response.
         """
-        import threading
-        print(threading.get_ident())
         epsagon.trace.factory.get_trace().prepare()
         # Ignoring non relevant content types.
         self.ignored_request = ignore_request('', self.request.path.lower())
