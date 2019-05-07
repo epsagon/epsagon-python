@@ -7,7 +7,7 @@ from uuid import uuid4
 import traceback
 
 from ..event import BaseEvent
-from ..trace import tracer
+from ..trace import factory
 
 MAX_VALUE_SIZE = 25
 MAX_CMD_PIPELINE = 10
@@ -179,7 +179,7 @@ class RedisMultiEventFactory(object):
             exception,
             RedisMultiEventFactory.LAST_STACK
         )
-        tracer.add_event(event)
+        factory.get_trace().add_event(event)
 
 
 class RedisSingleEventFactory(object):
@@ -209,4 +209,4 @@ class RedisSingleEventFactory(object):
             response,
             exception
         )
-        tracer.add_event(event)
+        factory.get_trace().add_event(event)

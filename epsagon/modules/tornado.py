@@ -27,12 +27,12 @@ class TornadoWrapper(object):
         :param kwargs: wrapt's kwargs
         """
         try:
-            epsagon.trace.tracer.prepare()
+            epsagon.trace.factory.get_trace().prepare()
             ignored = ignore_request('', instance.request.path)
             if not ignored:
                 cls.RUNNER = TornadoRunner(time.time(), instance.request)
         except Exception as instrumentation_exception:  # pylint: disable=W0703
-            epsagon.trace.tracer.add_exception(
+            epsagon.trace.factory.get_trace().add_exception(
                 instrumentation_exception,
                 traceback.format_exc()
             )
@@ -47,7 +47,7 @@ class TornadoWrapper(object):
         :param args: wrapt's args
         :param kwargs: wrapt's kwargs
         """
-
+        trace = epsagon.trace.factory.get_trace()
         try:
             content = instance._headers.get(  # pylint: disable=protected-access
                 'Content-Type',
@@ -56,11 +56,11 @@ class TornadoWrapper(object):
             ignored = ignore_request(content, '')
             if not ignored and cls.RUNNER:
                 cls.RUNNER.update_response(instance)
-                epsagon.trace.tracer.add_event(cls.RUNNER)
-                epsagon.trace.tracer.send_traces()
-            epsagon.trace.tracer.prepare()
+                trace.add_event(cls.RUNNER)
+                trace.send_traces()
+                trace.prepare()
         except Exception as instrumentation_exception:  # pylint: disable=W0703
-            epsagon.trace.tracer.add_exception(
+            trace.add_exception(
                 instrumentation_exception,
                 traceback.format_exc()
             )
@@ -81,7 +81,7 @@ class TornadoWrapper(object):
                 _, exception, _ = args
                 cls.RUNNER.set_exception(exception, traceback.format_exc())
         except Exception as instrumentation_exception:  # pylint: disable=W0703
-            epsagon.trace.tracer.add_exception(
+            epsagon.trace.factory.get_trace().add_exception(
                 instrumentation_exception,
                 traceback.format_exc()
             )

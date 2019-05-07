@@ -3,3 +3,4 @@ tox
 mock
 Flask
 pylint-quotes
+django

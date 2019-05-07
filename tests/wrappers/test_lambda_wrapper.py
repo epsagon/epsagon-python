@@ -41,7 +41,7 @@ CONTEXT_STUB = type(
 
 @mock.patch.object(LambdaRunner, 'set_exception')
 @mock.patch(
-    'epsagon.trace.tracer',
+    'epsagon.trace.factory.get_trace',
     **get_tracer_patch_kwargs()
 )
 @mock.patch(

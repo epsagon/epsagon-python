@@ -23,7 +23,8 @@ def gcp_wrapper(func):
         """
         Generic google function wrapper
         """
-        epsagon.trace.tracer.prepare()
+        trace = epsagon.trace.factory.get_trace()
+        trace.prepare()
 
         try:
             runner = GoogleFunctionRunner(
@@ -36,10 +37,7 @@ def gcp_wrapper(func):
                 'GCP environment is invalid, using simple python wrapper',
                 EpsagonWarning
             )
-            epsagon.trace.tracer.add_exception(
-                exception,
-                traceback.format_exc()
-            )
+            trace.add_exception(exception, traceback.format_exc())
             return epsagon.wrappers.python_function.wrap_python_function(
                 func,
                 args,
@@ -58,17 +56,14 @@ def gcp_wrapper(func):
             raise
         finally:
             try:
-                if not epsagon.trace.tracer.metadata_only:
+                if not trace.metadata_only:
                     add_return_value(runner, result)
             # pylint: disable=W0703
             except Exception as exception:
-                epsagon.trace.tracer.add_exception(
-                    exception,
-                    traceback.format_exc(),
-                )
+                trace.add_exception(exception, traceback.format_exc())
             try:
-                epsagon.trace.tracer.add_event(runner)
-                epsagon.trace.tracer.send_traces()
+                trace.add_event(runner)
+                trace.send_traces()
             # pylint: disable=W0703
             except Exception:
                 pass

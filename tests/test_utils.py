@@ -1,11 +1,11 @@
 import epsagon.trace
 import epsagon.utils
 import epsagon.wrappers.http_filters
-from epsagon.trace import tracer
+from epsagon.trace import factory
 
 
 def setup_function(func):
-    tracer.__init__()
+    factory.get_trace().__init__()
 
 
 def test_blacklist_url():

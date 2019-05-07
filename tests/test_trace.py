@@ -11,7 +11,7 @@ from epsagon.constants import (
     TRACE_COLLECTOR_URL,
     DEFAULT_REGION
 )
-from epsagon.trace import tracer, MAX_EVENTS_PER_TYPE, TraceEncoder
+from epsagon.trace import factory, MAX_EVENTS_PER_TYPE, TraceEncoder
 from epsagon.utils import get_tc_url
 from epsagon.common import ErrorCode
 
@@ -80,7 +80,7 @@ class EventMockWithCounter(EventMock):
 
 
 def setup_function(func):
-    tracer.__init__()
+    factory.get_trace().__init__()
 
 
 def test_add_exception():
@@ -93,15 +93,16 @@ def test_add_exception():
         TypeError
     ]
 
+    trace = factory.get_trace()
     for i, exception_type in enumerate(tested_exception_types):
         try:
             raise exception_type(message_format % i)
         except exception_type as e:
-            tracer.add_exception(e, stack_trace_format % i)
+            trace.add_exception(e, stack_trace_format % i)
 
-    assert len(tracer.exceptions) == len(tested_exception_types)
+    assert len(trace.exceptions) == len(tested_exception_types)
     for i, exception_type in enumerate(tested_exception_types):
-        current_exception = tracer.exceptions[i]
+        current_exception = trace.exceptions[i]
         assert current_exception['type'] == str(exception_type)
         assert current_exception['message'] == message_format % i
         assert current_exception['traceback'] == stack_trace_format % i
@@ -119,15 +120,17 @@ def test_add_exception_with_additional_data():
     ]
 
     additional_data = {'key': 'value', 'key2': 'othervalue'}
+    trace = factory.get_trace()
+
     for i, exception_type in enumerate(tested_exception_types):
         try:
             raise exception_type(message_format % i)
         except exception_type as e:
-            tracer.add_exception(e, stack_trace_format % i, additional_data)
+            trace.add_exception(e, stack_trace_format % i, additional_data)
 
-    assert len(tracer.exceptions) == len(tested_exception_types)
+    assert len(trace.exceptions) == len(tested_exception_types)
     for i, exception_type in enumerate(tested_exception_types):
-        current_exception = tracer.exceptions[i]
+        current_exception = trace.exceptions[i]
         assert current_exception['type'] == str(exception_type)
         assert current_exception['message'] == message_format % i
         assert current_exception['traceback'] == stack_trace_format % i
@@ -136,28 +139,29 @@ def test_add_exception_with_additional_data():
 
 
 def test_prepare():
+    trace = factory.get_trace()
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter('always')
-        tracer.prepare()
-        assert not list(tracer.events())
-        assert tracer.exceptions == []
+        trace.prepare()
+        assert not list(trace.events())
+        assert trace.exceptions == []
         assert len(w) == 1
-    tracer.clear_events()
-    tracer.add_event(EventMock())
+    trace.clear_events()
+    trace.add_event(EventMock())
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter('always')
-        tracer.prepare()
-        assert not list(tracer.events())
-        assert tracer.exceptions == []
+        trace.prepare()
+        assert not list(trace.events())
+        assert trace.exceptions == []
         assert len(w) == 1
 
-    tracer.clear_events()
-    tracer.add_event(EventMock())
+    trace.clear_events()
+    trace.add_event(EventMock())
     with warnings.catch_warnings(record=True) as w:
-        tracer.prepare()
-        tracer.prepare()  # this call should NOT trigger a warning
-        assert not list(tracer.events())
-        assert tracer.exceptions == []
+        trace.prepare()
+        trace.prepare()  # this call should NOT trigger a warning
+        assert not list(trace.events())
+        assert trace.exceptions == []
         assert len(w) == 1
 
 
@@ -168,30 +172,31 @@ def test_initialize():
     metadata_only = False
     disable_on_timeout = False
     debug = True
-    tracer.initialize(
+    trace = factory.get_trace()
+    trace.initialize(
         app_name, token, collector_url, metadata_only, disable_on_timeout, debug
     )
-    assert tracer.app_name == app_name
-    assert tracer.token == token
-    assert tracer.collector_url == collector_url
-    assert tracer.disable_timeout_send == disable_on_timeout
-    assert tracer.debug == debug
+    assert trace.app_name == app_name
+    assert trace.token == token
+    assert trace.collector_url == collector_url
+    assert trace.disable_timeout_send == disable_on_timeout
+    assert trace.debug == debug
 
-    tracer.initialize(app_name, '', '', False, False, False)
-    assert tracer.app_name == app_name
-    assert tracer.token == ''
-    assert tracer.collector_url == ''
-    assert tracer.metadata_only == False
-    assert tracer.disable_timeout_send == False
-    assert tracer.debug == False
+    trace.initialize(app_name, '', '', False, False, False)
+    assert trace.app_name == app_name
+    assert trace.token == ''
+    assert trace.collector_url == ''
+    assert trace.metadata_only == False
+    assert trace.disable_timeout_send == False
+    assert trace.debug == False
 
-    tracer.initialize('', '', '', True, True, False)
-    assert tracer.app_name == ''
-    assert tracer.token == ''
-    assert tracer.collector_url == ''
-    assert tracer.metadata_only == True
-    assert tracer.disable_timeout_send == True
-    assert tracer.debug == False
+    trace.initialize('', '', '', True, True, False)
+    assert trace.app_name == ''
+    assert trace.token == ''
+    assert trace.collector_url == ''
+    assert trace.metadata_only == True
+    assert trace.disable_timeout_send == True
+    assert trace.debug == False
 
 
 def test_load_from_dict():
@@ -242,21 +247,23 @@ def test_load_from_dict_with_exceptions():
 
 def test_add_event():
     event = EventMock()
-    tracer.clear_events()
+    trace = factory.get_trace()
+    trace.clear_events()
     for i in range(10):  # verify we can add more then 1 event
-        tracer.add_event(event)
+        trace.add_event(event)
 
-        assert event is list(tracer.events())[i]
+        assert event is list(trace.events())[i]
         assert event.terminated
 
 
 def test_add_too_many_events():
     event = EventMock()
-    tracer.clear_events()
+    trace = factory.get_trace()
+    trace.clear_events()
     for _ in range(MAX_EVENTS_PER_TYPE * 2):  # verify we can add more then 1 event
-        tracer.add_event(event)
+        trace.add_event(event)
 
-    assert len(tracer.to_dict()['events']) == MAX_EVENTS_PER_TYPE
+    assert len(trace.to_dict()['events']) == MAX_EVENTS_PER_TYPE
 
 
 def test_to_dict():
@@ -284,13 +291,14 @@ def test_to_dict():
 
 def test_custom_labels_sanity():
     event = RunnerEventMock()
-    tracer.clear_events()
-    tracer.set_runner(event)
-    tracer.add_label('test_label', 'test_value')
-    tracer.add_label('test_label_2', 42)
-    tracer.add_label('test_label_3', 42.2)
-    tracer.add_label('test_label_invalid', {})
-    trace_metadata = tracer.to_dict()['events'][0]['resource']['metadata']
+    trace = factory.get_trace()
+    trace.clear_events()
+    trace.set_runner(event)
+    trace.add_label('test_label', 'test_value')
+    trace.add_label('test_label_2', 42)
+    trace.add_label('test_label_3', 42.2)
+    trace.add_label('test_label_invalid', {})
+    trace_metadata = trace.to_dict()['events'][0]['resource']['metadata']
 
     assert trace_metadata.get('labels') is not None
     assert json.loads(trace_metadata['labels']) == {
@@ -302,20 +310,22 @@ def test_custom_labels_sanity():
 
 def test_set_error_sanity():
     event = RunnerEventMock()
-    tracer.clear_events()
-    tracer.set_runner(event)
+    trace = factory.get_trace()
+    trace.clear_events()
+    trace.set_runner(event)
     msg = 'oops'
-    tracer.set_error(ValueError(msg), 'test_value')
+    trace.set_error(ValueError(msg), 'test_value')
 
-    assert tracer.to_dict()['events'][0]['exception']['message'] == msg
+    assert trace.to_dict()['events'][0]['exception']['message'] == msg
 
 def test_custom_labels_override_trace():
     event = RunnerEventMock()
-    tracer.clear_events()
-    tracer.set_runner(event)
-    tracer.add_label('test_label', 'test_value1')
-    tracer.add_label('test_label', 'test_value2')
-    trace_metadata = tracer.to_dict()['events'][0]['resource']['metadata']
+    trace = factory.get_trace()
+    trace.clear_events()
+    trace.set_runner(event)
+    trace.add_label('test_label', 'test_value1')
+    trace.add_label('test_label', 'test_value2')
+    trace_metadata = trace.to_dict()['events'][0]['resource']['metadata']
 
     assert trace_metadata.get('labels') is not None
     assert json.loads(trace_metadata['labels']) == {'test_label': 'test_value2'}
@@ -339,7 +349,7 @@ def test_to_dict_empty():
 
 def test_set_timeout_handler_emtpy_context():
     # Has no 'get_remaining_time_in_millis' attribute
-    tracer.set_timeout_handler({})
+    factory.get_trace().set_timeout_handler({})
 
 
 @mock.patch('requests.Session.post')
@@ -349,12 +359,13 @@ def test_timeout_handler_called(wrapped_post):
     """
     context = ContextMock(300)
     runner = RunnerEventMock()
-    tracer.token = 'a'
-    tracer.set_timeout_handler(context)
-    tracer.set_runner(runner)
+    trace = factory.get_trace()
+    trace.token = 'a'
+    trace.set_timeout_handler(context)
+    trace.set_runner(runner)
     time.sleep(0.5)
 
-    assert tracer.trace_sent
+    assert trace.trace_sent
     assert wrapped_post.called
 
 
@@ -366,12 +377,13 @@ def test_timeout_send_not_called_twice(wrapped_post):
     """
     context = ContextMock(300)
     runner = RunnerEventMock()
-    tracer.token = 'a'
-    tracer.set_timeout_handler(context)
-    tracer.set_runner(runner)
+    trace = factory.get_trace()
+    trace.token = 'a'
+    trace.set_timeout_handler(context)
+    trace.set_runner(runner)
     time.sleep(0.5)
 
-    assert tracer.trace_sent
+    assert trace.trace_sent
     assert wrapped_post.call_count == 1
 
 
@@ -383,22 +395,24 @@ def test_timeout_happyflow_handler_call(wrapped_post):
     """
     context = ContextMock(300)
     runner = RunnerEventMock()
-    tracer.set_runner(runner)
+    trace = factory.get_trace()
+    trace.set_runner(runner)
 
-    tracer.token = 'a'
-    tracer.send_traces()
+    trace.token = 'a'
+    trace.send_traces()
 
-    tracer.set_timeout_handler(context)
+    trace.set_timeout_handler(context)
     time.sleep(0.5)
 
-    assert tracer.trace_sent
+    assert trace.trace_sent
     assert wrapped_post.call_count == 1
 
 
 @mock.patch('requests.Session.post')
 def test_send_traces_sanity(wrapped_post):
-    tracer.token = 'a'
-    tracer.send_traces()
+    trace = factory.get_trace()
+    trace.token = 'a'
+    trace.send_traces()
     wrapped_post.assert_called_with(
         '',
         data=json.dumps(tracer.to_dict()),
@@ -409,14 +423,17 @@ def test_send_traces_sanity(wrapped_post):
 
 @mock.patch('requests.Session.post')
 def test_send_traces_no_token(wrapped_post):
-    tracer.send_traces()
+    trace = factory.get_trace()
+    trace.send_traces()
     wrapped_post.assert_not_called()
 
 
 @mock.patch('requests.Session.post', side_effect=requests.ReadTimeout)
 def test_send_traces_timeout(wrapped_post):
-    tracer.token = 'a'
-    tracer.send_traces()
+    trace = factory.get_trace()
+
+    trace.token = 'a'
+    trace.send_traces()
     wrapped_post.assert_called_with(
         '',
         data=json.dumps(tracer.to_dict()),
@@ -427,8 +444,10 @@ def test_send_traces_timeout(wrapped_post):
 
 @mock.patch('requests.Session.post', side_effect=Exception)
 def test_send_traces_post_error(wrapped_post):
-    tracer.token = 'a'
-    tracer.send_traces()
+    trace = factory.get_trace()
+
+    trace.token = 'a'
+    trace.send_traces()
     wrapped_post.assert_called_with(
         '',
         data=json.dumps(tracer.to_dict()),
@@ -437,7 +456,7 @@ def test_send_traces_post_error(wrapped_post):
     )
 
 
-@mock.patch('epsagon.trace.Trace.initialize')
+@mock.patch('epsagon.trace.TraceFactory.initialize')
 def test_init_sanity(wrapped_init):
     epsagon.utils.init(
         token='token',
@@ -455,7 +474,7 @@ def test_init_sanity(wrapped_init):
     )
 
 
-@mock.patch('epsagon.trace.Trace.initialize')
+@mock.patch('epsagon.trace.TraceFactory.initialize')
 def test_init_empty_app_name(wrapped_init):
     epsagon.utils.init(
         token='token',
@@ -474,7 +493,7 @@ def test_init_empty_app_name(wrapped_init):
     )
 
 
-@mock.patch('epsagon.trace.Trace.initialize')
+@mock.patch('epsagon.trace.TraceFactory.initialize')
 def test_init_empty_collector_url(wrapped_init):
     epsagon.utils.init(token='token', app_name='app-name', metadata_only=False)
     wrapped_init.assert_called_with(
@@ -487,7 +506,7 @@ def test_init_empty_collector_url(wrapped_init):
     )
 
 
-@mock.patch('epsagon.trace.Trace.initialize')
+@mock.patch('epsagon.trace.TraceFactory.initialize')
 def test_init_no_ssl_no_url(wrapped_init):
     epsagon.utils.init(token='token', app_name='app-name', metadata_only=False,
                        use_ssl=False)
@@ -504,7 +523,7 @@ def test_init_no_ssl_no_url(wrapped_init):
     )
 
 
-@mock.patch('epsagon.trace.Trace.initialize')
+@mock.patch('epsagon.trace.TraceFactory.initialize')
 def test_init_ssl_no_url(wrapped_init):
     epsagon.utils.init(
         token='token',
@@ -525,7 +544,7 @@ def test_init_ssl_no_url(wrapped_init):
     )
 
 
-@mock.patch('epsagon.trace.Trace.initialize')
+@mock.patch('epsagon.trace.TraceFactory.initialize')
 def test_init_ssl_with_url(wrapped_init):
     epsagon.utils.init(
         token='token',
@@ -544,7 +563,7 @@ def test_init_ssl_with_url(wrapped_init):
     )
 
 
-@mock.patch('epsagon.trace.Trace.initialize')
+@mock.patch('epsagon.trace.TraceFactory.initialize')
 def test_init_no_ssl_with_url(wrapped_init):
     epsagon.utils.init(
         token='token',

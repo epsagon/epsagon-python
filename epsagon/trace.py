@@ -11,6 +11,7 @@ import traceback
 import warnings
 import signal
 import pprint
+import threading
 import simplejson as json
 
 import requests
@@ -32,6 +33,7 @@ class TraceEncoder(json.JSONEncoder):
     """
     An encoder for the trace json
     """
+
     def default(self, o):  # pylint: disable=method-hidden
         if isinstance(o, set):
             return list(o)
@@ -46,28 +48,118 @@ class TraceEncoder(json.JSONEncoder):
         return output
 
 
+class TraceFactory(object):
+    """
+    A trace factory.
+    """
+
+    def __init__(self):
+        """
+        Initialize.
+        """
+        self.traces = {}
+        self.app_name = ''
+        self.token = ''
+        self.collector_url = ''
+        self.metadata_only = True
+        self.disable_timeout_send = False
+        self.debug = False
+
+    def initialize(
+            self,
+            app_name,
+            token,
+            collector_url,
+            metadata_only,
+            disable_timeout_send,
+            debug
+    ):
+        """
+        Initializes trace with user's data.
+        User can configure here trace parameters.
+        :param app_name: application name
+        :param token: user's token
+        :param collector_url: the url to send traces to.
+        :param metadata_only: whether to send metadata only or not.
+        :param disable_timeout_send: whether to disable traces send on timeout
+         (when enabled, is done using a signal handler).
+        :param debug: debug flag
+        :return: None
+        """
+
+        self.app_name = app_name
+        self.token = token
+        self.collector_url = collector_url
+        self.metadata_only = metadata_only
+        self.disable_timeout_send = disable_timeout_send
+        self.debug = debug
+
+    def get_trace(self):
+        """
+        Get the trace of the current thread.
+        :return:
+        """
+        thread_id = threading.get_ident()
+        if thread_id not in self.traces:
+            new_trace = Trace(
+                self.app_name,
+                self.token,
+                self.collector_url,
+                self.metadata_only,
+                self.disable_timeout_send,
+                self.debug
+            )
+            self.traces[thread_id] = new_trace
+
+        return self.traces[thread_id]
+
+    def add_label(self, key, value):
+        """
+        Add label to the current thread's trace.
+        :param key:
+        :param value:
+        """
+        self.get_trace().add_label(key, value)
+
+    def set_error(self, exception, traceback_data=None):
+        """
+        Set an error for the current thread's trace.
+        :param exception: The exception
+        :param traceback_data: The traceback data.
+        """
+        self.get_trace().set_error(exception, traceback_data)
+
+
 class Trace(object):
     """
     Represents runtime trace
     """
 
-    def __init__(self):
+    def __init__(
+            self,
+            app_name='',
+            token='',
+            collector_url='',
+            metadata_only=True,
+            disable_timeout_send=False,
+            debug=False
+    ):
         """
         initialize.
         """
 
-        self.app_name = ''
-        self.token = ''
+        self.app_name = app_name
+        self.token = token
         self.events_map = {}
         self.exceptions = []
         self.custom_labels = {}
         self.custom_labels_size = 0
         self.has_custom_error = False
         self.version = __version__
-        self.collector_url = ''
-        self.metadata_only = True
-        self.disable_timeout_send = False
-        self.debug = False
+        self.collector_url = collector_url
+        self.metadata_only = metadata_only
+        self.disable_timeout_send = disable_timeout_send
+        self.debug = debug
         self.platform = 'Python {}.{}'.format(
             sys.version_info.major,
             sys.version_info.minor
@@ -113,8 +205,8 @@ class Trace(object):
             if original_timeout <= TIMEOUT_GRACE_TIME_MS:
                 return
 
-            modified_timeout = (
-                original_timeout - TIMEOUT_GRACE_TIME_MS) / 1000.0
+            modified_timeout = \
+                (original_timeout - TIMEOUT_GRACE_TIME_MS) / 1000.0
 
             signal.setitimer(signal.ITIMER_REAL, modified_timeout)
             original_handler = signal.signal(
@@ -124,8 +216,8 @@ class Trace(object):
 
             # pylint: disable=comparison-with-callable
             if (
-                original_handler and
-                original_handler != self.timeout_handler
+                    original_handler and
+                    original_handler != self.timeout_handler
             ):
                 warnings.warn(
                     'Epsagon Warning: Overriding existing '
@@ -183,13 +275,13 @@ class Trace(object):
         self.trace_sent = False
 
     def initialize(
-        self,
-        app_name,
-        token,
-        collector_url,
-        metadata_only,
-        disable_timeout_send,
-        debug
+            self,
+            app_name,
+            token,
+            collector_url,
+            metadata_only,
+            disable_timeout_send,
+            debug
     ):
         """
         Initializes trace with user's data.
@@ -218,7 +310,6 @@ class Trace(object):
         :param trace_data: dict data of trace
         :return: Trace
         """
-
         trace = Trace()
         trace.app_name = trace_data['app_name']
         trace.token = trace_data['token']
@@ -270,9 +361,9 @@ class Trace(object):
             return False
 
         if (
-            len(key) +
-            len(value) +
-            self.custom_labels_size > MAX_LABEL_SIZE
+                len(key) +
+                len(value) +
+                self.custom_labels_size > MAX_LABEL_SIZE
         ):
             return False
 
@@ -335,7 +426,7 @@ class Trace(object):
         # pylint: disable=W0703
         except Exception as exception:
             # Ignore custom logs in case of error.
-            tracer.add_exception(
+            self.add_exception(
                 exception,
                 traceback.format_exc()
             )
@@ -394,4 +485,4 @@ class Trace(object):
 
 
 # pylint: disable=C0103
-tracer = Trace()
+factory = TraceFactory()

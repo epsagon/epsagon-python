@@ -7,7 +7,7 @@ import os
 from .utils import init
 from .patcher import patch_all
 from .constants import __version__, EPSAGON_HANDLER
-from .trace import tracer
+from .trace import factory
 
 if os.getenv(EPSAGON_HANDLER):
     from .handler import wrapper
@@ -48,8 +48,8 @@ else:
 
 
 # pylint: disable=C0103
-label = tracer.add_label
-error = tracer.set_error
+label = factory.add_label
+error = factory.set_error
 
 __all__ = ['lambda_wrapper', 'azure_wrapper', 'python_wrapper', 'init',
            'step_lambda_wrapper', 'flask_wrapper', 'wrapper', 'gcp_wrapper']

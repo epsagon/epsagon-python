@@ -53,7 +53,8 @@ class FlaskWrapper(object):
         Runs when new request comes in.
         :return: None.
         """
-        epsagon.trace.tracer.prepare()
+        trace = epsagon.trace.factory.get_trace()
+        trace.prepare()
 
         # Ignoring non relevant content types.
         self.ignored_request = ignore_request('', request.path.lower())
@@ -72,7 +73,7 @@ class FlaskWrapper(object):
         except Exception as exception:
             # Regress to python runner.
             warnings.warn('Could not extract request', EpsagonWarning)
-            epsagon.trace.tracer.add_exception(
+            trace.add_exception(
                 exception,
                 traceback.format_exc()
             )
@@ -84,10 +85,10 @@ class FlaskWrapper(object):
                     request
                 )
             if trigger:
-                epsagon.trace.tracer.add_event(trigger)
+                trace.add_event(trigger)
         # pylint: disable=W0703
         except Exception as exception:
-            epsagon.trace.tracer.add_exception(
+            trace.add_exception(
                 exception,
                 traceback.format_exc(),
             )
@@ -152,6 +153,7 @@ class FlaskWrapper(object):
         if not exception and request.path in self.ignored_endpoints:
             return
 
-        epsagon.trace.tracer.add_event(self.runner)
-        epsagon.trace.tracer.send_traces()
-        epsagon.trace.tracer.prepare()
+        trace = epsagon.trace.factory.get_trace()
+        trace.add_event(self.runner)
+        trace.send_traces()
+        trace.prepare()

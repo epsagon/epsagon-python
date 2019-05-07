@@ -9,7 +9,7 @@ from past.builtins import range
 
 from epsagon.utils import add_data_if_needed
 from ..event import BaseEvent
-from ..trace import tracer
+from ..trace import factory
 
 
 class PyMongoEvent(BaseEvent):
@@ -111,4 +111,4 @@ class PyMongoEventFactory(object):
             response,
             exception
         )
-        tracer.add_event(event)
+        factory.get_trace().add_event(event)
