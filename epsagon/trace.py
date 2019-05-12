@@ -37,7 +37,13 @@ class TraceEncoder(json.JSONEncoder):
             return list(o)
         if isinstance(o, (datetime, date)):
             return o.isoformat()
-        return json.JSONEncoder.default(self, o)
+
+        output = repr(o)
+        try:
+            output = json.JSONEncoder.default(self, o)
+        except TypeError:
+            pass
+        return output
 
 
 class Trace(object):
