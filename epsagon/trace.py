@@ -75,7 +75,7 @@ class TraceFactory(object):
             debug
     ):
         """
-        Initializes trace with user's data.
+        Initializes The factory with user's data.
         User can configure here trace parameters.
         :param app_name: application name
         :param token: user's token
