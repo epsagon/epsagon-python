@@ -415,9 +415,9 @@ def test_send_traces_sanity(wrapped_post):
     trace.send_traces()
     wrapped_post.assert_called_with(
         '',
-        data=json.dumps(tracer.to_dict()),
+        data=json.dumps(trace.to_dict()),
         timeout=epsagon.constants.SEND_TIMEOUT,
-        headers={'Authorization': 'Bearer {}'.format(tracer.token)}
+        headers={'Authorization': 'Bearer {}'.format(trace.token)}
     )
 
 
@@ -436,9 +436,9 @@ def test_send_traces_timeout(wrapped_post):
     trace.send_traces()
     wrapped_post.assert_called_with(
         '',
-        data=json.dumps(tracer.to_dict()),
+        data=json.dumps(trace.to_dict()),
         timeout=epsagon.constants.SEND_TIMEOUT,
-        headers={'Authorization': 'Bearer {}'.format(tracer.token)}
+        headers={'Authorization': 'Bearer {}'.format(trace.token)}
     )
 
 
@@ -450,9 +450,9 @@ def test_send_traces_post_error(wrapped_post):
     trace.send_traces()
     wrapped_post.assert_called_with(
         '',
-        data=json.dumps(tracer.to_dict()),
+        data=json.dumps(trace.to_dict()),
         timeout=epsagon.constants.SEND_TIMEOUT,
-        headers={'Authorization': 'Bearer {}'.format(tracer.token)}
+        headers={'Authorization': 'Bearer {}'.format(trace.token)}
     )
 
 
@@ -584,14 +584,16 @@ def test_init_no_ssl_with_url(wrapped_init):
 
 @mock.patch('requests.Session.post', side_effect=requests.ReadTimeout)
 def test_event_with_datetime(wrapped_post):
-    tracer.token = 'a'
+    trace = factory.get_trace()
+
+    trace.token = 'a'
     event = EventMock()
     event.resource['metadata'] = datetime.fromtimestamp(1000)
-    tracer.add_event(event)
-    tracer.send_traces()
+    trace.add_event(event)
+    trace.send_traces()
     wrapped_post.assert_called_with(
         '',
-        data=json.dumps(tracer.to_dict(), cls=TraceEncoder),
+        data=json.dumps(trace.to_dict(), cls=TraceEncoder),
         timeout=epsagon.constants.SEND_TIMEOUT,
-        headers={'Authorization': 'Bearer {}'.format(tracer.token)}
+        headers={'Authorization': 'Bearer {}'.format(trace.token)}
     )
