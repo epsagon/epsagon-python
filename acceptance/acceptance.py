@@ -36,10 +36,13 @@ class TestLambdaWrapper:
     ])
     def test_sanity_valid_input(self, input):
         response = invoke('sanity', json.dumps(input))
+        print(response)
         assert response['StatusCode'] == 200
         content = json.loads(response['Payload'].read())
+        print(content)
         assert content['statusCode'] == 200
         body = json.loads(content['body'])
+        print(body)
         assert body['input'] == input
 
     @pytest.mark.parametrize("input", [
