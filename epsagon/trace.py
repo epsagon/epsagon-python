@@ -99,7 +99,7 @@ class TraceFactory(object):
         Get the trace of the current thread.
         :return:
         """
-        thread_id = threading.get_ident()
+        thread_id = threading.currentThread().ident
         if thread_id not in self.traces:
             new_trace = Trace(
                 self.app_name,
