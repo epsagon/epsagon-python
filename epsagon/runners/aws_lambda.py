@@ -35,15 +35,21 @@ class AbstractLambdaRunner(BaseEvent):
         )
         self.resource['name'] = context.function_name
         self.resource['operation'] = self.OPERATION
+
+        arn_split = context.invoked_function_arn.split(':')
         self.resource['metadata'] = {
             'log_stream_name': context.log_stream_name,
             'log_group_name': context.log_group_name,
             'function_version': context.function_version,
             'memory': context.memory_limit_in_mb,
-            'aws_account': context.invoked_function_arn.split(':')[4],
+            'aws_account': arn_split[4],
             'cold_start': constants.COLD_START,
             'region': os.getenv('AWS_REGION', ''),
         }
+
+        # Extract Function alias if exists
+        if len(arn_split) == 8:
+            self.resource['metadata']['function_alias'] = arn_split[-1]
 
     def set_timeout(self):
         """

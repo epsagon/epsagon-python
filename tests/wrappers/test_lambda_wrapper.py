@@ -498,3 +498,26 @@ def test_step_lambda_wrapper_invalid_return_value(trace_mock):
         runner.resource['metadata']['return_value'] ==
         FAILED_TO_SERIALIZE_MESSAGE
     )
+
+
+@mock.patch(
+    'epsagon.trace.tracer',
+    **get_tracer_patch_kwargs()
+)
+def test_lambda_wrapper_sanity(
+    trace_mock,
+):
+    @epsagon.wrappers.aws_lambda.lambda_wrapper
+    def wrapped_lambda(event, context):
+        return 'success'
+
+    orig_arn = CONTEXT_STUB.invoked_function_arn
+    CONTEXT_STUB.invoked_function_arn = (
+        'arn:aws:lambda:us-east-1:123456789012:function:TestFunction:test_alias'
+    )
+    assert wrapped_lambda('a', CONTEXT_STUB) == 'success'
+    CONTEXT_STUB.invoked_function_arn = orig_arn
+    trace_mock.prepare.assert_called()
+    runner = _get_runner_event(trace_mock)
+
+    assert runner.resource['metadata']['function_alias'] == 'test_alias'
