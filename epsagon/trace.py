@@ -1,7 +1,7 @@
 """
 Trace object holds events and metadata
 """
-# pylint: disable=C0302
+# pylint: disable=too-many-lines
 
 from __future__ import absolute_import, print_function
 import sys
@@ -121,7 +121,7 @@ class TraceFactory(object):
         """
         return self.traces.get(threading.currentThread().ident)
 
-    def remove_trace(self):
+    def remove_current_trace(self):
         """
         Remove the thread's trace.
         """
@@ -133,7 +133,7 @@ class TraceFactory(object):
         :param event: The event to add.
         :return: None
         """
-        if threading.currentThread().ident in self.traces:
+        if self.get_trace():
             self.get_trace().add_event(event)
 
     def add_exception(self, exception, stack_trace, additional_data=''):
@@ -145,7 +145,7 @@ class TraceFactory(object):
             additional data regarding the exception
         :return: None
         """
-        if threading.currentThread().ident in self.traces:
+        if self.get_trace():
             self.get_trace().add_exception(
                 exception,
                 stack_trace,
@@ -158,7 +158,7 @@ class TraceFactory(object):
         :param key:
         :param value:
         """
-        if threading.currentThread().ident in self.traces:
+        if self.get_trace():
             self.get_trace().add_label(key, value)
 
     def set_error(self, exception, traceback_data=None):
@@ -167,7 +167,7 @@ class TraceFactory(object):
         :param exception: The exception
         :param traceback_data: The traceback data.
         """
-        if threading.currentThread().ident in self.traces:
+        if self.get_trace():
             self.get_trace().set_error(exception, traceback_data)
 
     def send_traces(self):
@@ -175,7 +175,7 @@ class TraceFactory(object):
         Send the traces for the current thread.
         :return: None
         """
-        if threading.currentThread().ident in self.traces:
+        if self.get_trace():
             self.get_trace().send_traces()
 
     def prepare(self):
@@ -183,7 +183,7 @@ class TraceFactory(object):
         Prepare the relevant trace.
         :return: None
         """
-        if threading.currentThread().ident in self.traces:
+        if self.get_trace():
             self.get_trace().prepare()
 
 
@@ -517,7 +517,6 @@ class Trace(object):
             return
         trace = ''
         try:
-            trace_factory.remove_trace()
             if self.runner:
                 self.runner.terminate()
 
@@ -563,6 +562,8 @@ class Trace(object):
             ))
             if self.debug:
                 pprint.pprint(self.to_dict())
+        finally:
+            trace_factory.remove_current_trace()
 
 
 # pylint: disable=C0103
