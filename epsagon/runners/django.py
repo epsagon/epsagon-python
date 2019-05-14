@@ -26,7 +26,7 @@ class DjangoRunner(BaseEvent):
         super(DjangoRunner, self).__init__(start_time)
 
         self.event_id = str(uuid.uuid4())
-        self.resource['name'] = request.get_full_path()
+        self.resource['name'] = request.get_host()
         self.resource['operation'] = request.method
 
         self.resource['metadata'] = {
