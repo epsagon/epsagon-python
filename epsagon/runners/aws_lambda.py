@@ -17,6 +17,8 @@ class AbstractLambdaRunner(BaseEvent):
     ORIGIN = 'runner'
     RESOURCE_TYPE = NotImplemented
     OPERATION = 'invoke'
+    ARN_WITH_ALIAS_LENGTH = 8
+    AWS_ACCOUNT_IND = 4
 
     def __init__(self, start_time, context):
         """
@@ -42,13 +44,13 @@ class AbstractLambdaRunner(BaseEvent):
             'log_group_name': context.log_group_name,
             'function_version': context.function_version,
             'memory': context.memory_limit_in_mb,
-            'aws_account': arn_split[4],
+            'aws_account': arn_split[self.AWS_ACCOUNT_IND],
             'cold_start': constants.COLD_START,
             'region': os.getenv('AWS_REGION', ''),
         }
 
         # Extract Function alias if exists
-        if len(arn_split) == 8:
+        if len(arn_split) == self.ARN_WITH_ALIAS_LENGTH:
             self.resource['metadata']['function_alias'] = arn_split[-1]
 
     def set_timeout(self):

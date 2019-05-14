@@ -504,7 +504,7 @@ def test_step_lambda_wrapper_invalid_return_value(trace_mock):
     'epsagon.trace.tracer',
     **get_tracer_patch_kwargs()
 )
-def test_lambda_wrapper_sanity(
+def test_lambda_wrapper_with_alias_arn(
     trace_mock,
 ):
     @epsagon.wrappers.aws_lambda.lambda_wrapper
