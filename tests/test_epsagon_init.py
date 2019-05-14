@@ -87,7 +87,7 @@ def test_epsagon_wrapper_env_init(wrapped_get, wrapped_init):
     wrapped_init.assert_called()
 
 
-@mock.patch('epsagon.trace.Trace.initialize')
+@mock.patch('epsagon.trace.TraceFactory.initialize')
 @mock.patch('os.getenv', side_effect=(lambda x: {
     'EPSAGON_HANDLER': 'epsagon.lambda_wrapper',
     'DISABLE_EPSAGON': 'FALSE',

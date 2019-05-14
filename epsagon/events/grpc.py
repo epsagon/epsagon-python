@@ -8,7 +8,7 @@ import traceback
 
 from epsagon.utils import add_data_if_needed
 from ..event import BaseEvent
-from ..trace import tracer
+from ..trace import trace_factory
 
 
 class GoogleRPCEvent(BaseEvent):
@@ -115,4 +115,4 @@ class GRPCEventFactory(object):
             response,
             exception
         )
-        tracer.add_event(event)
+        trace_factory.add_event(event)

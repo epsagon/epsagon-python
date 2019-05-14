@@ -1,4 +1,5 @@
 import json
+import threading
 import mock
 import pytest
 import epsagon.wrappers.python_function
@@ -7,16 +8,20 @@ import epsagon.runners.python_function
 import epsagon.constants
 from .common import get_tracer_patch_kwargs
 
+trace_mock = mock.MagicMock()
+
 
 def setup_function(func):
+    trace_mock.configure_mock(**get_tracer_patch_kwargs())
+    epsagon.trace_factory.traces[threading.currentThread().ident] = trace_mock
     epsagon.constants.COLD_START = True
 
 
 @mock.patch(
-    'epsagon.trace.tracer',
-    **get_tracer_patch_kwargs()
+    'epsagon.trace.trace_factory.get_or_create_trace',
+    side_effect=lambda: trace_mock
 )
-def test_function_wrapper_sanity(trace_mock):
+def test_function_wrapper_sanity(_):
     retval = 'success'
 
     @epsagon.wrappers.python_function.python_wrapper
@@ -24,10 +29,9 @@ def test_function_wrapper_sanity(trace_mock):
         return retval
 
     assert wrapped_function('a', 'b') == 'success'
-
     trace_mock.prepare.assert_called_once()
     trace_mock.add_event.assert_called_once()
-    (event, ), _ = trace_mock.add_event.call_args
+    (event,), _ = trace_mock.add_event.call_args
     assert isinstance(event, epsagon.runners.python_function.PythonRunner)
 
     trace_mock.send_traces.assert_called_once()
@@ -42,10 +46,9 @@ def test_function_wrapper_sanity(trace_mock):
     'set_exception'
 )
 @mock.patch(
-    'epsagon.trace.tracer',
-    **get_tracer_patch_kwargs()
-)
-def test_function_wrapper_function_exception(trace_mock, set_exception_mock):
+    'epsagon.trace.trace_factory.get_or_create_trace',
+    side_effect=lambda: trace_mock)
+def test_function_wrapper_function_exception(_, set_exception_mock):
     @epsagon.wrappers.python_function.python_wrapper
     def wrapped_function(event, context):
         raise TypeError('test')
@@ -59,7 +62,7 @@ def test_function_wrapper_function_exception(trace_mock, set_exception_mock):
     trace_mock.prepare.assert_called_once()
     trace_mock.add_event.assert_called_once()
 
-    (event, ), _ = trace_mock.add_event.call_args
+    (event,), _ = trace_mock.add_event.call_args
     assert isinstance(event, epsagon.runners.python_function.PythonRunner)
 
     trace_mock.send_traces.assert_called_once()
@@ -70,10 +73,10 @@ def test_function_wrapper_function_exception(trace_mock, set_exception_mock):
 
 
 @mock.patch(
-    'epsagon.trace.tracer',
-    **get_tracer_patch_kwargs()
+    'epsagon.trace.trace_factory.get_or_create_trace',
+    side_effect=lambda: trace_mock
 )
-def test_python_wrapper_python_runner_factory_failed(trace_mock):
+def test_python_wrapper_python_runner_factory_failed(_):
     @epsagon.wrappers.python_function.python_wrapper
     def wrapped_function(event, context):
         return 'success'
@@ -90,19 +93,19 @@ def test_python_wrapper_python_runner_factory_failed(trace_mock):
 
 
 @mock.patch(
-    'epsagon.trace.tracer',
-    **get_tracer_patch_kwargs()
+    'epsagon.trace.trace_factory.get_or_create_trace',
+    side_effect=lambda: trace_mock
 )
-def test_python_wrapper_invalid_return_value(trace_mock):
+def test_python_wrapper_invalid_return_value(_):
     @epsagon.wrappers.python_function.python_wrapper
     def wrapped_function(event, context):
-        return pytest # Not json-serializable
+        return pytest  # Not json-serializable
 
     assert wrapped_function('a', 'b') == pytest
 
     trace_mock.prepare.assert_called_once()
     trace_mock.add_event.assert_called_once()
-    (event, ), _ = trace_mock.add_event.call_args
+    (event,), _ = trace_mock.add_event.call_args
     assert isinstance(event, epsagon.runners.python_function.PythonRunner)
 
     trace_mock.send_traces.assert_called_once()
@@ -110,6 +113,6 @@ def test_python_wrapper_invalid_return_value(trace_mock):
 
     assert not epsagon.constants.COLD_START
     assert (
-        event.resource['metadata']['return_value'] ==
-        FAILED_TO_SERIALIZE_MESSAGE
+            event.resource['metadata']['return_value'] ==
+            FAILED_TO_SERIALIZE_MESSAGE
     )

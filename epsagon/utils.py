@@ -5,7 +5,7 @@ Utilities for Epsagon module.
 from __future__ import absolute_import
 import os
 from epsagon.constants import TRACE_COLLECTOR_URL, REGION
-from .trace import tracer
+from .trace import trace_factory
 from .constants import EPSAGON_HANDLER
 
 
@@ -18,7 +18,7 @@ def add_data_if_needed(dictionary, name, data):
     :return: None
     """
     dictionary[name] = None
-    if not tracer.metadata_only:
+    if not trace_factory.metadata_only:
         dictionary[name] = data
 
 
@@ -75,7 +75,7 @@ def init(
         collector_url = get_tc_url(
             ((os.getenv('EPSAGON_SSL') or '').upper() == 'TRUE') | use_ssl
         )
-    tracer.initialize(
+    trace_factory.initialize(
         token=os.getenv('EPSAGON_TOKEN') or token,
         app_name=os.getenv('EPSAGON_APP_NAME') or app_name,
         collector_url=os.getenv('EPSAGON_COLLECTOR_URL') or collector_url,

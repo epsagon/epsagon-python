@@ -11,7 +11,7 @@ import traceback
 from uuid import uuid4
 
 from epsagon.utils import add_data_if_needed
-from ..trace import tracer
+from ..trace import trace_factory
 from ..event import BaseEvent
 from ..wrappers.http_filters import is_blacklisted_url
 from ..utils import update_api_gateway_headers
@@ -38,7 +38,6 @@ class RequestsEvent(BaseEvent):
         :param response: response data
         :param exception: Exception (if happened)
         """
-
         super(RequestsEvent, self).__init__(start_time)
 
         self.event_id = 'requests-{}'.format(str(uuid4()))
@@ -129,4 +128,4 @@ class RequestsEventFactory(object):
             exception
         )
 
-        tracer.add_event(event)
+        trace_factory.add_event(event)

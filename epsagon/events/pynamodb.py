@@ -4,7 +4,7 @@ PynamoDB events module.
 
 from __future__ import absolute_import
 import simplejson as json
-from ..trace import tracer
+from ..trace import trace_factory
 from .botocore import BotocoreDynamoDBEvent
 
 
@@ -60,4 +60,4 @@ class PynamoDBEventAdapter(object):
         event.origin = 'pynamodb'
         event.resource['metadata'].pop('Retry Attempts')
 
-        tracer.add_event(event)
+        trace_factory.add_event(event)

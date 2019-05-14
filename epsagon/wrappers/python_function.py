@@ -47,17 +47,17 @@ def wrap_python_function(func, args, kwargs):
         raise
     finally:
         try:
-            if not epsagon.trace.tracer.metadata_only:
+            if not epsagon.trace.trace_factory.get_trace().metadata_only:
                 add_return_value(runner, result)
         # pylint: disable=W0703
         except Exception as exception:
-            epsagon.trace.tracer.add_exception(
+            epsagon.trace.trace_factory.add_exception(
                 exception,
                 traceback.format_exc(),
             )
         try:
-            epsagon.trace.tracer.add_event(runner)
-            epsagon.trace.tracer.send_traces()
+            epsagon.trace.trace_factory.add_event(runner)
+            epsagon.trace.trace_factory.send_traces()
         # pylint: disable=W0703
         except Exception:
             pass
@@ -68,7 +68,7 @@ def python_wrapper(func):
 
     @functools.wraps(func)
     def _python_wrapper(*args, **kwargs):
-        epsagon.trace.tracer.prepare()
+        epsagon.trace.trace_factory.get_or_create_trace().prepare()
         return wrap_python_function(func, args, kwargs)
 
     return _python_wrapper

@@ -6,7 +6,7 @@ General wrapper for instrumentation.
 from __future__ import absolute_import
 import time
 import traceback
-from epsagon.trace import tracer
+from epsagon.trace import trace_factory
 
 
 def wrapper(factory, wrapped, instance, args, kwargs):
@@ -42,7 +42,7 @@ def wrapper(factory, wrapped, instance, args, kwargs):
                 exception
             )
         except Exception as instrumentation_exception:
-            tracer.add_exception(
+            trace_factory.add_exception(
                 instrumentation_exception,
                 traceback.format_exc()
             )

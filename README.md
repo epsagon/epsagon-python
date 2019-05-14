@@ -33,6 +33,26 @@ def handler(event, context):
   pass
 ```
 
+## Django Application
+
+Add the following code to the `settings.py` file:
+```python
+import epsagon
+epsagon.init(
+    token='my-secret-token',
+    app_name='my-app-name',
+    metadata_only=False,  # Optional, send more trace data
+)
+```
+
+Add Epsagon middleware to the application's middleware list (located in `settings.py`)
+```python
+MIDDLEWARE = [
+    '....',
+    'epsagon.wrappers.django.DjangoMiddleware',
+]
+```
+
 ## Custom labels
 
 You can add custom labels to your traces. Filters can later be used for filtering

@@ -6,7 +6,7 @@ from __future__ import absolute_import
 import time
 import traceback
 import functools
-from ..trace import tracer
+from ..trace import trace_factory
 from ..runners.azure_function import AzureFunctionRunner
 
 
@@ -18,12 +18,13 @@ def azure_wrapper(func):
         """
         general Azure function wrapper
         """
-        tracer.prepare()
+        trace = trace_factory.get_or_create_trace()
+        trace.prepare()
 
         # Trigger event is not supported yet.
 
         runner = AzureFunctionRunner(time.time())
-        tracer.add_event(runner)
+        trace.add_event(runner)
 
         try:
             result = func(*args, **kwargs)
@@ -33,6 +34,6 @@ def azure_wrapper(func):
             raise
         finally:
             runner.terminate()
-            tracer.send_traces()
+            trace.send_traces()
 
     return _azure_wrapper

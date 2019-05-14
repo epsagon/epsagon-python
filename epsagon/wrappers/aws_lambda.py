@@ -29,7 +29,8 @@ def lambda_wrapper(func):
         """
         Generic Lambda function wrapper
         """
-        epsagon.trace.tracer.prepare()
+        trace = epsagon.trace.trace_factory.get_or_create_trace()
+        trace.prepare()
 
         try:
             event, context = args
@@ -43,7 +44,7 @@ def lambda_wrapper(func):
                 time.time(),
                 context
             )
-            epsagon.trace.tracer.set_runner(runner)
+            trace.set_runner(runner)
         # pylint: disable=W0703
         except Exception as exception:
             # Regress to python runner.
@@ -51,7 +52,7 @@ def lambda_wrapper(func):
                 'Lambda context is invalid, using simple python wrapper',
                 EpsagonWarning
             )
-            epsagon.trace.tracer.add_exception(
+            trace.add_exception(
                 exception,
                 traceback.format_exc()
             )
@@ -64,7 +65,7 @@ def lambda_wrapper(func):
         constants.COLD_START = False
 
         try:
-            epsagon.trace.tracer.add_event(
+            trace.add_event(
                 epsagon.triggers.aws_lambda.LambdaTriggerFactory.factory(
                     time.time(),
                     event,
@@ -73,14 +74,14 @@ def lambda_wrapper(func):
             )
         # pylint: disable=W0703
         except Exception as exception:
-            epsagon.trace.tracer.add_exception(
+            trace.add_exception(
                 exception,
                 traceback.format_exc(),
                 additional_data={'event': event}
             )
 
-        if not epsagon.trace.tracer.disable_timeout_send:
-            epsagon.trace.tracer.set_timeout_handler(context)
+        if not trace.disable_timeout_send:
+            trace.set_timeout_handler(context)
 
         result = None
         try:
@@ -92,22 +93,22 @@ def lambda_wrapper(func):
             raise
         finally:
             try:
-                if not epsagon.trace.tracer.metadata_only:
+                if not trace.metadata_only:
                     add_return_value(runner, result)
             # pylint: disable=W0703
             except Exception as exception:
-                epsagon.trace.tracer.add_exception(
+                trace.add_exception(
                     exception,
                     traceback.format_exc(),
                 )
             try:
-                if not epsagon.trace.tracer.disable_timeout_send:
+                if not trace.disable_timeout_send:
                     epsagon.trace.Trace.reset_timeout_handler()
             # pylint: disable=W0703
             except Exception:
                 pass
             try:
-                epsagon.trace.tracer.send_traces()
+                trace.send_traces()
             # pylint: disable=W0703
             except Exception:
                 pass
@@ -123,7 +124,8 @@ def step_lambda_wrapper(func):
         """
         Generic Step Function wrapper
         """
-        epsagon.trace.tracer.prepare()
+        trace = epsagon.trace.trace_factory.get_or_create_trace()
+        trace.prepare()
 
         try:
             event, context = args
@@ -137,7 +139,7 @@ def step_lambda_wrapper(func):
                 time.time(),
                 context
             )
-            epsagon.trace.tracer.set_runner(runner)
+            trace.set_runner(runner)
         # pylint: disable=W0703
         except Exception as exception:
             # Regress to python runner.
@@ -145,7 +147,7 @@ def step_lambda_wrapper(func):
                 'Lambda context is invalid, using simple python wrapper',
                 EpsagonWarning
             )
-            epsagon.trace.tracer.add_exception(
+            trace.add_exception(
                 exception,
                 traceback.format_exc()
             )
@@ -158,7 +160,7 @@ def step_lambda_wrapper(func):
         constants.COLD_START = False
 
         try:
-            epsagon.trace.tracer.add_event(
+            trace.add_event(
                 epsagon.triggers.aws_lambda.LambdaTriggerFactory.factory(
                     time.time(),
                     event,
@@ -167,13 +169,13 @@ def step_lambda_wrapper(func):
             )
         # pylint: disable=W0703
         except Exception as exception:
-            epsagon.trace.tracer.add_exception(
+            trace.add_exception(
                 exception,
                 traceback.format_exc(),
                 additional_data={'event': event}
             )
 
-        epsagon.trace.tracer.set_timeout_handler(context)
+        trace.set_timeout_handler(context)
 
         result = None
         try:
@@ -197,11 +199,11 @@ def step_lambda_wrapper(func):
             raise
         finally:
             try:
-                if not epsagon.trace.tracer.metadata_only:
+                if not trace.metadata_only:
                     add_return_value(runner, result)
             # pylint: disable=W0703
             except Exception as exception:
-                epsagon.trace.tracer.add_exception(
+                trace.add_exception(
                     exception,
                     traceback.format_exc(),
                 )
@@ -211,7 +213,7 @@ def step_lambda_wrapper(func):
             except Exception:
                 pass
             try:
-                epsagon.trace.tracer.send_traces()
+                trace.send_traces()
             # pylint: disable=W0703
             except Exception:
                 pass
