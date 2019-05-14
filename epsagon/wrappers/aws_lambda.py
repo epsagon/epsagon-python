@@ -29,7 +29,7 @@ def lambda_wrapper(func):
         """
         Generic Lambda function wrapper
         """
-        trace = epsagon.trace.factory.get_trace()
+        trace = epsagon.trace.trace_factory.get_trace()
         trace.prepare()
 
         try:
@@ -124,7 +124,7 @@ def step_lambda_wrapper(func):
         """
         Generic Step Function wrapper
         """
-        trace = epsagon.trace.factory.get_trace()
+        trace = epsagon.trace.trace_factory.get_trace()
         trace.prepare()
 
         try:

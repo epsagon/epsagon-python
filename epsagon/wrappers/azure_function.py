@@ -6,7 +6,7 @@ from __future__ import absolute_import
 import time
 import traceback
 import functools
-from ..trace import factory
+from ..trace import trace_factory
 from ..runners.azure_function import AzureFunctionRunner
 
 
@@ -18,7 +18,7 @@ def azure_wrapper(func):
         """
         general Azure function wrapper
         """
-        trace = factory.get_trace()
+        trace = trace_factory.get_trace()
         trace.prepare()
 
         # Trigger event is not supported yet.

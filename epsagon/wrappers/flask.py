@@ -53,7 +53,7 @@ class FlaskWrapper(object):
         Runs when new request comes in.
         :return: None.
         """
-        trace = epsagon.trace.factory.get_trace()
+        trace = epsagon.trace.trace_factory.get_trace()
         trace.prepare()
 
         # Ignoring non relevant content types.
@@ -153,7 +153,7 @@ class FlaskWrapper(object):
         if not exception and request.path in self.ignored_endpoints:
             return
 
-        trace = epsagon.trace.factory.get_trace()
+        trace = epsagon.trace.trace_factory.get_trace()
         trace.add_event(self.runner)
         trace.send_traces()
         trace.prepare()

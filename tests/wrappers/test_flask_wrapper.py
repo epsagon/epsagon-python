@@ -56,7 +56,7 @@ def test_flask_wrapper_after_request(runner_mock, _, client):
 
 
 @mock.patch('warnings.warn')
-@mock.patch('epsagon.trace.factory.get_trace')
+@mock.patch('epsagon.trace.trace_factory.get_trace')
 def test_flask_wrapper_teardown_request(trace_mock, _, client):
     """Test tracer gets new event and send it on new request."""
     client.get('/')

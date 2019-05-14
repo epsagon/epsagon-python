@@ -21,7 +21,7 @@ except ImportError:
             if '=' in attribute
         )
 
-from ..trace import factory
+from ..trace import trace_factory
 from ..event import BaseEvent
 
 MAX_QUERY_SIZE = 2048
@@ -101,7 +101,10 @@ class DBAPIEvent(BaseEvent):
         }
 
         # for select we always want to save the query
-        if (operation == 'select') or (not factory.get_trace().metadata_only):
+        if (
+                (operation == 'select') or
+                (not trace_factory.get_trace().metadata_only)
+        ):
             self.resource['metadata']['Query'] = query[:MAX_QUERY_SIZE]
 
         if exception is None:
@@ -159,4 +162,4 @@ class DBAPIEventFactory(object):
             start_time,
             exception,
         )
-        factory.get_trace().add_event(event)
+        trace_factory.get_trace().add_event(event)

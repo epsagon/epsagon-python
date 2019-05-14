@@ -12,7 +12,7 @@ from uuid import uuid4
 import simplejson as json
 
 from epsagon.utils import add_data_if_needed
-from ..trace import factory
+from ..trace import trace_factory
 from ..event import BaseEvent
 from ..wrappers.http_filters import is_blacklisted_url
 from ..utils import update_api_gateway_headers
@@ -144,4 +144,4 @@ class Httplib2EventFactory(object):
             exception
         )
 
-        factory.get_trace().add_event(event)
+        trace_factory.get_trace().add_event(event)

@@ -65,5 +65,5 @@ class DjangoRunner(BaseEvent):
             dict(response.items())
         )
 
-        if response.status_code >= 300:
+        if response.status_code >= 500:
             self.set_error()

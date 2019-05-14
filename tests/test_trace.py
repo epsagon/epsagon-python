@@ -11,7 +11,7 @@ from epsagon.constants import (
     TRACE_COLLECTOR_URL,
     DEFAULT_REGION
 )
-from epsagon.trace import factory, MAX_EVENTS_PER_TYPE, TraceEncoder
+from epsagon.trace import trace_factory, MAX_EVENTS_PER_TYPE, TraceEncoder
 from epsagon.utils import get_tc_url
 from epsagon.common import ErrorCode
 
@@ -80,7 +80,7 @@ class EventMockWithCounter(EventMock):
 
 
 def setup_function(func):
-    factory.get_trace().__init__()
+    trace_factory.get_trace().__init__()
 
 
 def test_add_exception():
@@ -93,7 +93,7 @@ def test_add_exception():
         TypeError
     ]
 
-    trace = factory.get_trace()
+    trace = trace_factory.get_trace()
     for i, exception_type in enumerate(tested_exception_types):
         try:
             raise exception_type(message_format % i)
@@ -120,7 +120,7 @@ def test_add_exception_with_additional_data():
     ]
 
     additional_data = {'key': 'value', 'key2': 'othervalue'}
-    trace = factory.get_trace()
+    trace = trace_factory.get_trace()
 
     for i, exception_type in enumerate(tested_exception_types):
         try:
@@ -139,7 +139,7 @@ def test_add_exception_with_additional_data():
 
 
 def test_prepare():
-    trace = factory.get_trace()
+    trace = trace_factory.get_trace()
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter('always')
         trace.prepare()
@@ -172,7 +172,7 @@ def test_initialize():
     metadata_only = False
     disable_on_timeout = False
     debug = True
-    trace = factory.get_trace()
+    trace = trace_factory.get_trace()
     trace.initialize(
         app_name, token, collector_url, metadata_only, disable_on_timeout, debug
     )
@@ -247,7 +247,7 @@ def test_load_from_dict_with_exceptions():
 
 def test_add_event():
     event = EventMock()
-    trace = factory.get_trace()
+    trace = trace_factory.get_trace()
     trace.clear_events()
     for i in range(10):  # verify we can add more then 1 event
         trace.add_event(event)
@@ -258,7 +258,7 @@ def test_add_event():
 
 def test_add_too_many_events():
     event = EventMock()
-    trace = factory.get_trace()
+    trace = trace_factory.get_trace()
     trace.clear_events()
     for _ in range(MAX_EVENTS_PER_TYPE * 2):  # verify we can add more then 1 event
         trace.add_event(event)
@@ -291,7 +291,7 @@ def test_to_dict():
 
 def test_custom_labels_sanity():
     event = RunnerEventMock()
-    trace = factory.get_trace()
+    trace = trace_factory.get_trace()
     trace.clear_events()
     trace.set_runner(event)
     trace.add_label('test_label', 'test_value')
@@ -310,7 +310,7 @@ def test_custom_labels_sanity():
 
 def test_set_error_sanity():
     event = RunnerEventMock()
-    trace = factory.get_trace()
+    trace = trace_factory.get_trace()
     trace.clear_events()
     trace.set_runner(event)
     msg = 'oops'
@@ -320,7 +320,7 @@ def test_set_error_sanity():
 
 def test_custom_labels_override_trace():
     event = RunnerEventMock()
-    trace = factory.get_trace()
+    trace = trace_factory.get_trace()
     trace.clear_events()
     trace.set_runner(event)
     trace.add_label('test_label', 'test_value1')
@@ -349,7 +349,7 @@ def test_to_dict_empty():
 
 def test_set_timeout_handler_emtpy_context():
     # Has no 'get_remaining_time_in_millis' attribute
-    factory.get_trace().set_timeout_handler({})
+    trace_factory.get_trace().set_timeout_handler({})
 
 
 @mock.patch('requests.Session.post')
@@ -359,7 +359,7 @@ def test_timeout_handler_called(wrapped_post):
     """
     context = ContextMock(300)
     runner = RunnerEventMock()
-    trace = factory.get_trace()
+    trace = trace_factory.get_trace()
     trace.token = 'a'
     trace.set_timeout_handler(context)
     trace.set_runner(runner)
@@ -377,7 +377,7 @@ def test_timeout_send_not_called_twice(wrapped_post):
     """
     context = ContextMock(300)
     runner = RunnerEventMock()
-    trace = factory.get_trace()
+    trace = trace_factory.get_trace()
     trace.token = 'a'
     trace.set_timeout_handler(context)
     trace.set_runner(runner)
@@ -395,7 +395,7 @@ def test_timeout_happyflow_handler_call(wrapped_post):
     """
     context = ContextMock(300)
     runner = RunnerEventMock()
-    trace = factory.get_trace()
+    trace = trace_factory.get_trace()
     trace.set_runner(runner)
 
     trace.token = 'a'
@@ -410,7 +410,7 @@ def test_timeout_happyflow_handler_call(wrapped_post):
 
 @mock.patch('requests.Session.post')
 def test_send_traces_sanity(wrapped_post):
-    trace = factory.get_trace()
+    trace = trace_factory.get_trace()
     trace.token = 'a'
     trace.send_traces()
     wrapped_post.assert_called_with(
@@ -423,14 +423,14 @@ def test_send_traces_sanity(wrapped_post):
 
 @mock.patch('requests.Session.post')
 def test_send_traces_no_token(wrapped_post):
-    trace = factory.get_trace()
+    trace = trace_factory.get_trace()
     trace.send_traces()
     wrapped_post.assert_not_called()
 
 
 @mock.patch('requests.Session.post', side_effect=requests.ReadTimeout)
 def test_send_traces_timeout(wrapped_post):
-    trace = factory.get_trace()
+    trace = trace_factory.get_trace()
 
     trace.token = 'a'
     trace.send_traces()
@@ -444,7 +444,7 @@ def test_send_traces_timeout(wrapped_post):
 
 @mock.patch('requests.Session.post', side_effect=Exception)
 def test_send_traces_post_error(wrapped_post):
-    trace = factory.get_trace()
+    trace = trace_factory.get_trace()
 
     trace.token = 'a'
     trace.send_traces()
@@ -584,7 +584,7 @@ def test_init_no_ssl_with_url(wrapped_init):
 
 @mock.patch('requests.Session.post', side_effect=requests.ReadTimeout)
 def test_event_with_datetime(wrapped_post):
-    trace = factory.get_trace()
+    trace = trace_factory.get_trace()
 
     trace.token = 'a'
     event = EventMock()

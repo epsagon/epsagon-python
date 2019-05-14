@@ -16,7 +16,7 @@ def setup_function(func):
 
 
 @mock.patch(
-    'epsagon.trace.factory.get_trace',
+    'epsagon.trace.trace_factory.get_trace',
     side_effect=lambda: trace_mock
 )
 def test_function_wrapper_sanity(_):
@@ -44,7 +44,7 @@ def test_function_wrapper_sanity(_):
     'set_exception'
 )
 @mock.patch(
-    'epsagon.trace.factory.get_trace',
+    'epsagon.trace.trace_factory.get_trace',
     side_effect=lambda: trace_mock)
 def test_function_wrapper_function_exception(_, set_exception_mock):
     @epsagon.wrappers.python_function.python_wrapper
@@ -71,7 +71,7 @@ def test_function_wrapper_function_exception(_, set_exception_mock):
 
 
 @mock.patch(
-    'epsagon.trace.factory.get_trace',
+    'epsagon.trace.trace_factory.get_trace',
     side_effect=lambda: trace_mock
 )
 def test_python_wrapper_python_runner_factory_failed(_):
@@ -91,7 +91,7 @@ def test_python_wrapper_python_runner_factory_failed(_):
 
 
 @mock.patch(
-    'epsagon.trace.factory.get_trace',
+    'epsagon.trace.trace_factory.get_trace',
     side_effect=lambda: trace_mock
 )
 def test_python_wrapper_invalid_return_value(_):

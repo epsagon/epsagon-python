@@ -45,7 +45,7 @@ class DjangoMiddleware(object):
         """
         Runs before process of response.
         """
-        epsagon.trace.factory.get_trace().prepare()
+        epsagon.trace.trace_factory.get_trace().prepare()
         # Ignoring non relevant content types.
         self.ignored_request = ignore_request('', self.request.path.lower())
 
@@ -62,7 +62,7 @@ class DjangoMiddleware(object):
         except Exception as exception:
             # Regress to python runner.
             warnings.warn('Could not extract request', EpsagonWarning)
-            epsagon.trace.factory.get_trace().add_exception(
+            epsagon.trace.trace_factory.get_trace().add_exception(
                 exception,
                 traceback.format_exc()
             )
@@ -74,10 +74,10 @@ class DjangoMiddleware(object):
                 self.request
             )
             if trigger:
-                epsagon.trace.factory.get_trace().add_event(trigger)
+                epsagon.trace.trace_factory.get_trace().add_event(trigger)
         # pylint: disable=W0703
         except Exception as exception:
-            epsagon.trace.factory.get_trace().add_exception(
+            epsagon.trace.trace_factory.get_trace().add_exception(
                 exception,
                 traceback.format_exc(),
             )
@@ -94,6 +94,6 @@ class DjangoMiddleware(object):
             self.ignored_request = True
             return
 
-        epsagon.trace.factory.get_trace().add_event(self.runner)
+        epsagon.trace.trace_factory.get_trace().add_event(self.runner)
         self.runner.update_response(self.response)
-        epsagon.trace.factory.get_trace().send_traces()
+        epsagon.trace.trace_factory.get_trace().send_traces()

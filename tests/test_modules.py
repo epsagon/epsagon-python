@@ -4,7 +4,7 @@ from epsagon.modules.botocore import _wrapper as _botocore_wrapper
 from epsagon.modules.grpc import _wrapper as _grpc_wrapper
 from epsagon.modules.requests import _wrapper as _request_wrapper
 from epsagon.modules.pymongo import _wrapper as _pymongo_wrapper
-from epsagon.trace import factory
+from epsagon.trace import trace_factory
 
 EXCEPTION_MESSAGE = 'Test exception'
 EXCEPTION_TYPE = RuntimeError
@@ -16,7 +16,7 @@ def raise_exception(*args):
 
 def _test(func):
     func(lambda: None, [], [], {})
-    trace = factory.get_trace()
+    trace = trace_factory.get_trace()
     assert len(trace.exceptions) == 1
     assert trace.exceptions[0]['message'] == EXCEPTION_MESSAGE
     assert trace.exceptions[0]['type'] == str(EXCEPTION_TYPE)
@@ -27,7 +27,7 @@ def _test(func):
 def setup_function(function):
     """Setup function that resets the tracer's exceptions list.
     """
-    factory.get_trace().exceptions = []
+    trace_factory.get_trace().exceptions = []
 
 
 @mock.patch(

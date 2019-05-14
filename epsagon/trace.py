@@ -113,6 +113,12 @@ class TraceFactory(object):
 
         return self.traces[thread_id]
 
+    def remove_trace(self):
+        """
+        Remove the thread's trace.
+        """
+        self.traces.pop(threading.currentThread().ident, None)
+
     def add_label(self, key, value):
         """
         Add label to the current thread's trace.
@@ -205,9 +211,8 @@ class Trace(object):
             if original_timeout <= TIMEOUT_GRACE_TIME_MS:
                 return
 
-            modified_timeout = \
-                (original_timeout - TIMEOUT_GRACE_TIME_MS) / 1000.0
-
+            modified_timeout = (
+                           original_timeout - TIMEOUT_GRACE_TIME_MS) / 1000.0
             signal.setitimer(signal.ITIMER_REAL, modified_timeout)
             original_handler = signal.signal(
                 signal.SIGALRM,
@@ -450,6 +455,7 @@ class Trace(object):
             return
         trace = ''
         try:
+            trace_factory.remove_trace()
             if self.runner:
                 self.runner.terminate()
             trace = json.dumps(
@@ -485,4 +491,4 @@ class Trace(object):
 
 
 # pylint: disable=C0103
-factory = TraceFactory()
+trace_factory = TraceFactory()

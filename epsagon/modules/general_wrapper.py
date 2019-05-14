@@ -6,7 +6,7 @@ General wrapper for instrumentation.
 from __future__ import absolute_import
 import time
 import traceback
-from epsagon.trace import factory as trace_factory
+from epsagon.trace import trace_factory
 
 
 def wrapper(factory, wrapped, instance, args, kwargs):

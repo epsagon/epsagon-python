@@ -27,12 +27,12 @@ class TornadoWrapper(object):
         :param kwargs: wrapt's kwargs
         """
         try:
-            epsagon.trace.factory.get_trace().prepare()
+            epsagon.trace.trace_factory.get_trace().prepare()
             ignored = ignore_request('', instance.request.path)
             if not ignored:
                 cls.RUNNER = TornadoRunner(time.time(), instance.request)
         except Exception as instrumentation_exception:  # pylint: disable=W0703
-            epsagon.trace.factory.get_trace().add_exception(
+            epsagon.trace.trace_factory.get_trace().add_exception(
                 instrumentation_exception,
                 traceback.format_exc()
             )
@@ -47,7 +47,7 @@ class TornadoWrapper(object):
         :param args: wrapt's args
         :param kwargs: wrapt's kwargs
         """
-        trace = epsagon.trace.factory.get_trace()
+        trace = epsagon.trace.trace_factory.get_trace()
         try:
             content = instance._headers.get(  # pylint: disable=protected-access
                 'Content-Type',
@@ -81,7 +81,7 @@ class TornadoWrapper(object):
                 _, exception, _ = args
                 cls.RUNNER.set_exception(exception, traceback.format_exc())
         except Exception as instrumentation_exception:  # pylint: disable=W0703
-            epsagon.trace.factory.get_trace().add_exception(
+            epsagon.trace.trace_factory.get_trace().add_exception(
                 instrumentation_exception,
                 traceback.format_exc()
             )
