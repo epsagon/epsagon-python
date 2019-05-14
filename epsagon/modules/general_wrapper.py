@@ -42,7 +42,7 @@ def wrapper(factory, wrapped, instance, args, kwargs):
                 exception
             )
         except Exception as instrumentation_exception:
-            trace_factory.get_trace().add_exception(
+            trace_factory.add_exception(
                 instrumentation_exception,
                 traceback.format_exc()
             )

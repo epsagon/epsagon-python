@@ -23,7 +23,7 @@ def gcp_wrapper(func):
         """
         Generic google function wrapper
         """
-        trace = epsagon.trace.trace_factory.get_trace()
+        trace = epsagon.trace.trace_factory.get_or_create_trace()
         trace.prepare()
 
         try:

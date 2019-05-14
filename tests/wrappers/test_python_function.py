@@ -1,4 +1,5 @@
 import json
+import threading
 import mock
 import pytest
 import epsagon.wrappers.python_function
@@ -12,11 +13,12 @@ trace_mock = mock.MagicMock()
 
 def setup_function(func):
     trace_mock.configure_mock(**get_tracer_patch_kwargs())
+    epsagon.trace_factory.traces[threading.currentThread().ident] = trace_mock
     epsagon.constants.COLD_START = True
 
 
 @mock.patch(
-    'epsagon.trace.trace_factory.get_trace',
+    'epsagon.trace.trace_factory.get_or_create_trace',
     side_effect=lambda: trace_mock
 )
 def test_function_wrapper_sanity(_):
@@ -44,7 +46,7 @@ def test_function_wrapper_sanity(_):
     'set_exception'
 )
 @mock.patch(
-    'epsagon.trace.trace_factory.get_trace',
+    'epsagon.trace.trace_factory.get_or_create_trace',
     side_effect=lambda: trace_mock)
 def test_function_wrapper_function_exception(_, set_exception_mock):
     @epsagon.wrappers.python_function.python_wrapper
@@ -71,7 +73,7 @@ def test_function_wrapper_function_exception(_, set_exception_mock):
 
 
 @mock.patch(
-    'epsagon.trace.trace_factory.get_trace',
+    'epsagon.trace.trace_factory.get_or_create_trace',
     side_effect=lambda: trace_mock
 )
 def test_python_wrapper_python_runner_factory_failed(_):
@@ -91,7 +93,7 @@ def test_python_wrapper_python_runner_factory_failed(_):
 
 
 @mock.patch(
-    'epsagon.trace.trace_factory.get_trace',
+    'epsagon.trace.trace_factory.get_or_create_trace',
     side_effect=lambda: trace_mock
 )
 def test_python_wrapper_invalid_return_value(_):

@@ -115,4 +115,4 @@ class GRPCEventFactory(object):
             response,
             exception
         )
-        trace_factory.get_trace().add_event(event)
+        trace_factory.add_event(event)

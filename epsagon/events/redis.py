@@ -179,7 +179,7 @@ class RedisMultiEventFactory(object):
             exception,
             RedisMultiEventFactory.LAST_STACK
         )
-        trace_factory.get_trace().add_event(event)
+        trace_factory.add_event(event)
 
 
 class RedisSingleEventFactory(object):
@@ -209,4 +209,4 @@ class RedisSingleEventFactory(object):
             response,
             exception
         )
-        trace_factory.get_trace().add_event(event)
+        trace_factory.add_event(event)

@@ -528,7 +528,7 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
         """
         self.resource['name'] = self.request_data['TableName']
         request_data = self.request_data.copy()
-        if trace_factory.get_trace().metadata_only:
+        if trace_factory.metadata_only:
             # Remove parameters containing non-metadata
             data_parameters = [
                 'KeyConditions',
@@ -549,7 +549,7 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
         """
         self.resource['name'] = self.request_data['TableName']
         request_data = self.request_data.copy()
-        if trace_factory.get_trace().metadata_only:
+        if trace_factory.metadata_only:
             # Remove parameters containing non-metadata
             data_parameters = [
                 'ScanFilter'
@@ -599,7 +599,7 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
         Process the query/scan response
         """
         response_data = self.response.copy()
-        if trace_factory.get_trace().metadata_only:
+        if trace_factory.metadata_only:
             # Remove parameters containing non-metadata
             response_data.pop('Items', None)
             response_data.pop('LastEvaluatedKey', None)
@@ -1225,4 +1225,4 @@ class BotocoreEventFactory(object):
                 response,
                 exception
             )
-            trace_factory.get_trace().add_event(event)
+            trace_factory.add_event(event)

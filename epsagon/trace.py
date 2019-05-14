@@ -96,10 +96,10 @@ class TraceFactory(object):
         self.disable_timeout_send = disable_timeout_send
         self.debug = debug
 
-    def get_trace(self):
+    def get_or_create_trace(self):
         """
-        Get the trace of the current thread.
-        :return:
+        Get or create trace related to the current thread.
+        :return: The trace.
         """
         thread_id = threading.currentThread().ident
         if thread_id not in self.traces:
@@ -112,8 +112,14 @@ class TraceFactory(object):
                 self.debug
             )
             self.traces[thread_id] = new_trace
-
         return self.traces[thread_id]
+
+    def get_trace(self):
+        """
+        Get the trace of the current thread.
+        :return:
+        """
+        return self.traces.get(threading.currentThread().ident)
 
     def remove_trace(self):
         """
@@ -121,13 +127,39 @@ class TraceFactory(object):
         """
         self.traces.pop(threading.currentThread().ident, None)
 
+    def add_event(self, event):
+        """
+        Add  event to the relevant trace.
+        :param event: The event to add.
+        :return: None
+        """
+        if threading.currentThread().ident in self.traces:
+            self.get_trace().add_event(event)
+
+    def add_exception(self, exception, stack_trace, additional_data=''):
+        """
+        add an exception to the relevant trace.
+        :param exception: the exception to add
+        :param stack_trace: the traceback at the moment of the event
+        :param additional_data: a json serializable object that contains
+            additional data regarding the exception
+        :return: None
+        """
+        if threading.currentThread().ident in self.traces:
+            self.get_trace().add_exception(
+                exception,
+                stack_trace,
+                additional_data
+            )
+
     def add_label(self, key, value):
         """
         Add label to the current thread's trace.
         :param key:
         :param value:
         """
-        self.get_trace().add_label(key, value)
+        if threading.currentThread().ident in self.traces:
+            self.get_trace().add_label(key, value)
 
     def set_error(self, exception, traceback_data=None):
         """
@@ -135,7 +167,24 @@ class TraceFactory(object):
         :param exception: The exception
         :param traceback_data: The traceback data.
         """
-        self.get_trace().set_error(exception, traceback_data)
+        if threading.currentThread().ident in self.traces:
+            self.get_trace().set_error(exception, traceback_data)
+
+    def send_traces(self):
+        """
+        Send the traces for the current thread.
+        :return: None
+        """
+        if threading.currentThread().ident in self.traces:
+            self.get_trace().send_traces()
+
+    def prepare(self):
+        """
+        Prepare the relevant trace.
+        :return: None
+        """
+        if threading.currentThread().ident in self.traces:
+            self.get_trace().prepare(event)
 
 
 class Trace(object):
@@ -215,7 +264,7 @@ class Trace(object):
                 return
 
             modified_timeout = (
-                           original_timeout - TIMEOUT_GRACE_TIME_MS) / 1000.0
+                                       original_timeout - TIMEOUT_GRACE_TIME_MS) / 1000.0
             signal.setitimer(signal.ITIMER_REAL, modified_timeout)
             original_handler = signal.signal(
                 signal.SIGALRM,

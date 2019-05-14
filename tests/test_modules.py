@@ -16,7 +16,7 @@ def raise_exception(*args):
 
 def _test(func):
     func(lambda: None, [], [], {})
-    trace = trace_factory.get_trace()
+    trace = trace_factory.get_or_create_trace()
     assert len(trace.exceptions) == 1
     assert trace.exceptions[0]['message'] == EXCEPTION_MESSAGE
     assert trace.exceptions[0]['type'] == str(EXCEPTION_TYPE)
@@ -27,7 +27,7 @@ def _test(func):
 def setup_function(function):
     """Setup function that resets the tracer's exceptions list.
     """
-    trace_factory.get_trace().exceptions = []
+    trace_factory.get_or_create_trace().exceptions = []
 
 
 @mock.patch(

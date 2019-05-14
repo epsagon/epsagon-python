@@ -18,7 +18,7 @@ def azure_wrapper(func):
         """
         general Azure function wrapper
         """
-        trace = trace_factory.get_trace()
+        trace = trace_factory.get_or_create_trace()
         trace.prepare()
 
         # Trigger event is not supported yet.

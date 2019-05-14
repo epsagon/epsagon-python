@@ -103,7 +103,7 @@ class DBAPIEvent(BaseEvent):
         # for select we always want to save the query
         if (
                 (operation == 'select') or
-                (not trace_factory.get_trace().metadata_only)
+                (not trace_factory.metadata_only)
         ):
             self.resource['metadata']['Query'] = query[:MAX_QUERY_SIZE]
 
@@ -162,4 +162,4 @@ class DBAPIEventFactory(object):
             start_time,
             exception,
         )
-        trace_factory.get_trace().add_event(event)
+        trace_factory.add_event(event)

@@ -60,4 +60,4 @@ class PynamoDBEventAdapter(object):
         event.origin = 'pynamodb'
         event.resource['metadata'].pop('Retry Attempts')
 
-        trace_factory.get_trace().add_event(event)
+        trace_factory.add_event(event)
