@@ -454,25 +454,27 @@ def test_send_traces_no_token(wrapped_post):
 
 @mock.patch('requests.Session.post')
 def test_send_big_trace(wrapped_post):
+    trace = trace_factory.get_trace()
     runner = RunnerEventMock()
-    tracer.set_runner(runner)
-    tracer.token = 'a'
+
+    trace.set_runner(runner)
+    trace.token = 'a'
 
     for _ in range(2):
-        tracer.add_event(BigEventMock())
+        trace.add_event(BigEventMock())
 
-    tracer.send_traces()
+    trace.send_traces()
 
-    assert len(tracer.to_dict()['events']) == 1
-    for event in tracer.to_dict()['events']:
+    assert len(trace.to_dict()['events']) == 1
+    for event in trace.to_dict()['events']:
         if event['origin'] == 'runner':
             assert event['resource']['metadata']['is_trimmed']
 
     wrapped_post.assert_called_with(
         '',
-        data=json.dumps(tracer.to_dict()),
+        data=json.dumps(trace.to_dict()),
         timeout=epsagon.constants.SEND_TIMEOUT,
-        headers={'Authorization': 'Bearer {}'.format(tracer.token)}
+        headers={'Authorization': 'Bearer {}'.format(trace.token)}
     )
 
 

@@ -510,11 +510,11 @@ def test_step_lambda_wrapper_invalid_return_value(_):
 
 
 @mock.patch(
-    'epsagon.trace.tracer',
-    **get_tracer_patch_kwargs()
+    'epsagon.trace.trace_factory.get_trace',
+    side_effect=lambda: trace_mock
 )
 def test_lambda_wrapper_with_alias_arn(
-    trace_mock,
+    _,
 ):
     @epsagon.wrappers.aws_lambda.lambda_wrapper
     def wrapped_lambda(event, context):
