@@ -1,6 +1,7 @@
 """
 Trace object holds events and metadata
 """
+# pylint: disable=C0302
 
 from __future__ import absolute_import, print_function
 import sys
