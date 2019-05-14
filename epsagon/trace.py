@@ -26,6 +26,7 @@ from .constants import (
 )
 
 MAX_EVENTS_PER_TYPE = 20
+MAX_TRACE_SIZE_BYTES = 64 * (2 ** 10)
 SESSION = requests.Session()
 
 
@@ -446,6 +447,16 @@ class Trace(object):
             'platform': self.platform,
         }
 
+    def _strip(self):
+        """
+        Strips a given trace from all operations
+        """
+        for event in self.events():
+            if event.origin == 'runner' or event.origin == 'trigger':
+                continue
+
+            del self.events_map[event.identifier()]
+
     # pylint: disable=W0703
     def send_traces(self):
         """
@@ -459,11 +470,24 @@ class Trace(object):
             trace_factory.remove_trace()
             if self.runner:
                 self.runner.terminate()
+
             trace = json.dumps(
                 self.to_dict(),
                 cls=TraceEncoder,
                 encoding='latin1'
             )
+
+            if len(trace) > MAX_TRACE_SIZE_BYTES:
+                # Trace too big.
+                self._strip()
+                self.runner.resource['metadata']['is_trimmed'] = True
+
+                trace = json.dumps(
+                    self.to_dict(),
+                    cls=TraceEncoder,
+                    encoding='latin1'
+                )
+
             SESSION.post(
                 self.collector_url,
                 data=trace,

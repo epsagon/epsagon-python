@@ -1,5 +1,6 @@
 import sys
 import mock
+import uuid
 import json
 import time
 from datetime import datetime
@@ -48,6 +49,20 @@ class EventMock(object):
         return result
 
 
+class BigEventMock(EventMock):
+    def __init__(self):
+        super(BigEventMock, self).__init__()
+
+        self.resource = {
+            'metadata': {'big': 'big' * 32 * (2 ** 10)}
+        }
+        self.origin = 'not_runner'
+        self.id = str(uuid.uuid4())
+
+    def identifier(self):
+        return self.id
+
+
 class RunnerEventMock(EventMock):
     def __init__(self):
         super(RunnerEventMock, self).__init__()
@@ -66,6 +81,12 @@ class RunnerEventMock(EventMock):
         self.exception['message'] = str(exception)
         self.exception['traceback'] = traceback_data
         self.exception['time'] = time.time()
+
+    def to_dict(self):
+        result = super(RunnerEventMock, self).to_dict()
+        result['origin'] = self.origin
+
+        return result
 
 
 class EventMockWithCounter(EventMock):
@@ -429,6 +450,30 @@ def test_send_traces_no_token(wrapped_post):
     trace = trace_factory.get_trace()
     trace.send_traces()
     wrapped_post.assert_not_called()
+
+
+@mock.patch('requests.Session.post')
+def test_send_big_trace(wrapped_post):
+    runner = RunnerEventMock()
+    tracer.set_runner(runner)
+    tracer.token = 'a'
+
+    for _ in range(2):
+        tracer.add_event(BigEventMock())
+
+    tracer.send_traces()
+
+    assert len(tracer.to_dict()['events']) == 1
+    for event in tracer.to_dict()['events']:
+        if event['origin'] == 'runner':
+            assert event['resource']['metadata']['is_trimmed']
+
+    wrapped_post.assert_called_with(
+        '',
+        data=json.dumps(tracer.to_dict()),
+        timeout=epsagon.constants.SEND_TIMEOUT,
+        headers={'Authorization': 'Bearer {}'.format(tracer.token)}
+    )
 
 
 @mock.patch('requests.Session.post', side_effect=requests.ReadTimeout)
