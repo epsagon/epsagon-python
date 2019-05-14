@@ -184,7 +184,7 @@ class TraceFactory(object):
         :return: None
         """
         if threading.currentThread().ident in self.traces:
-            self.get_trace().prepare(event)
+            self.get_trace().prepare()
 
 
 class Trace(object):
@@ -264,7 +264,7 @@ class Trace(object):
                 return
 
             modified_timeout = (
-                                       original_timeout - TIMEOUT_GRACE_TIME_MS) / 1000.0
+                           original_timeout - TIMEOUT_GRACE_TIME_MS) / 1000.0
             signal.setitimer(signal.ITIMER_REAL, modified_timeout)
             original_handler = signal.signal(
                 signal.SIGALRM,
