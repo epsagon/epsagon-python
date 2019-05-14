@@ -364,6 +364,7 @@ def test_timeout_handler_called(wrapped_post):
     trace.set_timeout_handler(context)
     trace.set_runner(runner)
     time.sleep(0.5)
+    trace.reset_timeout_handler()
 
     assert trace.trace_sent
     assert wrapped_post.called
@@ -382,6 +383,7 @@ def test_timeout_send_not_called_twice(wrapped_post):
     trace.set_timeout_handler(context)
     trace.set_runner(runner)
     time.sleep(0.5)
+    trace.reset_timeout_handler()
 
     assert trace.trace_sent
     assert wrapped_post.call_count == 1
@@ -403,6 +405,7 @@ def test_timeout_happyflow_handler_call(wrapped_post):
 
     trace.set_timeout_handler(context)
     time.sleep(0.5)
+    trace.reset_timeout_handler()
 
     assert trace.trace_sent
     assert wrapped_post.call_count == 1

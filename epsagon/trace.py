@@ -197,6 +197,7 @@ class Trace(object):
         Cancel an already set alarm.
         """
         signal.alarm(0)
+        signal.signal(signal.SIGALRM, signal.SIG_DFL)
 
     def set_timeout_handler(self, context):
         """
