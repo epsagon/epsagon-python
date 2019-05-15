@@ -108,7 +108,8 @@ class TraceFactory(object):
     def get_or_create_trace(self):
         """
         Get or create trace based on the use_single_trace flag.
-        if use_single_trace is set to False, then each thread will have a trace.
+        if use_single_trace is set to False, each thread will have
+        it's own trace.
         :return: The trace.
         """
 
@@ -140,7 +141,7 @@ class TraceFactory(object):
 
     def get_trace(self):
         """
-        Get the relevant trace (may be thread-base or a singleton trace)
+        Get the relevant trace (may be thread-based or a singleton trace)
         :return:
         """
         if self.use_single_trace:

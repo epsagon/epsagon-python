@@ -5,7 +5,6 @@ import epsagon
 from epsagon import trace_factory
 from epsagon.wrappers.flask import FlaskWrapper
 
-
 # Setting demo Flask app
 epsagon.init(token='test', app_name='FlaskApp')
 RETURN_VALUE = 'a'
@@ -29,6 +28,7 @@ def client():
     app_test.testing = True
     app = app_test.test_client()
     return app
+
 
 ###
 
