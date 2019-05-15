@@ -66,6 +66,8 @@ class TraceFactory(object):
         self.metadata_only = True
         self.disable_timeout_send = False
         self.debug = False
+        self.use_single_trace = True
+        self.singleton_trace = None
 
     def initialize(
             self,
@@ -96,11 +98,33 @@ class TraceFactory(object):
         self.disable_timeout_send = disable_timeout_send
         self.debug = debug
 
+    def switch_to_multiple_traces(self):
+        """
+        Set the use_single_trace flag to False.
+        :return: None
+        """
+        self.use_single_trace = False
+
     def get_or_create_trace(self):
         """
-        Get or create trace related to the current thread.
+        Get or create trace based on the use_single_trace flag.
+        if use_single_trace is set to False, then each thread will have a trace.
         :return: The trace.
         """
+
+        if self.use_single_trace:
+            if self.singleton_trace is None:
+                self.singleton_trace = Trace(
+                    self.app_name,
+                    self.token,
+                    self.collector_url,
+                    self.metadata_only,
+                    self.disable_timeout_send,
+                    self.debug
+                )
+            return self.singleton_trace
+
+        # If multiple threads are used, then create a new trace for each thread
         thread_id = threading.currentThread().ident
         if thread_id not in self.traces:
             new_trace = Trace(
@@ -116,16 +140,20 @@ class TraceFactory(object):
 
     def get_trace(self):
         """
-        Get the trace of the current thread.
+        Get the relevant trace (may be thread-base or a singleton trace)
         :return:
         """
+        if self.use_single_trace:
+            return self.singleton_trace
+
         return self.traces.get(threading.currentThread().ident)
 
     def remove_current_trace(self):
         """
-        Remove the thread's trace.
+        Remove the thread's trace only if use_single_trace is set to False.
         """
-        self.traces.pop(threading.currentThread().ident, None)
+        if not self.use_single_trace:
+            self.traces.pop(threading.currentThread().ident, None)
 
     def add_event(self, event):
         """

@@ -2,6 +2,7 @@ import pytest
 import mock
 from flask import Flask, request
 import epsagon
+from epsagon import trace_factory
 from epsagon.wrappers.flask import FlaskWrapper
 
 
@@ -72,3 +73,11 @@ def test_flask_wrapper_teardown_exception(exception_mock, _, client):
         client.get('/error')
 
         exception_mock.assert_called_once()
+
+
+@mock.patch(
+    'epsagon.trace.trace_factory.get_or_create_trace',
+    side_effect=lambda: trace_mock
+)
+def test_lambda_wrapper_single_thread(_):
+    assert trace_factory.use_single_trace
