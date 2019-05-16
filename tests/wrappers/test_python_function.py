@@ -3,6 +3,7 @@ import threading
 import mock
 import pytest
 import epsagon.wrappers.python_function
+from epsagon.trace import trace_factory
 from epsagon.wrappers.return_value import FAILED_TO_SERIALIZE_MESSAGE
 import epsagon.runners.python_function
 import epsagon.constants
@@ -13,7 +14,10 @@ trace_mock = mock.MagicMock()
 
 def setup_function(func):
     trace_mock.configure_mock(**get_tracer_patch_kwargs())
-    epsagon.trace_factory.traces[threading.currentThread().ident] = trace_mock
+    if trace_factory.use_single_trace:
+        trace_factory.singleton_trace = trace_mock
+    else:
+        trace_factory.traces[threading.currentThread().ident] = trace_mock
     epsagon.constants.COLD_START = True
 
 
@@ -21,7 +25,7 @@ def setup_function(func):
     'epsagon.trace.trace_factory.get_or_create_trace',
     side_effect=lambda: trace_mock
 )
-def test_function_wrapper_sanity(_):
+def test_function_wrapper_sanity(_, ):
     retval = 'success'
 
     @epsagon.wrappers.python_function.python_wrapper
@@ -116,3 +120,18 @@ def test_python_wrapper_invalid_return_value(_):
             event.resource['metadata']['return_value'] ==
             FAILED_TO_SERIALIZE_MESSAGE
     )
+
+
+@mock.patch(
+    'epsagon.trace.trace_factory.get_or_create_trace',
+    side_effect=lambda: trace_mock
+)
+def test_python_wrapper_single_thread(_):
+    retval = 'success'
+
+    @epsagon.wrappers.python_function.python_wrapper
+    def wrapped_function(event, context):
+        return retval
+
+    assert wrapped_function('a', 'b') == retval
+    assert trace_factory.use_single_trace

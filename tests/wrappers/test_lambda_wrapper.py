@@ -3,6 +3,7 @@ import mock
 import pytest
 import warnings
 import epsagon.wrappers.aws_lambda
+from epsagon import trace_factory
 from epsagon.wrappers.return_value import FAILED_TO_SERIALIZE_MESSAGE
 from epsagon.runners.aws_lambda import LambdaRunner, StepLambdaRunner
 import epsagon.constants
@@ -224,6 +225,7 @@ def test_lambda_wrapper_lambda_runner_factory_failed(
 
     trace_mock.prepare.assert_called()
     wrap_python_function_wrapper.assert_called()
+
 
 @mock.patch(
     'epsagon.trace.trace_factory.get_or_create_trace',
@@ -514,7 +516,7 @@ def test_step_lambda_wrapper_invalid_return_value(_):
     side_effect=lambda: trace_mock
 )
 def test_lambda_wrapper_with_alias_arn(
-    _,
+        _,
 ):
     @epsagon.wrappers.aws_lambda.lambda_wrapper
     def wrapped_lambda(event, context):
@@ -530,3 +532,18 @@ def test_lambda_wrapper_with_alias_arn(
     runner = _get_runner_event(trace_mock)
 
     assert runner.resource['metadata']['function_alias'] == 'test_alias'
+
+
+@mock.patch(
+    'epsagon.trace.trace_factory.get_or_create_trace',
+    side_effect=lambda: trace_mock
+)
+def test_lambda_wrapper_single_thread(_):
+    retval = 'success'
+
+    @epsagon.wrappers.aws_lambda.lambda_wrapper
+    def wrapped_lambda(event, context):
+        return retval
+
+    assert wrapped_lambda('a', CONTEXT_STUB) == retval
+    assert trace_factory.use_single_trace

@@ -27,6 +27,7 @@ class DjangoMiddleware(object):
         self.response = None
 
         self.ignored_request = False
+        epsagon.trace.trace_factory.switch_to_multiple_traces()
 
     def __call__(self, request):
         self.request = request
