@@ -487,6 +487,9 @@ class Trace(object):
         :param exception: Exception object to set.
         :param traceback_data: traceback string
         """
+        if not self.runner:
+            return
+
         if not traceback_data:
             traceback_data = ''.join(traceback.extract_stack().format())
         self.runner.set_exception(exception, traceback_data)
