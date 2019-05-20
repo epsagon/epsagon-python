@@ -91,7 +91,7 @@ class DjangoMiddleware(object):
             return
 
         # Ignoring non relevant content typoes.
-        if ignore_request(self.response.get('Content-Type').lower(), ''):
+        if ignore_request(self.response.get('Content-Type', '').lower(), ''):
             self.ignored_request = True
             return
 
