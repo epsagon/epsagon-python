@@ -55,7 +55,8 @@ def init(
     metadata_only=True,
     disable_timeout_send=False,
     use_ssl=True,
-    debug=False
+    debug=False,
+    send_trace_only_on_error=False
 ):
     """
     Initializes trace with user's data.
@@ -67,7 +68,9 @@ def init(
     :param disable_timeout_send: whether to disable traces send on timeout
      (when enabled, is t done using a signal handler).
     :param use_ssl: whether to use SSL or not.
-    :param debug: debug mode flag
+    :param debug: debug mode flag,
+    :param send_trace_only_on_error: Whether to send trace only when
+     there is an error or not.
     :return: None
     """
 
@@ -87,7 +90,11 @@ def init(
             ((os.getenv('EPSAGON_DISABLE_ON_TIMEOUT') or '').upper() == 'TRUE')
             | disable_timeout_send
         ),
-        debug=((os.getenv('EPSAGON_DEBUG') or '').upper() == 'TRUE') | debug
+        debug=((os.getenv('EPSAGON_DEBUG') or '').upper() == 'TRUE') | debug,
+        send_trace_only_on_error=(
+            ((os.getenv('EPSAGON_SEND_TRACE_ON_ERROR') or '').upper() == 'TRUE')
+            | send_trace_only_on_error
+        ),
     )
 
 

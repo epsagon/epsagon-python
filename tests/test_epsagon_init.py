@@ -69,6 +69,7 @@ def test_epsagon_disable_epsagon_and_disable_patch(wrapped_get, wrapped_patch):
     'EPSAGON_METADATA': 'FALSE',
     'EPSAGON_DISABLE_ON_TIMEOUT': 'FALSE',
     'EPSAGON_DEBUG': 'FALSE',
+    'EPSAGON_SEND_TRACE_ON_ERROR': 'FALSE'
 }[x]))
 def test_epsagon_wrapper_env_init(wrapped_get, wrapped_init):
     reload(epsagon)
@@ -83,6 +84,7 @@ def test_epsagon_wrapper_env_init(wrapped_get, wrapped_init):
         mock.call('EPSAGON_METADATA'),
         mock.call('EPSAGON_DISABLE_ON_TIMEOUT'),
         mock.call('EPSAGON_DEBUG'),
+        mock.call('EPSAGON_SEND_TRACE_ON_ERROR'),
     ])
     wrapped_init.assert_called()
 
@@ -99,6 +101,7 @@ def test_epsagon_wrapper_env_init(wrapped_get, wrapped_init):
     'EPSAGON_METADATA': 'TRUE',
     'EPSAGON_DISABLE_ON_TIMEOUT': 'FALSE',
     'EPSAGON_DEBUG': 'FALSE',
+    'EPSAGON_SEND_TRACE_ON_ERROR': 'FALSE',
 }[x]))
 def test_epsagon_wrapper_env_init(_wrapped_get, wrapped_init):
     reload(epsagon)
@@ -108,5 +111,6 @@ def test_epsagon_wrapper_env_init(_wrapped_get, wrapped_init):
         collector_url='epsagon',
         metadata_only=True,
         disable_timeout_send=False,
-        debug=False
+        debug=False,
+        send_trace_only_on_error=False,
     )
