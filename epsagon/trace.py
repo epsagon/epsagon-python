@@ -66,7 +66,7 @@ class TraceFactory(object):
         self.metadata_only = True
         self.disable_timeout_send = False
         self.debug = False
-        self.send_trace_only_on_error=False
+        self.send_trace_only_on_error = False
         self.use_single_trace = True
         self.singleton_trace = None
 
@@ -254,7 +254,7 @@ class Trace(object):
         self.metadata_only = metadata_only
         self.disable_timeout_send = disable_timeout_send
         self.debug = debug
-        self.send_trace_only_on_error=send_trace_only_on_error
+        self.send_trace_only_on_error = send_trace_only_on_error
         self.platform = 'Python {}.{}'.format(
             sys.version_info.major,
             sys.version_info.minor
@@ -562,7 +562,7 @@ class Trace(object):
                 self.runner.error_code == ErrorCode.OK
         ):
             return
-
+        print(self.runner)
         trace = ''
         try:
             if self.runner:

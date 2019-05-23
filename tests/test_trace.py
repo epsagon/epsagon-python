@@ -657,18 +657,31 @@ def test_event_with_datetime(wrapped_post):
 
 
 @mock.patch('requests.Session.post')
-def test_send_on_error_only_off(wrapped_post):
+def test_send_on_error_only_off_with_error(wrapped_post):
     trace = trace_factory.get_or_create_trace()
     trace.token = 'a'
+    trace.runner = mock.MagicMock()
+    trace.runner.error_code = ErrorCode.ERROR
     event = EventMock()
     event.resource['metadata'] = datetime.fromtimestamp(1000)
     trace.add_event(event)
     trace.send_traces()
     wrapped_post.assert_called_once()
 
+@mock.patch('requests.Session.post')
+def test_send_on_error_only_off_no_error(wrapped_post):
+    trace = trace_factory.get_or_create_trace()
+    trace.token = 'a'
+    trace.runner = mock.MagicMock()
+    trace.runner.error_code = ErrorCode.OK
+    event = EventMock()
+    event.resource['metadata'] = datetime.fromtimestamp(1000)
+    trace.add_event(event)
+    trace.send_traces()
+    wrapped_post.assert_called_once()
 
 @mock.patch('requests.Session.post')
-def test_send_on_error_only_on_no_error(wrapped_post):
+def test_send_on_error_only_no_error(wrapped_post):
     trace = trace_factory.get_or_create_trace()
     trace.send_trace_only_on_error = True
     trace.runner = mock.MagicMock()
@@ -682,7 +695,7 @@ def test_send_on_error_only_on_no_error(wrapped_post):
 
 
 @mock.patch('requests.Session.post')
-def test_send_on_error_only_on_with_error(wrapped_post):
+def test_send_on_error_only_with_error(wrapped_post):
     trace = trace_factory.get_or_create_trace()
     trace.send_trace_only_on_error = True
     trace.runner = mock.MagicMock()
