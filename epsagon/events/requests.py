@@ -23,7 +23,7 @@ class RequestsEvent(BaseEvent):
     """
 
     ORIGIN = 'requests'
-    RESOURCE_TYPE = 'requests'
+    RESOURCE_TYPE = 'http'
 
     #pylint: disable=W0613
     def __init__(self, wrapped, instance, args, kwargs, start_time, response,
