@@ -5,6 +5,22 @@
 
 This package provides an instrumentation to Python code running on functions for collection of distributed tracing and performance monitoring.
 
+- [Installation](https://github.com/epsagon/epsagon-python#installation)
+- Usage
+  - [AWS Lambda](https://github.com/epsagon/epsagon-python#aws-lambda)
+  - [Django Application](https://github.com/epsagon/epsagon-python#django-application)
+  - [Flask Application](https://github.com/epsagon/epsagon-python#flask-application)
+  - [Tornado Application](https://github.com/epsagon/epsagon-python#tornado-application)
+  - [Generic Python](https://github.com/epsagon/epsagon-python#generic-python)
+- Custom Data
+  - [Custom Labels](https://github.com/epsagon/epsagon-python#custom-labels)
+  - [Custom Errors](https://github.com/epsagon/epsagon-python#custom-errors)
+- Frameworks Integration
+  - [Chalice](https://github.com/epsagon/epsagon-python#chalice)
+  - [Serverless](https://github.com/epsagon/epsagon-python#serverless)
+  - [Zappa](https://github.com/epsagon/epsagon-python#zappa)
+- [Copyright](https://github.com/epsagon/epsagon-python#copyright)
+
 
 ## Installation
 
@@ -16,7 +32,9 @@ $ pip install epsagon
 
 More details about lambda deployments are available in the [AWS documentation](https://docs.aws.amazon.com/lambda/latest/dg/lambda-python-how-to-create-deployment-package.html).
 
-## Basic Usage
+## Usage
+
+### AWS Lambda
 
 Simply use our decorator to report metrics:
 
@@ -33,7 +51,7 @@ def handler(event, context):
   pass
 ```
 
-## Django Application
+### Django Application
 
 Add the following code to the `settings.py` file:
 ```python
@@ -53,7 +71,83 @@ MIDDLEWARE = [
 ]
 ```
 
-## Custom labels
+### Flask Application
+
+Use the example snippet:
+```python
+from flask import Flask
+import epsagon
+
+epsagon.init(
+    token='my-secret-token',
+    app_name='my-app-name',
+    metadata_only=False
+)
+
+app = Flask(__name__)
+epsagon.flask_wrapper(app)
+
+@app.route('/')
+def hello():
+    return "Hello World!"
+
+app.run()
+```
+
+### Tornado Application
+
+Use the example snippet:
+```python
+import tornado.ioloop
+import tornado.web
+import epsagon
+
+epsagon.init(
+    token='my-secret-token',
+    app_name='my-app-name',
+    metadata_only=False
+)
+
+
+class MainHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.write('Hello, world')
+
+
+def make_app():
+    return tornado.web.Application([
+        (r'/', MainHandler),
+    ])
+
+
+if __name__ == '__main__':
+    app = make_app()
+    app.listen(8888)
+    tornado.ioloop.IOLoop.current().start()
+```
+
+### Generic Python
+
+Use the example snippet:
+```python
+import epsagon
+epsagon.init(
+    token='my-secret-token',
+    app_name='my-app-name',
+    metadata_only=False
+)
+
+
+@epsagon.python_wrapper
+def main():
+    return 'It worked!'
+  
+main()
+```
+
+## Custom Data
+
+### Custom Labels
 
 You can add custom labels to your traces. Filters can later be used for filtering
 traces that contains specific labels:
@@ -65,7 +159,7 @@ def handler(event, context):
   pass
 ```
 
-## Set Error
+### Custom Errors
 
 Set a custom error, maybe without even failing the function:
 ```python
@@ -74,6 +168,66 @@ def handler(event, context):
   if 'my_param' not in event:
       epsagon.error(ValueError('event missing my_param'))
   pass
+```
+
+## Frameworks Integration
+
+### Serverless
+
+Using Epsagon with [Serverless](https://github.com/serverless/serverless) is simple, by using the [serverless-plugin-epsagon](https://github.com/epsagon/serverless-plugin-epsagon).
+
+### Chalice
+
+Using Epsagon with [Chalice](https://github.com/aws/chalice) is simple, follow this example:
+
+```python
+from chalice import Chalice
+import epsagon
+epsagon.init(
+    token='my-secret-token',
+    app_name='my-app-name',
+    metadata_only=False
+)
+app = Chalice(app_name="hello-world")
+
+
+@app.route("/")
+def index():
+    return {"hello": "world"}
+
+app = epsagon.lambda_wrapper(app)
+```
+
+### Zappa
+
+Using Epsagon with [Zappa](https://github.com/Miserlou/Zappa) is simple, follow this example:
+
+```python
+from flask import Flask
+from zappa.handler import lambda_handler
+import epsagon
+
+epsagon.init(
+    token='my-secret-token',
+    app_name='my-app-name',
+    metadata_only=False
+)
+app = Flask(__name__)
+
+
+@app.route('/')
+def hello_world():
+    return 'Hello, World!'
+
+
+epsagon_handler = epsagon.lambda_wrapper(lambda_handler)
+```
+
+And in your `zappa_settings.json` file include the following:
+```json
+{
+  "lambda_handler": "module.path_to.epsagon_handler"
+}
 ```
 
 ## Copyright
