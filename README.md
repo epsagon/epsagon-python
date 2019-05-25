@@ -16,8 +16,8 @@ This package provides an instrumentation to Python code running on functions for
   - [Custom Labels](https://github.com/epsagon/epsagon-python#custom-labels)
   - [Custom Errors](https://github.com/epsagon/epsagon-python#custom-errors)
 - Frameworks Integration
-  - [Chalice](https://github.com/epsagon/epsagon-python#chalice)
   - [Serverless](https://github.com/epsagon/epsagon-python#serverless)
+  - [Chalice](https://github.com/epsagon/epsagon-python#chalice)
   - [Zappa](https://github.com/epsagon/epsagon-python#zappa)
 - [Copyright](https://github.com/epsagon/epsagon-python#copyright)
 
