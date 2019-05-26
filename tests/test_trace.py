@@ -520,7 +520,8 @@ def test_init_sanity(wrapped_init):
         collector_url='collector',
         metadata_only=False,
         disable_timeout_send=False,
-        debug=False
+        debug=False,
+        send_trace_only_on_error=False
     )
 
 
@@ -539,7 +540,8 @@ def test_init_empty_app_name(wrapped_init):
         collector_url='collector',
         metadata_only=False,
         disable_timeout_send=False,
-        debug=False
+        debug=False,
+        send_trace_only_on_error=False
     )
 
 
@@ -552,7 +554,8 @@ def test_init_empty_collector_url(wrapped_init):
         collector_url=get_tc_url(True),
         metadata_only=False,
         disable_timeout_send=False,
-        debug=False
+        debug=False,
+        send_trace_only_on_error=False
     )
 
 
@@ -569,7 +572,8 @@ def test_init_no_ssl_no_url(wrapped_init):
             protocol="http://"
         ),
         disable_timeout_send=False,
-        debug=False
+        debug=False,
+        send_trace_only_on_error=False
     )
 
 
@@ -590,7 +594,8 @@ def test_init_ssl_no_url(wrapped_init):
             protocol="https://"
         ),
         disable_timeout_send=False,
-        debug=False
+        debug=False,
+        send_trace_only_on_error=False
     )
 
 
@@ -609,7 +614,8 @@ def test_init_ssl_with_url(wrapped_init):
         metadata_only=False,
         collector_url="http://abc.com",
         disable_timeout_send=False,
-        debug=False
+        debug=False,
+        send_trace_only_on_error=False
     )
 
 
@@ -628,7 +634,8 @@ def test_init_no_ssl_with_url(wrapped_init):
         metadata_only=False,
         collector_url="http://abc.com",
         disable_timeout_send=False,
-        debug=False
+        debug=False,
+        send_trace_only_on_error=False
     )
 
 
@@ -647,3 +654,55 @@ def test_event_with_datetime(wrapped_post):
         timeout=epsagon.constants.SEND_TIMEOUT,
         headers={'Authorization': 'Bearer {}'.format(trace.token)}
     )
+
+
+@mock.patch('requests.Session.post')
+def test_send_on_error_only_off_with_error(wrapped_post):
+    trace = trace_factory.get_or_create_trace()
+    trace.token = 'a'
+    trace.runner = mock.MagicMock()
+    trace.runner.error_code = ErrorCode.ERROR
+    event = EventMock()
+    event.resource['metadata'] = datetime.fromtimestamp(1000)
+    trace.add_event(event)
+    trace.send_traces()
+    wrapped_post.assert_called_once()
+
+@mock.patch('requests.Session.post')
+def test_send_on_error_only_off_no_error(wrapped_post):
+    trace = trace_factory.get_or_create_trace()
+    trace.token = 'a'
+    trace.runner = mock.MagicMock()
+    trace.runner.error_code = ErrorCode.OK
+    event = EventMock()
+    event.resource['metadata'] = datetime.fromtimestamp(1000)
+    trace.add_event(event)
+    trace.send_traces()
+    wrapped_post.assert_called_once()
+
+@mock.patch('requests.Session.post')
+def test_send_on_error_only_no_error(wrapped_post):
+    trace = trace_factory.get_or_create_trace()
+    trace.send_trace_only_on_error = True
+    trace.runner = mock.MagicMock()
+    trace.runner.error_code = ErrorCode.OK
+    trace.token = 'a'
+    event = EventMock()
+    event.resource['metadata'] = datetime.fromtimestamp(1000)
+    trace.add_event(event)
+    trace.send_traces()
+    wrapped_post.assert_not_called()
+
+
+@mock.patch('requests.Session.post')
+def test_send_on_error_only_with_error(wrapped_post):
+    trace = trace_factory.get_or_create_trace()
+    trace.send_trace_only_on_error = True
+    trace.runner = mock.MagicMock()
+    trace.runner.error_code = ErrorCode.ERROR
+    trace.token = 'a'
+    event = EventMock()
+    event.resource['metadata'] = datetime.fromtimestamp(1000)
+    trace.add_event(event)
+    trace.send_traces()
+    wrapped_post.assert_called_once()
