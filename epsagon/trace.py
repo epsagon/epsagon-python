@@ -562,7 +562,6 @@ class Trace(object):
                 self.runner.error_code == ErrorCode.OK
         ):
             return
-        print(self.runner)
         trace = ''
         try:
             if self.runner:
