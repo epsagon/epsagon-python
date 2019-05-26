@@ -172,6 +172,15 @@ class TraceFactory(object):
         if self.get_trace():
             self.get_trace().add_event(event)
 
+    def set_runner(self, event):
+        """
+        Add a runner event to the relevant trace.
+        :param event: The event to add.
+        :return: None
+        """
+        if self.get_trace():
+            self.get_trace().set_runner(event)
+
     def add_exception(self, exception, stack_trace, additional_data=''):
         """
         add an exception to the relevant trace.

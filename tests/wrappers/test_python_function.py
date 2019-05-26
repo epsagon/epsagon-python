@@ -34,8 +34,8 @@ def test_function_wrapper_sanity(_, ):
 
     assert wrapped_function('a', 'b') == 'success'
     trace_mock.prepare.assert_called_once()
-    trace_mock.add_event.assert_called_once()
-    (event,), _ = trace_mock.add_event.call_args
+    trace_mock.set_runner.assert_called_once()
+    (event,), _ = trace_mock.set_runner.call_args
     assert isinstance(event, epsagon.runners.python_function.PythonRunner)
 
     trace_mock.send_traces.assert_called_once()
@@ -64,9 +64,9 @@ def test_function_wrapper_function_exception(_, set_exception_mock):
     set_exception_mock.assert_called_once()
 
     trace_mock.prepare.assert_called_once()
-    trace_mock.add_event.assert_called_once()
+    trace_mock.set_runner.assert_called_once()
 
-    (event,), _ = trace_mock.add_event.call_args
+    (event,), _ = trace_mock.set_runner.call_args
     assert isinstance(event, epsagon.runners.python_function.PythonRunner)
 
     trace_mock.send_traces.assert_called_once()
@@ -93,7 +93,7 @@ def test_python_wrapper_python_runner_factory_failed(_):
 
     trace_mock.prepare.assert_called_once()
     trace_mock.send_traces.assert_not_called()
-    trace_mock.add_event.assert_not_called()
+    trace_mock.set_runner.assert_not_called()
 
 
 @mock.patch(
@@ -108,8 +108,8 @@ def test_python_wrapper_invalid_return_value(_):
     assert wrapped_function('a', 'b') == pytest
 
     trace_mock.prepare.assert_called_once()
-    trace_mock.add_event.assert_called_once()
-    (event,), _ = trace_mock.add_event.call_args
+    trace_mock.set_runner.assert_called_once()
+    (event,), _ = trace_mock.set_runner.call_args
     assert isinstance(event, epsagon.runners.python_function.PythonRunner)
 
     trace_mock.send_traces.assert_called_once()
