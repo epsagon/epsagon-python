@@ -1,9 +1,13 @@
 """
 requests patcher module.
+
+This is deprecated now that we have urllib3 support as requests is using urllib3
+under the hood.
+This is left here both as future reference and because it is used in the
+botocore module that has a similar interface.
 """
 
 from __future__ import absolute_import
-import wrapt
 from epsagon.modules.general_wrapper import wrapper
 from ..events.requests import RequestsEventFactory
 
@@ -27,8 +31,8 @@ def patch():
     :return: None
     """
 
-    wrapt.wrap_function_wrapper(
-        'requests',
-        'Session.send',
-        _wrapper
-    )
+    # wrapt.wrap_function_wrapper(
+    #     'requests',
+    #     'Session.send',
+    #     _wrapper
+    # )

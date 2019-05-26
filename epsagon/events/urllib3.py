@@ -1,5 +1,5 @@
 """
-requests events module.
+urllib3 events module.
 """
 
 from __future__ import absolute_import
@@ -17,15 +17,15 @@ from ..wrappers.http_filters import is_blacklisted_url
 from ..utils import update_api_gateway_headers
 
 
-class RequestsEvent(BaseEvent):
+class Urllib3Event(BaseEvent):
     """
     Represents base requests event.
     """
 
-    ORIGIN = 'requests'
+    ORIGIN = 'urllib3'
     RESOURCE_TYPE = 'http'
 
-    #pylint: disable=W0613
+    # pylint: disable=W0613
     def __init__(self, wrapped, instance, args, kwargs, start_time, response,
                  exception):
         """
@@ -38,26 +38,30 @@ class RequestsEvent(BaseEvent):
         :param response: response data
         :param exception: Exception (if happened)
         """
-        super(RequestsEvent, self).__init__(start_time)
 
-        self.event_id = 'requests-{}'.format(str(uuid4()))
+        super(Urllib3Event, self).__init__(start_time)
 
-        prepared_request = args[0]
-        url_obj = urlparse(prepared_request.url)
-        self.resource['name'] = url_obj.hostname
-        self.resource['operation'] = prepared_request.method
-        self.resource['metadata']['url'] = prepared_request.url
+        self.event_id = 'urllib3-{}'.format(str(uuid4()))
+
+        method, url = args
+        body = kwargs.get('body')
+        headers = kwargs.get('headers')
+
+        parsed_url = urlparse(url)
+        self.resource['name'] = parsed_url.netloc
+        self.resource['operation'] = method
+        self.resource['metadata']['url'] = url
 
         add_data_if_needed(
             self.resource['metadata'],
             'request_headers',
-            dict(prepared_request.headers)
+            dict(headers)
         )
 
         add_data_if_needed(
             self.resource['metadata'],
             'request_body',
-            prepared_request.body
+            body
         )
 
         if response is not None:
@@ -73,16 +77,17 @@ class RequestsEvent(BaseEvent):
         :return: None
         """
 
-        self.resource['metadata']['status_code'] = response.status_code
+        self.resource['metadata']['status_code'] = response.status
+        headers = dict(response.getheaders())
         self.resource = update_api_gateway_headers(
             self.resource,
-            response.headers
+            headers
         )
 
         add_data_if_needed(
             self.resource['metadata'],
             'response_headers',
-            dict(response.headers)
+            headers
         )
 
         # Extract only json responses
@@ -91,19 +96,19 @@ class RequestsEvent(BaseEvent):
             add_data_if_needed(
                 self.resource['metadata'],
                 'response_body',
-                response.json()
+                str(response.data)
             )
         except ValueError:
             pass
 
         # Detect errors based on status code
-        if response.status_code >= 300:
+        if response.status >= 300:
             self.set_error()
 
 
-class RequestsEventFactory(object):
+class Urllib3EventFactory(object):
     """
-    Factory class, generates requests event.
+    Factory class, generates urllib3 event.
     """
 
     @staticmethod
@@ -112,13 +117,20 @@ class RequestsEventFactory(object):
         """
         Create an event according to the given api_name.
         """
-        prepared_request = args[0]
+        # pylint: disable=possibly-unused-variable
+        path = args[1] if len(args) > 1 else kwargs.get('url', '')
+        port_part = ':' + str(instance.port) if instance.port else ''
+        host_url = '{scheme}://{host}'.format_map(
+            {'scheme': instance.scheme, 'host': instance.host})
+        url = '{host_url}{port_part}{path}'.format_map(locals())
+        args = (args[0] if args else kwargs.get('method', 'UNKNOWN METHOD'),
+                url)
 
         # Detect if URL is blacklisted, and ignore.
-        if is_blacklisted_url(prepared_request.url):
+        if is_blacklisted_url(host_url):
             return
 
-        event = RequestsEvent(
+        event = Urllib3Event(
             wrapped,
             instance,
             args,

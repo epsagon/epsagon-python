@@ -598,7 +598,6 @@ class Trace(object):
                 print('Trace sent (size: {})'.format(
                     len(trace)
                 ))
-                pprint.pprint(self.to_dict())
         except requests.exceptions.ReadTimeout:
             print('Failed to send trace (size: {}) (timeout)'.format(
                 len(trace)
@@ -608,9 +607,9 @@ class Trace(object):
                 len(trace),
                 exception
             ))
+        finally:
             if self.debug:
                 pprint.pprint(self.to_dict())
-        finally:
             trace_factory.remove_current_trace()
 
 
