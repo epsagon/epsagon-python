@@ -4,9 +4,9 @@ urllib3 events module.
 
 from __future__ import absolute_import
 try:
-    from urllib.parse import urlparse
+    from urllib.parse import urlparse, urlunparse
 except ImportError:
-    from urlparse import urlparse
+    from urlparse import urlparse, urlunparse
 import traceback
 from uuid import uuid4
 
@@ -48,9 +48,20 @@ class Urllib3Event(BaseEvent):
         headers = kwargs.get('headers')
 
         parsed_url = urlparse(url)
-        self.resource['name'] = parsed_url.netloc.split(':')[0]
+        # Omitting ports (`:80'/':443') for the host URL.
+        host_url = parsed_url.netloc.split(':')[0]
+        full_url = urlunparse((
+            parsed_url.scheme,
+            host_url,
+            parsed_url.path,
+            parsed_url.params,
+            parsed_url.query,
+            parsed_url.fragment,
+        ))
+
+        self.resource['name'] = host_url
         self.resource['operation'] = method
-        self.resource['metadata']['url'] = url
+        self.resource['metadata']['url'] = full_url
 
         add_data_if_needed(
             self.resource['metadata'],
