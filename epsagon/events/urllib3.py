@@ -48,9 +48,10 @@ class Urllib3Event(BaseEvent):
         headers = kwargs.get('headers')
 
         parsed_url = urlparse(url)
-        self.resource['name'] = parsed_url.netloc.split(':')[0]
+        host_url = parsed_url.netloc.split(':')[0]
+        self.resource['name'] = host_url
         self.resource['operation'] = method
-        self.resource['metadata']['url'] = url
+        self.resource['metadata']['url'] = host_url
 
         add_data_if_needed(
             self.resource['metadata'],
