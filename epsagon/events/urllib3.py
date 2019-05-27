@@ -49,9 +49,17 @@ class Urllib3Event(BaseEvent):
 
         parsed_url = urlparse(url)
         host_url = parsed_url.netloc.split(':')[0]
+        full_url = '{}://{}{}'.format(
+            parsed_url.scheme,
+            host_url,
+            parsed_url.path
+        )
+        if parsed_url.query:
+            full_url += '?{}'.format(parsed_url.query)
+
         self.resource['name'] = host_url
         self.resource['operation'] = method
-        self.resource['metadata']['url'] = host_url
+        self.resource['metadata']['url'] = full_url
 
         add_data_if_needed(
             self.resource['metadata'],
