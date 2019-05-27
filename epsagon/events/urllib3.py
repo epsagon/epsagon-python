@@ -48,6 +48,7 @@ class Urllib3Event(BaseEvent):
         headers = kwargs.get('headers')
 
         parsed_url = urlparse(url)
+        # Omitting ports (`:80'/':443') for the host URL.
         host_url = parsed_url.netloc.split(':')[0]
         full_url = urlunparse((
             parsed_url.scheme,
