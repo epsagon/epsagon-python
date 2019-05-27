@@ -96,7 +96,7 @@ class Urllib3Event(BaseEvent):
             add_data_if_needed(
                 self.resource['metadata'],
                 'response_body',
-                str(response.data)
+                str(getattr(response, '_fp').fp.peek())
             )
         except ValueError:
             pass
