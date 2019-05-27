@@ -32,11 +32,6 @@ def patch():
             'HTTPConnectionPool.urlopen',
             _wrapper
         )
-        wrapt.wrap_function_wrapper(
-            'urllib3',
-            'HTTPSConnectionPool.urlopen',
-            _wrapper
-        )
     except Exception:  # pylint: disable=broad-except
         # Can happen in different Python versions.
         pass
