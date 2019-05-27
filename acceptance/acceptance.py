@@ -1,5 +1,6 @@
 import os
 import json
+import urllib3
 import pytest
 import boto3
 
@@ -60,4 +61,22 @@ class TestLambdaWrapper:
         assert body['input'] == input
 
 
-
+class TestHTTPWrappers:
+    """ test http wrappers """
+    @staticmethod
+    def test_sanity_http():
+        """ sanity test """
+        # pylint: disable=possibly-unused-variable
+        domain = os.getenv('DOMAIN_CODE')
+        build_number = os.getenv('TRAVIS_BUILD_NUMBER')
+        runtime = os.getenv('runtimeName')
+        http_test_url = ('https://{domain}'
+                         '.execute-api.us-east-1.amazonaws.com'
+                         '/{build_number}-{runtime}'
+                         '/http_test'
+                         ).format_map(locals())
+        response = urllib3.PoolManager().request(
+            'GET', http_test_url)
+        assert response.status == 200
+        content = json.loads(response.data)
+        assert json.loads(content['body']) == {'hello': 'world'}

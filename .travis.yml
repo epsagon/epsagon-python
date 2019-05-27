@@ -5,6 +5,7 @@ python:
 install:
   - pip install -r requirements-dev.txt
   - pip install pylint
+  - pip install awscli
 
 script:
   - "pylint --msg-template='{path}:{line}: [{msg_id}({symbol}) {obj}] {msg}' epsagon/"

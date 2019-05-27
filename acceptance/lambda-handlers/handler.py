@@ -3,6 +3,7 @@ Epsagon Acceptance Tests
 """
 import platform
 import json
+import urllib3
 import epsagon
 
 
@@ -61,5 +62,26 @@ def labels(event, _):
     epsagon.label(12, 12)
     epsagon.label(12, None)
     epsagon.label('12', None)
+
+    return response
+
+
+@epsagon.lambda_wrapper
+def read_data(event, _):
+    """
+    Read data from another service
+    """
+    url = (f'https://{event["headers"]["Host"]}/'
+           f'{event["requestContext"]["stage"]}/sanity')
+    r = urllib3.PoolManager().request(
+        'POST', url,
+        body=json.dumps({'hello': 'world'}).encode('utf-8'),
+        headers={'Content-Type': 'application/json'},
+    )
+    data = r.data
+    response = {
+        'statusCode': 200,
+        'body': json.dumps(json.loads(data)['input']),
+    }
 
     return response

@@ -22,8 +22,20 @@ custom:
 functions:
   sanity:
     handler: handler.sanity
+    events:
+      - http:
+          path: sanity
+          method: post
+
   labels:
     handler: handler.labels
+
+  http-test:
+    handler: handler.read_data
+    events:
+      - http:
+          path: http_test
+          method: get
 
 plugins:
   - serverless-python-requirements
