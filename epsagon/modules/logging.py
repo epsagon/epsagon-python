@@ -17,8 +17,7 @@ def _wrapper(wrapped, _instance, args, kwargs):
     :return: None
     """
     trace_factory.set_error(*args)
-    response = wrapped(*args, **kwargs)
-    return response
+    return wrapped(*args, **kwargs)
 
 
 def patch():
@@ -26,13 +25,5 @@ def patch():
     Patch module.
     :return: None
     """
-    wrapt.wrap_function_wrapper(
-        'logging',
-        'exception',
-        _wrapper
-    )
-    wrapt.wrap_function_wrapper(
-        'logging',
-        'Logger.exception',
-        _wrapper
-    )
+    wrapt.wrap_function_wrapper('logging', 'exception', _wrapper)
+    wrapt.wrap_function_wrapper('logging', 'Logger.exception', _wrapper)
