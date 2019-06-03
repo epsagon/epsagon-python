@@ -31,3 +31,8 @@ def patch():
         'exception',
         _wrapper
     )
+    wrapt.wrap_function_wrapper(
+        'logging',
+        'Logger.exception',
+        _wrapper
+    )
