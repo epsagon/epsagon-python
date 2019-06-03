@@ -29,6 +29,7 @@ def wrap_python_function(func, args, kwargs):
             args,
             kwargs
         )
+        epsagon.trace.trace_factory.set_runner(runner)
     # pylint: disable=W0703
     except Exception:
         # If we failed, just call the user's function. Nothing more to do.
@@ -56,7 +57,6 @@ def wrap_python_function(func, args, kwargs):
                 traceback.format_exc(),
             )
         try:
-            epsagon.trace.trace_factory.set_runner(runner)
             epsagon.trace.trace_factory.send_traces()
         # pylint: disable=W0703
         except Exception:
