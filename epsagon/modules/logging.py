@@ -4,7 +4,6 @@ logging patcher module.
 
 from __future__ import absolute_import
 import wrapt
-from epsagon.modules.general_wrapper import wrapper
 from ..trace import trace_factory
 
 
