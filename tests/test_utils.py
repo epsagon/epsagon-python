@@ -45,10 +45,10 @@ def test_trace_blacklist():
     Validate trace URL Blacklist mechanism.
     :return: None
     """
-    trace_factory.get_trace().url_patterns_to_ignore = ['test.net']
+    trace_factory.get_trace().url_patterns_to_ignore = set(('test.net', 'test2.net'))
     assert epsagon.wrappers.http_filters.is_payload_collection_blacklisted('http://www.test.net')
     assert epsagon.wrappers.http_filters.is_payload_collection_blacklisted('http://www.bla.test.net')
     assert not epsagon.wrappers.http_filters.is_payload_collection_blacklisted('http://www.test.new.net')
-    trace_factory.get_trace().url_patterns_to_ignore = None
+    trace_factory.get_trace().url_patterns_to_ignore = set()
     assert not epsagon.wrappers.http_filters.is_payload_collection_blacklisted('http://www.test.net')
     assert not epsagon.wrappers.http_filters.is_payload_collection_blacklisted('http://www.bla.test.net')

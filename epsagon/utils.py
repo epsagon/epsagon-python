@@ -76,7 +76,6 @@ def init(
       collection.
     :return: None
     """
-
     if not collector_url:
         collector_url = get_tc_url(
             ((os.getenv('EPSAGON_SSL') or '').upper() == 'TRUE') | use_ssl

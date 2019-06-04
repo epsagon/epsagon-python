@@ -106,7 +106,9 @@ class TraceFactory(object):
         self.disable_timeout_send = disable_timeout_send
         self.debug = debug
         self.send_trace_only_on_error = send_trace_only_on_error
-        self.url_patterns_to_ignore = url_patterns_to_ignore
+        self.url_patterns_to_ignore = (
+            set(url_patterns_to_ignore) if url_patterns_to_ignore else set()
+        )
 
     def switch_to_multiple_traces(self):
         """

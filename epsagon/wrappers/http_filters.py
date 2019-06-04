@@ -62,11 +62,7 @@ def is_payload_collection_blacklisted(url):
     """
     url = urllib.parse.urlparse(url).netloc
     trace_blacklist_urls = trace_factory.get_trace().url_patterns_to_ignore
-    if trace_blacklist_urls:
-        for blacklist_url in trace_blacklist_urls:
-            if blacklist_url in url:
-                return True
-    return False
+    return any(blacklist_url in url for blacklist_url in trace_blacklist_urls)
 
 
 def ignore_request(content, path):
