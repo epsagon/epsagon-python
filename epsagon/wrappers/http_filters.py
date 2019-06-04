@@ -3,6 +3,7 @@ Utils for web frameworks request filters.
 """
 
 from six.moves import urllib
+from epsagon.trace import trace_factory
 
 # Ignored content types for web frameworks.
 IGNORED_CONTENT_TYPES = [
@@ -50,6 +51,18 @@ def is_blacklisted_url(url):
             if method(url, blacklist_url):
                 return True
     return False
+
+
+def is_payload_collection_blacklisted(url):
+    """
+    Return whether the payload should be collected according to the blacklisted
+    urls list in the Trace.
+    :param url: url string
+    :return:  True if URL is blacklisted, else False
+    """
+    url = urllib.parse.urlparse(url).netloc
+    trace_blacklist_urls = trace_factory.get_trace().url_patterns_to_ignore
+    return any(blacklist_url in url for blacklist_url in trace_blacklist_urls)
 
 
 def ignore_request(content, path):

@@ -67,6 +67,7 @@ class TraceFactory(object):
         self.disable_timeout_send = False
         self.debug = False
         self.send_trace_only_on_error = False
+        self.url_patterns_to_ignore = None
         self.use_single_trace = True
         self.singleton_trace = None
 
@@ -79,6 +80,7 @@ class TraceFactory(object):
             disable_timeout_send,
             debug,
             send_trace_only_on_error,
+            url_patterns_to_ignore
     ):
         """
         Initializes The factory with user's data.
@@ -92,6 +94,8 @@ class TraceFactory(object):
         :param debug: debug flag.
         :param send_trace_only_on_error: Whether to send trace only when
          there is error or not.
+        :param url_patterns_to_ignore: URL patterns to ignore in HTTP data
+         collection.
         :return: None
         """
 
@@ -102,6 +106,9 @@ class TraceFactory(object):
         self.disable_timeout_send = disable_timeout_send
         self.debug = debug
         self.send_trace_only_on_error = send_trace_only_on_error
+        self.url_patterns_to_ignore = (
+            set(url_patterns_to_ignore) if url_patterns_to_ignore else set()
+        )
 
     def switch_to_multiple_traces(self):
         """
@@ -127,7 +134,8 @@ class TraceFactory(object):
                     self.metadata_only,
                     self.disable_timeout_send,
                     self.debug,
-                    self.send_trace_only_on_error
+                    self.send_trace_only_on_error,
+                    self.url_patterns_to_ignore
                 )
             return self.singleton_trace
 
@@ -141,7 +149,8 @@ class TraceFactory(object):
                 self.metadata_only,
                 self.disable_timeout_send,
                 self.debug,
-                self.send_trace_only_on_error
+                self.send_trace_only_on_error,
+                self.url_patterns_to_ignore
             )
             self.traces[thread_id] = new_trace
         return self.traces[thread_id]
@@ -245,7 +254,9 @@ class Trace(object):
             metadata_only=True,
             disable_timeout_send=False,
             debug=False,
-            send_trace_only_on_error=False
+            send_trace_only_on_error=False,
+            url_patterns_to_ignore=None
+
     ):
         """
         initialize.
@@ -264,6 +275,7 @@ class Trace(object):
         self.disable_timeout_send = disable_timeout_send
         self.debug = debug
         self.send_trace_only_on_error = send_trace_only_on_error
+        self.url_patterns_to_ignore = url_patterns_to_ignore
         self.platform = 'Python {}.{}'.format(
             sys.version_info.major,
             sys.version_info.minor
