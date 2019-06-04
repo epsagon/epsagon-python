@@ -113,4 +113,5 @@ def test_epsagon_wrapper_env_init(_wrapped_get, wrapped_init):
         disable_timeout_send=False,
         debug=False,
         send_trace_only_on_error=False,
+        url_patterns_to_ignore=None
     )

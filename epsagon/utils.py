@@ -56,7 +56,8 @@ def init(
     disable_timeout_send=False,
     use_ssl=True,
     debug=False,
-    send_trace_only_on_error=False
+    send_trace_only_on_error=False,
+    url_patterns_to_ignore=None
 ):
     """
     Initializes trace with user's data.
@@ -71,6 +72,8 @@ def init(
     :param debug: debug mode flag,
     :param send_trace_only_on_error: Whether to send trace only when
      there is an error or not.
+    :param url_patterns_to_ignore: URL patterns to ignore in HTTP data
+      collection.
     :return: None
     """
 
@@ -95,6 +98,7 @@ def init(
             ((os.getenv('EPSAGON_SEND_TRACE_ON_ERROR') or '').upper() == 'TRUE')
             | send_trace_only_on_error
         ),
+        url_patterns_to_ignore=url_patterns_to_ignore
     )
 
 

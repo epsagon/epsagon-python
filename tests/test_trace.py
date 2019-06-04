@@ -521,7 +521,8 @@ def test_init_sanity(wrapped_init):
         metadata_only=False,
         disable_timeout_send=False,
         debug=False,
-        send_trace_only_on_error=False
+        send_trace_only_on_error=False,
+        url_patterns_to_ignore=None
     )
 
 
@@ -541,7 +542,8 @@ def test_init_empty_app_name(wrapped_init):
         metadata_only=False,
         disable_timeout_send=False,
         debug=False,
-        send_trace_only_on_error=False
+        send_trace_only_on_error=False,
+        url_patterns_to_ignore=None
     )
 
 
@@ -555,7 +557,8 @@ def test_init_empty_collector_url(wrapped_init):
         metadata_only=False,
         disable_timeout_send=False,
         debug=False,
-        send_trace_only_on_error=False
+        send_trace_only_on_error=False,
+        url_patterns_to_ignore=None
     )
 
 
@@ -573,7 +576,8 @@ def test_init_no_ssl_no_url(wrapped_init):
         ),
         disable_timeout_send=False,
         debug=False,
-        send_trace_only_on_error=False
+        send_trace_only_on_error=False,
+        url_patterns_to_ignore=None
     )
 
 
@@ -595,7 +599,8 @@ def test_init_ssl_no_url(wrapped_init):
         ),
         disable_timeout_send=False,
         debug=False,
-        send_trace_only_on_error=False
+        send_trace_only_on_error=False,
+        url_patterns_to_ignore=None
     )
 
 
@@ -606,7 +611,7 @@ def test_init_ssl_with_url(wrapped_init):
         app_name='app-name',
         collector_url="http://abc.com",
         metadata_only=False,
-        use_ssl=True
+        use_ssl=True,
     )
     wrapped_init.assert_called_with(
         token='token',
@@ -615,7 +620,8 @@ def test_init_ssl_with_url(wrapped_init):
         collector_url="http://abc.com",
         disable_timeout_send=False,
         debug=False,
-        send_trace_only_on_error=False
+        send_trace_only_on_error=False,
+        url_patterns_to_ignore=None
     )
 
 
@@ -635,7 +641,8 @@ def test_init_no_ssl_with_url(wrapped_init):
         collector_url="http://abc.com",
         disable_timeout_send=False,
         debug=False,
-        send_trace_only_on_error=False
+        send_trace_only_on_error=False,
+        url_patterns_to_ignore=None
     )
 
 
