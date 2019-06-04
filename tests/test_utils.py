@@ -42,7 +42,7 @@ def test_original_blacklist_url():
 
 def test_trace_blacklist():
     """
-    Validate original needed URLs are in.
+    Validate trace URL Blacklist mechanism.
     :return: None
     """
     trace_factory.get_trace().url_patterns_to_ignore = ['test.net']
