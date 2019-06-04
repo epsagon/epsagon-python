@@ -3,6 +3,7 @@ requests events module.
 """
 
 from __future__ import absolute_import
+
 try:
     from urllib.parse import urlparse
 except ImportError:
@@ -13,7 +14,10 @@ from uuid import uuid4
 from epsagon.utils import add_data_if_needed
 from ..trace import trace_factory
 from ..event import BaseEvent
-from ..wrappers.http_filters import is_blacklisted_url
+from ..wrappers.http_filters import (
+    is_blacklisted_url,
+    is_payload_collection_blacklisted
+)
 from ..utils import update_api_gateway_headers
 
 
@@ -25,7 +29,7 @@ class UrllibEvent(BaseEvent):
     ORIGIN = 'urllib'
     RESOURCE_TYPE = 'http'
 
-    #pylint: disable=W0613
+    # pylint: disable=W0613
     def __init__(self, wrapped, instance, args, kwargs, start_time, response,
                  exception):
         """
@@ -49,17 +53,18 @@ class UrllibEvent(BaseEvent):
         self.resource['operation'] = prepared_request.get_method()
         self.resource['metadata']['url'] = prepared_request.full_url
 
-        add_data_if_needed(
-            self.resource['metadata'],
-            'request_headers',
-            dict(prepared_request.headers)
-        )
+        if not is_payload_collection_blacklisted(prepared_request.full_url):
+            add_data_if_needed(
+                self.resource['metadata'],
+                'request_headers',
+                dict(prepared_request.headers)
+            )
 
-        add_data_if_needed(
-            self.resource['metadata'],
-            'request_body',
-            data
-        )
+            add_data_if_needed(
+                self.resource['metadata'],
+                'request_body',
+                data
+            )
 
         if response is not None:
             self.update_response(response)
@@ -81,22 +86,25 @@ class UrllibEvent(BaseEvent):
             headers
         )
 
-        add_data_if_needed(
-            self.resource['metadata'],
-            'response_headers',
-            headers
-        )
-
-        # Extract only json responses
         self.resource['metadata']['response_body'] = None
-        try:
+        full_url = self.resource['metadata']['url']
+
+        if not is_payload_collection_blacklisted(full_url):
             add_data_if_needed(
                 self.resource['metadata'],
-                'response_body',
-                str(response.peek())
+                'response_headers',
+                headers
             )
-        except ValueError:
-            pass
+
+            # Extract only json responses
+            try:
+                add_data_if_needed(
+                    self.resource['metadata'],
+                    'response_body',
+                    str(response.peek())
+                )
+            except ValueError:
+                pass
 
         # Detect errors based on status code
         if response.status >= 300:

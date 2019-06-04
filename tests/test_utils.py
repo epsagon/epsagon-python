@@ -46,9 +46,9 @@ def test_trace_blacklist():
     :return: None
     """
     trace_factory.get_trace().url_patterns_to_ignore = ['test.net']
-    assert epsagon.wrappers.http_filters.is_blacklisted_url('http://www.test.net')
-    assert epsagon.wrappers.http_filters.is_blacklisted_url('http://www.bla.test.net')
-    assert not epsagon.wrappers.http_filters.is_blacklisted_url('http://www.test.new.net')
+    assert epsagon.wrappers.http_filters.is_payload_collection_blacklisted('http://www.test.net')
+    assert epsagon.wrappers.http_filters.is_payload_collection_blacklisted('http://www.bla.test.net')
+    assert not epsagon.wrappers.http_filters.is_payload_collection_blacklisted('http://www.test.new.net')
     trace_factory.get_trace().url_patterns_to_ignore = None
-    assert not epsagon.wrappers.http_filters.is_blacklisted_url('http://www.test.net')
-    assert not epsagon.wrappers.http_filters.is_blacklisted_url('http://www.bla.test.net')
+    assert not epsagon.wrappers.http_filters.is_payload_collection_blacklisted('http://www.test.net')
+    assert not epsagon.wrappers.http_filters.is_payload_collection_blacklisted('http://www.bla.test.net')
