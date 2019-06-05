@@ -109,17 +109,6 @@ class Urllib3Event(BaseEvent):
                 headers
             )
 
-            # Extract only json responses
-            try:
-
-                add_data_if_needed(
-                    self.resource['metadata'],
-                    'response_body',
-                    str(getattr(response, '_fp').fp.peek())
-                )
-            except ValueError:
-                pass
-
         # Detect errors based on status code
         if response.status >= 300:
             self.set_error()
