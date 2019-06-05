@@ -1,3 +1,4 @@
+import os
 import sys
 import mock
 import uuid
@@ -644,6 +645,28 @@ def test_init_no_ssl_with_url(wrapped_init):
         send_trace_only_on_error=False,
         url_patterns_to_ignore=None
     )
+
+
+@mock.patch('epsagon.trace.TraceFactory.initialize')
+def test_init_ignored_urls_env(wrapped_init):
+    os.environ['EPSAGON_URLS_TO_IGNORE'] = 'test.com,test2.com'
+    epsagon.utils.init(
+        token='token',
+        app_name='app-name',
+        collector_url='collector',
+        metadata_only=False
+    )
+    wrapped_init.assert_called_with(
+        token='token',
+        app_name='app-name',
+        collector_url='collector',
+        metadata_only=False,
+        disable_timeout_send=False,
+        debug=False,
+        send_trace_only_on_error=False,
+        url_patterns_to_ignore=['test.com', 'test2.com']
+    )
+    os.environ.pop('EPSAGON_URLS_TO_IGNORE')
 
 
 @mock.patch('requests.Session.post', side_effect=requests.ReadTimeout)

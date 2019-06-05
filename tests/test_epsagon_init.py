@@ -69,7 +69,8 @@ def test_epsagon_disable_epsagon_and_disable_patch(wrapped_get, wrapped_patch):
     'EPSAGON_METADATA': 'FALSE',
     'EPSAGON_DISABLE_ON_TIMEOUT': 'FALSE',
     'EPSAGON_DEBUG': 'FALSE',
-    'EPSAGON_SEND_TRACE_ON_ERROR': 'FALSE'
+    'EPSAGON_SEND_TRACE_ON_ERROR': 'FALSE',
+    'EPSAGON_URLS_TO_IGNORE': '',
 }[x]))
 def test_epsagon_wrapper_env_init(wrapped_get, wrapped_init):
     reload(epsagon)
@@ -77,6 +78,7 @@ def test_epsagon_wrapper_env_init(wrapped_get, wrapped_init):
         mock.call('DISABLE_EPSAGON'),
         mock.call('DISABLE_EPSAGON_PATCH'),
         mock.call('EPSAGON_HANDLER'),
+        mock.call('EPSAGON_URLS_TO_IGNORE'),
         mock.call('EPSAGON_SSL'),
         mock.call('EPSAGON_TOKEN'),
         mock.call('EPSAGON_APP_NAME'),
@@ -102,6 +104,7 @@ def test_epsagon_wrapper_env_init(wrapped_get, wrapped_init):
     'EPSAGON_DISABLE_ON_TIMEOUT': 'FALSE',
     'EPSAGON_DEBUG': 'FALSE',
     'EPSAGON_SEND_TRACE_ON_ERROR': 'FALSE',
+    'EPSAGON_URLS_TO_IGNORE': '',
 }[x]))
 def test_epsagon_wrapper_env_init(_wrapped_get, wrapped_init):
     reload(epsagon)

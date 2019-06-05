@@ -80,6 +80,10 @@ def init(
         collector_url = get_tc_url(
             ((os.getenv('EPSAGON_SSL') or '').upper() == 'TRUE') | use_ssl
         )
+    # Ignored URLs is a comma separated values, if coming from env.
+    ignored_urls = os.getenv('EPSAGON_URLS_TO_IGNORE')
+    if ignored_urls:
+        ignored_urls = ignored_urls.split(',')
     trace_factory.initialize(
         token=os.getenv('EPSAGON_TOKEN') or token,
         app_name=os.getenv('EPSAGON_APP_NAME') or app_name,
@@ -97,7 +101,7 @@ def init(
             ((os.getenv('EPSAGON_SEND_TRACE_ON_ERROR') or '').upper() == 'TRUE')
             | send_trace_only_on_error
         ),
-        url_patterns_to_ignore=url_patterns_to_ignore
+        url_patterns_to_ignore=ignored_urls or url_patterns_to_ignore
     )
 
 
