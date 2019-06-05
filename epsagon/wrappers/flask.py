@@ -150,7 +150,7 @@ class FlaskWrapper(object):
             self.exception_handler[sys.version_info.major](exception)
 
         # Ignoring endpoint, only if no error happened.
-        if not exception and request.path in self.ignored_endpoints:
+        if not exception and request.url_rule.rule in self.ignored_endpoints:
             return
 
         trace = epsagon.trace.trace_factory.get_or_create_trace()
