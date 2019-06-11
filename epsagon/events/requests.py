@@ -1,5 +1,7 @@
 """
 requests events module.
+Currently it instruments only botocore.vendored.requests.
+For regular requests lib, we use urllib3
 """
 
 from __future__ import absolute_import
@@ -15,6 +17,10 @@ from ..trace import trace_factory
 from ..event import BaseEvent
 from ..wrappers.http_filters import is_blacklisted_url
 from ..utils import update_api_gateway_headers
+
+
+# Ignore AWS endpoints here since we capture botocore.vendored.requests
+IGNORE_PATTERNS = ['.amazonaws.com']
 
 
 class RequestsEvent(BaseEvent):
@@ -115,7 +121,7 @@ class RequestsEventFactory(object):
         prepared_request = args[0]
 
         # Detect if URL is blacklisted, and ignore.
-        if is_blacklisted_url(prepared_request.url):
+        if is_blacklisted_url(prepared_request.url, IGNORE_PATTERNS):
             return
 
         event = RequestsEvent(
