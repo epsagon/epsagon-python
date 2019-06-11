@@ -1,5 +1,7 @@
 """
 requests events module.
+Currently it instruments only botocore.vendored.requests.
+For regular requests lib, we use urllib3
 """
 
 from __future__ import absolute_import
