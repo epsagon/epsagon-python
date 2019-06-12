@@ -28,7 +28,6 @@ IGNORED_FILE_TYPES = [
 BLACKLIST_URLS = {
     str.endswith: [
         'epsagon.com',
-        '.amazonaws.com',
     ],
     str.__contains__: [
         'accounts.google.com',
@@ -36,11 +35,12 @@ BLACKLIST_URLS = {
 }
 
 
-def is_blacklisted_url(url):
+def is_blacklisted_url(url, patterns=None):
     """
     Return whether the URL blacklisted or not.
     Using BLACKLIST_URLS methods against the URLs.
     :param url: url string
+    :param patterns: Additional patterns to filter (list)
     :return: True if URL is blacklisted, else False
     """
 
@@ -50,6 +50,8 @@ def is_blacklisted_url(url):
         for blacklist_url in BLACKLIST_URLS[method]:
             if method(url, blacklist_url):
                 return True
+    if patterns:
+        return any([pattern in url for pattern in patterns])
     return False
 
 
