@@ -28,30 +28,39 @@ IGNORED_FILE_TYPES = [
 BLACKLIST_URLS = {
     str.endswith: [
         'epsagon.com',
+        '.amazonaws.com',
     ],
     str.__contains__: [
         'accounts.google.com',
     ],
 }
+WHITELIST_URL = {
+    str.__contains__: [
+        '.execute-api.',
+    ],
+}
 
 
-def is_blacklisted_url(url, patterns=None):
+def is_blacklisted_url(url):
     """
     Return whether the URL blacklisted or not.
     Using BLACKLIST_URLS methods against the URLs.
     :param url: url string
-    :param patterns: Additional patterns to filter (list)
     :return: True if URL is blacklisted, else False
     """
 
     url = urllib.parse.urlparse(url).netloc
 
+    for method in WHITELIST_URL:
+        for whitelist_url in WHITELIST_URL[method]:
+            if method(url, whitelist_url):
+                return False
+
     for method in BLACKLIST_URLS:
         for blacklist_url in BLACKLIST_URLS[method]:
             if method(url, blacklist_url):
                 return True
-    if patterns:
-        return any([pattern in url for pattern in patterns])
+
     return False
 
 
