@@ -567,8 +567,7 @@ class Trace(object):
             if event.origin == 'runner' or event.origin == 'trigger':
                 continue
 
-            if event.identifier() in self.events_map:
-                del self.events_map[event.identifier()]
+            self.events_map.pop(event.identifier(), None)
 
     # pylint: disable=W0703
     def send_traces(self):

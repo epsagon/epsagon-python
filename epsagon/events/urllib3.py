@@ -20,9 +20,6 @@ from ..wrappers.http_filters import (
 )
 from ..utils import update_api_gateway_headers
 
-# Ignore AWS endpoints here since we capture botocore.vendored.requests
-IGNORE_PATTERNS = ['.amazonaws.com']
-
 
 class Urllib3Event(BaseEvent):
     """
@@ -138,7 +135,7 @@ class Urllib3EventFactory(object):
                 url)
 
         # Detect if URL is blacklisted, and ignore.
-        if is_blacklisted_url(host_url, IGNORE_PATTERNS):
+        if is_blacklisted_url(host_url):
             return
 
         event = Urllib3Event(
