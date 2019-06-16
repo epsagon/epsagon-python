@@ -26,6 +26,7 @@ if os.getenv('DISABLE_EPSAGON') == 'TRUE':
     os.environ['DISABLE_EPSAGON_PATCH'] = 'TRUE'
     lambda_wrapper = dummy_wrapper  # pylint: disable=C0103
     step_lambda_wrapper = dummy_wrapper  # pylint: disable=C0103
+    chalice_wrapper = dummy_wrapper  # pylint: disable=C0103
     azure_wrapper = dummy_wrapper  # pylint: disable=C0103
     python_wrapper = dummy_wrapper  # pylint: disable=C0103
     flask_wrapper = dummy_wrapper  # pylint: disable=C0103
@@ -35,6 +36,7 @@ else:
     from .wrappers import (
         lambda_wrapper,
         step_lambda_wrapper,
+        chalice_wrapper,
         azure_wrapper,
         python_wrapper,
         gcp_wrapper
@@ -51,8 +53,17 @@ else:
 label = trace_factory.add_label
 error = trace_factory.set_error
 
-__all__ = ['lambda_wrapper', 'azure_wrapper', 'python_wrapper', 'init',
-           'step_lambda_wrapper', 'flask_wrapper', 'wrapper', 'gcp_wrapper']
+__all__ = [
+    'lambda_wrapper',
+    'azure_wrapper',
+    'python_wrapper',
+    'init',
+    'step_lambda_wrapper',
+    'flask_wrapper',
+    'wrapper',
+    'gcp_wrapper',
+    'chalice_wrapper',
+]
 
 
 # The modules are patched only if DISABLE_EPSAGON_PATCH variable is NOT 'TRUE'

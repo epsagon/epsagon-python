@@ -195,7 +195,7 @@ app = Chalice(app_name="hello-world")
 def index():
     return {"hello": "world"}
 
-app = epsagon.lambda_wrapper(app)
+app = epsagon.chalice_wrapper(app)
 ```
 
 ### Zappa
