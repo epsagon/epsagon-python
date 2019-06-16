@@ -3,6 +3,7 @@ Base Event class
 """
 
 from __future__ import absolute_import
+import os
 import time
 from .common import ErrorCode
 
@@ -96,6 +97,9 @@ class BaseEvent(object):
         :param traceback_data: traceback string
         :return: None
         """
+
+        if os.getenv('EPSAGON_OMIT_TRACEBACK', '').upper() == 'TRUE':
+            traceback_data = 'omitted'
 
         self.error_code = ErrorCode.EXCEPTION
         self.exception['type'] = type(exception).__name__

@@ -1,3 +1,4 @@
+import os
 import json
 import threading
 import mock
@@ -74,6 +75,23 @@ def test_function_wrapper_function_exception(_, set_exception_mock):
 
     assert not epsagon.constants.COLD_START
     assert event.resource['metadata']['return_value'] == json.dumps(None)
+
+
+@mock.patch(
+    'epsagon.trace.trace_factory.get_or_create_trace',
+    side_effect=lambda: trace_mock)
+def test_function_wrapper_function_exception_no_tb(_):
+    os.environ['EPSAGON_OMIT_TRACEBACK'] = 'TRUE'
+    @epsagon.wrappers.python_function.python_wrapper
+    def wrapped_function():
+        raise TypeError('test')
+
+    with pytest.raises(TypeError):
+        wrapped_function()
+
+    (event,), _ = trace_mock.set_runner.call_args
+    assert event.exception['traceback'] == 'omitted'
+    os.environ.pop('EPSAGON_OMIT_TRACEBACK')
 
 
 @mock.patch(
