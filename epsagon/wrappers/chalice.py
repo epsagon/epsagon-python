@@ -3,7 +3,7 @@ Wrapper for AWS Lambda in Chalice environment.
 """
 
 from __future__ import absolute_import
-from epsagon.wrappers import lambda_wrapper
+from . import lambda_wrapper
 
 
 class ChaliceWrapper:
@@ -13,13 +13,13 @@ class ChaliceWrapper:
     calls.
     """
     def __init__(self, app):
-        self.app = app
+        self._app = app
 
     def __getattr__(self, item):
-        return getattr(self.app, item)
+        return getattr(self._app, item)
 
     def __call__(self, *args, **kwargs):
-        return lambda_wrapper(self.app)(*args, **kwargs)
+        return lambda_wrapper(self._app)(*args, **kwargs)
 
 
 def chalice_wrapper(app):
