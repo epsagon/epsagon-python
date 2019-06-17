@@ -3,7 +3,7 @@ Wrapper for AWS Lambda in Chalice environment.
 """
 
 from __future__ import absolute_import
-from . import lambda_wrapper
+from .aws_lambda import lambda_wrapper
 
 
 class ChaliceWrapper:
