@@ -28,7 +28,7 @@ class FlaskWrapper(object):
         :param app: the :class:`flask.Flask` application object.
         :param ignored_endpoints: endpoint paths to ignore.
         """
-
+        print('init')
         self.app = app
         self.ignored_endpoints = []
         if ignored_endpoints:
@@ -53,6 +53,7 @@ class FlaskWrapper(object):
         Runs when new request comes in.
         :return: None.
         """
+        print('before request')
         trace = epsagon.trace.trace_factory.get_or_create_trace()
         trace.prepare()
 
@@ -61,7 +62,7 @@ class FlaskWrapper(object):
 
         if self.ignored_request:
             return
-
+        print('before request - after ignore')
         # Create flask runner with current request.
         try:
             self.runner = epsagon.runners.flask.FlaskRunner(
@@ -71,6 +72,7 @@ class FlaskWrapper(object):
             )
         # pylint: disable=W0703
         except Exception as exception:
+            print('before request - Exception')
             # Regress to python runner.
             warnings.warn('Could not extract request', EpsagonWarning)
             trace.add_exception(
@@ -88,6 +90,7 @@ class FlaskWrapper(object):
                 trace.add_event(trigger)
         # pylint: disable=W0703
         except Exception as exception:
+            print('before request - Exception 2')
             trace.add_exception(
                 exception,
                 traceback.format_exc(),
@@ -99,7 +102,7 @@ class FlaskWrapper(object):
         :param response: The current Response object.
         :return: Response.
         """
-
+        print('after request')
         if self.ignored_request:
             return response
 
@@ -142,18 +145,22 @@ class FlaskWrapper(object):
         :param exception: Exception (or None).
         :return: None.
         """
-
+        print('teardown request')
         if self.ignored_request:
             return
 
         if exception:
             self.exception_handler[sys.version_info.major](exception)
 
+        print('teardown request - after exception')
         # Ignoring endpoint, only if no error happened.
         if not exception and request.url_rule.rule in self.ignored_endpoints:
             return
 
+        print('teardown request - after route')
         trace = epsagon.trace.trace_factory.get_or_create_trace()
         trace.add_event(self.runner)
+        print('teardown request - before send')
         trace.send_traces()
+        print('teardown request - after send')
         trace.prepare()
