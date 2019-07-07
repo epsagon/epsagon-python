@@ -17,12 +17,14 @@ from epsagon.trace import trace_factory, MAX_EVENTS_PER_TYPE, TraceEncoder
 from epsagon.utils import get_tc_url
 from epsagon.common import ErrorCode
 
+
 class ContextMock:
     def __init__(self, timeout):
         self.timeout = timeout
 
     def get_remaining_time_in_millis(self):
         return self.timeout
+
 
 class EventMock(object):
     ORIGIN = 'mock'
@@ -282,7 +284,8 @@ def test_add_too_many_events():
     event = EventMock()
     trace = trace_factory.get_or_create_trace()
     trace.clear_events()
-    for _ in range(MAX_EVENTS_PER_TYPE * 2):  # verify we can add more then 1 event
+    for _ in range(
+            MAX_EVENTS_PER_TYPE * 2):  # verify we can add more then 1 event
         trace.add_event(event)
 
     assert len(trace.to_dict()['events']) == MAX_EVENTS_PER_TYPE
@@ -339,6 +342,7 @@ def test_set_error_sanity():
     trace.set_error(ValueError(msg), 'test_value')
 
     assert trace.to_dict()['events'][0]['exception']['message'] == msg
+
 
 def test_custom_labels_override_trace():
     event = RunnerEventMock()
@@ -523,7 +527,8 @@ def test_init_sanity(wrapped_init):
         disable_timeout_send=False,
         debug=False,
         send_trace_only_on_error=False,
-        url_patterns_to_ignore=None
+        url_patterns_to_ignore=None,
+        keys_to_ignore=None
     )
 
 
@@ -544,7 +549,8 @@ def test_init_empty_app_name(wrapped_init):
         disable_timeout_send=False,
         debug=False,
         send_trace_only_on_error=False,
-        url_patterns_to_ignore=None
+        url_patterns_to_ignore=None,
+        keys_to_ignore=None
     )
 
 
@@ -559,7 +565,8 @@ def test_init_empty_collector_url(wrapped_init):
         disable_timeout_send=False,
         debug=False,
         send_trace_only_on_error=False,
-        url_patterns_to_ignore=None
+        url_patterns_to_ignore=None,
+        keys_to_ignore=None
     )
 
 
@@ -578,7 +585,8 @@ def test_init_no_ssl_no_url(wrapped_init):
         disable_timeout_send=False,
         debug=False,
         send_trace_only_on_error=False,
-        url_patterns_to_ignore=None
+        url_patterns_to_ignore=None,
+        keys_to_ignore=None
     )
 
 
@@ -601,7 +609,8 @@ def test_init_ssl_no_url(wrapped_init):
         disable_timeout_send=False,
         debug=False,
         send_trace_only_on_error=False,
-        url_patterns_to_ignore=None
+        url_patterns_to_ignore=None,
+        keys_to_ignore=None
     )
 
 
@@ -622,7 +631,8 @@ def test_init_ssl_with_url(wrapped_init):
         disable_timeout_send=False,
         debug=False,
         send_trace_only_on_error=False,
-        url_patterns_to_ignore=None
+        url_patterns_to_ignore=None,
+        keys_to_ignore=None
     )
 
 
@@ -643,7 +653,8 @@ def test_init_no_ssl_with_url(wrapped_init):
         disable_timeout_send=False,
         debug=False,
         send_trace_only_on_error=False,
-        url_patterns_to_ignore=None
+        url_patterns_to_ignore=None,
+        keys_to_ignore=None
     )
 
 
@@ -664,9 +675,55 @@ def test_init_ignored_urls_env(wrapped_init):
         disable_timeout_send=False,
         debug=False,
         send_trace_only_on_error=False,
-        url_patterns_to_ignore=['test.com', 'test2.com']
+        url_patterns_to_ignore=['test.com', 'test2.com'],
+        keys_to_ignore=None
     )
     os.environ.pop('EPSAGON_URLS_TO_IGNORE')
+
+
+@mock.patch('epsagon.trace.TraceFactory.initialize')
+def test_init_keys_to_ignore(wrapped_init):
+    epsagon.utils.init(
+        token='token',
+        app_name='app-name',
+        collector_url="http://abc.com",
+        metadata_only=False,
+        keys_to_ignore=['a', 'b', 'c']
+    )
+    wrapped_init.assert_called_with(
+        token='token',
+        app_name='app-name',
+        metadata_only=False,
+        collector_url="http://abc.com",
+        disable_timeout_send=False,
+        debug=False,
+        send_trace_only_on_error=False,
+        url_patterns_to_ignore=None,
+        keys_to_ignore=['a', 'b', 'c']
+    )
+
+
+@mock.patch('epsagon.trace.TraceFactory.initialize')
+def test_init_keys_to_ignore_env(wrapped_init):
+    os.environ['EPSAGON_IGNORED_KEYS'] = 'a,b,c'
+    epsagon.utils.init(
+        token='token',
+        app_name='app-name',
+        collector_url="http://abc.com",
+        metadata_only=False,
+        keys_to_ignore=['123', '321', '123']
+    )
+    wrapped_init.assert_called_with(
+        token='token',
+        app_name='app-name',
+        metadata_only=False,
+        collector_url="http://abc.com",
+        disable_timeout_send=False,
+        debug=False,
+        send_trace_only_on_error=False,
+        url_patterns_to_ignore=None,
+        keys_to_ignore=['a', 'b', 'c']
+    )
 
 
 @mock.patch('requests.Session.post', side_effect=requests.ReadTimeout)
@@ -698,6 +755,7 @@ def test_send_on_error_only_off_with_error(wrapped_post):
     trace.send_traces()
     wrapped_post.assert_called_once()
 
+
 @mock.patch('requests.Session.post')
 def test_send_on_error_only_off_no_error(wrapped_post):
     trace = trace_factory.get_or_create_trace()
@@ -709,6 +767,7 @@ def test_send_on_error_only_off_no_error(wrapped_post):
     trace.add_event(event)
     trace.send_traces()
     wrapped_post.assert_called_once()
+
 
 @mock.patch('requests.Session.post')
 def test_send_on_error_only_no_error(wrapped_post):

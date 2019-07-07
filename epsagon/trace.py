@@ -139,7 +139,8 @@ class TraceFactory(object):
                     self.disable_timeout_send,
                     self.debug,
                     self.send_trace_only_on_error,
-                    self.url_patterns_to_ignore
+                    self.url_patterns_to_ignore,
+                    self.keys_to_ignore
                 )
             return self.singleton_trace
 
@@ -154,7 +155,9 @@ class TraceFactory(object):
                 self.disable_timeout_send,
                 self.debug,
                 self.send_trace_only_on_error,
-                self.url_patterns_to_ignore
+                self.url_patterns_to_ignore,
+                self.keys_to_ignore
+
             )
             self.traces[thread_id] = new_trace
         return self.traces[thread_id]
@@ -259,7 +262,8 @@ class Trace(object):
             disable_timeout_send=False,
             debug=False,
             send_trace_only_on_error=False,
-            url_patterns_to_ignore=None
+            url_patterns_to_ignore=None,
+            keys_to_ignore=None
 
     ):
         """
@@ -280,6 +284,7 @@ class Trace(object):
         self.debug = debug
         self.send_trace_only_on_error = send_trace_only_on_error
         self.url_patterns_to_ignore = url_patterns_to_ignore
+        self.keys_to_ignore = keys_to_ignore
         self.platform = 'Python {}.{}'.format(
             sys.version_info.major,
             sys.version_info.minor
@@ -327,7 +332,7 @@ class Trace(object):
                 return
 
             modified_timeout = (
-                           original_timeout - TIMEOUT_GRACE_TIME_MS) / 1000.0
+                                       original_timeout - TIMEOUT_GRACE_TIME_MS) / 1000.0
             signal.setitimer(signal.ITIMER_REAL, modified_timeout)
             original_handler = signal.signal(
                 signal.SIGALRM,
@@ -573,13 +578,33 @@ class Trace(object):
 
             self.events_map.pop(event.identifier(), None)
 
-    def _remove_ignored_keys(self):
+    @staticmethod
+    def _strip_key(key):
         """
-        Remove ignored keys from metadata.
+        Strip a given key from spaces, dashes, and underscores.
+        :param key: The key to strip.
+        :return: Stripped key.
+        """
+        return key.lower().replace('-', '').replace('_', '').replace(' ', '')
+
+    def remove_ignored_keys(self, input_dict):
+        """
+        Remove ignored keys recursively.
+        :param input_dict: Input dict to remove ignored keys from.
         :return: None
         """
-        for key in self.events['metadata']:
-            print(key)
+        if not self.keys_to_ignore:
+            return
+        stripped_keys = [self._strip_key(x) for x in self.keys_to_ignore]
+
+        # Python 2 returns a list, while Python3 returns an iterator.
+        for key, value in list(input_dict.items()):
+            if self._strip_key(key) in stripped_keys:
+                input_dict.pop(key)
+            else:
+                if isinstance(value, dict):
+                    self.remove_ignored_keys(value)
+        return
 
     # pylint: disable=W0703
     def send_traces(self):
@@ -596,7 +621,11 @@ class Trace(object):
         ):
             return
         trace = ''
-        self._remove_ignored_keys()
+
+        # Remove ignored keys.
+        for event in self.events():
+            self.remove_ignored_keys(event.resource['metadata'])
+
         try:
             if self.runner:
                 self.runner.terminate()
