@@ -284,7 +284,10 @@ class Trace(object):
         self.debug = debug
         self.send_trace_only_on_error = send_trace_only_on_error
         self.url_patterns_to_ignore = url_patterns_to_ignore
-        self.keys_to_ignore = keys_to_ignore
+        if keys_to_ignore:
+            self.keys_to_ignore = [self._strip_key(x) for x in keys_to_ignore]
+        else:
+            self.keys_to_ignore = []
         self.platform = 'Python {}.{}'.format(
             sys.version_info.major,
             sys.version_info.minor
@@ -593,18 +596,14 @@ class Trace(object):
         :param input_dict: Input dict to remove ignored keys from.
         :return: None
         """
-        if not self.keys_to_ignore:
-            return
-        stripped_keys = [self._strip_key(x) for x in self.keys_to_ignore]
-
-        # Python 2 returns a list, while Python3 returns an iterator.
-        for key, value in list(input_dict.items()):
-            if self._strip_key(key) in stripped_keys:
-                input_dict.pop(key)
-            else:
-                if isinstance(value, dict):
-                    self.remove_ignored_keys(value)
-        return
+        if self.keys_to_ignore:
+            # Python 2 returns a list, while Python3 returns an iterator.
+            for key, value in list(input_dict.items()):
+                if self._strip_key(key) in self.keys_to_ignore:
+                    input_dict.pop(key)
+                else:
+                    if isinstance(value, dict):
+                        self.remove_ignored_keys(value)
 
     # pylint: disable=W0703
     def send_traces(self):
