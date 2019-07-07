@@ -68,6 +68,7 @@ class TraceFactory(object):
         self.debug = False
         self.send_trace_only_on_error = False
         self.url_patterns_to_ignore = None
+        self.keys_to_ignore = None
         self.use_single_trace = True
         self.singleton_trace = None
 
@@ -80,7 +81,8 @@ class TraceFactory(object):
             disable_timeout_send,
             debug,
             send_trace_only_on_error,
-            url_patterns_to_ignore
+            url_patterns_to_ignore,
+            keys_to_ignore
     ):
         """
         Initializes The factory with user's data.
@@ -96,6 +98,7 @@ class TraceFactory(object):
          there is error or not.
         :param url_patterns_to_ignore: URL patterns to ignore in HTTP data
          collection.
+        :param keys_to_ignore: List of keys to ignore while extracting metadata.
         :return: None
         """
 
@@ -109,6 +112,7 @@ class TraceFactory(object):
         self.url_patterns_to_ignore = (
             set(url_patterns_to_ignore) if url_patterns_to_ignore else set()
         )
+        self.keys_to_ignore = [] if keys_to_ignore is None else keys_to_ignore
 
     def switch_to_multiple_traces(self):
         """
@@ -569,6 +573,14 @@ class Trace(object):
 
             self.events_map.pop(event.identifier(), None)
 
+    def _remove_ignored_keys(self):
+        """
+        Remove ignored keys from metadata.
+        :return: None
+        """
+        for key in self.events['metadata']:
+            print(key)
+
     # pylint: disable=W0703
     def send_traces(self):
         """
@@ -584,6 +596,7 @@ class Trace(object):
         ):
             return
         trace = ''
+        self._remove_ignored_keys()
         try:
             if self.runner:
                 self.runner.terminate()
