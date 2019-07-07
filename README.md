@@ -170,6 +170,19 @@ def handler(event, context):
   pass
 ```
 
+
+### Ignore keys
+
+You can prevent data from being sent to epsagon by filtering specific keys in initialization.
+```python
+import epsagon
+epsagon.init(
+    token='my-secret-token',
+    app_name='my-app-name',
+    metadata_only=False,
+    keys_to_ignore=['Request Data', 'Status_Code']
+)
+```
 ## Frameworks Integration
 
 ### Serverless

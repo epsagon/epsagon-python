@@ -105,6 +105,7 @@ def test_epsagon_wrapper_env_init(wrapped_get, wrapped_init):
     'EPSAGON_DEBUG': 'FALSE',
     'EPSAGON_SEND_TRACE_ON_ERROR': 'FALSE',
     'EPSAGON_URLS_TO_IGNORE': '',
+    'EPSAGON_IGNORED_KEYS': '',
 }[x]))
 def test_epsagon_wrapper_env_init(_wrapped_get, wrapped_init):
     reload(epsagon)
@@ -116,5 +117,6 @@ def test_epsagon_wrapper_env_init(_wrapped_get, wrapped_init):
         disable_timeout_send=False,
         debug=False,
         send_trace_only_on_error=False,
-        url_patterns_to_ignore=None
+        url_patterns_to_ignore=None,
+        keys_to_ignore=None
     )

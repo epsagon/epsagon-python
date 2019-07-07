@@ -58,7 +58,8 @@ def init(
     use_ssl=True,
     debug=False,
     send_trace_only_on_error=False,
-    url_patterns_to_ignore=None
+    url_patterns_to_ignore=None,
+    keys_to_ignore=None
 ):
     """
     Initializes trace with user's data.
@@ -75,6 +76,7 @@ def init(
      there is an error or not.
     :param url_patterns_to_ignore: URL patterns to ignore in HTTP data
       collection.
+    :param keys_to_ignore: List of keys to ignore while extracting metadata.
     :return: None
     """
     if not collector_url:
@@ -85,6 +87,12 @@ def init(
     ignored_urls = os.getenv('EPSAGON_URLS_TO_IGNORE')
     if ignored_urls:
         ignored_urls = ignored_urls.split(',')
+
+    # Same goes for Ignored keys.
+    ignored_keys = os.getenv('EPSAGON_IGNORED_KEYS')
+    if ignored_keys:
+        ignored_keys = ignored_keys.split(',')
+
     trace_factory.initialize(
         token=os.getenv('EPSAGON_TOKEN') or token,
         app_name=os.getenv('EPSAGON_APP_NAME') or app_name,
@@ -102,7 +110,8 @@ def init(
             ((os.getenv('EPSAGON_SEND_TRACE_ON_ERROR') or '').upper() == 'TRUE')
             | send_trace_only_on_error
         ),
-        url_patterns_to_ignore=ignored_urls or url_patterns_to_ignore
+        url_patterns_to_ignore=ignored_urls or url_patterns_to_ignore,
+        keys_to_ignore=ignored_keys or keys_to_ignore,
     )
 
 
