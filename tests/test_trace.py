@@ -284,8 +284,7 @@ def test_add_too_many_events():
     event = EventMock()
     trace = trace_factory.get_or_create_trace()
     trace.clear_events()
-    for _ in range(
-            MAX_EVENTS_PER_TYPE * 2):  # verify we can add more then 1 event
+    for _ in range(MAX_EVENTS_PER_TYPE * 2):  # verify we can add more then 1 event
         trace.add_event(event)
 
     assert len(trace.to_dict()['events']) == MAX_EVENTS_PER_TYPE
