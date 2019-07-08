@@ -15,6 +15,7 @@ This package provides an instrumentation to Python code running on functions for
 - Custom Data
   - [Custom Labels](https://github.com/epsagon/epsagon-python#custom-labels)
   - [Custom Errors](https://github.com/epsagon/epsagon-python#custom-errors)
+  - [Ignore Keys](https://github.com/epsagon/epsagon-python#ignore-keys)
 - Frameworks Integration
   - [Serverless](https://github.com/epsagon/epsagon-python#serverless)
   - [Chalice](https://github.com/epsagon/epsagon-python#chalice)
