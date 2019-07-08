@@ -211,6 +211,28 @@ def index():
 app = epsagon.chalice_wrapper(app)
 ```
 
+or In S3 trigger example:
+```python
+from chalice import Chalice
+
+app = Chalice(app_name="helloworld")
+
+import epsagon
+epsagon.init(
+    token='my-secret-token',
+    app_name='my-app-name',
+    metadata_only=False
+)
+# Whenever an object is uploaded to 'mybucket'
+# this lambda function will be invoked.
+
+@epsagon.lambda_wrapper
+@app.on_s3_event(bucket='mybucket')
+def handler(event):
+    print("Object uploaded for bucket: %s, key: %s"
+          % (event.bucket, event.key))
+```
+
 ### Zappa
 
 Using Epsagon with [Zappa](https://github.com/Miserlou/Zappa) is simple, follow this example:
