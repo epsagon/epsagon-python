@@ -15,6 +15,7 @@ This package provides an instrumentation to Python code running on functions for
 - Custom Data
   - [Custom Labels](https://github.com/epsagon/epsagon-python#custom-labels)
   - [Custom Errors](https://github.com/epsagon/epsagon-python#custom-errors)
+  - [Ignore Keys](https://github.com/epsagon/epsagon-python#ignore-keys)
 - Frameworks Integration
   - [Serverless](https://github.com/epsagon/epsagon-python#serverless)
   - [Chalice](https://github.com/epsagon/epsagon-python#chalice)
@@ -209,6 +210,28 @@ def index():
     return {"hello": "world"}
 
 app = epsagon.chalice_wrapper(app)
+```
+
+or In S3 trigger example:
+```python
+from chalice import Chalice
+
+app = Chalice(app_name="helloworld")
+
+import epsagon
+epsagon.init(
+    token='my-secret-token',
+    app_name='my-app-name',
+    metadata_only=False
+)
+# Whenever an object is uploaded to 'mybucket'
+# this lambda function will be invoked.
+
+@epsagon.lambda_wrapper
+@app.on_s3_event(bucket='mybucket')
+def handler(event):
+    print("Object uploaded for bucket: %s, key: %s"
+          % (event.bucket, event.key))
 ```
 
 ### Zappa
