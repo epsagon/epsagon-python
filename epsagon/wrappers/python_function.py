@@ -11,27 +11,9 @@ import requests
 import simplejson as json
 import epsagon.trace
 import epsagon.runners.python_function
+from epsagon.utils import collect_container_metadata
 from epsagon.wrappers.return_value import add_return_value
 from epsagon import constants
-
-
-def _collect_container_metadata():
-    """
-    Collects container metadata if exists.
-    :return: dict.
-    """
-    metadata_uri = os.environ.get('ECS_CONTAINER_METADATA_URI')
-    if not metadata_uri:
-        return {}
-    container_metadata = json.loads(requests.get(metadata_uri).content)
-
-    # Remove event from events list
-    events = list(epsagon.trace.trace_factory.get_trace().events_map.keys())
-    epsagon.trace.trace_factory.get_trace().events_map.pop(events[0])
-
-    new_metadata = container_metadata['Labels'].copy()
-    new_metadata['Limits'] = container_metadata['Limits']
-    return new_metadata
 
 
 def wrap_python_function(func, args, kwargs):
@@ -53,7 +35,7 @@ def wrap_python_function(func, args, kwargs):
         )
 
         # Collect metadata in case this is a container.
-        metadata = _collect_container_metadata()
+        metadata = collect_container_metadata()
         if metadata:
             runner.resource['metadata']['ECS'] = metadata
 
