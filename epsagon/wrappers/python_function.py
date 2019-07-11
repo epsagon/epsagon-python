@@ -3,12 +3,9 @@ Wrapper for a general python function
 """
 
 from __future__ import absolute_import
-import os
 import time
 import traceback
 import functools
-import requests
-import simplejson as json
 import epsagon.trace
 import epsagon.runners.python_function
 from epsagon.utils import collect_container_metadata
