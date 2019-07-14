@@ -131,6 +131,9 @@ class BotocoreS3Event(BotocoreEvent):
         if self.resource['operation'] in \
                 ['HeadObject', 'GetObject', 'PutObject']:
             self.resource['metadata']['key'] = request_data['Key']
+        elif self.resource['operation'] == 'CopyObject':
+            self.resource['metadata']['source'] = request_data['CopySource']
+            self.resource['metadata']['destination'] = request_data['Key']
 
     def update_response(self, response):
         """
