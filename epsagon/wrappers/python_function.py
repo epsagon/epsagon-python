@@ -8,6 +8,7 @@ import traceback
 import functools
 import epsagon.trace
 import epsagon.runners.python_function
+from epsagon.utils import collect_container_metadata
 from epsagon.wrappers.return_value import add_return_value
 from epsagon import constants
 
@@ -29,6 +30,12 @@ def wrap_python_function(func, args, kwargs):
             args,
             kwargs
         )
+
+        # Collect metadata in case this is a container.
+        metadata = collect_container_metadata()
+        if metadata:
+            runner.resource['metadata']['ECS'] = metadata
+
         epsagon.trace.trace_factory.set_runner(runner)
     # pylint: disable=W0703
     except Exception:

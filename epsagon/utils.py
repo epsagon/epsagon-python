@@ -4,6 +4,8 @@ Utilities for Epsagon module.
 
 from __future__ import absolute_import
 import os
+import requests
+import simplejson as json
 from epsagon.constants import TRACE_COLLECTOR_URL, REGION
 from .trace import trace_factory
 from .constants import EPSAGON_HANDLER
@@ -137,3 +139,22 @@ def import_original_module():
         return __import__(module_path), module_path, handler_name
     except ImportError:
         raise ImportError('Failed to import module: {}'.format(module_path))
+
+
+def collect_container_metadata():
+    """
+    Collects container metadata if exists.
+    :return: dict.
+    """
+    metadata_uri = os.environ.get('ECS_CONTAINER_METADATA_URI')
+    if not metadata_uri:
+        return {}
+    container_metadata = json.loads(requests.get(metadata_uri).content)
+
+    # Remove event from events list
+    events = list(trace_factory.get_trace().events_map.keys())
+    trace_factory.get_trace().events_map.pop(events[0])
+
+    new_metadata = container_metadata['Labels'].copy()
+    new_metadata['Limits'] = container_metadata['Limits']
+    return new_metadata

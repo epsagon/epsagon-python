@@ -14,6 +14,7 @@ import epsagon.trace
 import epsagon.triggers.http
 import epsagon.runners.flask
 from epsagon.common import EpsagonWarning
+from epsagon.utils import collect_container_metadata
 from .http_filters import ignore_request
 
 
@@ -69,6 +70,12 @@ class FlaskWrapper(object):
                 self.app,
                 request
             )
+
+            # Collect metadata in case this is a container.
+            metadata = collect_container_metadata()
+            if metadata:
+                self.runner.resource['metadata']['ECS'] = metadata
+
         # pylint: disable=W0703
         except Exception as exception:
             # Regress to python runner.
