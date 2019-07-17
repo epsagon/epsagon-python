@@ -7,9 +7,9 @@ import os
 import requests
 import simplejson as json
 try:
-    from urllib.parse import urlparse, urlunparse
+    from urllib.parse import urlparse
 except ImportError:
-    from urlparse import urlparse, urlunparse
+    from urlparse import urlparse
 
 from epsagon.constants import TRACE_COLLECTOR_URL, REGION
 from .trace import trace_factory
