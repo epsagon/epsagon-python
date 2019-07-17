@@ -18,7 +18,7 @@ from ..wrappers.http_filters import (
     is_blacklisted_url,
     is_payload_collection_blacklisted
 )
-from ..utils import update_api_gateway_headers
+from ..utils import update_api_gateway_headers, normalize_http_url
 
 
 class UrllibEvent(BaseEvent):
@@ -48,8 +48,7 @@ class UrllibEvent(BaseEvent):
         self.event_id = 'urllib-{}'.format(str(uuid4()))
 
         prepared_request, data = args
-        url_obj = urlparse(prepared_request.full_url)
-        self.resource['name'] = url_obj.hostname
+        self.resource['name'] = normalize_http_url(prepared_request.full_url)
         self.resource['operation'] = prepared_request.get_method()
         self.resource['metadata']['url'] = prepared_request.full_url
 

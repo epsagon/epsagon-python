@@ -18,7 +18,7 @@ from ..wrappers.http_filters import (
     is_blacklisted_url,
     is_payload_collection_blacklisted
 )
-from ..utils import update_api_gateway_headers
+from ..utils import update_api_gateway_headers, normalize_http_url
 
 
 class Urllib3Event(BaseEvent):
@@ -63,7 +63,7 @@ class Urllib3Event(BaseEvent):
             parsed_url.fragment,
         ))
 
-        self.resource['name'] = host_url
+        self.resource['name'] = normalize_http_url(url)
         self.resource['operation'] = method
         self.resource['metadata']['url'] = full_url
 

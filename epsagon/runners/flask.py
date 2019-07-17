@@ -5,7 +5,7 @@ Runner for a Flask Python function
 from __future__ import absolute_import
 import uuid
 from ..event import BaseEvent
-from ..utils import add_data_if_needed
+from ..utils import add_data_if_needed, normalize_http_url
 
 
 class FlaskRunner(BaseEvent):
@@ -30,7 +30,7 @@ class FlaskRunner(BaseEvent):
         self.event_id = str(uuid.uuid4())
 
         self.resource['name'] = (
-            request.headers.get('Host', app.name)
+            normalize_http_url(request.headers.get('Host', app.name))
             if request.headers
             else app.name
         )

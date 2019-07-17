@@ -6,9 +6,25 @@ from __future__ import absolute_import
 import os
 import requests
 import simplejson as json
+try:
+    from urllib.parse import urlparse, urlunparse
+except ImportError:
+    from urlparse import urlparse, urlunparse
+
 from epsagon.constants import TRACE_COLLECTOR_URL, REGION
 from .trace import trace_factory
 from .constants import EPSAGON_HANDLER
+
+
+def normalize_http_url(url):
+    """
+    Strip http schema, port number and path from a url
+    :param url: the url to normalize
+    :return: normalized url
+    """
+    parsed = urlparse(url)
+    netloc = parsed.netloc
+    return netloc.split(':')[0] if netloc else url
 
 
 def add_data_if_needed(dictionary, name, data):
@@ -100,8 +116,8 @@ def init(
         app_name=os.getenv('EPSAGON_APP_NAME') or app_name,
         collector_url=os.getenv('EPSAGON_COLLECTOR_URL') or collector_url,
         metadata_only=(
-          ((os.getenv('EPSAGON_METADATA') or '').upper() == 'TRUE') |
-          metadata_only
+            ((os.getenv('EPSAGON_METADATA') or '').upper() == 'TRUE') |
+            metadata_only
         ),
         disable_timeout_send=(
             ((os.getenv('EPSAGON_DISABLE_ON_TIMEOUT') or '').upper() == 'TRUE')
