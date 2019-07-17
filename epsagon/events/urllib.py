@@ -4,10 +4,6 @@ requests events module.
 
 from __future__ import absolute_import
 
-try:
-    from urllib.parse import urlparse
-except ImportError:
-    from urlparse import urlparse
 import traceback
 from uuid import uuid4
 
