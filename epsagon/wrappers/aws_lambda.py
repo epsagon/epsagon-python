@@ -24,6 +24,10 @@ STEP_DICT_NAME = 'Epsagon'
 def lambda_wrapper(func):
     """Epsagon's Lambda wrapper."""
 
+    # avoid double instrumentation
+    if getattr(func, '__instrumented__', False):
+        return func
+
     @functools.wraps(func)
     def _lambda_wrapper(*args, **kwargs):
         """
@@ -113,6 +117,7 @@ def lambda_wrapper(func):
             except Exception:
                 pass
 
+    _lambda_wrapper.__instrumented__ = True
     return _lambda_wrapper
 
 
