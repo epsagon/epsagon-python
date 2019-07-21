@@ -30,8 +30,8 @@ class FlaskRunner(BaseEvent):
         self.event_id = str(uuid.uuid4())
 
         self.resource['name'] = (
-            normalize_http_url(request.headers.get('Host', app.name))
-            if request.headers
+            normalize_http_url(request.headers.get('Host'))
+            if request.headers and request.headers.get('Host')
             else app.name
         )
         self.resource['operation'] = request.method
