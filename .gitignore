@@ -9,4 +9,4 @@ dist
 build
 epsagon.egg-info
 .tox
-venv
+venv/

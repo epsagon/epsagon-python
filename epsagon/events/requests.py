@@ -5,10 +5,6 @@ For regular requests lib, we use urllib3
 """
 
 from __future__ import absolute_import
-try:
-    from urllib.parse import urlparse
-except ImportError:
-    from urlparse import urlparse
 import traceback
 from uuid import uuid4
 
@@ -16,7 +12,7 @@ from epsagon.utils import add_data_if_needed
 from ..trace import trace_factory
 from ..event import BaseEvent
 from ..wrappers.http_filters import is_blacklisted_url
-from ..utils import update_api_gateway_headers
+from ..utils import update_api_gateway_headers, normalize_http_url
 
 
 class RequestsEvent(BaseEvent):
@@ -45,8 +41,7 @@ class RequestsEvent(BaseEvent):
         self.event_id = 'requests-{}'.format(str(uuid4()))
 
         prepared_request = args[0]
-        url_obj = urlparse(prepared_request.url)
-        self.resource['name'] = url_obj.hostname
+        self.resource['name'] = normalize_http_url(prepared_request.url)
         self.resource['operation'] = prepared_request.method
         self.resource['metadata']['url'] = prepared_request.url
 
