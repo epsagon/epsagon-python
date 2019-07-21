@@ -4,3 +4,4 @@ mock
 Flask
 pylint-quotes
 django
+pytest
