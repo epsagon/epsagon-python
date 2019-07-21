@@ -244,8 +244,8 @@ def test_lambda_wrapper_invalid_return_value(_):
     trace_mock.add_exception.assert_not_called()
 
     assert (
-            runner.resource['metadata']['return_value'] ==
-            FAILED_TO_SERIALIZE_MESSAGE
+        runner.resource['metadata']['return_value'] ==
+        FAILED_TO_SERIALIZE_MESSAGE
     )
 
 
@@ -506,8 +506,8 @@ def test_step_lambda_wrapper_invalid_return_value(_):
     trace_mock.add_exception.assert_not_called()
 
     assert (
-            runner.resource['metadata']['return_value'] ==
-            FAILED_TO_SERIALIZE_MESSAGE
+        runner.resource['metadata']['return_value'] ==
+        FAILED_TO_SERIALIZE_MESSAGE
     )
 
 
@@ -547,3 +547,13 @@ def test_lambda_wrapper_single_thread(_):
 
     assert wrapped_lambda('a', CONTEXT_STUB) == retval
     assert trace_factory.use_single_trace
+
+
+def test_lambda_wrapper_avoid_multi_wrap():
+    @epsagon.wrappers.aws_lambda.lambda_wrapper
+    def wrapped_lambda(event, context):
+        return 'success'
+
+    new_wrapped = epsagon.wrappers.aws_lambda.lambda_wrapper(wrapped_lambda)
+    assert getattr(wrapped_lambda, '__instrumented__', False) == True
+    assert new_wrapped == wrapped_lambda
