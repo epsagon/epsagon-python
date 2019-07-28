@@ -267,12 +267,21 @@ class ProxyAPIGatewayLambdaTrigger(BaseLambdaTrigger):
         super(ProxyAPIGatewayLambdaTrigger, self).__init__(start_time)
 
         self.event_id = event['requestContext']['requestId']
-        self.resource['name'] = event['resource']
+        self.resource['name'] = event['headers'].get(
+            'Host',
+            event['requestContext'].get(
+                'domainName',
+                event['requestContext']['apiId']
+            )
+        )
+
         self.resource['operation'] = event['httpMethod']
 
         self.resource['metadata'] = {
             'stage': event['requestContext']['stage'],
             'query_string_parameters': event['queryStringParameters'],
+            'resource': event['resource'],
+            'path': event['path'],
             'path_parameters': event['pathParameters'],
         }
 
