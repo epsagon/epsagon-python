@@ -483,6 +483,9 @@ class Trace(object):
         :return: True/False
         """
         if not isinstance(key, str) or not isinstance(value, str):
+            print('EPSAGON: epsagon.label() only supports '
+                  'label keys and values of type string.')
+            print('Received {key}:{value}'.format(key=key, value=value))
             return False
 
         if len(key) + len(value) > MAX_LABEL_SIZE:
