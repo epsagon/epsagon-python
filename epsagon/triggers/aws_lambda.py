@@ -269,10 +269,7 @@ class ProxyAPIGatewayLambdaTrigger(BaseLambdaTrigger):
         self.event_id = event['requestContext']['requestId']
         self.resource['name'] = event['headers'].get(
             'Host',
-            event['requestContext'].get(
-                'domainName',
-                event['requestContext']['apiId']
-            )
+            event['requestContext']['apiId']
         )
 
         self.resource['operation'] = event['httpMethod']
@@ -312,13 +309,17 @@ class NoProxyAPIGatewayLambdaTrigger(BaseLambdaTrigger):
         super(NoProxyAPIGatewayLambdaTrigger, self).__init__(start_time)
 
         self.event_id = event['context']['request-id']
-        self.resource['name'] = event['context']['resource-path']
+        self.resource['name'] = event['params']['header'].get(
+            'Host',
+            event['context']['api-id']
+        )
         self.resource['operation'] = event['context']['http-method']
 
         self.resource['metadata'] = {
             'stage': event['context']['stage'],
             'query_string_parameters': event['params']['querystring'],
             'path_parameters': event['params']['path'],
+            'resource': event['context']['resource-path'],
         }
 
         add_data_if_needed(
