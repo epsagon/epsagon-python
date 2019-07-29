@@ -338,9 +338,25 @@ def test_set_error_sanity():
     trace.clear_events()
     trace.set_runner(event)
     msg = 'oops'
-    trace.set_error(ValueError(msg), 'test_value')
+    trace.set_error(ValueError(msg))
 
     assert trace.to_dict()['events'][0]['exception']['message'] == msg
+    assert len(trace.to_dict()['events'][0]['exception']['traceback']) > 1
+
+
+def test_set_error_with_traceback():
+    event = RunnerEventMock()
+    trace = trace_factory.get_or_create_trace()
+    trace.clear_events()
+    trace.set_runner(event)
+    msg = 'oops'
+    traceback_data = 'test_value'
+    trace.set_error(ValueError(msg), traceback_data=traceback_data)
+
+    assert trace.to_dict()['events'][0]['exception']['message'] == msg
+    assert (
+        trace.to_dict()['events'][0]['exception']['traceback'] == traceback_data
+    )
 
 
 def test_custom_labels_override_trace():

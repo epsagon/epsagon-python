@@ -536,7 +536,9 @@ class Trace(object):
             return
 
         if not traceback_data:
-            traceback_data = ''.join(traceback.extract_stack().format())
+            traceback_data = ''.join(
+                traceback.format_list(traceback.extract_stack())
+            )
         self.runner.set_exception(exception, traceback_data)
 
     def update_runner_with_labels(self):
