@@ -27,10 +27,13 @@ class TornadoWrapper(object):
         :param kwargs: wrapt's kwargs
         """
         try:
-            epsagon.trace.trace_factory.get_or_create_trace().prepare()
+            trace = epsagon.trace.trace_factory.get_or_create_trace()
+            trace.prepare()
+
             ignored = ignore_request('', instance.request.path)
             if not ignored:
                 cls.RUNNER = TornadoRunner(time.time(), instance.request)
+                trace.set_runner(cls.RUNNER)
         except Exception as instrumentation_exception:  # pylint: disable=W0703
             epsagon.trace.trace_factory.add_exception(
                 instrumentation_exception,
