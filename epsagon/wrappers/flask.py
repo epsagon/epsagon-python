@@ -70,6 +70,7 @@ class FlaskWrapper(object):
                 self.app,
                 request
             )
+            trace.set_runner(self.runner)
 
             # Collect metadata in case this is a container.
             metadata = collect_container_metadata()

@@ -47,7 +47,9 @@ class DjangoMiddleware(object):
         """
         Runs before process of response.
         """
-        epsagon.trace.trace_factory.get_or_create_trace().prepare()
+        trace = epsagon.trace.trace_factory.get_or_create_trace()
+        trace.prepare()
+
         # Ignoring non relevant content types.
         self.ignored_request = ignore_request('', self.request.path.lower())
 
@@ -60,6 +62,7 @@ class DjangoMiddleware(object):
                 time.time(),
                 self.request
             )
+            trace.set_runner(self.runner)
 
             # Collect metadata in case this is a container.
             metadata = collect_container_metadata()
