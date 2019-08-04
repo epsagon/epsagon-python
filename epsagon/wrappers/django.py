@@ -105,6 +105,5 @@ class DjangoMiddleware(object):
             self.ignored_request = True
             return
 
-        epsagon.trace.trace_factory.add_event(self.runner)
         self.runner.update_response(self.response)
         epsagon.trace.trace_factory.send_traces()

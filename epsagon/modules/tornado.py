@@ -59,7 +59,6 @@ class TornadoWrapper(object):
             ignored = ignore_request(content, '')
             if not ignored and cls.RUNNER:
                 cls.RUNNER.update_response(instance)
-                trace.add_event(cls.RUNNER)
                 trace.send_traces()
             trace.prepare()
         except Exception as instrumentation_exception:  # pylint: disable=W0703
