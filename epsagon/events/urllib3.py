@@ -128,9 +128,10 @@ class Urllib3EventFactory(object):
         # pylint: disable=possibly-unused-variable
         path = args[1] if len(args) > 1 else kwargs.get('url', '')
         port_part = ':' + str(instance.port) if instance.port else ''
-        host_url = '{scheme}://{host}'.format_map(
-            {'scheme': instance.scheme, 'host': instance.host})
-        url = '{host_url}{port_part}{path}'.format_map(locals())
+        host_url = '{}://{}'.format(instance.scheme, instance.host)
+        url = '{}{}{}'.format(
+            host_url, port_part, path
+        )
         args = (args[0] if args else kwargs.get('method', 'UNKNOWN METHOD'),
                 url)
 
