@@ -64,5 +64,5 @@ class TornadoRunner(BaseEvent):
         self.resource['metadata']['Status'] = response._status_code
         self.resource['metadata']['etag'] = headers.get('Etag')
 
-        if not self.error_code and response._status_code >= 300:
+        if not self.error_code and response._status_code >= 500:
             self.set_error()

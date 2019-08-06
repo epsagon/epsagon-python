@@ -103,7 +103,7 @@ def patch():
     )
     wrapt.wrap_function_wrapper(
         'tornado.web',
-        'RequestHandler.on_finish',
+        'RequestHandler.finish',
         TornadoWrapper.after_request
     )
     wrapt.wrap_function_wrapper(
