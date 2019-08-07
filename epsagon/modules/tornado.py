@@ -28,6 +28,7 @@ class TornadoWrapper(object):
         :param kwargs: wrapt's kwargs
         """
         try:
+            epsagon.trace.trace_factory.switch_to_multiple_traces()
             trace = epsagon.trace.trace_factory.get_or_create_trace()
             trace.prepare()
 
