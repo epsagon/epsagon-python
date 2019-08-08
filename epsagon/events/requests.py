@@ -13,6 +13,7 @@ from ..trace import trace_factory
 from ..event import BaseEvent
 from ..wrappers.http_filters import is_blacklisted_url
 from ..utils import update_api_gateway_headers, normalize_http_url
+from ..constants import HTTP_ERR_CODE
 
 
 class RequestsEvent(BaseEvent):
@@ -94,7 +95,7 @@ class RequestsEvent(BaseEvent):
             pass
 
         # Detect errors based on status code
-        if response.status_code >= 300:
+        if response.status_code >= HTTP_ERR_CODE:
             self.set_error()
 
 

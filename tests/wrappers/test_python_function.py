@@ -14,10 +14,8 @@ trace_mock = mock.MagicMock()
 
 def setup_function(func):
     trace_mock.configure_mock(**get_tracer_patch_kwargs())
-    if trace_factory.use_single_trace:
-        trace_factory.singleton_trace = trace_mock
-    else:
-        trace_factory.traces[threading.currentThread().ident] = trace_mock
+    trace_factory.singleton_trace = trace_mock
+    trace_factory.use_single_trace = True
     epsagon.constants.COLD_START = True
 
 

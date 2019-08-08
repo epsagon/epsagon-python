@@ -48,6 +48,7 @@ class FlaskWrapper(object):
 
         # Whether we ignore this request or not.
         self.ignored_request = False
+        epsagon.trace.trace_factory.switch_to_multiple_traces()
 
     def _before_request(self):
         """

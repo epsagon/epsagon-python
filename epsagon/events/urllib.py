@@ -15,6 +15,7 @@ from ..wrappers.http_filters import (
     is_payload_collection_blacklisted
 )
 from ..utils import update_api_gateway_headers, normalize_http_url
+from ..constants import HTTP_ERR_CODE
 
 
 class UrllibEvent(BaseEvent):
@@ -102,7 +103,7 @@ class UrllibEvent(BaseEvent):
                 pass
 
         # Detect errors based on status code
-        if response.status >= 300:
+        if response.status >= HTTP_ERR_CODE:
             self.set_error()
 
 
