@@ -79,5 +79,5 @@ def test_flask_wrapper_teardown_exception(exception_mock, _, client):
     'epsagon.trace.trace_factory.get_or_create_trace',
     side_effect=lambda: trace_mock
 )
-def test_lambda_wrapper_single_thread(_):
-    assert trace_factory.use_single_trace
+def test_lambda_wrapper_multi_thread(_):
+    assert not trace_factory.use_single_trace

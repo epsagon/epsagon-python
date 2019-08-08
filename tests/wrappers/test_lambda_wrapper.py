@@ -13,6 +13,7 @@ trace_mock = mock.MagicMock()
 
 
 def setup_function(func):
+    trace_factory.use_single_trace = True
     trace_mock.configure_mock(**get_tracer_patch_kwargs())
     epsagon.constants.COLD_START = True
 

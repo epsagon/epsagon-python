@@ -19,6 +19,7 @@ from ..wrappers.http_filters import (
     is_payload_collection_blacklisted
 )
 from ..utils import update_api_gateway_headers
+from ..constants import HTTP_ERR_CODE
 
 
 class Httplib2Event(BaseEvent):
@@ -116,7 +117,7 @@ class Httplib2Event(BaseEvent):
                 pass
 
         # Detect errors based on status code
-        if int(response_headers['status']) >= 300:
+        if int(response_headers['status']) >= HTTP_ERR_CODE:
             self.set_error()
 
     @staticmethod
