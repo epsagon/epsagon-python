@@ -30,13 +30,13 @@ def wrap_python_function(func, args, kwargs):
             args,
             kwargs
         )
+        epsagon.trace.trace_factory.set_runner(runner)
 
         # Collect metadata in case this is a container.
         metadata = collect_container_metadata()
         if metadata:
             runner.resource['metadata']['ECS'] = metadata
 
-        epsagon.trace.trace_factory.set_runner(runner)
     # pylint: disable=W0703
     except Exception:
         # If we failed, just call the user's function. Nothing more to do.

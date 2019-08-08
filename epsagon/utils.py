@@ -167,10 +167,6 @@ def collect_container_metadata():
         return {}
     container_metadata = json.loads(requests.get(metadata_uri).content)
 
-    # Remove event from events list
-    events = list(trace_factory.get_trace().events_map.keys())
-    trace_factory.get_trace().events_map.pop(events[0])
-
     new_metadata = container_metadata['Labels'].copy()
     new_metadata['Limits'] = container_metadata['Limits']
     return new_metadata

@@ -342,6 +342,7 @@ class Trace(object):
                 self.timeout_handler
             )
 
+            # pylint: disable=comparison-with-callable
             if (
                     original_handler and
                     original_handler != self.timeout_handler

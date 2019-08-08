@@ -32,6 +32,7 @@ BLACKLIST_URLS = {
     ],
     str.__contains__: [
         'accounts.google.com',
+        '169.254.170.2'  # AWS Task Metadata Endpoint
     ],
 }
 WHITELIST_URL = {

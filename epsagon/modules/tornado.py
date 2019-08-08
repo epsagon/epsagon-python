@@ -9,6 +9,7 @@ import wrapt
 import epsagon.trace
 from epsagon.runners.tornado import TornadoRunner
 from epsagon.wrappers.http_filters import ignore_request
+from epsagon.utils import collect_container_metadata
 
 
 class TornadoWrapper(object):
@@ -16,6 +17,8 @@ class TornadoWrapper(object):
     Wraps Tornado web framework to get requests.
     """
     RUNNER = None
+    ECS_TASK_METADATA = None
+    CHECKED_ECS_ENDPOINT = False
 
     @classmethod
     def before_request(cls, wrapped, instance, args, kwargs):
@@ -34,6 +37,15 @@ class TornadoWrapper(object):
             if not ignored:
                 cls.RUNNER = TornadoRunner(time.time(), instance.request)
                 trace.set_runner(cls.RUNNER)
+
+                # Collect metadata in case this is a container.
+                if not cls.CHECKED_ECS_ENDPOINT:
+                    cls.CHECKED_ECS_ENDPOINT = True
+                    cls.ECS_TASK_METADATA = collect_container_metadata()
+                if cls.ECS_TASK_METADATA:
+                    cls.RUNNER.resource['metadata']['ECS'] = (
+                        cls.ECS_TASK_METADATA
+                    )
         except Exception as instrumentation_exception:  # pylint: disable=W0703
             epsagon.trace.trace_factory.add_exception(
                 instrumentation_exception,
