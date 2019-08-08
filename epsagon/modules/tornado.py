@@ -17,8 +17,6 @@ class TornadoWrapper(object):
     Wraps Tornado web framework to get requests.
     """
     RUNNER = None
-    ECS_TASK_METADATA = None
-    CHECKED_ECS_ENDPOINT = False
 
     @classmethod
     def before_request(cls, wrapped, instance, args, kwargs):
@@ -39,13 +37,9 @@ class TornadoWrapper(object):
                 trace.set_runner(cls.RUNNER)
 
                 # Collect metadata in case this is a container.
-                if not cls.CHECKED_ECS_ENDPOINT:
-                    cls.CHECKED_ECS_ENDPOINT = True
-                    cls.ECS_TASK_METADATA = collect_container_metadata()
-                if cls.ECS_TASK_METADATA:
-                    cls.RUNNER.resource['metadata']['ECS'] = (
-                        cls.ECS_TASK_METADATA
-                    )
+                metadata = collect_container_metadata()
+                if metadata:
+                    cls.RUNNER.resource['metadata']['ECS'] = metadata
         except Exception as instrumentation_exception:  # pylint: disable=W0703
             epsagon.trace.trace_factory.add_exception(
                 instrumentation_exception,

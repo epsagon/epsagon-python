@@ -16,6 +16,12 @@ from .trace import trace_factory
 from .constants import EPSAGON_HANDLER
 
 
+METADATA_CACHE = {
+    'queried': False,
+    'data': {},
+}
+
+
 def normalize_http_url(url):
     """
     Strip http schema, port number and path from a url
@@ -162,6 +168,10 @@ def collect_container_metadata():
     Collects container metadata if exists.
     :return: dict.
     """
+    if METADATA_CACHE['queried']:
+        return METADATA_CACHE['data']
+
+    METADATA_CACHE['queried'] = True
     metadata_uri = os.environ.get('ECS_CONTAINER_METADATA_URI')
     if not metadata_uri:
         return {}
@@ -169,4 +179,5 @@ def collect_container_metadata():
 
     new_metadata = container_metadata['Labels'].copy()
     new_metadata['Limits'] = container_metadata['Limits']
-    return new_metadata
+    METADATA_CACHE['data'] = new_metadata
+    return METADATA_CACHE['data']
