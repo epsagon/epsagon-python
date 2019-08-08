@@ -268,6 +268,7 @@ And in your `zappa_settings.json` file include the following:
 
 ## Copyright
 
+
 Provided under the MIT license. See LICENSE for details.
 
 Copyright 2019, Epsagon.
