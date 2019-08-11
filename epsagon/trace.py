@@ -121,63 +121,80 @@ class TraceFactory(object):
         """
         self.use_single_trace = False
 
-    def get_or_create_trace(self):
+    def _create_new_trace(self, unique_id=None):
+        """
+        Creating new trace instance
+        :param unique_id: trace unique id
+        :return: new trace
+        """
+        return Trace(
+            self.app_name,
+            self.token,
+            self.collector_url,
+            self.metadata_only,
+            self.disable_timeout_send,
+            self.debug,
+            self.send_trace_only_on_error,
+            self.url_patterns_to_ignore,
+            self.keys_to_ignore,
+            unique_id
+        )
+
+    def get_or_create_trace(self, unique_id=None):
         """
         Get or create trace based on the use_single_trace flag.
         if use_single_trace is set to False, each thread will have
         it's own trace.
         :return: The trace.
         """
+        if unique_id:
+            trace = (
+                self.singleton_trace
+                if self.singleton_trace and not self.traces
+                else self.traces.get(
+                    unique_id, self._create_new_trace(unique_id)
+                )
+            )
+            # Making sure singleton trace contains the latest trace
+            self.singleton_trace = trace
+            self.traces[unique_id] = trace
+            return trace
 
         if self.use_single_trace:
             if self.singleton_trace is None:
-                self.singleton_trace = Trace(
-                    self.app_name,
-                    self.token,
-                    self.collector_url,
-                    self.metadata_only,
-                    self.disable_timeout_send,
-                    self.debug,
-                    self.send_trace_only_on_error,
-                    self.url_patterns_to_ignore,
-                    self.keys_to_ignore
-                )
+                self.singleton_trace = self._create_new_trace()
             return self.singleton_trace
 
         # If multiple threads are used, then create a new trace for each thread
-        thread_id = threading.currentThread().ident
+        thread_id = self.get_trace_identifier()
         if thread_id not in self.traces:
-            new_trace = Trace(
-                self.app_name,
-                self.token,
-                self.collector_url,
-                self.metadata_only,
-                self.disable_timeout_send,
-                self.debug,
-                self.send_trace_only_on_error,
-                self.url_patterns_to_ignore,
-                self.keys_to_ignore
-
-            )
+            new_trace = self._create_new_trace()
             self.traces[thread_id] = new_trace
         return self.traces[thread_id]
+
+    def get_trace_identifier(self):
+        """
+        Return the trace identifier
+        :return: trace identifier
+        """
+        return (
+            threading.currentThread().ident
+            if not self.singleton_trace and self.singleton_trace.unique_id
+            else self.singleton_trace.unique_id
+        )
 
     def get_trace(self):
         """
         Get the relevant trace (may be thread-based or a singleton trace)
         :return:
         """
-        if self.use_single_trace:
-            return self.singleton_trace
-
-        return self.traces.get(threading.currentThread().ident)
+        return self.get_or_create_trace()
 
     def remove_current_trace(self):
         """
         Remove the thread's trace only if use_single_trace is set to False.
         """
-        if not self.use_single_trace:
-            self.traces.pop(threading.currentThread().ident, None)
+        self.traces.pop(self.get_trace_identifier(), None)
 
     def add_event(self, event):
         """
@@ -263,14 +280,14 @@ class Trace(object):
             debug=False,
             send_trace_only_on_error=False,
             url_patterns_to_ignore=None,
-            keys_to_ignore=None
-
+            keys_to_ignore=None,
+            unique_id=None,
     ):
         """
         initialize.
         """
-
         self.app_name = app_name
+        self.unique_id = unique_id
         self.token = token
         self.events_map = {}
         self.exceptions = []
