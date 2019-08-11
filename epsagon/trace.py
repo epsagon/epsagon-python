@@ -179,7 +179,7 @@ class TraceFactory(object):
         """
         return (
             threading.currentThread().ident
-            if not self.singleton_trace and self.singleton_trace.unique_id
+            if not self.singleton_trace or not self.singleton_trace.unique_id
             else self.singleton_trace.unique_id
         )
 
