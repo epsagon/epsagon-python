@@ -34,7 +34,6 @@ class TornadoWrapper(object):
         try:
             ignored = ignore_request('', instance.request.path)
             if not ignored:
-
                 unique_id = str(uuid.uuid4())
                 trace = epsagon.trace.trace_factory.get_or_create_trace(
                     unique_id=unique_id
