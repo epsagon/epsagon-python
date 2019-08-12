@@ -108,9 +108,9 @@ class TornadoWrapper(object):
         :param kwargs: wrapt's kwargs
         """
         try:
-            unique_id = getattr(instance, TORNADO_TRACE_ID)
+            unique_id = getattr(instance, TORNADO_TRACE_ID, None)
 
-            if cls.RUNNERS.get(unique_id):
+            if unique_id and cls.RUNNERS.get(unique_id):
                 _, exception, _ = args
                 cls.RUNNERS[unique_id].set_exception(
                     exception, traceback.format_exc()
@@ -137,10 +137,11 @@ class TornadoWrapper(object):
             func = args[0]
             if isinstance(func, partial):
                 func = func.func
-            unique_id = getattr(func, TORNADO_TRACE_ID)
-            epsagon.trace.trace_factory.get_or_create_trace(
-                unique_id=unique_id
-            )
+            unique_id = getattr(func, TORNADO_TRACE_ID, None)
+            if unique_id:
+                epsagon.trace.trace_factory.get_or_create_trace(
+                    unique_id=unique_id
+                )
         except Exception as instrumentation_exception:  # pylint: disable=W0703
             epsagon.trace.trace_factory.add_exception(
                 instrumentation_exception,
