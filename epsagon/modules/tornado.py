@@ -74,7 +74,7 @@ class TornadoWrapper(object):
         res = wrapped(*args, **kwargs)
         try:
             unique_id = getattr(instance, TORNADO_TRACE_ID)
-            request_handler = cls.RUNNERS.pop(unique_id)
+            tornado_runner = cls.RUNNERS.pop(unique_id)
 
             trace = epsagon.trace.trace_factory.get_or_create_trace(
                 unique_id=unique_id
@@ -86,7 +86,7 @@ class TornadoWrapper(object):
             )
             ignored = ignore_request(content, '')
             if not ignored:
-                request_handler.update_response(instance)
+                tornado_runner.update_response(instance)
                 trace.send_traces()
 
             trace.prepare()
