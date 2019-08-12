@@ -71,7 +71,7 @@ class TornadoWrapper(object):
         :param args: wrapt's args
         :param kwargs: wrapt's kwargs
         """
-
+        res = wrapped(*args, **kwargs)
         try:
             unique_id = getattr(instance, TORNADO_TRACE_ID)
             request_handler = cls.RUNNERS.pop(unique_id)
@@ -96,8 +96,7 @@ class TornadoWrapper(object):
                 instrumentation_exception,
                 traceback.format_exc()
             )
-
-        return wrapped(*args, **kwargs)
+        return res
 
     @classmethod
     def collect_exception(cls, wrapped, instance, args, kwargs):
@@ -178,7 +177,7 @@ def patch():
     )
     wrapt.wrap_function_wrapper(
         'tornado.web',
-        'RequestHandler.on_finish',
+        'RequestHandler.finish',
         TornadoWrapper.after_request
     )
     wrapt.wrap_function_wrapper(
