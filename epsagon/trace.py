@@ -71,6 +71,7 @@ class TraceFactory(object):
         self.keys_to_ignore = None
         self.use_single_trace = True
         self.singleton_trace = None
+        self.local_thread_to_unique_id = {}
 
     def initialize(
             self,
@@ -147,6 +148,7 @@ class TraceFactory(object):
         it's own trace.
         :return: The trace.
         """
+        unique_id = self.get_thread_local_unique_id(unique_id)
         if unique_id:
             trace = (
                 self.singleton_trace
@@ -156,6 +158,7 @@ class TraceFactory(object):
                 )
             )
             # Making sure singleton trace contains the latest trace
+            trace.unique_id = unique_id
             self.singleton_trace = trace
             self.traces[unique_id] = trace
             return trace
@@ -172,13 +175,51 @@ class TraceFactory(object):
             self.traces[thread_id] = new_trace
         return self.traces[thread_id]
 
+    def get_thread_local_unique_id(self, unique_id):
+        """
+        Get thread local unique id
+        :param unique_id: input unique id
+        :return: active id if there's an active unique id or given one
+        """
+        return self.local_thread_to_unique_id.get(
+            self.get_thread_id(), unique_id
+        )
+
+    def set_thread_local_unique_id(self, unique_id=None):
+        """
+        Set thread local unique id
+        :param unique_id: input unique id
+        :return: the active unique id
+        """
+        unique_id = (
+            unique_id if unique_id else (
+                self.singleton_trace.unique_id if self.singleton_trace else None
+            )
+        )
+        self.local_thread_to_unique_id[self.get_thread_id()] = unique_id
+        return unique_id
+
+    def unset_thread_local_unique_id(self):
+        """
+        Unset thread local unique id
+        :return: None
+        """
+        self.local_thread_to_unique_id.pop(self.get_thread_id(), None)
+
+    def get_thread_id(self):
+        """
+        Return current thread id
+        :return: thread id
+        """
+        return threading.currentThread().ident
+
     def get_trace_identifier(self):
         """
         Return the trace identifier
         :return: trace identifier
         """
         return (
-            threading.currentThread().ident
+            self.get_thread_id()
             if not self.singleton_trace or not self.singleton_trace.unique_id
             else self.singleton_trace.unique_id
         )
@@ -202,8 +243,9 @@ class TraceFactory(object):
         :param event: The event to add.
         :return: None
         """
-        if self.get_trace():
-            self.get_trace().add_event(event)
+        trace = self.get_trace()
+        if trace:
+            trace.add_event(event)
 
     def set_runner(self, event):
         """
@@ -591,6 +633,7 @@ class Trace(object):
             'exceptions': self.exceptions,
             'version': self.version,
             'platform': self.platform,
+            'unique_id': self.unique_id,
         }
 
     def _strip(self):
