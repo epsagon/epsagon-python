@@ -160,10 +160,54 @@ class TornadoWrapper(object):
         :param kwargs:
         :return:
         """
-        unique_id = epsagon.trace.trace_factory.get_or_create_trace().unique_id
         res = wrapped(*args, **kwargs)
-        if res and unique_id:
-            setattr(res, TORNADO_TRACE_ID, unique_id)
+        if res and not hasattr(res, TORNADO_TRACE_ID):
+            unique_id = (
+                epsagon.trace.trace_factory.get_or_create_trace().unique_id
+            )
+            if unique_id:
+                setattr(res, TORNADO_TRACE_ID, unique_id)
+        return res
+
+    @classmethod
+    def thread_pool_submit(cls, func, _, args, kwargs):
+        """
+        Submits a new worker to the thread pool, wrapped in our injector
+        """
+        unique_id = None
+
+        try:
+            unique_id = (
+                epsagon.trace.trace_factory.get_or_create_trace().unique_id
+            )
+
+        except Exception as instrumentation_exception:  # pylint: disable=W0703
+            epsagon.trace.trace_factory.add_exception(
+                instrumentation_exception,
+                traceback.format_exc()
+            )
+
+        fn = args[0]
+        fn_args = args[1:]
+        return func(cls.thread_pool_execution, unique_id, fn, fn_args, kwargs)
+
+    @classmethod
+    def thread_pool_execution(cls, unique_id, fn, args, kwargs):
+        """
+            Middleware to inject unique id to the thread pool execution
+        """
+        try:
+            if unique_id is not None:
+                epsagon.trace.trace_factory.set_thread_local_unique_id(
+                    unique_id
+                )
+        except Exception as instrumentation_exception:  # pylint: disable=W0703
+            epsagon.trace.trace_factory.add_exception(
+                instrumentation_exception,
+                traceback.format_exc()
+            )
+        res = fn(*args, **kwargs)
+        epsagon.trace.trace_factory.unset_thread_local_unique_id()
         return res
 
 
@@ -195,4 +239,9 @@ def patch():
         'tornado.stack_context',
         'wrap',
         TornadoWrapper.wrap
+    )
+    wrapt.wrap_function_wrapper(
+        'concurrent.futures',
+        'ThreadPoolExecutor.submit',
+        TornadoWrapper.thread_pool_submit
     )
