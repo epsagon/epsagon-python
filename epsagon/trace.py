@@ -633,7 +633,6 @@ class Trace(object):
             'exceptions': self.exceptions,
             'version': self.version,
             'platform': self.platform,
-            'unique_id': self.unique_id,
         }
 
     def _strip(self):
