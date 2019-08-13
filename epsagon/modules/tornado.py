@@ -33,7 +33,6 @@ class TornadoWrapper(object):
         """
         try:
             ignored = ignore_request('', instance.request.path)
-            print('EPSAGON_DEBUG: before_request', instance.request.path, 'ignored: ', ignored)
             if not ignored:
                 unique_id = str(uuid.uuid4())
                 trace = epsagon.trace.trace_factory.get_or_create_trace(
@@ -82,8 +81,6 @@ class TornadoWrapper(object):
         try:
             unique_id = getattr(instance, TORNADO_TRACE_ID, None)
             if not unique_id:
-                print('EPSAGON_DEBUG: ar | unique id not found', instance.request.path)
-
                 return res
 
             tornado_runner = cls.RUNNERS.pop(unique_id)
@@ -100,16 +97,11 @@ class TornadoWrapper(object):
                     )
                 )
                 ignored = ignore_request(content, '')
-                print('EPSAGON_DEBUG: ar ', instance.request.path, 'ignored', ignored)
 
                 if not ignored:
                     tornado_runner.update_response(instance)
                     epsagon.trace.trace_factory.send_traces(trace)
-            else:
-                print('EPSAGON_DEBUG: no trace found', unique_id, 'runner', tornado_runner)
         except Exception as instrumentation_exception:  # pylint: disable=W0703
-            print('EPSAGON_DEBUG: exception thrown after request', instance.request.path, instrumentation_exception)
-
             epsagon.trace.trace_factory.add_exception(
                 instrumentation_exception,
                 traceback.format_exc()
@@ -130,15 +122,10 @@ class TornadoWrapper(object):
 
             if unique_id and cls.RUNNERS.get(unique_id):
                 _, exception, _ = args
-                print('EPSAGON_DEBUG: collect exception {}'.format(exception))
                 cls.RUNNERS[unique_id].set_exception(
                     exception, traceback.format_exc()
                 )
         except Exception as instrumentation_exception:  # pylint: disable=W0703
-            print('EPSAGON_DEBUG: exception thrown after request {} {}'.format(
-                instance.request.path, instrumentation_exception)
-            )
-
             epsagon.trace.trace_factory.add_exception(
                 instrumentation_exception,
                 traceback.format_exc()
