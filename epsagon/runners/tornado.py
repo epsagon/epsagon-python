@@ -53,7 +53,6 @@ class TornadoRunner(BaseEvent):
         Adds response data to event.
         :param response: WSGI Response
         """
-        
         headers = dict(response._headers.get_all())
         add_data_if_needed(
             self.resource['metadata'],

@@ -722,7 +722,7 @@ class Trace(object):
                         self.remove_ignored_keys(value)
 
     # pylint: disable=W0703
-    def send_traces(self, destroy=True):
+    def send_traces(self):
         """
         Send trace to collector.
         :return: None
