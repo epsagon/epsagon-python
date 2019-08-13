@@ -71,6 +71,9 @@ class TornadoWrapper(object):
         :param args: wrapt's args
         :param kwargs: wrapt's kwargs
         """
+        response_body = getattr(instance, '_write_buffer', None)
+        if response_body and isinstance(response_body, list):
+            response_body = b''.join(response_body)
         res = wrapped(*args, **kwargs)
         try:
             unique_id = getattr(instance, TORNADO_TRACE_ID, None)
@@ -92,7 +95,7 @@ class TornadoWrapper(object):
                 )
                 ignored = ignore_request(content, '')
                 if not ignored:
-                    tornado_runner.update_response(instance)
+                    tornado_runner.update_response(instance, response_body)
                     epsagon.trace.trace_factory.send_traces(trace)
         except Exception as instrumentation_exception:  # pylint: disable=W0703
             epsagon.trace.trace_factory.add_exception(
