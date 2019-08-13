@@ -33,7 +33,7 @@ class TornadoWrapper(object):
         """
         try:
             ignored = ignore_request('', instance.request.path)
-            print('EPSAGON_DEBUG: before_request', instance.request.path)
+            print('EPSAGON_DEBUG: before_request', instance.request.path, 'ignored: ', ignored)
             if not ignored:
                 unique_id = str(uuid.uuid4())
                 trace = epsagon.trace.trace_factory.get_or_create_trace(
@@ -80,7 +80,12 @@ class TornadoWrapper(object):
 
         res = wrapped(*args, **kwargs)
         try:
-            unique_id = getattr(instance, TORNADO_TRACE_ID)
+            unique_id = getattr(instance, TORNADO_TRACE_ID, None)
+            if not unique_id:
+                print('EPSAGON_DEBUG: ar | unique id not found', instance.request.path)
+
+                return res
+
             tornado_runner = cls.RUNNERS.pop(unique_id)
 
             trace = epsagon.trace.trace_factory.switch_active_trace(
@@ -95,11 +100,15 @@ class TornadoWrapper(object):
                     )
                 )
                 ignored = ignore_request(content, '')
+                print('EPSAGON_DEBUG: ar ', instance.request.path, 'ignored', ignored)
+
                 if not ignored:
                     tornado_runner.update_response(instance)
                     trace.send_traces()
 
                 trace.prepare()
+            else:
+                print('EPSAGON_DEBUG: no trace found', unique_id, 'runner', tornado_runner)
         except Exception as instrumentation_exception:  # pylint: disable=W0703
             print('EPSAGON_DEBUG: exception thrown after request', instance.request.path, instrumentation_exception)
 
@@ -119,6 +128,8 @@ class TornadoWrapper(object):
         :param kwargs: wrapt's kwargs
         """
         try:
+            print('EPSAGON_DEBUG: collect exception', instance.request.path)
+
             unique_id = getattr(instance, TORNADO_TRACE_ID, None)
 
             if unique_id and cls.RUNNERS.get(unique_id):
@@ -127,6 +138,8 @@ class TornadoWrapper(object):
                     exception, traceback.format_exc()
                 )
         except Exception as instrumentation_exception:  # pylint: disable=W0703
+            print('EPSAGON_DEBUG: exception thrown after request', instance.request.path, instrumentation_exception)
+
             epsagon.trace.trace_factory.add_exception(
                 instrumentation_exception,
                 traceback.format_exc()
