@@ -104,10 +104,7 @@ class TornadoWrapper(object):
 
                 if not ignored:
                     tornado_runner.update_response(instance)
-                    trace.send_traces(destory=False)
-
-                trace.prepare()
-                epsagon.trace.trace_factory.pop_trace(trace.unique_id)
+                    epsagon.trace.trace_factory.send_traces(trace)
             else:
                 print('EPSAGON_DEBUG: no trace found', unique_id, 'runner', tornado_runner)
         except Exception as instrumentation_exception:  # pylint: disable=W0703

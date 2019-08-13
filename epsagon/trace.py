@@ -338,12 +338,13 @@ class TraceFactory(object):
         if self.get_trace():
             self.get_trace().set_error(exception, traceback_data)
 
-    def send_traces(self):
+    def send_traces(self, trace=None):
         """
         Send the traces for the current thread.
         :return: None
         """
-        trace = self.get_trace()
+        trace = trace if trace else self.get_trace()
+
         if trace:
             trace.send_traces()
             self.pop_trace(trace)
