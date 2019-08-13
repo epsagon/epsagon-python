@@ -216,6 +216,18 @@ class TraceFactory(object):
                 self.singleton_trace = trace
             return trace
 
+    def pop_trace(self, unique_id):
+        """
+        Sets the active trace by unique id
+        :return: unique id
+        """
+        with self.LOCK:
+            if self.traces:
+                trace = self.traces.pop(unique_id, None)
+                if not self.traces:
+                    self.singleton_trace = None
+                return trace
+
     def get_thread_local_unique_id(self, unique_id=None):
         """
         Get thread local unique id
@@ -269,7 +281,8 @@ class TraceFactory(object):
         """
         Remove the thread's trace only if use_single_trace is set to False.
         """
-        self.traces.pop(self.get_trace_identifier(), None)
+        with LOCK:
+            self.traces.pop(self.get_trace_identifier(), None)
 
     def add_event(self, event):
         """
@@ -704,7 +717,7 @@ class Trace(object):
                         self.remove_ignored_keys(value)
 
     # pylint: disable=W0703
-    def send_traces(self):
+    def send_traces(self, destroy=True):
         """
         Send trace to collector.
         :return: None
@@ -769,7 +782,8 @@ class Trace(object):
         finally:
             if self.debug:
                 pprint.pprint(self.to_dict())
-            trace_factory.remove_current_trace()
+            if destroy:
+                trace_factory.remove_current_trace()
 
 
 # pylint: disable=C0103
