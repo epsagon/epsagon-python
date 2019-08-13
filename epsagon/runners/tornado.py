@@ -4,7 +4,6 @@ Runner for a Tornado Python framework
 """
 
 from __future__ import absolute_import
-from copy import deepcopy
 import uuid
 from ..event import BaseEvent
 from ..utils import add_data_if_needed
