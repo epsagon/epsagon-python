@@ -33,6 +33,7 @@ class TornadoWrapper(object):
         """
         try:
             ignored = ignore_request('', instance.request.path)
+            print('EPSAGON_DEBUG: before_request', instance.request.path)
             if not ignored:
                 unique_id = str(uuid.uuid4())
                 trace = epsagon.trace.trace_factory.get_or_create_trace(
@@ -56,6 +57,10 @@ class TornadoWrapper(object):
 
                 trace.set_runner(cls.RUNNERS[unique_id])
         except Exception as instrumentation_exception:  # pylint: disable=W0703
+            print('EPSAGON_DEBUG: exception thrown',
+                  instance.request.path, instrumentation_exception
+                  )
+
             epsagon.trace.trace_factory.add_exception(
                 instrumentation_exception,
                 traceback.format_exc()
@@ -71,6 +76,8 @@ class TornadoWrapper(object):
         :param args: wrapt's args
         :param kwargs: wrapt's kwargs
         """
+        print('EPSAGON_DEBUG: after_request', instance.request.path)
+
         res = wrapped(*args, **kwargs)
         try:
             unique_id = getattr(instance, TORNADO_TRACE_ID)
@@ -94,6 +101,8 @@ class TornadoWrapper(object):
 
                 trace.prepare()
         except Exception as instrumentation_exception:  # pylint: disable=W0703
+            print('EPSAGON_DEBUG: exception thrown after request', instance.request.path, instrumentation_exception)
+
             epsagon.trace.trace_factory.add_exception(
                 instrumentation_exception,
                 traceback.format_exc()
