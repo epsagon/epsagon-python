@@ -63,6 +63,8 @@ class TraceFactory(object):
     A trace factory.
     """
 
+    LOCK = threading.Lock()
+
     def __init__(self):
         """
         Initialize.
@@ -151,6 +153,15 @@ class TraceFactory(object):
 
     def get_or_create_trace(self, unique_id=None):
         """
+        Gets or create a trace - thread-safe
+        :param unique_id: unique id
+        :return: trace
+        """
+        with TraceFactory.LOCK:
+            return self._get_or_create_trace(unique_id)
+
+    def _get_or_create_trace(self, unique_id=None):
+        """
         Get or create trace based on the use_single_trace flag.
         if use_single_trace is set to False, each thread will have
         it's own trace.
@@ -162,9 +173,11 @@ class TraceFactory(object):
                 self.singleton_trace
                 if self.singleton_trace and not self.traces
                 else self.traces.get(
-                    unique_id, self._create_new_trace(unique_id)
+                    unique_id, None
                 )
             )
+            if not trace:
+                trace = self._create_new_trace(unique_id)
             # Making sure singleton trace contains the latest trace
             trace.unique_id = unique_id
             self.singleton_trace = trace
@@ -183,7 +196,27 @@ class TraceFactory(object):
             self.traces[thread_id] = new_trace
         return self.traces[thread_id]
 
-    def get_thread_local_unique_id(self, unique_id):
+    @property
+    def active_trace(self):
+        """
+        Return the active trace
+        :return: None
+        """
+        local_unique_id = self.get_thread_local_unique_id()
+        return self.traces.get(local_unique_id, self.singleton_trace)
+
+    def switch_active_trace(self, unique_id):
+        """
+        Sets the active trace by unique id
+        :return: unique id
+        """
+        with self.LOCK:
+            trace = self.traces.get(unique_id, None)
+            if trace:
+                self.singleton_trace = trace
+            return trace
+
+    def get_thread_local_unique_id(self, unique_id=None):
         """
         Get thread local unique id
         :param unique_id: input unique id
