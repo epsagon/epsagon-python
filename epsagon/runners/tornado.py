@@ -65,7 +65,7 @@ class TornadoRunner(BaseEvent):
             add_data_if_needed(
                 self.resource['metadata'],
                 'Response Body',
-                b''.join(response_body)
+                response_body
             )
 
         self.resource['metadata']['Status'] = response._status_code
