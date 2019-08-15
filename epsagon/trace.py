@@ -687,19 +687,20 @@ class Trace(object):
             'platform': self.platform,
         }
 
-    def events_sorter(self, event):
-            """
-            Events sort function
-            :param event: event
-            :return: sorting result
-            """
-            return 1 if event.origin in ['runner', 'trigger'] else 0
+    @staticmethod
+    def events_sorter(event):
+        """
+        Events sort function
+        :param event: event
+        :return: sorting result
+        """
+        return 1 if event.origin in ['runner', 'trigger'] else 0
 
     def _strip(self, trace_length):
         """
         Strips a given trace from all operations
         """
-        for event in sorted(list(self.events()), key=self.events_sorter):
+        for event in sorted(list(self.events()), key=Trace.events_sorter):
             event_metadata_length = (
                     len(json.dumps(event.resource.get('metadata', {})))
             )
