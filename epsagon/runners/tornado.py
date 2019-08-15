@@ -8,6 +8,8 @@ import uuid
 from ..event import BaseEvent
 from ..utils import add_data_if_needed
 
+MAX_PAYLOAD_BYTES = 2000
+
 
 class TornadoRunner(BaseEvent):
     """
@@ -65,7 +67,7 @@ class TornadoRunner(BaseEvent):
             add_data_if_needed(
                 self.resource['metadata'],
                 'Response Body',
-                response_body
+                str(response_body)[:MAX_PAYLOAD_BYTES]
             )
 
         self.resource['metadata']['Status'] = response._status_code

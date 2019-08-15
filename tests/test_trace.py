@@ -33,6 +33,7 @@ class EventMock(object):
     def __init__(self):
         self.terminated = False
         self.exception = {}
+        self.origin = 'not_runner'
         self.resource = {
             'metadata': {}
         }
@@ -45,7 +46,8 @@ class EventMock(object):
 
     def to_dict(self):
         result = {
-            'resource': self.resource
+            'resource': self.resource,
+            'origin': self.origin
         }
         if self.exception:
             result['exception'] = self.exception
@@ -482,10 +484,9 @@ def test_send_big_trace(wrapped_post):
 
     for _ in range(2):
         trace.add_event(BigEventMock())
-
     trace.send_traces()
 
-    assert len(trace.to_dict()['events']) == 1
+    assert len(trace.to_dict()['events']) == 3
     for event in trace.to_dict()['events']:
         if event['origin'] == 'runner':
             assert event['resource']['metadata']['is_trimmed']
