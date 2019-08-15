@@ -544,7 +544,8 @@ def test_init_sanity(wrapped_init):
         debug=False,
         send_trace_only_on_error=False,
         url_patterns_to_ignore=None,
-        keys_to_ignore=None
+        keys_to_ignore=None,
+        ignored_endpoints=None,
     )
 
 
@@ -566,7 +567,8 @@ def test_init_empty_app_name(wrapped_init):
         debug=False,
         send_trace_only_on_error=False,
         url_patterns_to_ignore=None,
-        keys_to_ignore=None
+        keys_to_ignore=None,
+        ignored_endpoints=None,
     )
 
 
@@ -582,7 +584,8 @@ def test_init_empty_collector_url(wrapped_init):
         debug=False,
         send_trace_only_on_error=False,
         url_patterns_to_ignore=None,
-        keys_to_ignore=None
+        keys_to_ignore=None,
+        ignored_endpoints=None,
     )
 
 
@@ -602,7 +605,8 @@ def test_init_no_ssl_no_url(wrapped_init):
         debug=False,
         send_trace_only_on_error=False,
         url_patterns_to_ignore=None,
-        keys_to_ignore=None
+        keys_to_ignore=None,
+        ignored_endpoints=None,
     )
 
 
@@ -626,7 +630,8 @@ def test_init_ssl_no_url(wrapped_init):
         debug=False,
         send_trace_only_on_error=False,
         url_patterns_to_ignore=None,
-        keys_to_ignore=None
+        keys_to_ignore=None,
+        ignored_endpoints=None,
     )
 
 
@@ -648,7 +653,8 @@ def test_init_ssl_with_url(wrapped_init):
         debug=False,
         send_trace_only_on_error=False,
         url_patterns_to_ignore=None,
-        keys_to_ignore=None
+        keys_to_ignore=None,
+        ignored_endpoints=None,
     )
 
 
@@ -670,7 +676,8 @@ def test_init_no_ssl_with_url(wrapped_init):
         debug=False,
         send_trace_only_on_error=False,
         url_patterns_to_ignore=None,
-        keys_to_ignore=None
+        keys_to_ignore=None,
+        ignored_endpoints=None,
     )
 
 
@@ -692,9 +699,34 @@ def test_init_ignored_urls_env(wrapped_init):
         debug=False,
         send_trace_only_on_error=False,
         url_patterns_to_ignore=['test.com', 'test2.com'],
-        keys_to_ignore=None
+        keys_to_ignore=None,
+        ignored_endpoints=None,
     )
     os.environ.pop('EPSAGON_URLS_TO_IGNORE')
+
+
+@mock.patch('epsagon.trace.TraceFactory.initialize')
+def test_init_ignored_endpoints_env(wrapped_init):
+    os.environ['EPSAGON_ENDPOINTS_TO_IGNORE'] = '/health,/test'
+    epsagon.utils.init(
+        token='token',
+        app_name='app-name',
+        collector_url='collector',
+        metadata_only=False
+    )
+    wrapped_init.assert_called_with(
+        token='token',
+        app_name='app-name',
+        collector_url='collector',
+        metadata_only=False,
+        disable_timeout_send=False,
+        debug=False,
+        send_trace_only_on_error=False,
+        url_patterns_to_ignore=None,
+        keys_to_ignore=None,
+        ignored_endpoints=['/health', '/test'],
+    )
+    os.environ.pop('EPSAGON_ENDPOINTS_TO_IGNORE')
 
 
 @mock.patch('epsagon.trace.TraceFactory.initialize')
@@ -715,7 +747,8 @@ def test_init_keys_to_ignore(wrapped_init):
         debug=False,
         send_trace_only_on_error=False,
         url_patterns_to_ignore=None,
-        keys_to_ignore=['a', 'b', 'c']
+        keys_to_ignore=['a', 'b', 'c'],
+        ignored_endpoints=None,
     )
 
 
@@ -738,7 +771,8 @@ def test_init_keys_to_ignore_env(wrapped_init):
         debug=False,
         send_trace_only_on_error=False,
         url_patterns_to_ignore=None,
-        keys_to_ignore=['a', 'b', 'c']
+        keys_to_ignore=['a', 'b', 'c'],
+        ignored_endpoints=None,
     )
 
 

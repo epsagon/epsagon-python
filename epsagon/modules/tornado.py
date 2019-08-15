@@ -32,13 +32,13 @@ class TornadoWrapper(object):
         :param kwargs: wrapt's kwargs
         """
         try:
+            unique_id = str(uuid.uuid4())
+            trace = epsagon.trace.trace_factory.get_or_create_trace(
+                unique_id=unique_id
+            )
             ignored = ignore_request('', instance.request.path)
-            if not ignored:
-                unique_id = str(uuid.uuid4())
-                trace = epsagon.trace.trace_factory.get_or_create_trace(
-                    unique_id=unique_id
-                )
-
+            ignored_endpoint = instance.request.path in trace.ignored_endpoints
+            if not ignored and not ignored_endpoint:
                 trace.prepare()
 
                 setattr(instance, TORNADO_TRACE_ID, unique_id)
