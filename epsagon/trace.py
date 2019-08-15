@@ -687,15 +687,26 @@ class Trace(object):
             'platform': self.platform,
         }
 
-    def _strip(self):
+    def events_sorter(self, event):
+            """
+            Events sort function
+            :param event: event
+            :return: sorting result
+            """
+            return 1 if event.origin in ['runner', 'trigger'] else 0
+
+    def _strip(self, trace_length):
         """
         Strips a given trace from all operations
         """
-        for event in self.events():
-            if event.origin == 'runner' or event.origin == 'trigger':
-                continue
-
-            self.events_map.pop(event.identifier(), None)
+        for event in sorted(list(self.events()), key=self.events_sorter):
+            event_metadata_length = (
+                    len(json.dumps(event.resource.get('metadata', {})))
+            )
+            event.resource['metadata'] = {}
+            trace_length -= event_metadata_length
+            if trace_length < MAX_TRACE_SIZE_BYTES:
+                break
 
     @staticmethod
     def _strip_key(key):
@@ -751,9 +762,10 @@ class Trace(object):
                 encoding='latin1'
             )
 
-            if len(trace) > MAX_TRACE_SIZE_BYTES:
+            trace_length = len(trace)
+            if trace_length > MAX_TRACE_SIZE_BYTES:
                 # Trace too big.
-                self._strip()
+                self._strip(trace_length)
                 self.runner.resource['metadata']['is_trimmed'] = True
 
                 trace = json.dumps(
