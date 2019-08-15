@@ -59,7 +59,6 @@ class BaseEvent(object):
         Converts Event to dict.
         :return: dict
         """
-
         self_as_dict = {
             'id': self.event_id,
             'start_time': self.start_time,
