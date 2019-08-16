@@ -78,7 +78,6 @@ class TraceFactory(object):
         self.debug = False
         self.send_trace_only_on_error = False
         self.url_patterns_to_ignore = None
-        self.ignored_endpoints = None
         self.keys_to_ignore = None
         self.use_single_trace = True
         self.singleton_trace = None
@@ -94,8 +93,7 @@ class TraceFactory(object):
             debug,
             send_trace_only_on_error,
             url_patterns_to_ignore,
-            keys_to_ignore,
-            ignored_endpoints
+            keys_to_ignore
     ):
         """
         Initializes The factory with user's data.
@@ -112,7 +110,6 @@ class TraceFactory(object):
         :param url_patterns_to_ignore: URL patterns to ignore in HTTP data
          collection.
         :param keys_to_ignore: List of keys to ignore while extracting metadata.
-        :param ignored_endpoints: List of ignored endpoints for web frameworks.
         :return: None
         """
 
@@ -125,9 +122,6 @@ class TraceFactory(object):
         self.send_trace_only_on_error = send_trace_only_on_error
         self.url_patterns_to_ignore = (
             set(url_patterns_to_ignore) if url_patterns_to_ignore else set()
-        )
-        self.ignored_endpoints = (
-            set(ignored_endpoints) if ignored_endpoints else set()
         )
         self.keys_to_ignore = [] if keys_to_ignore is None else keys_to_ignore
 
@@ -154,7 +148,6 @@ class TraceFactory(object):
             self.send_trace_only_on_error,
             self.url_patterns_to_ignore,
             self.keys_to_ignore,
-            self.ignored_endpoints,
             unique_id
         )
 
@@ -382,7 +375,6 @@ class Trace(object):
             send_trace_only_on_error=False,
             url_patterns_to_ignore=None,
             keys_to_ignore=None,
-            ignored_endpoints=None,
             unique_id=None,
     ):
         """
@@ -403,7 +395,6 @@ class Trace(object):
         self.debug = debug
         self.send_trace_only_on_error = send_trace_only_on_error
         self.url_patterns_to_ignore = url_patterns_to_ignore
-        self.ignored_endpoints = ignored_endpoints
         if keys_to_ignore:
             self.keys_to_ignore = [self._strip_key(x) for x in keys_to_ignore]
         else:

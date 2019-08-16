@@ -10,7 +10,7 @@ from functools import partial
 import wrapt
 import epsagon.trace
 from epsagon.runners.tornado import TornadoRunner
-from epsagon.wrappers.http_filters import ignore_request
+from epsagon.http_filters import ignore_request, is_ignored_endpoint
 from epsagon.utils import collect_container_metadata
 
 TORNADO_TRACE_ID = 'epsagon_tornado_trace_key'
@@ -32,13 +32,13 @@ class TornadoWrapper(object):
         :param kwargs: wrapt's kwargs
         """
         try:
-            unique_id = str(uuid.uuid4())
-            trace = epsagon.trace.trace_factory.get_or_create_trace(
-                unique_id=unique_id
-            )
             ignored = ignore_request('', instance.request.path)
-            ignored_endpoint = instance.request.path in trace.ignored_endpoints
-            if not ignored and not ignored_endpoint:
+            if not ignored and not is_ignored_endpoint(instance.request.path):
+                unique_id = str(uuid.uuid4())
+                trace = epsagon.trace.trace_factory.get_or_create_trace(
+                    unique_id=unique_id
+                )
+
                 trace.prepare()
 
                 setattr(instance, TORNADO_TRACE_ID, unique_id)

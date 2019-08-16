@@ -1,6 +1,6 @@
 import epsagon.trace
 import epsagon.utils
-import epsagon.wrappers.http_filters
+import epsagon.http_filters
 from epsagon.trace import trace_factory
 
 
@@ -14,7 +14,7 @@ def test_blacklist_url():
     :return: None
     """
 
-    epsagon.wrappers.http_filters.BLACKLIST_URLS = {
+    epsagon.http_filters.BLACKLIST_URLS = {
         str.endswith: [
             '.com',
         ],
@@ -23,11 +23,11 @@ def test_blacklist_url():
         ],
     }
 
-    assert epsagon.wrappers.http_filters.is_blacklisted_url('http://www.google.com')
-    assert epsagon.wrappers.http_filters.is_blacklisted_url('https://www.restricted-site.org')
-    assert epsagon.wrappers.http_filters.is_blacklisted_url('http://www.restricted-site.com')
-    assert not epsagon.wrappers.http_filters.is_blacklisted_url('https://www.com.org')
-    assert not epsagon.wrappers.http_filters.is_blacklisted_url('http://www.google.org')
+    assert epsagon.http_filters.is_blacklisted_url('http://www.google.com')
+    assert epsagon.http_filters.is_blacklisted_url('https://www.restricted-site.org')
+    assert epsagon.http_filters.is_blacklisted_url('http://www.restricted-site.com')
+    assert not epsagon.http_filters.is_blacklisted_url('https://www.com.org')
+    assert not epsagon.http_filters.is_blacklisted_url('http://www.google.org')
 
 
 def test_original_blacklist_url():
@@ -36,8 +36,8 @@ def test_original_blacklist_url():
     :return: None
     """
 
-    assert epsagon.wrappers.http_filters.is_blacklisted_url('http://tc.us-east-1.epsagon.com')
-    assert epsagon.wrappers.http_filters.is_blacklisted_url('https://client.tc.epsagon.com')
+    assert epsagon.http_filters.is_blacklisted_url('http://tc.us-east-1.epsagon.com')
+    assert epsagon.http_filters.is_blacklisted_url('https://client.tc.epsagon.com')
 
 
 def test_trace_blacklist():
@@ -46,9 +46,9 @@ def test_trace_blacklist():
     :return: None
     """
     trace_factory.get_trace().url_patterns_to_ignore = set(('test.net', 'test2.net'))
-    assert epsagon.wrappers.http_filters.is_payload_collection_blacklisted('http://www.test.net')
-    assert epsagon.wrappers.http_filters.is_payload_collection_blacklisted('http://www.bla.test.net')
-    assert not epsagon.wrappers.http_filters.is_payload_collection_blacklisted('http://www.test.new.net')
+    assert epsagon.http_filters.is_payload_collection_blacklisted('http://www.test.net')
+    assert epsagon.http_filters.is_payload_collection_blacklisted('http://www.bla.test.net')
+    assert not epsagon.http_filters.is_payload_collection_blacklisted('http://www.test.new.net')
     trace_factory.get_trace().url_patterns_to_ignore = set()
-    assert not epsagon.wrappers.http_filters.is_payload_collection_blacklisted('http://www.test.net')
-    assert not epsagon.wrappers.http_filters.is_payload_collection_blacklisted('http://www.bla.test.net')
+    assert not epsagon.http_filters.is_payload_collection_blacklisted('http://www.test.net')
+    assert not epsagon.http_filters.is_payload_collection_blacklisted('http://www.bla.test.net')
