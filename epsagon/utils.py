@@ -12,6 +12,7 @@ except ImportError:
     from urlparse import urlparse
 
 from epsagon.constants import TRACE_COLLECTOR_URL, REGION
+from epsagon import http_filters
 from .trace import trace_factory
 from .constants import EPSAGON_HANDLER
 
@@ -83,7 +84,8 @@ def init(
     debug=False,
     send_trace_only_on_error=False,
     url_patterns_to_ignore=None,
-    keys_to_ignore=None
+    keys_to_ignore=None,
+    ignored_endpoints=None,
 ):
     """
     Initializes trace with user's data.
@@ -101,6 +103,7 @@ def init(
     :param url_patterns_to_ignore: URL patterns to ignore in HTTP data
       collection.
     :param keys_to_ignore: List of keys to ignore while extracting metadata.
+    :param ignored_endpoints: List of ignored endpoints for web frameworks.
     :return: None
     """
     if not collector_url:
@@ -111,6 +114,11 @@ def init(
     ignored_urls = os.getenv('EPSAGON_URLS_TO_IGNORE')
     if ignored_urls:
         ignored_urls = ignored_urls.split(',')
+
+    # Ignored URLs is a comma separated values, if coming from env.
+    ignored_paths = os.getenv('EPSAGON_ENDPOINTS_TO_IGNORE')
+    if ignored_paths:
+        ignored_paths = ignored_paths.split(',')
 
     # Same goes for Ignored keys.
     ignored_keys = os.getenv('EPSAGON_IGNORED_KEYS')
@@ -137,6 +145,9 @@ def init(
         url_patterns_to_ignore=ignored_urls or url_patterns_to_ignore,
         keys_to_ignore=ignored_keys or keys_to_ignore,
     )
+
+    # Append to ignored endpoints
+    http_filters.add_ignored_endpoints(ignored_paths or ignored_endpoints)
 
 
 def import_original_module():

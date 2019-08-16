@@ -22,3 +22,6 @@ MAX_LABEL_SIZE = 100 * 1024
 
 # User-defined HTTP minimum status code to be treated as an error.
 HTTP_ERR_CODE = int(os.getenv('EPSAGON_HTTP_ERR_CODE', '500'))
+
+# List of ignored endpoints for web frameworks.
+IGNORED_ENDPOINTS = []

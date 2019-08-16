@@ -11,7 +11,7 @@ from uuid import uuid4
 from epsagon.utils import add_data_if_needed
 from ..trace import trace_factory
 from ..event import BaseEvent
-from ..wrappers.http_filters import is_blacklisted_url
+from ..http_filters import is_blacklisted_url
 from ..utils import update_api_gateway_headers, normalize_http_url
 from ..constants import HTTP_ERR_CODE
 
