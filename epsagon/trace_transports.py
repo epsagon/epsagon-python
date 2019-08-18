@@ -30,7 +30,7 @@ class LogTransport(object):
             trace_json.encode('utf-8')
         ).decode('utf-8')
 
-        print(f'EPSAGON_TRACE: {trace_message}')
+        print('EPSAGON_TRACE: {}'.format(trace_message))
 
 
 class HTTPTransport(object):
@@ -43,7 +43,7 @@ class HTTPTransport(object):
         self.session = requests.Session()
 
     def send(self, trace):
-        headers = {'Authorization': f'Bearer {self.token}'}
+        headers = {'Authorization': 'Bearer {}'.format(self.token)}
         self.session.post(url=self.dest,
                           data=to_json(trace.to_dict()),
                           headers=headers,
