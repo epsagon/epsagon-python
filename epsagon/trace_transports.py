@@ -26,7 +26,11 @@ class LogTransport(object):
 
     def send(self, trace):
         trace_json = to_json({'token': self.token, 'trace': trace})
-        print(f'EPSAGON_TRACE: {base64.b64encode(trace_json)}')
+        trace_message = base64.b64encode(
+            trace_json.encode('utf-8')
+        ).decode('utf-8')
+
+        print(f'EPSAGON_TRACE: {trace_message}')
 
 
 class HTTPTransport(object):
