@@ -75,7 +75,7 @@ class TraceFactory(object):
             send_trace_only_on_error,
             url_patterns_to_ignore,
             keys_to_ignore,
-            transport
+            transport=NoneTransport()
     ):
         """
         Initializes The factory with user's data.
@@ -334,7 +334,6 @@ class Trace(object):
             app_name='',
             token='',
             collector_url='',
-            transport=NoneTransport(),
             metadata_only=True,
             disable_timeout_send=False,
             debug=False,
@@ -342,6 +341,7 @@ class Trace(object):
             url_patterns_to_ignore=None,
             keys_to_ignore=None,
             unique_id=None,
+            transport=NoneTransport(),
     ):
         """
         initialize.
