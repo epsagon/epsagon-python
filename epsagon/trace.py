@@ -19,7 +19,7 @@ import requests.exceptions
 from epsagon.event import BaseEvent
 from epsagon.common import EpsagonWarning, ErrorCode
 from epsagon.trace_encoder import TraceEncoder
-from epsagon.trace_transports import NoneTransport, HTTPTransport, LogTransport
+from epsagon.trace_transports import NoneTransport
 from .constants import (
     TIMEOUT_GRACE_TIME_MS,
     MAX_LABEL_SIZE,
