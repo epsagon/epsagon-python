@@ -1,6 +1,7 @@
 """trace transport layers"""
 
 import json
+import base64
 import logging
 import requests
 from epsagon.constants import SEND_TIMEOUT
@@ -24,10 +25,8 @@ class LogTransport(object):
         self.token = token
 
     def send(self, trace):
-        trace_log = {'messageType': 'trace',
-                     'token': self.token,
-                     'trace': trace.to_dict()}
-        print(to_json(trace_log))  # using print to avoid logging level issues
+        trace_json = to_json({'token': self.token, 'trace': trace})
+        print(f'EPSAGON_TRACE: {base64.b64encode(trace_json)}')
 
 
 class HTTPTransport(object):
