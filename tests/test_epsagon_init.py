@@ -3,6 +3,7 @@ import epsagon
 import os
 from imp import reload
 
+
 @mock.patch('epsagon.patcher.patch_all')
 @mock.patch('os.getenv', side_effect=(lambda x: {
     'EPSAGON_HANDLER': None,
@@ -106,6 +107,7 @@ def test_epsagon_wrapper_env_init(wrapped_get, wrapped_init):
     'EPSAGON_SEND_TRACE_ON_ERROR': 'FALSE',
     'EPSAGON_URLS_TO_IGNORE': '',
     'EPSAGON_IGNORED_KEYS': '',
+    'EPSAGON_LOG_TRANSPORT': 'FALSE'
 }[x]))
 def test_epsagon_wrapper_env_init(_wrapped_get, wrapped_init):
     reload(epsagon)
