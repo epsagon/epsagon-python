@@ -22,10 +22,11 @@ class LogTransport(object):
 
     def __init__(self, token):
         self.token = token
-        self.logger = logging.getLogger(__name__)
 
     def send(self, trace):
-        trace_log = {'token': self.token, 'trace': trace.to_dict()}
+        trace_log = {'messageType': 'trace',
+                     'token': self.token,
+                     'trace': trace.to_dict()}
         print(to_json(trace_log))  # using print to avoid logging level issues
 
 
