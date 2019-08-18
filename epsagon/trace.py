@@ -716,9 +716,7 @@ class Trace(object):
             event_metadata_length = (
                     len(json.dumps(event.resource.get('metadata', {})))
             )
-            event.resource['metadata'] = Trace.trim_metadata(
-                event.resource['metadata']
-            )
+            Trace.trim_metadata(event.resource['metadata'])
             trace_length -= event_metadata_length
             if trace_length < MAX_TRACE_SIZE_BYTES:
                 break
