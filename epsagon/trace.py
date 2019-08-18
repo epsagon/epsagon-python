@@ -23,6 +23,7 @@ from .constants import (
     TIMEOUT_GRACE_TIME_MS,
     SEND_TIMEOUT,
     MAX_LABEL_SIZE,
+    is_strong_key,
     __version__
 )
 
@@ -688,6 +689,17 @@ class Trace(object):
         }
 
     @staticmethod
+    def trim_metadata(metadata):
+        """
+        Trimming metadata
+        :param metadata: metadata
+        :return:
+        """
+        for key in list(metadata.keys()):
+            if not is_strong_key(key):
+                metadata.pop(key)
+
+    @staticmethod
     def events_sorter(event):
         """
         Events sort function
@@ -704,7 +716,9 @@ class Trace(object):
             event_metadata_length = (
                     len(json.dumps(event.resource.get('metadata', {})))
             )
-            event.resource['metadata'] = {}
+            event.resource['metadata'] = trim_metadata(
+                event.resource['metadata']
+            )
             trace_length -= event_metadata_length
             if trace_length < MAX_TRACE_SIZE_BYTES:
                 break
