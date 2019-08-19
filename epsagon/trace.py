@@ -4,9 +4,9 @@ Trace object holds events and metadata
 # pylint: disable=too-many-lines
 
 from __future__ import absolute_import, print_function
+import os
 import sys
 import time
-from datetime import date, datetime
 import itertools
 import traceback
 import warnings
@@ -19,9 +19,10 @@ import requests
 import requests.exceptions
 from epsagon.event import BaseEvent
 from epsagon.common import EpsagonWarning, ErrorCode
+from epsagon.trace_encoder import TraceEncoder
+from epsagon.trace_transports import NoneTransport, HTTPTransport, LogTransport
 from .constants import (
     TIMEOUT_GRACE_TIME_MS,
-    SEND_TIMEOUT,
     MAX_LABEL_SIZE,
     is_strong_key,
     __version__
@@ -29,7 +30,6 @@ from .constants import (
 
 MAX_EVENTS_PER_TYPE = 20
 MAX_TRACE_SIZE_BYTES = 64 * (2 ** 10)
-SESSION = requests.Session()
 
 
 def get_thread_id():
@@ -40,23 +40,10 @@ def get_thread_id():
     return threading.currentThread().ident
 
 
-class TraceEncoder(json.JSONEncoder):
-    """
-    An encoder for the trace json
-    """
-
-    def default(self, o):  # pylint: disable=method-hidden
-        if isinstance(o, set):
-            return list(o)
-        if isinstance(o, (datetime, date)):
-            return o.isoformat()
-
-        output = repr(o)
-        try:
-            output = json.JSONEncoder.default(self, o)
-        except TypeError:
-            pass
-        return output
+def create_transport(collector_url, token):
+    if (os.getenv('EPSAGON_LOG_TRANSPORT') or '').upper() == 'TRUE':
+        return LogTransport(token)
+    return HTTPTransport(collector_url, token)
 
 
 class TraceFactory(object):
@@ -83,6 +70,7 @@ class TraceFactory(object):
         self.use_single_trace = True
         self.singleton_trace = None
         self.local_thread_to_unique_id = {}
+        self.transport = NoneTransport()
 
     def initialize(
             self,
@@ -94,7 +82,8 @@ class TraceFactory(object):
             debug,
             send_trace_only_on_error,
             url_patterns_to_ignore,
-            keys_to_ignore
+            keys_to_ignore,
+            transport
     ):
         """
         Initializes The factory with user's data.
@@ -125,6 +114,7 @@ class TraceFactory(object):
             set(url_patterns_to_ignore) if url_patterns_to_ignore else set()
         )
         self.keys_to_ignore = [] if keys_to_ignore is None else keys_to_ignore
+        self.transport = transport
 
     def switch_to_multiple_traces(self):
         """
@@ -377,6 +367,7 @@ class Trace(object):
             url_patterns_to_ignore=None,
             keys_to_ignore=None,
             unique_id=None,
+            transport=NoneTransport()
     ):
         """
         initialize.
@@ -396,6 +387,8 @@ class Trace(object):
         self.debug = debug
         self.send_trace_only_on_error = send_trace_only_on_error
         self.url_patterns_to_ignore = url_patterns_to_ignore
+        self.transport = transport
+
         if keys_to_ignore:
             self.keys_to_ignore = [self._strip_key(x) for x in keys_to_ignore]
         else:
@@ -447,7 +440,7 @@ class Trace(object):
                 return
 
             modified_timeout = (
-                           original_timeout - TIMEOUT_GRACE_TIME_MS) / 1000.0
+                original_timeout - TIMEOUT_GRACE_TIME_MS) / 1000.0
             signal.setitimer(signal.ITIMER_REAL, modified_timeout)
             original_handler = signal.signal(
                 signal.SIGALRM,
@@ -761,6 +754,12 @@ class Trace(object):
             return
         trace = ''
 
+        self.transport = (
+            self.transport
+            if not isinstance(self.transport, NoneTransport)
+            else create_transport(self.collector_url, self.token)
+        )
+
         # Remove ignored keys.
         for event in self.events():
             self.remove_ignored_keys(event.resource['metadata'])
@@ -787,13 +786,7 @@ class Trace(object):
                     encoding='latin1'
                 )
 
-            SESSION.post(
-                self.collector_url,
-                data=trace,
-                timeout=SEND_TIMEOUT,
-                headers={'Authorization': 'Bearer {}'.format(self.token)}
-            )
-
+            self.transport.send(self)
             self.trace_sent = True
 
             if self.debug:

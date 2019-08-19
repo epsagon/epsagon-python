@@ -13,7 +13,7 @@ except ImportError:
 
 from epsagon.constants import TRACE_COLLECTOR_URL, REGION
 from epsagon import http_filters
-from .trace import trace_factory
+from .trace import trace_factory, create_transport
 from .constants import EPSAGON_HANDLER
 
 
@@ -144,7 +144,7 @@ def init(
         ),
         url_patterns_to_ignore=ignored_urls or url_patterns_to_ignore,
         keys_to_ignore=ignored_keys or keys_to_ignore,
-    )
+        transport=create_transport(collector_url, token))
 
     # Append to ignored endpoints
     http_filters.add_ignored_endpoints(ignored_paths or ignored_endpoints)

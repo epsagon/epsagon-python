@@ -2,6 +2,8 @@ import mock
 import epsagon
 import os
 from imp import reload
+from epsagon.trace_transports import HTTPTransport
+
 
 @mock.patch('epsagon.patcher.patch_all')
 @mock.patch('os.getenv', side_effect=(lambda x: {
@@ -106,6 +108,10 @@ def test_epsagon_wrapper_env_init(wrapped_get):
     ])
 
 
+default_http = HTTPTransport("epsagon", "1234")
+
+
+@mock.patch('epsagon.utils.create_transport', side_effect=lambda x, y: default_http)
 @mock.patch('epsagon.trace.TraceFactory.initialize')
 @mock.patch('os.getenv', side_effect=(lambda x: {
     'EPSAGON_HANDLER': 'epsagon.lambda_wrapper',
@@ -121,9 +127,10 @@ def test_epsagon_wrapper_env_init(wrapped_get):
     'EPSAGON_SEND_TRACE_ON_ERROR': 'FALSE',
     'EPSAGON_URLS_TO_IGNORE': '',
     'EPSAGON_IGNORED_KEYS': '',
+    'EPSAGON_LOG_TRANSPORT': 'FALSE',
     'EPSAGON_ENDPOINTS_TO_IGNORE': '',
 }[x]))
-def test_epsagon_wrapper_env_init_trace(_wrapped_get, wrapped_init):
+def test_epsagon_wrapper_env_init(_wrapped_get, wrapped_init, _create):
     reload(epsagon)
     epsagon.init()
     wrapped_init.assert_called_with(
@@ -135,7 +142,8 @@ def test_epsagon_wrapper_env_init_trace(_wrapped_get, wrapped_init):
         debug=False,
         send_trace_only_on_error=False,
         url_patterns_to_ignore=None,
-        keys_to_ignore=None
+        keys_to_ignore=None,
+        transport=default_http
     )
 
 
@@ -155,6 +163,7 @@ def test_epsagon_wrapper_env_init_trace(_wrapped_get, wrapped_init):
     'EPSAGON_URLS_TO_IGNORE': '',
     'EPSAGON_IGNORED_KEYS': '',
     'EPSAGON_ENDPOINTS_TO_IGNORE': '/health,/test',
+    'EPSAGON_LOG_TRANSPORT': 'FALSE'
 }[x]))
 def test_epsagon_wrapper_env_endpoints(_wrapped_get, wrapped_http):
     reload(epsagon)
