@@ -35,6 +35,13 @@ def normalize_http_url(url):
     return netloc.split(':')[0] if netloc else url
 
 
+def create_transport(collector_url, token):
+    if (os.getenv('EPSAGON_LOG_TRANSPORT') or '').upper() == 'TRUE':
+        return LogTransport(token)
+    else:
+        return HTTPTransport(collector_url, token)
+
+
 def add_data_if_needed(dictionary, name, data):
     """
     Add data to the given dictionary if metadata_only option is set to False.
@@ -126,11 +133,6 @@ def init(
     if ignored_keys:
         ignored_keys = ignored_keys.split(',')
 
-    if os.getenv('EPSAGON_LOG_TRANSPORT', '').upper() == 'TRUE':
-        transport = LogTransport(token)
-    else:
-        transport = HTTPTransport(collector_url, token)
-
     trace_factory.initialize(
         token=os.getenv('EPSAGON_TOKEN') or token,
         app_name=os.getenv('EPSAGON_APP_NAME') or app_name,
@@ -150,8 +152,7 @@ def init(
         ),
         url_patterns_to_ignore=ignored_urls or url_patterns_to_ignore,
         keys_to_ignore=ignored_keys or keys_to_ignore,
-        transport=transport
-    )
+        transport=create_transport(collector_url, token))
 
     # Append to ignored endpoints
     http_filters.add_ignored_endpoints(ignored_paths or ignored_endpoints)

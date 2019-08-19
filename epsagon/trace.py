@@ -16,6 +16,7 @@ import simplejson as json
 
 import requests
 import requests.exceptions
+import epsagon.utils
 from epsagon.event import BaseEvent
 from epsagon.common import EpsagonWarning, ErrorCode
 from epsagon.trace_encoder import TraceEncoder
@@ -76,7 +77,7 @@ class TraceFactory(object):
             send_trace_only_on_error,
             url_patterns_to_ignore,
             keys_to_ignore,
-            transport=NoneTransport()
+            transport
     ):
         """
         Initializes The factory with user's data.
@@ -360,7 +361,7 @@ class Trace(object):
             url_patterns_to_ignore=None,
             keys_to_ignore=None,
             unique_id=None,
-            transport=NoneTransport(),
+            transport=NoneTransport()
     ):
         """
         initialize.
@@ -381,6 +382,7 @@ class Trace(object):
         self.send_trace_only_on_error = send_trace_only_on_error
         self.url_patterns_to_ignore = url_patterns_to_ignore
         self.transport = transport
+
         if keys_to_ignore:
             self.keys_to_ignore = [self._strip_key(x) for x in keys_to_ignore]
         else:
@@ -745,6 +747,10 @@ class Trace(object):
         ):
             return
         trace = ''
+
+        self.transport = self.transport \
+            if not isinstance(self.transport, NoneTransport) \
+            else epsagon.utils.create_transport(self.collector_url, self.token)
 
         # Remove ignored keys.
         for event in self.events():
