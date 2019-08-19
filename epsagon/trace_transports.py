@@ -1,6 +1,6 @@
 """trace transport layers"""
 
-import json
+import simplejson as json
 import base64
 import logging
 import requests
@@ -44,7 +44,7 @@ class HTTPTransport(object):
 
     def send(self, trace):
         headers = {'Authorization': 'Bearer {}'.format(self.token)}
-        self.session.post(url=self.dest,
+        self.session.post(self.dest,
                           data=to_json(trace.to_dict()),
                           headers=headers,
                           timeout=self.timeout)

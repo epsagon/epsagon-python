@@ -1,6 +1,6 @@
 """ JSONEncoder for trace objects """
 
-import json
+import simplejson as json
 from datetime import datetime, date
 
 

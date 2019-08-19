@@ -16,6 +16,7 @@ from epsagon.constants import (
 from epsagon.trace import trace_factory, MAX_EVENTS_PER_TYPE, TraceEncoder
 from epsagon.utils import get_tc_url
 from epsagon.common import ErrorCode
+from epsagon.trace_transports import HTTPTransport
 
 
 class ContextMock:
@@ -526,8 +527,12 @@ def test_send_traces_post_error(wrapped_post):
     )
 
 
+default_http = HTTPTransport('collector', 'token')
+
+
+@mock.patch('epsagon.utils.create_transport', side_effect=lambda x, y: default_http)
 @mock.patch('epsagon.trace.TraceFactory.initialize')
-def test_init_sanity(wrapped_init):
+def test_init_sanity(wrapped_init, _create):
     epsagon.utils.init(
         token='token',
         app_name='app-name',
@@ -543,12 +548,14 @@ def test_init_sanity(wrapped_init):
         debug=False,
         send_trace_only_on_error=False,
         url_patterns_to_ignore=None,
-        keys_to_ignore=None
+        keys_to_ignore=None,
+        transport=default_http
     )
 
 
+@mock.patch('epsagon.utils.create_transport', side_effect=lambda x, y: default_http)
 @mock.patch('epsagon.trace.TraceFactory.initialize')
-def test_init_empty_app_name(wrapped_init):
+def test_init_empty_app_name(wrapped_init, _create):
     epsagon.utils.init(
         token='token',
         app_name='',
@@ -565,12 +572,14 @@ def test_init_empty_app_name(wrapped_init):
         debug=False,
         send_trace_only_on_error=False,
         url_patterns_to_ignore=None,
-        keys_to_ignore=None
+        keys_to_ignore=None,
+        transport=default_http
     )
 
 
+@mock.patch('epsagon.utils.create_transport', side_effect=lambda x, y: default_http)
 @mock.patch('epsagon.trace.TraceFactory.initialize')
-def test_init_empty_collector_url(wrapped_init):
+def test_init_empty_collector_url(wrapped_init, _create):
     epsagon.utils.init(token='token', app_name='app-name', metadata_only=False)
     wrapped_init.assert_called_with(
         token='token',
@@ -581,12 +590,14 @@ def test_init_empty_collector_url(wrapped_init):
         debug=False,
         send_trace_only_on_error=False,
         url_patterns_to_ignore=None,
-        keys_to_ignore=None
+        keys_to_ignore=None,
+        transport=default_http
     )
 
 
+@mock.patch('epsagon.utils.create_transport', side_effect=lambda x, y: default_http)
 @mock.patch('epsagon.trace.TraceFactory.initialize')
-def test_init_no_ssl_no_url(wrapped_init):
+def test_init_no_ssl_no_url(wrapped_init, _create):
     epsagon.utils.init(token='token', app_name='app-name', metadata_only=False,
                        use_ssl=False)
     wrapped_init.assert_called_with(
@@ -601,12 +612,14 @@ def test_init_no_ssl_no_url(wrapped_init):
         debug=False,
         send_trace_only_on_error=False,
         url_patterns_to_ignore=None,
-        keys_to_ignore=None
+        keys_to_ignore=None,
+        transport=default_http
     )
 
 
+@mock.patch('epsagon.utils.create_transport', side_effect=lambda x, y: default_http)
 @mock.patch('epsagon.trace.TraceFactory.initialize')
-def test_init_ssl_no_url(wrapped_init):
+def test_init_ssl_no_url(wrapped_init, _create):
     epsagon.utils.init(
         token='token',
         app_name='app-name',
@@ -625,12 +638,14 @@ def test_init_ssl_no_url(wrapped_init):
         debug=False,
         send_trace_only_on_error=False,
         url_patterns_to_ignore=None,
-        keys_to_ignore=None
+        keys_to_ignore=None,
+        transport=default_http
     )
 
 
+@mock.patch('epsagon.utils.create_transport', side_effect=lambda x, y: default_http)
 @mock.patch('epsagon.trace.TraceFactory.initialize')
-def test_init_ssl_with_url(wrapped_init):
+def test_init_ssl_with_url(wrapped_init, _create):
     epsagon.utils.init(
         token='token',
         app_name='app-name',
@@ -647,12 +662,14 @@ def test_init_ssl_with_url(wrapped_init):
         debug=False,
         send_trace_only_on_error=False,
         url_patterns_to_ignore=None,
-        keys_to_ignore=None
+        keys_to_ignore=None,
+        transport=default_http
     )
 
 
+@mock.patch('epsagon.utils.create_transport', side_effect=lambda x, y: default_http)
 @mock.patch('epsagon.trace.TraceFactory.initialize')
-def test_init_no_ssl_with_url(wrapped_init):
+def test_init_no_ssl_with_url(wrapped_init, _create):
     epsagon.utils.init(
         token='token',
         app_name='app-name',
@@ -669,12 +686,14 @@ def test_init_no_ssl_with_url(wrapped_init):
         debug=False,
         send_trace_only_on_error=False,
         url_patterns_to_ignore=None,
-        keys_to_ignore=None
+        keys_to_ignore=None,
+        transport=default_http
     )
 
 
+@mock.patch('epsagon.utils.create_transport', side_effect=lambda x, y: default_http)
 @mock.patch('epsagon.trace.TraceFactory.initialize')
-def test_init_ignored_urls_env(wrapped_init):
+def test_init_ignored_urls_env(wrapped_init, _create):
     os.environ['EPSAGON_URLS_TO_IGNORE'] = 'test.com,test2.com'
     epsagon.utils.init(
         token='token',
@@ -691,13 +710,15 @@ def test_init_ignored_urls_env(wrapped_init):
         debug=False,
         send_trace_only_on_error=False,
         url_patterns_to_ignore=['test.com', 'test2.com'],
-        keys_to_ignore=None
+        keys_to_ignore=None,
+        transport=default_http
     )
     os.environ.pop('EPSAGON_URLS_TO_IGNORE')
 
 
+@mock.patch('epsagon.utils.create_transport', side_effect=lambda x, y: default_http)
 @mock.patch('epsagon.trace.TraceFactory.initialize')
-def test_init_keys_to_ignore(wrapped_init):
+def test_init_keys_to_ignore(wrapped_init, _create):
     epsagon.utils.init(
         token='token',
         app_name='app-name',
@@ -714,12 +735,14 @@ def test_init_keys_to_ignore(wrapped_init):
         debug=False,
         send_trace_only_on_error=False,
         url_patterns_to_ignore=None,
-        keys_to_ignore=['a', 'b', 'c']
+        keys_to_ignore=['a', 'b', 'c'],
+        transport=default_http
     )
 
 
+@mock.patch('epsagon.utils.create_transport', side_effect=lambda x, y: default_http)
 @mock.patch('epsagon.trace.TraceFactory.initialize')
-def test_init_keys_to_ignore_env(wrapped_init):
+def test_init_keys_to_ignore_env(wrapped_init, _create):
     os.environ['EPSAGON_IGNORED_KEYS'] = 'a,b,c'
     epsagon.utils.init(
         token='token',
@@ -737,7 +760,8 @@ def test_init_keys_to_ignore_env(wrapped_init):
         debug=False,
         send_trace_only_on_error=False,
         url_patterns_to_ignore=None,
-        keys_to_ignore=['a', 'b', 'c']
+        keys_to_ignore=['a', 'b', 'c'],
+        transport=default_http
     )
 
 
