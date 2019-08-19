@@ -12,9 +12,7 @@ except ImportError:
     from urlparse import urlparse
 
 from epsagon.constants import TRACE_COLLECTOR_URL, REGION
-from epsagon.trace_transports import HTTPTransport, LogTransport
-from epsagon import http_filters
-from .trace import trace_factory
+from .trace import trace_factory, create_transport
 from .constants import EPSAGON_HANDLER
 
 
@@ -33,13 +31,6 @@ def normalize_http_url(url):
     parsed = urlparse(url)
     netloc = parsed.netloc
     return netloc.split(':')[0] if netloc else url
-
-
-def create_transport(collector_url, token):
-    if (os.getenv('EPSAGON_LOG_TRANSPORT') or '').upper() == 'TRUE':
-        return LogTransport(token)
-    else:
-        return HTTPTransport(collector_url, token)
 
 
 def add_data_if_needed(dictionary, name, data):

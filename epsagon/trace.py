@@ -4,6 +4,7 @@ Trace object holds events and metadata
 # pylint: disable=too-many-lines
 
 from __future__ import absolute_import, print_function
+import os
 import sys
 import time
 import itertools
@@ -16,11 +17,10 @@ import simplejson as json
 
 import requests
 import requests.exceptions
-import epsagon.utils
 from epsagon.event import BaseEvent
 from epsagon.common import EpsagonWarning, ErrorCode
 from epsagon.trace_encoder import TraceEncoder
-from epsagon.trace_transports import NoneTransport
+from epsagon.trace_transports import NoneTransport, HTTPTransport, LogTransport
 from .constants import (
     TIMEOUT_GRACE_TIME_MS,
     MAX_LABEL_SIZE,
@@ -38,6 +38,12 @@ def get_thread_id():
     :return: thread id
     """
     return threading.currentThread().ident
+
+
+def create_transport(collector_url, token):
+    if (os.getenv('EPSAGON_LOG_TRANSPORT') or '').upper() == 'TRUE':
+        return LogTransport(token)
+    return HTTPTransport(collector_url, token)
 
 
 class TraceFactory(object):
@@ -748,9 +754,11 @@ class Trace(object):
             return
         trace = ''
 
-        self.transport = self.transport \
-            if not isinstance(self.transport, NoneTransport) \
-            else epsagon.utils.create_transport(self.collector_url, self.token)
+        self.transport = (
+            self.transport
+            if not isinstance(self.transport, NoneTransport)
+            else create_transport(self.collector_url, self.token)
+        )
 
         # Remove ignored keys.
         for event in self.events():
