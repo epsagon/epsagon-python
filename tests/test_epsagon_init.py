@@ -142,8 +142,9 @@ def test_epsagon_wrapper_env_init(_wrapped_get, wrapped_init, _create):
         debug=False,
         send_trace_only_on_error=False,
         url_patterns_to_ignore=None,
-		keys_to_ignore=None,
-		transport=default_http)
+        keys_to_ignore=None,
+        transport=default_http
+    )
 
 
 @mock.patch('epsagon.http_filters.add_ignored_endpoints')
@@ -162,6 +163,7 @@ def test_epsagon_wrapper_env_init(_wrapped_get, wrapped_init, _create):
     'EPSAGON_URLS_TO_IGNORE': '',
     'EPSAGON_IGNORED_KEYS': '',
     'EPSAGON_ENDPOINTS_TO_IGNORE': '/health,/test',
+    'EPSAGON_LOG_TRANSPORT': 'FALSE'
 }[x]))
 def test_epsagon_wrapper_env_endpoints(_wrapped_get, wrapped_http):
     reload(epsagon)
