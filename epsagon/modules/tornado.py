@@ -10,7 +10,7 @@ from functools import partial
 import wrapt
 import epsagon.trace
 from epsagon.runners.tornado import TornadoRunner
-from epsagon.wrappers.http_filters import ignore_request
+from epsagon.http_filters import ignore_request, is_ignored_endpoint
 from epsagon.utils import collect_container_metadata
 
 TORNADO_TRACE_ID = 'epsagon_tornado_trace_key'
@@ -33,7 +33,7 @@ class TornadoWrapper(object):
         """
         try:
             ignored = ignore_request('', instance.request.path)
-            if not ignored:
+            if not ignored and not is_ignored_endpoint(instance.request.path):
                 unique_id = str(uuid.uuid4())
                 trace = epsagon.trace.trace_factory.get_or_create_trace(
                     unique_id=unique_id
@@ -71,9 +71,15 @@ class TornadoWrapper(object):
         :param args: wrapt's args
         :param kwargs: wrapt's kwargs
         """
+        response_body = getattr(instance, '_write_buffer', None)
+        if response_body and isinstance(response_body, list):
+            response_body = b''.join(response_body)
         res = wrapped(*args, **kwargs)
         try:
-            unique_id = getattr(instance, TORNADO_TRACE_ID)
+            unique_id = getattr(instance, TORNADO_TRACE_ID, None)
+            if not unique_id:
+                return res
+
             tornado_runner = cls.RUNNERS.pop(unique_id)
 
             trace = epsagon.trace.trace_factory.switch_active_trace(
@@ -89,10 +95,8 @@ class TornadoWrapper(object):
                 )
                 ignored = ignore_request(content, '')
                 if not ignored:
-                    tornado_runner.update_response(instance)
-                    trace.send_traces()
-
-                trace.prepare()
+                    tornado_runner.update_response(instance, response_body)
+                    epsagon.trace.trace_factory.send_traces(trace)
         except Exception as instrumentation_exception:  # pylint: disable=W0703
             epsagon.trace.trace_factory.add_exception(
                 instrumentation_exception,

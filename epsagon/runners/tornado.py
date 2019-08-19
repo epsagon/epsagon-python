@@ -8,6 +8,8 @@ import uuid
 from ..event import BaseEvent
 from ..utils import add_data_if_needed
 
+MAX_PAYLOAD_BYTES = 2000
+
 
 class TornadoRunner(BaseEvent):
     """
@@ -48,18 +50,25 @@ class TornadoRunner(BaseEvent):
                 request.query
             )
 
-    def update_response(self, response):
+    def update_response(self, response, response_body=None):
         """
         Adds response data to event.
+        :param response_body: Response body
         :param response: WSGI Response
         """
-
         headers = dict(response._headers.get_all())
         add_data_if_needed(
             self.resource['metadata'],
             'Response Headers',
             headers
         )
+
+        if response_body:
+            add_data_if_needed(
+                self.resource['metadata'],
+                'Response Body',
+                str(response_body)[:MAX_PAYLOAD_BYTES]
+            )
 
         self.resource['metadata']['Status'] = response._status_code
         self.resource['metadata']['etag'] = headers.get('Etag')

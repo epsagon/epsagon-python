@@ -59,7 +59,6 @@ def test_epsagon_disable_epsagon_and_disable_patch(wrapped_get, wrapped_patch):
     assert epsagon.gcp_wrapper(dummy) is dummy
 
 
-@mock.patch('epsagon.utils.init')
 @mock.patch('os.getenv', side_effect=(lambda x: {
     'EPSAGON_HANDLER': 'epsagon.lambda_wrapper',
     'DISABLE_EPSAGON': 'FALSE',
@@ -73,15 +72,18 @@ def test_epsagon_disable_epsagon_and_disable_patch(wrapped_get, wrapped_patch):
     'EPSAGON_DEBUG': 'FALSE',
     'EPSAGON_SEND_TRACE_ON_ERROR': 'FALSE',
     'EPSAGON_URLS_TO_IGNORE': '',
+    'EPSAGON_ENDPOINTS_TO_IGNORE': '',
+    'EPSAGON_IGNORED_KEYS': '',
 }[x]))
-def test_epsagon_wrapper_env_init(wrapped_get, wrapped_init):
+def test_epsagon_wrapper_env_init(wrapped_get):
     reload(epsagon)
+    epsagon.init()
     wrapped_get.assert_has_calls([
-        mock.call('DISABLE_EPSAGON'),
-        mock.call('DISABLE_EPSAGON_PATCH'),
         mock.call('EPSAGON_HANDLER'),
-        mock.call('EPSAGON_URLS_TO_IGNORE'),
         mock.call('EPSAGON_SSL'),
+        mock.call('EPSAGON_URLS_TO_IGNORE'),
+        mock.call('EPSAGON_ENDPOINTS_TO_IGNORE'),
+        mock.call('EPSAGON_IGNORED_KEYS'),
         mock.call('EPSAGON_TOKEN'),
         mock.call('EPSAGON_APP_NAME'),
         mock.call('EPSAGON_COLLECTOR_URL'),
@@ -89,8 +91,21 @@ def test_epsagon_wrapper_env_init(wrapped_get, wrapped_init):
         mock.call('EPSAGON_DISABLE_ON_TIMEOUT'),
         mock.call('EPSAGON_DEBUG'),
         mock.call('EPSAGON_SEND_TRACE_ON_ERROR'),
+        mock.call('EPSAGON_HANDLER'),
+        mock.call('DISABLE_EPSAGON'),
+        mock.call('DISABLE_EPSAGON_PATCH'),
+        mock.call('EPSAGON_SSL'),
+        mock.call('EPSAGON_URLS_TO_IGNORE'),
+        mock.call('EPSAGON_ENDPOINTS_TO_IGNORE'),
+        mock.call('EPSAGON_IGNORED_KEYS'),
+        mock.call('EPSAGON_TOKEN'),
+        mock.call('EPSAGON_APP_NAME'),
+        mock.call('EPSAGON_COLLECTOR_URL'),
+        mock.call('EPSAGON_METADATA'),
+        mock.call('EPSAGON_DISABLE_ON_TIMEOUT'),
+        mock.call('EPSAGON_DEBUG'),
+        mock.call('EPSAGON_SEND_TRACE_ON_ERROR')
     ])
-    wrapped_init.assert_called()
 
 
 default_http = HTTPTransport("epsagon", "1234")
@@ -112,10 +127,12 @@ default_http = HTTPTransport("epsagon", "1234")
     'EPSAGON_SEND_TRACE_ON_ERROR': 'FALSE',
     'EPSAGON_URLS_TO_IGNORE': '',
     'EPSAGON_IGNORED_KEYS': '',
-    'EPSAGON_LOG_TRANSPORT': 'FALSE'
+    'EPSAGON_LOG_TRANSPORT': 'FALSE',
+    'EPSAGON_ENDPOINTS_TO_IGNORE': '',
 }[x]))
 def test_epsagon_wrapper_env_init(_wrapped_get, wrapped_init, _create):
     reload(epsagon)
+    epsagon.init()
     wrapped_init.assert_called_with(
         app_name='test',
         token='1234',
@@ -127,3 +144,27 @@ def test_epsagon_wrapper_env_init(_wrapped_get, wrapped_init, _create):
         url_patterns_to_ignore=None,
         keys_to_ignore=None,
         transport=default_http)
+    )
+
+
+@mock.patch('epsagon.http_filters.add_ignored_endpoints')
+@mock.patch('os.getenv', side_effect=(lambda x: {
+    'EPSAGON_HANDLER': 'epsagon.lambda_wrapper',
+    'DISABLE_EPSAGON': 'FALSE',
+    'DISABLE_EPSAGON_PATCH': 'FALSE',
+    'EPSAGON_SSL': 'FALSE',
+    'EPSAGON_TOKEN': '1234',
+    'EPSAGON_APP_NAME': 'test',
+    'EPSAGON_COLLECTOR_URL': 'epsagon',
+    'EPSAGON_METADATA': 'TRUE',
+    'EPSAGON_DISABLE_ON_TIMEOUT': 'FALSE',
+    'EPSAGON_DEBUG': 'FALSE',
+    'EPSAGON_SEND_TRACE_ON_ERROR': 'FALSE',
+    'EPSAGON_URLS_TO_IGNORE': '',
+    'EPSAGON_IGNORED_KEYS': '',
+    'EPSAGON_ENDPOINTS_TO_IGNORE': '/health,/test',
+}[x]))
+def test_epsagon_wrapper_env_endpoints(_wrapped_get, wrapped_http):
+    reload(epsagon)
+    epsagon.init()
+    wrapped_http.assert_called_with(['/health', '/test'])

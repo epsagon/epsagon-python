@@ -22,3 +22,34 @@ MAX_LABEL_SIZE = 100 * 1024
 
 # User-defined HTTP minimum status code to be treated as an error.
 HTTP_ERR_CODE = int(os.getenv('EPSAGON_HTTP_ERR_CODE', '500'))
+
+# List of ignored endpoints for web frameworks.
+IGNORED_ENDPOINTS = []
+
+STRONG_KEYS = [
+    'key',
+    'request_id',
+    'requestid',
+    'request-id',
+    'steps_dict',
+    'message_id',
+    'etag',
+    'item_hash',
+    'sequence_number',
+    'trace_id',
+    'job_id',
+    'activation_id'
+]
+
+
+def is_strong_key(key):
+    """
+    Checks if given key is a strong key
+    :param key: key
+    :return: is a strong key
+    """
+    key = key.replace(' ', '_').lower()
+    for strong_key in STRONG_KEYS:
+        if strong_key in key:
+            return True
+    return False

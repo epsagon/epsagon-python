@@ -24,6 +24,7 @@ from epsagon.trace_transports import NoneTransport, HTTPTransport, LogTransport
 from .constants import (
     TIMEOUT_GRACE_TIME_MS,
     MAX_LABEL_SIZE,
+    is_strong_key,
     __version__
 )
 
@@ -206,6 +207,23 @@ class TraceFactory(object):
                 self.singleton_trace = trace
             return trace
 
+    def pop_trace(self, trace=None):
+        """
+        Sets the active trace by unique id
+        :return: unique id
+        """
+        with self.LOCK:
+            if self.traces:
+                trace = self.traces.pop(self.get_trace_identifier(trace), None)
+                if not self.traces:
+                    self.singleton_trace = None
+                return trace
+            if not trace:
+                trace = self.singleton_trace
+                self.singleton_trace = None
+                return trace
+            return None
+
     def get_thread_local_unique_id(self, unique_id=None):
         """
         Get thread local unique id
@@ -237,15 +255,18 @@ class TraceFactory(object):
         """
         self.local_thread_to_unique_id.pop(get_thread_id(), None)
 
-    def get_trace_identifier(self):
+    def get_trace_identifier(self, trace=None):
         """
         Return the trace identifier
         :return: trace identifier
         """
+        if not trace:
+            trace = self.singleton_trace
+
         return (
             get_thread_id()
-            if not self.singleton_trace or not self.singleton_trace.unique_id
-            else self.singleton_trace.unique_id
+            if not trace or not trace.unique_id
+            else trace.unique_id
         )
 
     def get_trace(self):
@@ -254,12 +275,6 @@ class TraceFactory(object):
         :return:
         """
         return self.get_or_create_trace()
-
-    def remove_current_trace(self):
-        """
-        Remove the thread's trace only if use_single_trace is set to False.
-        """
-        self.traces.pop(self.get_trace_identifier(), None)
 
     def add_event(self, event):
         """
@@ -314,21 +329,25 @@ class TraceFactory(object):
         if self.get_trace():
             self.get_trace().set_error(exception, traceback_data)
 
-    def send_traces(self):
+    def send_traces(self, trace=None):
         """
         Send the traces for the current thread.
         :return: None
         """
-        if self.get_trace():
-            self.get_trace().send_traces()
+        trace = trace if trace else self.get_trace()
+
+        if trace:
+            trace.send_traces()
+            self.pop_trace(trace)
 
     def prepare(self):
         """
         Prepare the relevant trace.
         :return: None
         """
-        if self.get_trace():
-            self.get_trace().prepare()
+        trace = self.get_trace()
+        if trace:
+            trace.prepare()
 
 
 class Trace(object):
@@ -662,15 +681,38 @@ class Trace(object):
             'platform': self.platform,
         }
 
-    def _strip(self):
+    @staticmethod
+    def trim_metadata(metadata):
+        """
+        Trimming metadata
+        :param metadata: metadata
+        :return:
+        """
+        for key in list(metadata.keys()):
+            if not is_strong_key(key):
+                metadata.pop(key)
+
+    @staticmethod
+    def events_sorter(event):
+        """
+        Events sort function
+        :param event: event
+        :return: sorting result
+        """
+        return 1 if event.origin in ['runner', 'trigger'] else 0
+
+    def _strip(self, trace_length):
         """
         Strips a given trace from all operations
         """
-        for event in self.events():
-            if event.origin == 'runner' or event.origin == 'trigger':
-                continue
-
-            self.events_map.pop(event.identifier(), None)
+        for event in sorted(list(self.events()), key=Trace.events_sorter):
+            event_metadata_length = (
+                    len(json.dumps(event.resource.get('metadata', {})))
+            )
+            Trace.trim_metadata(event.resource['metadata'])
+            trace_length -= event_metadata_length
+            if trace_length < MAX_TRACE_SIZE_BYTES:
+                break
 
     @staticmethod
     def _strip_key(key):
@@ -732,9 +774,10 @@ class Trace(object):
                 encoding='latin1'
             )
 
-            if len(trace) > MAX_TRACE_SIZE_BYTES:
+            trace_length = len(trace)
+            if trace_length > MAX_TRACE_SIZE_BYTES:
                 # Trace too big.
-                self._strip()
+                self._strip(trace_length)
                 self.runner.resource['metadata']['is_trimmed'] = True
 
                 trace = json.dumps(
@@ -762,7 +805,6 @@ class Trace(object):
         finally:
             if self.debug:
                 pprint.pprint(self.to_dict())
-            trace_factory.remove_current_trace()
 
 
 # pylint: disable=C0103

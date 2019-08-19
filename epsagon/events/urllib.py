@@ -10,7 +10,7 @@ from uuid import uuid4
 from epsagon.utils import add_data_if_needed
 from ..trace import trace_factory
 from ..event import BaseEvent
-from ..wrappers.http_filters import (
+from ..http_filters import (
     is_blacklisted_url,
     is_payload_collection_blacklisted
 )

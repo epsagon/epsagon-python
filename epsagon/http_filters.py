@@ -4,6 +4,7 @@ Utils for web frameworks request filters.
 
 from six.moves import urllib
 from epsagon.trace import trace_factory
+from epsagon.constants import IGNORED_ENDPOINTS
 
 # Ignored content types for web frameworks.
 IGNORED_CONTENT_TYPES = [
@@ -89,3 +90,22 @@ def ignore_request(content, path):
         any([x in content for x in IGNORED_CONTENT_TYPES]) or
         any([path.endswith(x) for x in IGNORED_FILE_TYPES])
     )
+
+
+def add_ignored_endpoints(endpoints):
+    """
+    add endpoints to the list of ignored ones..
+    :param endpoints: list of endpoints or None
+    :return: None
+    """
+    if endpoints:
+        IGNORED_ENDPOINTS.extend(endpoints)
+
+
+def is_ignored_endpoint(endpoint):
+    """
+    return true if endpoint should be ignored.
+    :param endpoint: endpoint path
+    :return: Bool
+    """
+    return endpoint in IGNORED_ENDPOINTS
