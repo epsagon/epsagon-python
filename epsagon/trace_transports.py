@@ -1,9 +1,9 @@
 """trace transport layers"""
 
-import simplejson as json
 import base64
 import logging
 import requests
+import simplejson as json
 from epsagon.constants import SEND_TIMEOUT
 from epsagon.trace_encoder import TraceEncoder
 
@@ -21,11 +21,9 @@ class NoneTransport(object):
 class LogTransport(object):
     """ send traces by logging them """
 
-    def __init__(self, token):
-        self.token = token
-
-    def send(self, trace):
-        trace_json = to_json({'token': self.token, 'trace': trace})
+    @classmethod
+    def send(cls, trace):
+        trace_json = to_json(trace)
         trace_message = base64.b64encode(
             trace_json.encode('utf-8')
         ).decode('utf-8')
