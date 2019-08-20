@@ -707,7 +707,11 @@ class Trace(object):
         """
         for event in sorted(list(self.events()), key=Trace.events_sorter):
             event_metadata_length = (
-                    len(json.dumps(event.resource.get('metadata', {})))
+                len(json.dumps(
+                    event.resource.get('metadata', {}),
+                    cls=TraceEncoder,
+                    encoding='latin1',
+                ))
             )
             Trace.trim_metadata(event.resource['metadata'])
             trace_length -= event_metadata_length
