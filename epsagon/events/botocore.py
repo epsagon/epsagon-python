@@ -9,6 +9,7 @@ import hashlib
 import traceback
 import simplejson as json
 from boto3.dynamodb.types import TypeDeserializer
+from boto3.dynamodb.conditions import ConditionExpressionBuilder
 from botocore.exceptions import ClientError
 from ..trace import trace_factory
 from ..event import BaseEvent
@@ -370,6 +371,7 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
     Represents DynamoDB botocore event.
     """
     RESOURCE_TYPE = 'dynamodb'
+    CONDITION_FIELDS = ['FilterExpression', 'KeyConditionExpression']
 
     def __init__(self, wrapped, instance, args, kwargs, start_time, response,
                  exception):
@@ -530,7 +532,7 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
         Process the query operation.
         """
         self.resource['name'] = self.request_data['TableName']
-        request_data = self.request_data.copy()
+        request_data = self._stringify_conditions(self.request_data.copy())
         if trace_factory.metadata_only:
             # Remove parameters containing non-metadata
             data_parameters = [
@@ -551,7 +553,7 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
         Process the scan operation.
         """
         self.resource['name'] = self.request_data['TableName']
-        request_data = self.request_data.copy()
+        request_data = self._stringify_conditions(self.request_data.copy())
         if trace_factory.metadata_only:
             # Remove parameters containing non-metadata
             data_parameters = [
@@ -639,6 +641,25 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
             except (TypeError, AttributeError):
                 break
         return deserialized_item
+
+    def _stringify_conditions(self, request_data):
+        """
+        convert Key and Attr object of DynamoDB to strings.
+        :param request_data: DynamoDB request data
+        :return: updated request data
+        """
+        for field in self.CONDITION_FIELDS:
+            if field in request_data:
+                try:
+                    request_data[field] = str(
+                        ConditionExpressionBuilder().build_expression(
+                            request_data[field],
+                            field == 'KeyConditionExpression'
+                        )
+                    )
+                except Exception:  # pylint: disable=W0703
+                    pass
+        return request_data
 
 
 class BotocoreSESEvent(BotocoreEvent):
