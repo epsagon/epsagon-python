@@ -28,7 +28,6 @@ from .constants import (
     __version__
 )
 
-MAX_EVENTS_PER_TYPE = 20
 MAX_TRACE_SIZE_BYTES = 64 * (2 ** 10)
 
 
@@ -577,8 +576,7 @@ class Trace(object):
         """
         event.terminate()
         events = self.events_map.setdefault(event.identifier(), [])
-        if len(events) < MAX_EVENTS_PER_TYPE:
-            events.append(event)
+        events.append(event)
 
     def verify_custom_label(self, key, value):
         """
