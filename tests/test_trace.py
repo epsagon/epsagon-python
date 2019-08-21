@@ -1,12 +1,14 @@
+# pylint: disable=too-many-lines
+""" Tests for trace.py """
 import os
 import sys
-import mock
 import uuid
 import json
 import time
 from datetime import datetime
-import requests
 import warnings
+import requests
+import mock
 import epsagon.trace
 import epsagon.constants
 from epsagon.constants import (
