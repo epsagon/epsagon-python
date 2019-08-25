@@ -352,12 +352,15 @@ class ElasticLoadBalancerLambdaTrigger(BaseLambdaTrigger):
         super(ElasticLoadBalancerLambdaTrigger, self).__init__(start_time)
 
         self.event_id = 'elb-{}'.format(str(uuid4()))
-        self.resource['name'] = event['path']
+        self.resource['name'] = event['headers']['host']
         self.resource['operation'] = event['httpMethod']
 
         self.resource['metadata'] = {
             'query_string_parameters': event['queryStringParameters'],
-            'target_group_arn': event['requestContext']['elb']['targetGroupArn']
+            'target_group_arn': (
+                event['requestContext']['elb']['targetGroupArn']
+            ),
+            'path': event['path']
         }
 
         add_data_if_needed(
