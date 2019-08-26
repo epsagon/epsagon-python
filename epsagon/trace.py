@@ -28,7 +28,7 @@ from .constants import (
     __version__
 )
 
-MAX_TRACE_SIZE_BYTES = 64 * (2 ** 10)
+DEFAULT_MAX_TRACE_SIZE_BYTES = 64 * (2 ** 10)
 
 
 def get_thread_id():
@@ -706,6 +706,20 @@ class Trace(object):
         """
         return 1 if event.origin in ['runner', 'trigger'] else 0
 
+    @property
+    def _max_trace_size(self):
+        """
+        Retreive the max trace size
+        """
+        max_trace_size = os.getenv('EPSAGON_MAX_TRACE_SIZE')
+        if max_trace_size:
+            try:
+                return int(max_trace_size)
+            except ValueError:
+                print('Invalid max Epsagon trace size given')
+
+        return DEFAULT_MAX_TRACE_SIZE_BYTES
+
     def _strip(self, trace_length):
         """
         Strips a given trace from all operations
@@ -720,7 +734,7 @@ class Trace(object):
             )
             Trace.trim_metadata(event.resource['metadata'])
             trace_length -= event_metadata_length
-            if trace_length < MAX_TRACE_SIZE_BYTES:
+            if trace_length < self._max_trace_size:
                 break
 
     @staticmethod
@@ -784,7 +798,7 @@ class Trace(object):
             )
 
             trace_length = len(trace)
-            if trace_length > MAX_TRACE_SIZE_BYTES:
+            if trace_length > self._max_trace_size:
                 # Trace too big.
                 self._strip(trace_length)
                 self.runner.resource['metadata']['is_trimmed'] = True
