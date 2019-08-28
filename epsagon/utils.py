@@ -5,6 +5,7 @@ Utilities for Epsagon module.
 from __future__ import absolute_import
 import os
 import requests
+import logging
 import simplejson as json
 try:
     from urllib.parse import urlparse
@@ -106,48 +107,52 @@ def init(
     :param ignored_endpoints: List of ignored endpoints for web frameworks.
     :return: None
     """
-    if not collector_url:
-        collector_url = get_tc_url(
-            ((os.getenv('EPSAGON_SSL') or '').upper() == 'TRUE') | use_ssl
-        )
-    # Ignored URLs is a comma separated values, if coming from env.
-    ignored_urls = os.getenv('EPSAGON_URLS_TO_IGNORE')
-    if ignored_urls:
-        ignored_urls = ignored_urls.split(',')
 
-    # Ignored URLs is a comma separated values, if coming from env.
-    ignored_paths = os.getenv('EPSAGON_ENDPOINTS_TO_IGNORE')
-    if ignored_paths:
-        ignored_paths = ignored_paths.split(',')
+    try:
+        if not collector_url:
+            collector_url = get_tc_url(
+                ((os.getenv('EPSAGON_SSL') or '').upper() == 'TRUE') | use_ssl
+            )
+        # Ignored URLs is a comma separated values, if coming from env.
+        ignored_urls = os.getenv('EPSAGON_URLS_TO_IGNORE')
+        if ignored_urls:
+            ignored_urls = ignored_urls.split(',')
 
-    # Same goes for Ignored keys.
-    ignored_keys = os.getenv('EPSAGON_IGNORED_KEYS')
-    if ignored_keys:
-        ignored_keys = ignored_keys.split(',')
+        # Ignored URLs is a comma separated values, if coming from env.
+        ignored_paths = os.getenv('EPSAGON_ENDPOINTS_TO_IGNORE')
+        if ignored_paths:
+            ignored_paths = ignored_paths.split(',')
 
-    trace_factory.initialize(
-        token=os.getenv('EPSAGON_TOKEN') or token,
-        app_name=os.getenv('EPSAGON_APP_NAME') or app_name,
-        collector_url=os.getenv('EPSAGON_COLLECTOR_URL') or collector_url,
-        metadata_only=(
-            ((os.getenv('EPSAGON_METADATA') or '').upper() == 'TRUE') |
-            metadata_only
-        ),
-        disable_timeout_send=(
-            ((os.getenv('EPSAGON_DISABLE_ON_TIMEOUT') or '').upper() == 'TRUE')
-            | disable_timeout_send
-        ),
-        debug=((os.getenv('EPSAGON_DEBUG') or '').upper() == 'TRUE') | debug,
-        send_trace_only_on_error=(
-            ((os.getenv('EPSAGON_SEND_TRACE_ON_ERROR') or '').upper() == 'TRUE')
-            | send_trace_only_on_error
-        ),
-        url_patterns_to_ignore=ignored_urls or url_patterns_to_ignore,
-        keys_to_ignore=ignored_keys or keys_to_ignore,
-        transport=create_transport(collector_url, token))
+        # Same goes for Ignored keys.
+        ignored_keys = os.getenv('EPSAGON_IGNORED_KEYS')
+        if ignored_keys:
+            ignored_keys = ignored_keys.split(',')
 
-    # Append to ignored endpoints
-    http_filters.add_ignored_endpoints(ignored_paths or ignored_endpoints)
+        trace_factory.initialize(
+            token=os.getenv('EPSAGON_TOKEN') or token,
+            app_name=os.getenv('EPSAGON_APP_NAME') or app_name,
+            collector_url=os.getenv('EPSAGON_COLLECTOR_URL') or collector_url,
+            metadata_only=(
+                ((os.getenv('EPSAGON_METADATA') or '').upper() == 'TRUE') |
+                metadata_only
+            ),
+            disable_timeout_send=(
+                ((os.getenv('EPSAGON_DISABLE_ON_TIMEOUT') or '').upper() == 'TRUE')
+                | disable_timeout_send
+            ),
+            debug=((os.getenv('EPSAGON_DEBUG') or '').upper() == 'TRUE') | debug,
+            send_trace_only_on_error=(
+                ((os.getenv('EPSAGON_SEND_TRACE_ON_ERROR') or '').upper() == 'TRUE')
+                | send_trace_only_on_error
+            ),
+            url_patterns_to_ignore=ignored_urls or url_patterns_to_ignore,
+            keys_to_ignore=ignored_keys or keys_to_ignore,
+            transport=create_transport(collector_url, token))
+
+        # Append to ignored endpoints
+        http_filters.add_ignored_endpoints(ignored_paths or ignored_endpoints)
+    except Exception:
+        logging.exception("exceptions occured")
 
 
 def import_original_module():
