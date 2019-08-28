@@ -277,9 +277,8 @@ class ProxyAPIGatewayLambdaTrigger(BaseLambdaTrigger):
         self.resource['metadata'] = {
             'stage': event['requestContext']['stage'],
             'query_string_parameters': event['queryStringParameters'],
-            'resource': event['resource'],
-            'path': event['path'],
             'path_parameters': event['pathParameters'],
+            'path': event['resource'],
         }
 
         add_data_if_needed(self.resource['metadata'], 'body', event['body'])
@@ -319,7 +318,7 @@ class NoProxyAPIGatewayLambdaTrigger(BaseLambdaTrigger):
             'stage': event['context']['stage'],
             'query_string_parameters': event['params']['querystring'],
             'path_parameters': event['params']['path'],
-            'resource': event['context']['resource-path'],
+            'path': event['context']['resource-path'],
         }
 
         add_data_if_needed(
