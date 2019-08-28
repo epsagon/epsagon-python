@@ -41,7 +41,7 @@ def get_thread_id():
 
 
 def create_transport(collector_url, token):
-    if (os.getenv('EPSAGON_LOG_TRANSPORT') or '').upper() == 'TRUE':
+    if os.getenv('EPSAGON_LOG_TRANSPORT', '').upper() == 'TRUE':
         return LogTransport(token)
     return HTTPTransport(collector_url, token)
 
@@ -707,7 +707,7 @@ class Trace(object):
         """
         for event in sorted(list(self.events()), key=Trace.events_sorter):
             event_metadata_length = (
-                    len(json.dumps(event.resource.get('metadata', {})))
+                len(json.dumps(event.resource.get('metadata', {})))
             )
             Trace.trim_metadata(event.resource['metadata'])
             trace_length -= event_metadata_length
