@@ -277,9 +277,8 @@ class ProxyAPIGatewayLambdaTrigger(BaseLambdaTrigger):
         self.resource['metadata'] = {
             'stage': event['requestContext']['stage'],
             'query_string_parameters': event['queryStringParameters'],
-            'resource': event['resource'],
-            'path': event['path'],
             'path_parameters': event['pathParameters'],
+            'path': event['resource'],
         }
 
         add_data_if_needed(self.resource['metadata'], 'body', event['body'])
@@ -319,7 +318,7 @@ class NoProxyAPIGatewayLambdaTrigger(BaseLambdaTrigger):
             'stage': event['context']['stage'],
             'query_string_parameters': event['params']['querystring'],
             'path_parameters': event['params']['path'],
-            'resource': event['context']['resource-path'],
+            'path': event['context']['resource-path'],
         }
 
         add_data_if_needed(
@@ -352,12 +351,15 @@ class ElasticLoadBalancerLambdaTrigger(BaseLambdaTrigger):
         super(ElasticLoadBalancerLambdaTrigger, self).__init__(start_time)
 
         self.event_id = 'elb-{}'.format(str(uuid4()))
-        self.resource['name'] = event['path']
+        self.resource['name'] = event['headers']['host']
         self.resource['operation'] = event['httpMethod']
 
         self.resource['metadata'] = {
             'query_string_parameters': event['queryStringParameters'],
-            'target_group_arn': event['requestContext']['elb']['targetGroupArn']
+            'target_group_arn': (
+                event['requestContext']['elb']['targetGroupArn']
+            ),
+            'path': event['path']
         }
 
         add_data_if_needed(
