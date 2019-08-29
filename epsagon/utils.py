@@ -4,8 +4,8 @@ Utilities for Epsagon module.
 
 from __future__ import absolute_import
 import os
-import requests
 import logging
+import requests
 import simplejson as json
 try:
     from urllib.parse import urlparse
@@ -136,12 +136,15 @@ def init(
                 metadata_only
             ),
             disable_timeout_send=(
-                ((os.getenv('EPSAGON_DISABLE_ON_TIMEOUT') or '').upper() == 'TRUE')
+                ((os.getenv('EPSAGON_DISABLE_ON_TIMEOUT') or '')
+                 .upper() == 'TRUE')
                 | disable_timeout_send
             ),
-            debug=((os.getenv('EPSAGON_DEBUG') or '').upper() == 'TRUE') | debug,
+            debug=((os.getenv('EPSAGON_DEBUG') or '')
+                   .upper() == 'TRUE') | debug,
             send_trace_only_on_error=(
-                ((os.getenv('EPSAGON_SEND_TRACE_ON_ERROR') or '').upper() == 'TRUE')
+                ((os.getenv('EPSAGON_SEND_TRACE_ON_ERROR') or '')
+                 .upper() == 'TRUE')
                 | send_trace_only_on_error
             ),
             url_patterns_to_ignore=ignored_urls or url_patterns_to_ignore,
@@ -150,8 +153,9 @@ def init(
 
         # Append to ignored endpoints
         http_filters.add_ignored_endpoints(ignored_paths or ignored_endpoints)
+    # pylint: disable=broad-except
     except Exception:
-        logging.exception("exceptions occured")
+        logging.exception('exceptions occured')
 
 
 def import_original_module():
