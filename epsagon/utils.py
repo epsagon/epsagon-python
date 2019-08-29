@@ -12,6 +12,7 @@ try:
 except ImportError:
     from urlparse import urlparse
 
+from epsagon import http_filters
 from epsagon.constants import TRACE_COLLECTOR_URL, REGION
 from .trace import trace_factory, create_transport
 from .constants import EPSAGON_HANDLER

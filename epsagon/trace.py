@@ -41,7 +41,7 @@ def get_thread_id():
 
 
 def create_transport(collector_url, token):
-    if os.getenv('EPSAGON_LOG_TRANSPORT', '').upper() == 'TRUE':
+    if (os.getenv('EPSAGON_LOG_TRANSPORT') or '').upper() == 'TRUE':
         return LogTransport()
     return HTTPTransport(collector_url, token)
 
