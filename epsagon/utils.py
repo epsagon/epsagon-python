@@ -157,6 +157,7 @@ def init(
     # pylint: disable=broad-except
     except Exception:
         logging.exception('exceptions occured')
+        raise
 
 
 def import_original_module():

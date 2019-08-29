@@ -30,6 +30,7 @@ from .constants import (
 
 MAX_EVENTS_PER_TYPE = 20
 MAX_TRACE_SIZE_BYTES = 64 * (2 ** 10)
+DEFAULT_MAX_TRACE_SIZE_BYTES = 64 * (2 ** 10)
 
 
 def get_thread_id():
@@ -577,8 +578,7 @@ class Trace(object):
         """
         event.terminate()
         events = self.events_map.setdefault(event.identifier(), [])
-        if len(events) < MAX_EVENTS_PER_TYPE:
-            events.append(event)
+        events.append(event)
 
     def verify_custom_label(self, key, value):
         """
@@ -641,9 +641,16 @@ class Trace(object):
             return
 
         if not traceback_data:
-            traceback_data = ''.join(
-                traceback.format_list(traceback.extract_stack())
-            )
+            if getattr(exception, '__traceback__', None):
+                traceback_data = ''.join(traceback.format_exception(
+                    type(exception),
+                    exception,
+                    getattr(exception, '__traceback__'),
+                ))
+            else:
+                traceback_data = ''.join(
+                    traceback.format_list(traceback.extract_stack())
+                )
         self.runner.set_exception(exception, traceback_data)
 
     def update_runner_with_labels(self):
@@ -701,17 +708,35 @@ class Trace(object):
         """
         return 1 if event.origin in ['runner', 'trigger'] else 0
 
+    @property
+    def _max_trace_size(self):
+        """
+        Retreive the max trace size
+        """
+        max_trace_size = os.getenv('EPSAGON_MAX_TRACE_SIZE')
+        if max_trace_size:
+            try:
+                return int(max_trace_size)
+            except ValueError:
+                print('Invalid max Epsagon trace size given')
+
+        return DEFAULT_MAX_TRACE_SIZE_BYTES
+
     def _strip(self, trace_length):
         """
         Strips a given trace from all operations
         """
         for event in sorted(list(self.events()), key=Trace.events_sorter):
             event_metadata_length = (
-                len(json.dumps(event.resource.get('metadata', {})))
+                len(json.dumps(
+                    event.resource.get('metadata', {}),
+                    cls=TraceEncoder,
+                    encoding='latin1',
+                ))
             )
             Trace.trim_metadata(event.resource['metadata'])
             trace_length -= event_metadata_length
-            if trace_length < MAX_TRACE_SIZE_BYTES:
+            if trace_length < self._max_trace_size:
                 break
 
     @staticmethod
@@ -775,7 +800,7 @@ class Trace(object):
             )
 
             trace_length = len(trace)
-            if trace_length > MAX_TRACE_SIZE_BYTES:
+            if trace_length > self._max_trace_size:
                 # Trace too big.
                 self._strip(trace_length)
                 self.runner.resource['metadata']['is_trimmed'] = True

@@ -1,19 +1,21 @@
+# pylint: disable=too-many-lines
+""" Tests for trace.py """
 import os
 import sys
-import mock
 import uuid
 import json
 import time
 from datetime import datetime
-import requests
 import warnings
+import requests
+import mock
 import epsagon.trace
 import epsagon.constants
 from epsagon.constants import (
     TRACE_COLLECTOR_URL,
     DEFAULT_REGION
 )
-from epsagon.trace import trace_factory, MAX_EVENTS_PER_TYPE, TraceEncoder
+from epsagon.trace import trace_factory, TraceEncoder
 from epsagon.utils import get_tc_url
 from epsagon.common import ErrorCode
 from epsagon.trace_transports import HTTPTransport
@@ -281,16 +283,6 @@ def test_add_event():
 
         assert event is list(trace.events())[i]
         assert event.terminated
-
-
-def test_add_too_many_events():
-    event = EventMock()
-    trace = trace_factory.get_or_create_trace()
-    trace.clear_events()
-    for _ in range(MAX_EVENTS_PER_TYPE * 2):  # verify we can add more then 1 event
-        trace.add_event(event)
-
-    assert len(trace.to_dict()['events']) == MAX_EVENTS_PER_TYPE
 
 
 def test_to_dict():
