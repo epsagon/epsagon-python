@@ -4,7 +4,6 @@ Utilities for Epsagon module.
 
 from __future__ import absolute_import
 import os
-import logging
 import requests
 import simplejson as json
 try:
