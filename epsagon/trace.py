@@ -70,6 +70,7 @@ class TraceFactory(object):
         self.singleton_trace = None
         self.local_thread_to_unique_id = {}
         self.transport = NoneTransport()
+        self.split_on_send = False
 
     def initialize(
             self,
@@ -82,7 +83,8 @@ class TraceFactory(object):
             send_trace_only_on_error,
             url_patterns_to_ignore,
             keys_to_ignore,
-            transport
+            transport,
+            split_on_send,
     ):
         """
         Initializes The factory with user's data.
@@ -99,6 +101,8 @@ class TraceFactory(object):
         :param url_patterns_to_ignore: URL patterns to ignore in HTTP data
          collection.
         :param keys_to_ignore: List of keys to ignore while extracting metadata.
+        :param split_on_send: Split trace into multiple traces in case it's size
+         exceeds the maximum size.
         :return: None
         """
 
@@ -114,6 +118,7 @@ class TraceFactory(object):
         )
         self.keys_to_ignore = [] if keys_to_ignore is None else keys_to_ignore
         self.transport = transport
+        self.split_on_send = split_on_send
 
     def switch_to_multiple_traces(self):
         """
@@ -138,6 +143,7 @@ class TraceFactory(object):
             self.send_trace_only_on_error,
             self.url_patterns_to_ignore,
             self.keys_to_ignore,
+            self.split_on_send,
             unique_id
         )
 
@@ -335,9 +341,43 @@ class TraceFactory(object):
         """
         trace = trace if trace else self.get_trace()
 
-        if trace:
+        if not trace:
+            return
+
+        # If trace size exceeds the maximum size, and split flag is on
+        # then split the trace into multiple traces.
+        if self.split_on_send and trace.length > trace.max_trace_size:
+            self.send_trace_split(trace)
+        else:
             trace.send_traces()
-            self.pop_trace(trace)
+        self.pop_trace(trace)
+
+    @staticmethod
+    def send_trace_split(trace):
+        """
+        Split trace into multiple traces and send them one after the other.
+        This is done by manipulating the trace object while keeping the same
+        runner.
+        :param trace: the trace to send.
+        """
+        # Get only events (without runner)
+        all_events = trace.events.copy()
+        all_events.remove(trace.runner)
+
+        trace.clear_events()
+        trace.add_event(trace.runner)
+
+        for event in all_events:
+            trace.events.append(event)
+            if trace.length > trace.max_trace_size:
+                trace.events.pop()
+                trace.send_traces()
+                trace.trace_sent = False
+                trace.clear_events()
+                trace.add_event(trace.runner)
+                trace.add_event(event)
+
+        trace.send_traces()
 
     def prepare(self):
         """
@@ -366,7 +406,8 @@ class Trace(object):
             url_patterns_to_ignore=None,
             keys_to_ignore=None,
             unique_id=None,
-            transport=NoneTransport()
+            split_on_send=False,
+            transport=NoneTransport(),
     ):
         """
         initialize.
@@ -374,7 +415,7 @@ class Trace(object):
         self.app_name = app_name
         self.unique_id = unique_id
         self.token = token
-        self.events_map = {}
+        self.events = []
         self.exceptions = []
         self.custom_labels = {}
         self.custom_labels_size = 0
@@ -387,6 +428,7 @@ class Trace(object):
         self.send_trace_only_on_error = send_trace_only_on_error
         self.url_patterns_to_ignore = url_patterns_to_ignore
         self.transport = transport
+        self.split_on_send = split_on_send
 
         if keys_to_ignore:
             self.keys_to_ignore = [self._strip_key(x) for x in keys_to_ignore]
@@ -439,7 +481,7 @@ class Trace(object):
                 return
 
             modified_timeout = (
-                original_timeout - TIMEOUT_GRACE_TIME_MS) / 1000.0
+                                       original_timeout - TIMEOUT_GRACE_TIME_MS) / 1000.0
             signal.setitimer(signal.ITIMER_REAL, modified_timeout)
             original_handler = signal.signal(
                 signal.SIGALRM,
@@ -498,7 +540,7 @@ class Trace(object):
                 EpsagonWarning
             )
 
-        self.events_map = {}
+        self.events = []
         self.exceptions = []
         self.custom_labels = {}
         self.custom_labels_size = 0
@@ -548,7 +590,7 @@ class Trace(object):
         trace.version = trace_data['version']
         trace.platform = trace_data['platform']
         trace.exceptions = trace_data.get('exceptions', [])
-        trace.events_map = {}
+        trace.events = []
         for event in trace_data['events']:
             trace.add_event(BaseEvent.load_from_dict(event))
         return trace
@@ -566,7 +608,7 @@ class Trace(object):
         Clears the events list
         :return: None
         """
-        self.events_map = {}
+        self.events = []
 
     def add_event(self, event):
         """
@@ -575,8 +617,7 @@ class Trace(object):
         :return: None
         """
         event.terminate()
-        events = self.events_map.setdefault(event.identifier(), [])
-        events.append(event)
+        self.events.append(event)
 
     def verify_custom_label(self, key, value):
         """
@@ -604,15 +645,6 @@ class Trace(object):
         self.custom_labels_size += len(key) + len(value)
 
         return True
-
-    def events(self):
-        """
-        Returns events iterator
-        :return: events iterator
-        """
-        return itertools.chain(
-            *self.events_map.values()
-        )
 
     def add_label(self, key, value):
         """
@@ -680,7 +712,7 @@ class Trace(object):
         return {
             'token': self.token,
             'app_name': self.app_name,
-            'events': [event.to_dict() for event in self.events()],
+            'events': [event.to_dict() for event in self.events],
             'exceptions': self.exceptions,
             'version': self.version,
             'platform': self.platform,
@@ -707,7 +739,7 @@ class Trace(object):
         return 1 if event.origin in ['runner', 'trigger'] else 0
 
     @property
-    def _max_trace_size(self):
+    def max_trace_size(self):
         """
         Retreive the max trace size
         """
@@ -720,11 +752,20 @@ class Trace(object):
 
         return DEFAULT_MAX_TRACE_SIZE_BYTES
 
+    @property
+    def length(self):
+        json_trace = json.dumps(
+            self.to_dict(),
+            cls=TraceEncoder,
+            encoding='latin1'
+        )
+        return len(json_trace)
+
     def _strip(self, trace_length):
         """
         Strips a given trace from all operations
         """
-        for event in sorted(list(self.events()), key=Trace.events_sorter):
+        for event in sorted(self.events, key=Trace.events_sorter):
             event_metadata_length = (
                 len(json.dumps(
                     event.resource.get('metadata', {}),
@@ -734,7 +775,7 @@ class Trace(object):
             )
             Trace.trim_metadata(event.resource['metadata'])
             trace_length -= event_metadata_length
-            if trace_length < self._max_trace_size:
+            if trace_length < self.max_trace_size:
                 break
 
     @staticmethod
@@ -784,7 +825,7 @@ class Trace(object):
         )
 
         # Remove ignored keys.
-        for event in self.events():
+        for event in self.events:
             self.remove_ignored_keys(event.resource['metadata'])
 
         try:
@@ -798,7 +839,7 @@ class Trace(object):
             )
 
             trace_length = len(trace)
-            if trace_length > self._max_trace_size:
+            if not self.split_on_send and trace_length > self.max_trace_size:
                 # Trace too big.
                 self._strip(trace_length)
                 self.runner.resource['metadata']['is_trimmed'] = True
