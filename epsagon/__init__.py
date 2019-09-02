@@ -24,6 +24,7 @@ def dummy_wrapper(func):
 
 if (os.getenv('DISABLE_EPSAGON') == 'TRUE' or
         os.getenv('IS_OFFLINE').upper() == 'TRUE'):
+    print("DISABLED EPSAGON")
     os.environ['DISABLE_EPSAGON_PATCH'] = 'TRUE'
     lambda_wrapper = dummy_wrapper  # pylint: disable=C0103
     step_lambda_wrapper = dummy_wrapper  # pylint: disable=C0103
