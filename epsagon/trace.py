@@ -788,12 +788,14 @@ class Trace(object):
         """
         # Get only events (without runner)
         all_events = self.events.copy()
-        all_events.remove(self.runner)
+        if self.runner:
+            all_events.remove(self.runner)
+
         self.runner.resource['metadata']['fragment_seq'] = 1
         self.clear_events()
         self.add_event(self.runner)
         for event in all_events:
-            self.events.append(event)
+            self.add_event(event)
             if self.length > self._max_trace_size:
                 self.events.pop()
                 self._send_traces()
