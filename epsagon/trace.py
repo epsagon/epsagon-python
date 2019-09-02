@@ -142,8 +142,8 @@ class TraceFactory(object):
             self.send_trace_only_on_error,
             self.url_patterns_to_ignore,
             self.keys_to_ignore,
+            unique_id,
             self.split_on_send,
-            unique_id
         )
 
     def get_or_create_trace(self, unique_id=None):
@@ -340,43 +340,9 @@ class TraceFactory(object):
         """
         trace = trace if trace else self.get_trace()
 
-        if not trace:
-            return
-
-        # If trace size exceeds the maximum size, and split flag is on
-        # then split the trace into multiple traces.
-        if self.split_on_send and trace.length > trace.max_trace_size:
-            self.send_trace_split(trace)
-        else:
+        if trace:
             trace.send_traces()
-        self.pop_trace(trace)
-
-    @staticmethod
-    def send_trace_split(trace):
-        """
-        Split trace into multiple traces and send them one after the other.
-        This is done by manipulating the trace object while keeping the same
-        runner.
-        :param trace: the trace to send.
-        """
-        # Get only events (without runner)
-        all_events = trace.events.copy()
-        all_events.remove(trace.runner)
-
-        trace.clear_events()
-        trace.add_event(trace.runner)
-
-        for event in all_events:
-            trace.events.append(event)
-            if trace.length > trace.max_trace_size:
-                trace.events.pop()
-                trace.send_traces()
-                trace.trace_sent = False
-                trace.clear_events()
-                trace.add_event(trace.runner)
-                trace.add_event(event)
-
-        trace.send_traces()
+            self.pop_trace(trace)
 
     def prepare(self):
         """
@@ -387,7 +353,8 @@ class TraceFactory(object):
         if trace:
             trace.prepare()
 
-#pylint: disable=too-many-public-methods
+
+# pylint: disable=too-many-public-methods
 class Trace(object):
     """
     Represents runtime trace
@@ -738,7 +705,7 @@ class Trace(object):
         return 1 if event.origin in ['runner', 'trigger'] else 0
 
     @property
-    def max_trace_size(self):
+    def _max_trace_size(self):
         """
         Retreive the max trace size
         """
@@ -774,7 +741,7 @@ class Trace(object):
             )
             Trace.trim_metadata(event.resource['metadata'])
             trace_length -= event_metadata_length
-            if trace_length < self.max_trace_size:
+            if trace_length < self._max_trace_size:
                 break
 
     @staticmethod
@@ -801,8 +768,46 @@ class Trace(object):
                     if isinstance(value, dict):
                         self.remove_ignored_keys(value)
 
-    # pylint: disable=W0703
     def send_traces(self):
+        """
+        If trace size exceeds the maximum size, and split flag is on
+        then split the trace into multiple traces.
+        :return: None
+        """
+        if self.split_on_send and self.length > self._max_trace_size:
+            self._send_trace_split()
+        else:
+            self._send_traces()
+
+    def _send_trace_split(self):
+        """
+        Split trace into multiple traces and send them one after the other.
+        This is done by manipulating the trace object while keeping the same
+        runner.
+        :param trace: the trace to send.
+        """
+        # Get only events (without runner)
+        all_events = self.events.copy()
+        all_events.remove(self.runner)
+
+        self.clear_events()
+        self.add_event(self.runner)
+        for event in all_events:
+            self.events.append(event)
+            if self.length > self._max_trace_size:
+                self.events.pop()
+                self._send_traces()
+                self.trace_sent = False
+                self.clear_events()
+                self.add_event(self.runner)
+                self.add_event(event)
+
+        # If there are events to send (except for runner)
+        if len(self.events) > 1:
+            self._send_traces()
+
+    # pylint: disable=W0703
+    def _send_traces(self):
         """
         Send trace to collector.
         :return: None
@@ -838,7 +843,7 @@ class Trace(object):
             )
 
             trace_length = len(trace)
-            if not self.split_on_send and trace_length > self.max_trace_size:
+            if not self.split_on_send and trace_length > self._max_trace_size:
                 # Trace too big.
                 self._strip(trace_length)
                 self.runner.resource['metadata']['is_trimmed'] = True
