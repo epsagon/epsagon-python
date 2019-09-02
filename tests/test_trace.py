@@ -172,7 +172,7 @@ def test_prepare():
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter('always')
         trace.prepare()
-        assert not list(trace.events())
+        assert not trace.events
         assert trace.exceptions == []
         assert len(w) == 1
     trace.clear_events()
@@ -180,7 +180,7 @@ def test_prepare():
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter('always')
         trace.prepare()
-        assert not list(trace.events())
+        assert not trace.events
         assert trace.exceptions == []
         assert len(w) == 1
 
@@ -189,7 +189,7 @@ def test_prepare():
     with warnings.catch_warnings(record=True) as w:
         trace.prepare()
         trace.prepare()  # this call should NOT trigger a warning
-        assert not list(trace.events())
+        assert not trace.events
         assert trace.exceptions == []
         assert len(w) == 1
 
@@ -246,7 +246,7 @@ def test_load_from_dict():
             assert new_trace.token == trace_data['token']
             assert new_trace.version == trace_data['version']
             assert new_trace.platform == trace_data['platform']
-            assert list(new_trace.events()) == trace_data['events']
+            assert new_trace.events == trace_data['events']
             assert new_trace.exceptions == []
 
 
@@ -270,7 +270,7 @@ def test_load_from_dict_with_exceptions():
             assert new_trace.token == trace_data['token']
             assert new_trace.version == trace_data['version']
             assert new_trace.platform == trace_data['platform']
-            assert list(new_trace.events()) == trace_data['events']
+            assert new_trace.events == trace_data['events']
             assert new_trace.exceptions == trace_data['exceptions']
 
 
@@ -281,7 +281,7 @@ def test_add_event():
     for i in range(10):  # verify we can add more then 1 event
         trace.add_event(event)
 
-        assert event is list(trace.events())[i]
+        assert event is trace.events[i]
         assert event.terminated
 
 
@@ -542,7 +542,8 @@ def test_init_sanity(wrapped_init, _create):
         send_trace_only_on_error=False,
         url_patterns_to_ignore=None,
         keys_to_ignore=None,
-        transport=default_http
+        transport=default_http,
+        split_on_send=False
     )
 
 
@@ -566,7 +567,8 @@ def test_init_empty_app_name(wrapped_init, _create):
         send_trace_only_on_error=False,
         url_patterns_to_ignore=None,
         keys_to_ignore=None,
-        transport=default_http
+        transport=default_http,
+        split_on_send=False
     )
 
 
@@ -584,7 +586,8 @@ def test_init_empty_collector_url(wrapped_init, _create):
         send_trace_only_on_error=False,
         url_patterns_to_ignore=None,
         keys_to_ignore=None,
-        transport=default_http
+        transport=default_http,
+         split_on_send=False
     )
 
 
@@ -606,7 +609,8 @@ def test_init_no_ssl_no_url(wrapped_init, _create):
         send_trace_only_on_error=False,
         url_patterns_to_ignore=None,
         keys_to_ignore=None,
-        transport=default_http
+        transport=default_http,
+        split_on_send=False
     )
 
 
@@ -632,7 +636,8 @@ def test_init_ssl_no_url(wrapped_init, _create):
         send_trace_only_on_error=False,
         url_patterns_to_ignore=None,
         keys_to_ignore=None,
-        transport=default_http
+        transport=default_http,
+        split_on_send=False
     )
 
 
@@ -656,7 +661,8 @@ def test_init_ssl_with_url(wrapped_init, _create):
         send_trace_only_on_error=False,
         url_patterns_to_ignore=None,
         keys_to_ignore=None,
-        transport=default_http
+        transport=default_http,
+        split_on_send=False
     )
 
 
@@ -680,7 +686,8 @@ def test_init_no_ssl_with_url(wrapped_init, _create):
         send_trace_only_on_error=False,
         url_patterns_to_ignore=None,
         keys_to_ignore=None,
-        transport=default_http
+        transport=default_http,
+        split_on_send=False
     )
 
 
@@ -704,7 +711,8 @@ def test_init_ignored_urls_env(wrapped_init, _create):
         send_trace_only_on_error=False,
         url_patterns_to_ignore=['test.com', 'test2.com'],
         keys_to_ignore=None,
-        transport=default_http
+        transport=default_http,
+        split_on_send=False
     )
     os.environ.pop('EPSAGON_URLS_TO_IGNORE')
 
@@ -729,7 +737,8 @@ def test_init_keys_to_ignore(wrapped_init, _create):
         send_trace_only_on_error=False,
         url_patterns_to_ignore=None,
         keys_to_ignore=['a', 'b', 'c'],
-        transport=default_http
+        transport=default_http,
+        split_on_send=False
     )
 
 
@@ -754,7 +763,8 @@ def test_init_keys_to_ignore_env(wrapped_init, _create):
         send_trace_only_on_error=False,
         url_patterns_to_ignore=None,
         keys_to_ignore=['a', 'b', 'c'],
-        transport=default_http
+        transport=default_http,
+        split_on_send=False
     )
 
 
