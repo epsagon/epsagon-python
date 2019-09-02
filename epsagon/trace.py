@@ -7,7 +7,6 @@ from __future__ import absolute_import, print_function
 import os
 import sys
 import time
-import itertools
 import traceback
 import warnings
 import signal
@@ -388,7 +387,7 @@ class TraceFactory(object):
         if trace:
             trace.prepare()
 
-
+#pylint: disable=too-many-public-methods
 class Trace(object):
     """
     Represents runtime trace
@@ -481,7 +480,7 @@ class Trace(object):
                 return
 
             modified_timeout = (
-                                       original_timeout - TIMEOUT_GRACE_TIME_MS) / 1000.0
+                           original_timeout - TIMEOUT_GRACE_TIME_MS) / 1000.0
             signal.setitimer(signal.ITIMER_REAL, modified_timeout)
             original_handler = signal.signal(
                 signal.SIGALRM,
