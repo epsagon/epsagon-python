@@ -21,9 +21,9 @@ class NoneTransport(object):
 class LogTransport(object):
     """ send traces by logging them """
 
-    @classmethod
-    def send(cls, trace):
-        trace_json = to_json(trace)
+    @staticmethod
+    def send(trace):
+        trace_json = to_json(trace.to_dict())
         trace_message = base64.b64encode(
             trace_json.encode('utf-8')
         ).decode('utf-8')
