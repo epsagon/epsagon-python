@@ -587,7 +587,7 @@ def test_init_empty_collector_url(wrapped_init, _create):
         url_patterns_to_ignore=None,
         keys_to_ignore=None,
         transport=default_http,
-         split_on_send=False
+        split_on_send=False
     )
 
 
@@ -766,6 +766,58 @@ def test_init_keys_to_ignore_env(wrapped_init, _create):
         transport=default_http,
         split_on_send=False
     )
+    os.environ.pop('EPSAGON_IGNORED_KEYS')
+
+
+@mock.patch('epsagon.utils.create_transport', side_effect=lambda x, y: default_http)
+@mock.patch('epsagon.trace.TraceFactory.initialize')
+def test_init_split_on_send(wrapped_init, _create):
+    epsagon.utils.init(
+        token='token',
+        app_name='app-name',
+        collector_url="http://abc.com",
+        metadata_only=False,
+        split_on_send=True
+    )
+    wrapped_init.assert_called_with(
+        token='token',
+        app_name='app-name',
+        metadata_only=False,
+        collector_url="http://abc.com",
+        disable_timeout_send=False,
+        debug=False,
+        send_trace_only_on_error=False,
+        url_patterns_to_ignore=None,
+        transport=default_http,
+        keys_to_ignore=None,
+        split_on_send=True
+    )
+
+
+@mock.patch('epsagon.utils.create_transport', side_effect=lambda x, y: default_http)
+@mock.patch('epsagon.trace.TraceFactory.initialize')
+def test_init_split_on_send_env(wrapped_init, _create):
+    os.environ['EPSAGON_SPLIT_ON_SEND'] = 'TRUE'
+    epsagon.utils.init(
+        token='token',
+        app_name='app-name',
+        collector_url="http://abc.com",
+        metadata_only=False,
+    )
+    wrapped_init.assert_called_with(
+        token='token',
+        app_name='app-name',
+        metadata_only=False,
+        collector_url="http://abc.com",
+        disable_timeout_send=False,
+        debug=False,
+        send_trace_only_on_error=False,
+        url_patterns_to_ignore=None,
+        transport=default_http,
+        keys_to_ignore=None,
+        split_on_send=True
+    )
+    os.environ.pop('EPSAGON_SPLIT_ON_SEND')
 
 
 @mock.patch('requests.Session.post', side_effect=requests.ReadTimeout)
