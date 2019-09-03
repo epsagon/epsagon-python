@@ -11,8 +11,8 @@ try:
 except ImportError:
     from urlparse import urlparse
 
-from epsagon.constants import TRACE_COLLECTOR_URL, REGION
 from epsagon import http_filters
+from epsagon.constants import TRACE_COLLECTOR_URL, REGION
 from .trace import trace_factory, create_transport
 from .constants import EPSAGON_HANDLER
 
@@ -107,6 +107,7 @@ def init(
     :param ignored_endpoints: List of ignored endpoints for web frameworks.
     :return: None
     """
+
     if not collector_url:
         collector_url = get_tc_url(
             ((os.getenv('EPSAGON_SSL') or '').upper() == 'TRUE') | use_ssl
@@ -135,12 +136,15 @@ def init(
             metadata_only
         ),
         disable_timeout_send=(
-            ((os.getenv('EPSAGON_DISABLE_ON_TIMEOUT') or '').upper() == 'TRUE')
+            ((os.getenv('EPSAGON_DISABLE_ON_TIMEOUT') or '')
+                .upper() == 'TRUE')
             | disable_timeout_send
         ),
-        debug=((os.getenv('EPSAGON_DEBUG') or '').upper() == 'TRUE') | debug,
+        debug=((os.getenv('EPSAGON_DEBUG') or '')
+               .upper() == 'TRUE') | debug,
         send_trace_only_on_error=(
-            ((os.getenv('EPSAGON_SEND_TRACE_ON_ERROR') or '').upper() == 'TRUE')
+            ((os.getenv('EPSAGON_SEND_TRACE_ON_ERROR') or '')
+                .upper() == 'TRUE')
             | send_trace_only_on_error
         ),
         url_patterns_to_ignore=ignored_urls or url_patterns_to_ignore,
