@@ -86,6 +86,7 @@ def init(
     url_patterns_to_ignore=None,
     keys_to_ignore=None,
     ignored_endpoints=None,
+    split_on_send=False
 ):
     """
     Initializes trace with user's data.
@@ -148,7 +149,12 @@ def init(
         ),
         url_patterns_to_ignore=ignored_urls or url_patterns_to_ignore,
         keys_to_ignore=ignored_keys or keys_to_ignore,
-        transport=create_transport(collector_url, token))
+        transport=create_transport(collector_url, token),
+        split_on_send=(
+                ((os.getenv('EPSAGON_SPLIT_ON_SEND') or '').upper() == 'TRUE')
+                | split_on_send
+        ),
+    )
 
     # Append to ignored endpoints
     http_filters.add_ignored_endpoints(ignored_paths or ignored_endpoints)

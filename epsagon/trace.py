@@ -7,7 +7,6 @@ from __future__ import absolute_import, print_function
 import os
 import sys
 import time
-import itertools
 import traceback
 import warnings
 import signal
@@ -72,6 +71,7 @@ class TraceFactory(object):
         self.singleton_trace = None
         self.local_thread_to_unique_id = {}
         self.transport = NoneTransport()
+        self.split_on_send = False
 
     def initialize(
             self,
@@ -84,7 +84,8 @@ class TraceFactory(object):
             send_trace_only_on_error,
             url_patterns_to_ignore,
             keys_to_ignore,
-            transport
+            transport,
+            split_on_send,
     ):
         """
         Initializes The factory with user's data.
@@ -101,6 +102,8 @@ class TraceFactory(object):
         :param url_patterns_to_ignore: URL patterns to ignore in HTTP data
          collection.
         :param keys_to_ignore: List of keys to ignore while extracting metadata.
+        :param split_on_send: Split trace into multiple traces in case it's size
+         exceeds the maximum size.
         :return: None
         """
 
@@ -116,6 +119,7 @@ class TraceFactory(object):
         )
         self.keys_to_ignore = [] if keys_to_ignore is None else keys_to_ignore
         self.transport = transport
+        self.split_on_send = split_on_send
 
     def switch_to_multiple_traces(self):
         """
@@ -140,7 +144,8 @@ class TraceFactory(object):
             self.send_trace_only_on_error,
             self.url_patterns_to_ignore,
             self.keys_to_ignore,
-            unique_id
+            unique_id,
+            self.split_on_send,
         )
 
     def get_or_create_trace(self, unique_id=None):
@@ -351,6 +356,7 @@ class TraceFactory(object):
             trace.prepare()
 
 
+# pylint: disable=too-many-public-methods
 class Trace(object):
     """
     Represents runtime trace
@@ -368,7 +374,8 @@ class Trace(object):
             url_patterns_to_ignore=None,
             keys_to_ignore=None,
             unique_id=None,
-            transport=NoneTransport()
+            split_on_send=False,
+            transport=NoneTransport(),
     ):
         """
         initialize.
@@ -376,7 +383,7 @@ class Trace(object):
         self.app_name = app_name
         self.unique_id = unique_id
         self.token = token
-        self.events_map = {}
+        self.events = []
         self.exceptions = []
         self.custom_labels = {}
         self.custom_labels_size = 0
@@ -389,6 +396,7 @@ class Trace(object):
         self.send_trace_only_on_error = send_trace_only_on_error
         self.url_patterns_to_ignore = url_patterns_to_ignore
         self.transport = transport
+        self.split_on_send = split_on_send
 
         if keys_to_ignore:
             self.keys_to_ignore = [self._strip_key(x) for x in keys_to_ignore]
@@ -441,7 +449,7 @@ class Trace(object):
                 return
 
             modified_timeout = (
-                original_timeout - TIMEOUT_GRACE_TIME_MS) / 1000.0
+                           original_timeout - TIMEOUT_GRACE_TIME_MS) / 1000.0
             signal.setitimer(signal.ITIMER_REAL, modified_timeout)
             original_handler = signal.signal(
                 signal.SIGALRM,
@@ -500,7 +508,7 @@ class Trace(object):
                 EpsagonWarning
             )
 
-        self.events_map = {}
+        self.events = []
         self.exceptions = []
         self.custom_labels = {}
         self.custom_labels_size = 0
@@ -550,7 +558,7 @@ class Trace(object):
         trace.version = trace_data['version']
         trace.platform = trace_data['platform']
         trace.exceptions = trace_data.get('exceptions', [])
-        trace.events_map = {}
+        trace.events = []
         for event in trace_data['events']:
             trace.add_event(BaseEvent.load_from_dict(event))
         return trace
@@ -568,7 +576,7 @@ class Trace(object):
         Clears the events list
         :return: None
         """
-        self.events_map = {}
+        self.events = []
 
     def add_event(self, event):
         """
@@ -577,8 +585,7 @@ class Trace(object):
         :return: None
         """
         event.terminate()
-        events = self.events_map.setdefault(event.identifier(), [])
-        events.append(event)
+        self.events.append(event)
 
     def verify_custom_label(self, key, value):
         """
@@ -606,15 +613,6 @@ class Trace(object):
         self.custom_labels_size += len(key) + len(value)
 
         return True
-
-    def events(self):
-        """
-        Returns events iterator
-        :return: events iterator
-        """
-        return itertools.chain(
-            *self.events_map.values()
-        )
 
     def add_label(self, key, value):
         """
@@ -682,7 +680,7 @@ class Trace(object):
         return {
             'token': self.token,
             'app_name': self.app_name,
-            'events': [event.to_dict() for event in self.events()],
+            'events': [event.to_dict() for event in self.events],
             'exceptions': self.exceptions,
             'version': self.version,
             'platform': self.platform,
@@ -722,11 +720,20 @@ class Trace(object):
 
         return DEFAULT_MAX_TRACE_SIZE_BYTES
 
+    @property
+    def length(self):
+        json_trace = json.dumps(
+            self.to_dict(),
+            cls=TraceEncoder,
+            encoding='latin1'
+        )
+        return len(json_trace)
+
     def _strip(self, trace_length):
         """
         Strips a given trace from all operations
         """
-        for event in sorted(list(self.events()), key=Trace.events_sorter):
+        for event in sorted(self.events, key=Trace.events_sorter):
             event_metadata_length = (
                 len(json.dumps(
                     event.resource.get('metadata', {}),
@@ -763,8 +770,49 @@ class Trace(object):
                     if isinstance(value, dict):
                         self.remove_ignored_keys(value)
 
-    # pylint: disable=W0703
     def send_traces(self):
+        """
+        If trace size exceeds the maximum size, and split flag is on
+        then split the trace into multiple traces.
+        :return: None
+        """
+        if self.split_on_send and self.length > self._max_trace_size:
+            self._send_trace_split()
+        else:
+            self._send_traces()
+
+    def _send_trace_split(self):
+        """
+        Split trace into multiple traces and send them one after the other.
+        This is done by manipulating the trace object while keeping the same
+        runner.
+        :param trace: the trace to send.
+        """
+        # Get only events (without runner)
+        all_events = self.events[:]
+        if self.runner:
+            all_events.remove(self.runner)
+
+        self.runner.resource['metadata']['fragment_seq'] = 1
+        self.clear_events()
+        self.add_event(self.runner)
+        for event in all_events:
+            self.add_event(event)
+            if self.length > self._max_trace_size:
+                self.events.pop()
+                self._send_traces()
+                self.runner.resource['metadata']['fragment_seq'] += 1
+                self.trace_sent = False
+                self.clear_events()
+                self.add_event(self.runner)
+                self.add_event(event)
+
+        # If there are events to send (except for runner)
+        if len(self.events) > 1:
+            self._send_traces()
+
+    # pylint: disable=W0703
+    def _send_traces(self):
         """
         Send trace to collector.
         :return: None
@@ -786,7 +834,7 @@ class Trace(object):
         )
 
         # Remove ignored keys.
-        for event in self.events():
+        for event in self.events:
             self.remove_ignored_keys(event.resource['metadata'])
 
         try:
@@ -800,7 +848,7 @@ class Trace(object):
             )
 
             trace_length = len(trace)
-            if trace_length > self._max_trace_size:
+            if not self.split_on_send and trace_length > self._max_trace_size:
                 # Trace too big.
                 self._strip(trace_length)
                 self.runner.resource['metadata']['is_trimmed'] = True

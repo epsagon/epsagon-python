@@ -27,6 +27,7 @@ class BaseEvent(object):
         self.duration = 0.0
         self.error_code = ErrorCode.OK
         self.exception = {}
+        self.terminated = False
 
         self.resource = {
             'type': self.RESOURCE_TYPE,
@@ -79,7 +80,9 @@ class BaseEvent(object):
         Sets duration time.
         :return: None
         """
-        self.duration = time.time() - self.start_time
+        if not self.terminated:
+            self.duration = time.time() - self.start_time
+            self.terminated = True
 
     def set_error(self):
         """
@@ -102,10 +105,3 @@ class BaseEvent(object):
         self.exception['message'] = str(exception)
         self.exception['traceback'] = traceback_data
         self.exception['time'] = time.time()
-
-    def identifier(self):
-        """
-        Return event identifier
-        :return: event identifier
-        """
-        return '{}|{}'.format(self.ORIGIN, self.RESOURCE_TYPE)
