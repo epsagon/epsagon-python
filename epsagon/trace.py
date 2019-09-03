@@ -787,7 +787,7 @@ class Trace(object):
         :param trace: the trace to send.
         """
         # Get only events (without runner)
-        all_events = self.events.copy()
+        all_events = self.events[:]
         if self.runner:
             all_events.remove(self.runner)
 
