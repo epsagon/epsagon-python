@@ -889,3 +889,52 @@ def test_send_on_error_only_with_error(wrapped_post):
     trace.add_event(event)
     trace.send_traces()
     wrapped_post.assert_called_once()
+
+
+@mock.patch('requests.Session.post')
+def test_send_with_split_on_big_trace(wrapped_post):
+    # Should be low enough to force trace split.
+    os.environ['EPSAGON_MAX_TRACE_SIZE'] = '500'
+    trace = trace_factory.get_or_create_trace()
+    trace.runner = mock.MagicMock()
+    trace.add_event(trace.runner)
+    trace.token = 'a'
+    trace.split_on_send = True
+    for _ in range(10):
+        event = EventMock()
+        trace.add_event(event)
+    trace.send_traces()
+    assert wrapped_post.call_count == 2
+    os.environ.pop('EPSAGON_MAX_TRACE_SIZE')
+
+
+@mock.patch('requests.Session.post')
+def test_send_with_split_on_small_trace(wrapped_post):
+    # Should be low enough to force trace split.
+    os.environ['EPSAGON_MAX_TRACE_SIZE'] = '500'
+    trace = trace_factory.get_or_create_trace()
+    trace.runner = mock.MagicMock()
+    trace.add_event(trace.runner)
+    trace.token = 'a'
+    trace.split_on_send = True
+    event = EventMock()
+    trace.add_event(event)
+    trace.send_traces()
+    wrapped_post.assert_called_once()
+    os.environ.pop('EPSAGON_MAX_TRACE_SIZE')
+
+
+@mock.patch('requests.Session.post')
+def test_send_with_split_off(wrapped_post):
+    # Should be low enough to force trace split.
+    os.environ['EPSAGON_MAX_TRACE_SIZE'] = '500'
+    trace = trace_factory.get_or_create_trace()
+    trace.runner = mock.MagicMock()
+    trace.add_event(trace.runner)
+    trace.token = 'a'
+    trace.split_on_send = False
+    for _ in range(10):
+        event = EventMock()
+        trace.add_event(event)
+    trace.send_traces()
+    wrapped_post.assert_called_once()
