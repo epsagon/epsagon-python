@@ -17,7 +17,9 @@ def _wrapper(wrapped, _instance, args, kwargs):
     :param kwargs: wrapt's kwargs
     :return: None
     """
-    if os.getenv('EPSAGON_DISABLE_LOGGING_ERRORS') != 'TRUE':
+    if (os.getenv(
+            'EPSAGON_DISABLE_LOGGING_ERRORS'
+    ) or '').upper() == 'TRUE':
         trace_factory.set_error(*args)
     return wrapped(*args, **kwargs)
 
