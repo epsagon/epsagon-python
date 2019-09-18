@@ -130,7 +130,7 @@ class TraceFactory(object):
         """
         tracers_to_update = (
             [self.singleton_trace, ] if self.singleton_trace else
-            self.tracers
+            self.traces
         )
 
         for tracer in tracers_to_update:
