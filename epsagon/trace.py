@@ -121,6 +121,31 @@ class TraceFactory(object):
         self.transport = transport
         self.split_on_send = split_on_send
 
+        self.update_tracers()
+
+    def update_tracers(self):
+        """
+        Update tracers to have latest parameters in case of re-initialization
+        of the factory.
+        """
+        tracers_to_update = (
+            [self.singleton_trace, ] if self.singleton_trace else
+            self._tracers
+        )
+
+        for tracer in tracers_to_update:
+            tracer.app_name = self.app_name
+            tracer.token = self.token
+            tracer.collector_url = self.collector_url
+            tracer.metadata_only = self.metadata_only
+            tracer.disable_timeout_send = self.disable_timeout_send
+            tracer.debug = self.debug
+            tracer.send_trace_only_on_error = self.send_trace_only_on_error
+            tracer.url_patterns_to_ignore = self.url_patterns_to_ignore
+            tracer.keys_to_ignore = self.keys_to_ignore
+            tracer.transport = self.transport
+            tracer.split_on_send = self.split_on_send
+
     def switch_to_multiple_traces(self):
         """
         Set the use_single_trace flag to False.
