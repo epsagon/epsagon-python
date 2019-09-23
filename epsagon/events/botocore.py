@@ -1056,7 +1056,11 @@ class BotocoreSSMEvent(BotocoreEvent):
         :return: None
         """
         _, request_args = args
-        self.resource['metadata']['Names'] = str(request_args.get('Names', ''))
+        add_data_if_needed(
+            self.resource['metadata'],
+            'Names',
+            str(request_args.get('Names', '')),
+        )
         self.resource['metadata']['With Decryption'] = (
             request_args.get('WithDecryption', True)
         )
@@ -1067,9 +1071,15 @@ class BotocoreSSMEvent(BotocoreEvent):
         :param response: response from SSM Client
         :return: None
         """
-        self.resource['metadata']['Parameters'] = response['Parameters']
-        self.resource['metadata']['Invalid Parameters'] = str(
-            response.get('InvalidParameters', '')
+        add_data_if_needed(
+            self.resource['metadata'],
+            'Parameters',
+            response['Parameters']
+        )
+        add_data_if_needed(
+            self.resource['metadata'],
+            'Invalid Parameters',
+            str(response.get('InvalidParameters', ''))
         )
 
 
