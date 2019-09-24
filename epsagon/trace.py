@@ -873,7 +873,7 @@ class Trace(object):
             )
 
             trace_length = len(trace)
-            if not self.split_on_send and trace_length > self._max_trace_size:
+            if trace_length > self._max_trace_size:
                 # Trace too big.
                 self._strip(trace_length)
                 self.runner.resource['metadata']['is_trimmed'] = True
