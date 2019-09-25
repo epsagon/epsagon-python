@@ -520,8 +520,8 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
         """
         table_name = list(self.request_data['RequestItems'].keys())[0]
         self.resource['name'] = table_name
-        keys = [  # pylint: disable=unnecessary-comprehension
-            key for key in
+        keys = [
+            key for key in  # pylint: disable=unnecessary-comprehension
             self.request_data['RequestItems'][table_name]['Keys']
         ]
 
