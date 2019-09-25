@@ -16,6 +16,7 @@ from epsagon.constants import (
     DEFAULT_REGION
 )
 from epsagon.trace import trace_factory, TraceEncoder
+from epsagon.event import BaseEvent
 from epsagon.utils import get_tc_url
 from epsagon.common import ErrorCode
 from epsagon.trace_transports import HTTPTransport
@@ -33,7 +34,9 @@ class EventMock(object):
     ORIGIN = 'mock'
     RESOURCE_TYPE = 'mock'
 
-    def __init__(self):
+    def __init__(self, start_time=None):
+        self.start_time = start_time
+        self.duration = 0.0
         self.terminated = False
         self.exception = {}
         self.origin = 'not_runner'
@@ -73,12 +76,14 @@ class BigEventMock(EventMock):
 
 class RunnerEventMock(EventMock):
     def __init__(self):
-        super(RunnerEventMock, self).__init__()
+        super(RunnerEventMock, self).__init__(start_time=time.time())
         self.terminated = True
         self.origin = 'runner'
 
     def terminate(self):
-        pass
+        # This is a hack, to prevent duplicating this method code.
+        # These classes mocks is a wrong idea in general.
+        BaseEvent.terminate(self)
 
     def set_timeout(self):
         pass
@@ -386,6 +391,20 @@ def test_to_dict_empty():
 def test_set_timeout_handler_emtpy_context():
     # Has no 'get_remaining_time_in_millis' attribute
     trace_factory.get_or_create_trace().set_timeout_handler({})
+
+
+@mock.patch('requests.Session.post')
+def test_runner_duration(_wrapped_post):
+    runner = RunnerEventMock()
+    runner.terminated = False
+    trace = trace_factory.get_or_create_trace()
+    trace.token = 'a'
+    trace.set_runner(runner)
+    time.sleep(0.2)
+    trace.send_traces()
+
+    print(runner.duration)
+    assert runner.duration > 0.2
 
 
 @mock.patch('requests.Session.post')
