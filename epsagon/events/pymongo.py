@@ -46,7 +46,7 @@ class PyMongoEvent(BaseEvent):
         address = [x for x in getattr(
             instance.database.client,
             '_topology_settings'
-        ).seeds][0]
+        ).seeds][0]  # pylint: disable=unnecessary-comprehension
 
         if self.resource['operation'] == 'insert_one':
             documents = [documents]
