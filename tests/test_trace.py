@@ -81,9 +81,11 @@ class RunnerEventMock(EventMock):
         self.origin = 'runner'
 
     def terminate(self):
-        # This is a hack, to prevent duplicating this method code.
+        # This should be a copy of `BaseEvent.terminate()`
         # These classes mocks is a wrong idea in general.
-        BaseEvent.terminate(self)
+        if not self.terminated:
+            self.duration = time.time() - self.start_time
+            self.terminated = True
 
     def set_timeout(self):
         pass
@@ -403,8 +405,7 @@ def test_runner_duration(_wrapped_post):
     time.sleep(0.2)
     trace.send_traces()
 
-    print(runner.duration)
-    assert runner.duration > 0.2
+    assert 0.2 < runner.duration < 0.3
 
 
 @mock.patch('requests.Session.post')
