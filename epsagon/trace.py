@@ -593,7 +593,7 @@ class Trace(object):
         Sets the runner of the current tracer
         :param runner: Runner to set
         """
-        self.add_event(runner)
+        self.add_event(runner, should_terminate=False)
         self.runner = runner
 
     def clear_events(self):
@@ -603,13 +603,15 @@ class Trace(object):
         """
         self.events = []
 
-    def add_event(self, event):
+    def add_event(self, event, should_terminate=True):
         """
         Add event to events list.
         :param event: BaseEvent
+        :param should_terminate: If True, `event.terminate()` is called
         :return: None
         """
-        event.terminate()
+        if should_terminate:
+            event.terminate()
         self.events.append(event)
 
     def verify_custom_label(self, key, value):
