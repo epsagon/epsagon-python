@@ -72,6 +72,7 @@ class TraceFactory(object):
         self.local_thread_to_unique_id = {}
         self.transport = NoneTransport()
         self.split_on_send = False
+        self.disabled = False
 
     def initialize(
             self,
@@ -365,6 +366,9 @@ class TraceFactory(object):
         Send the traces for the current thread.
         :return: None
         """
+        if self.disabled:
+            return
+
         trace = trace if trace else self.get_trace()
 
         if trace:
@@ -379,6 +383,20 @@ class TraceFactory(object):
         trace = self.get_trace()
         if trace:
             trace.prepare()
+
+    def enable(self):
+        """
+        Enables Epsagon
+        :return: None
+        """
+        self.disabled = False
+
+    def disable(self):
+        """
+        Enables Epsagon
+        :return: None
+        """
+        self.disabled = True
 
 
 # pylint: disable=too-many-public-methods
