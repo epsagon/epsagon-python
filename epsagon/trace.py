@@ -393,7 +393,7 @@ class TraceFactory(object):
 
     def disable(self):
         """
-        Enables Epsagon
+        Disables Epsagon
         :return: None
         """
         self.disabled = True
