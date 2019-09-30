@@ -46,6 +46,7 @@ def create_transport(collector_url, token):
     return HTTPTransport(collector_url, token)
 
 
+# pylint: disable=R0904
 class TraceFactory(object):
     """
     A trace factory.
