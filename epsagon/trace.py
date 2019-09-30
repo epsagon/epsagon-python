@@ -367,6 +367,7 @@ class TraceFactory(object):
         :return: None
         """
         if self.disabled:
+            print('EPSAGON: Trace not sent (disabled).')
             return
 
         trace = trace if trace else self.get_trace()
