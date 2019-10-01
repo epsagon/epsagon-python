@@ -52,6 +52,9 @@ else:
 # pylint: disable=C0103
 label = trace_factory.add_label
 error = trace_factory.set_error
+disable = trace_factory.disable
+enable = trace_factory.enable
+
 
 __all__ = [
     'lambda_wrapper',
