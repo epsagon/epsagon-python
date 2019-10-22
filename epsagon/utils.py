@@ -6,6 +6,7 @@ from __future__ import absolute_import
 import os
 import requests
 import simplejson as json
+import socket
 try:
     from urllib.parse import urlparse
 except ImportError:
@@ -202,3 +203,10 @@ def collect_container_metadata():
     new_metadata['Limits'] = container_metadata['Limits']
     METADATA_CACHE['data'] = new_metadata
     return METADATA_CACHE['data']
+
+
+def add_k8s_container_metadata_if_exists(metadata):
+    is_k8s = os.environ.get('KUBERNETES_SERVICE_HOST')
+    if is_k8s:
+        metadata['is_k8s'] = True
+        metadata['k8s_pod_name'] = socket.gethostname()

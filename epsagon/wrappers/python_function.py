@@ -8,6 +8,7 @@ import traceback
 import functools
 import epsagon.trace
 import epsagon.runners.python_function
+from epsagon.utils import add_k8s_container_metadata_if_exists
 from epsagon.utils import collect_container_metadata
 from epsagon.wrappers.return_value import add_return_value
 from epsagon import constants
@@ -36,6 +37,7 @@ def wrap_python_function(func, args, kwargs):
         metadata = collect_container_metadata()
         if metadata:
             runner.resource['metadata']['ECS'] = metadata
+        add_k8s_container_metadata_if_exists(runner.resource['metadata'])
 
     # pylint: disable=W0703
     except Exception:

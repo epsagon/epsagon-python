@@ -12,6 +12,7 @@ import epsagon.triggers.http
 import epsagon.runners.django
 
 from epsagon.common import EpsagonWarning
+from epsagon.utils import add_k8s_container_metadata_if_exists
 from epsagon.utils import collect_container_metadata
 from ..http_filters import ignore_request
 
@@ -68,6 +69,9 @@ class DjangoMiddleware(object):
             metadata = collect_container_metadata()
             if metadata:
                 self.runner.resource['metadata']['ECS'] = metadata
+            add_k8s_container_metadata_if_exists(
+                self.runner.resource['metadata']
+            )
 
         # pylint: disable=W0703
         except Exception as exception:
