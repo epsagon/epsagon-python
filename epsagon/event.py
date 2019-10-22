@@ -3,6 +3,8 @@ Base Event class
 """
 
 from __future__ import absolute_import
+import os
+import socket
 import time
 from .common import ErrorCode
 
@@ -52,6 +54,10 @@ class BaseEvent(object):
         event.resource = event_data['resource']
         if event.error_code == ErrorCode.EXCEPTION:
             event.exception = event_data['exception']
+        is_k8s = os.environ.get('KUBERNETES_SERVICE_HOST')
+        if is_k8s:
+            event.resource['metadata']['is_k8s'] = True
+            event.resource['metadata']['k8s_pod_name'] = socket.gethostname()
 
         return event
 
