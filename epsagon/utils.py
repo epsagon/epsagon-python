@@ -4,9 +4,9 @@ Utilities for Epsagon module.
 
 from __future__ import absolute_import
 import os
+import socket
 import requests
 import simplejson as json
-import socket
 try:
     from urllib.parse import urlparse
 except ImportError:
