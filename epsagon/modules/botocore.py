@@ -33,13 +33,10 @@ def patch():
         _wrapper
     )
 
-    try:
-        wrapt.wrap_function_wrapper(
-            'botocore.vendored.requests',
-            'Session.send',
-            _requests_wrapper
-        )
-    except Exception:  # pylint: disable=broad-except
-        # botocore no longer vendor requests in new version
-        # https://github.com/boto/botocore/pull/1829
-        pass
+    # botocore no longer vendor requests in new version
+    # https://github.com/boto/botocore/pull/1829
+    wrapt.wrap_function_wrapper(
+        'botocore.vendored.requests',
+        'Session.send',
+        _requests_wrapper
+    )
