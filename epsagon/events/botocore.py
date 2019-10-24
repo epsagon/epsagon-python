@@ -572,12 +572,14 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
         Process the get item response.
         """
         self.resource['name'] = self.request_data['TableName']
-        if 'Item' in self.response:
+        if self.response.get('Item'):
             add_data_if_needed(
                 self.resource['metadata'],
                 'Item',
                 self.response['Item']
             )
+        else:
+            self.resource['metadata']['Item'] = 'null'
 
     def process_batch_get_response(self):
         """
