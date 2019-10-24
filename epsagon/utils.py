@@ -185,28 +185,27 @@ def import_original_module():
         raise ImportError('Failed to import module: {}'.format(module_path))
 
 
-def collect_container_metadata():
+def collect_container_metadata(metadata):
     """
     Collects container metadata if exists.
     :return: dict.
     """
+    is_k8s = os.environ.get('KUBERNETES_SERVICE_HOST')
+    if is_k8s:
+        metadata['is_k8s'] = True
+        metadata['k8s_pod_name'] = socket.gethostname()
+
     if METADATA_CACHE['queried']:
-        return METADATA_CACHE['data']
+        metadata['ECS'] = METADATA_CACHE['data']
+        return
 
     METADATA_CACHE['queried'] = True
     metadata_uri = os.environ.get('ECS_CONTAINER_METADATA_URI')
     if not metadata_uri:
-        return {}
+        return
     container_metadata = json.loads(requests.get(metadata_uri).content)
 
     new_metadata = container_metadata['Labels'].copy()
     new_metadata['Limits'] = container_metadata['Limits']
     METADATA_CACHE['data'] = new_metadata
-    return METADATA_CACHE['data']
-
-
-def add_k8s_container_metadata_if_exists(metadata):
-    is_k8s = os.environ.get('KUBERNETES_SERVICE_HOST')
-    if is_k8s:
-        metadata['is_k8s'] = True
-        metadata['k8s_pod_name'] = socket.gethostname()
+    metadata['ECS'] = METADATA_CACHE['data']

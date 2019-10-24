@@ -11,7 +11,6 @@ import wrapt
 import epsagon.trace
 from epsagon.runners.tornado import TornadoRunner
 from epsagon.http_filters import ignore_request, is_ignored_endpoint
-from epsagon.utils import add_k8s_container_metadata_if_exists
 from epsagon.utils import collect_container_metadata
 
 TORNADO_TRACE_ID = 'epsagon_tornado_trace_key'
@@ -49,12 +48,7 @@ class TornadoWrapper(object):
                 )
 
                 # Collect metadata in case this is a container.
-                metadata = collect_container_metadata()
-                if metadata:
-                    cls.RUNNERS[unique_id].resource['metadata']['ECS'] = (
-                        metadata
-                    )
-                add_k8s_container_metadata_if_exists(
+                collect_container_metadata(
                     cls.RUNNERS[unique_id].resource['metadata']
                 )
 
