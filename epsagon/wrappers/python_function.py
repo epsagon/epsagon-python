@@ -33,9 +33,7 @@ def wrap_python_function(func, args, kwargs):
         epsagon.trace.trace_factory.set_runner(runner)
 
         # Collect metadata in case this is a container.
-        metadata = collect_container_metadata()
-        if metadata:
-            runner.resource['metadata']['ECS'] = metadata
+        collect_container_metadata(runner.resource['metadata'])
 
     # pylint: disable=W0703
     except Exception:
