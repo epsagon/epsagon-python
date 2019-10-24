@@ -27,4 +27,7 @@ def patch_all():
     """
     for patch_module in epsagon.modules.MODULES:
         if _import_exists(patch_module):
-            epsagon.modules.MODULES[patch_module].patch()
+            try:
+                epsagon.modules.MODULES[patch_module].patch()
+            except Exception:  # pylint: disable=broad-except
+                pass

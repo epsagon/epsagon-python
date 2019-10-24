@@ -65,9 +65,7 @@ class DjangoMiddleware(object):
             trace.set_runner(self.runner)
 
             # Collect metadata in case this is a container.
-            metadata = collect_container_metadata()
-            if metadata:
-                self.runner.resource['metadata']['ECS'] = metadata
+            collect_container_metadata(self.runner.resource['metadata'])
 
         # pylint: disable=W0703
         except Exception as exception:

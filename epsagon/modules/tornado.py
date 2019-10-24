@@ -48,11 +48,9 @@ class TornadoWrapper(object):
                 )
 
                 # Collect metadata in case this is a container.
-                metadata = collect_container_metadata()
-                if metadata:
-                    cls.RUNNERS[unique_id].resource['metadata']['ECS'] = (
-                        metadata
-                    )
+                collect_container_metadata(
+                    cls.RUNNERS[unique_id].resource['metadata']
+                )
 
                 trace.set_runner(cls.RUNNERS[unique_id])
         except Exception as instrumentation_exception:  # pylint: disable=W0703
