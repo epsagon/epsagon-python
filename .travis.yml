@@ -2,6 +2,9 @@ language: python
 python:
     - "3.6"
 
+before_install:
+  - nvm use node  # for semantic-release
+
 install:
   - pip install -r requirements-dev.txt
   - pip install pylint
@@ -11,6 +14,7 @@ script:
   - tox
   - npm install && export PATH=$(pwd)/node_modules/.bin:$PATH
   - ./acceptance/run.sh $TRAVIS_BUILD_NUMBER
+
 
 deploy:
   provider: script
