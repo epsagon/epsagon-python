@@ -39,6 +39,7 @@ BLACKLIST_URLS = {
 WHITELIST_URL = {
     str.__contains__: [
         '.execute-api.',
+        '.elb.amazonaws.com'
     ],
 }
 
