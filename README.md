@@ -6,17 +6,17 @@
 This package provides an instrumentation to Python code running on functions for collection of distributed tracing and performance monitoring.
 
 - [Installation](https://github.com/epsagon/epsagon-python#installation)
-- Usage
+- [Usage](https://github.com/epsagon/epsagon-python#usage)
   - [AWS Lambda](https://github.com/epsagon/epsagon-python#aws-lambda)
   - [Django Application](https://github.com/epsagon/epsagon-python#django-application)
   - [Flask Application](https://github.com/epsagon/epsagon-python#flask-application)
   - [Tornado Application](https://github.com/epsagon/epsagon-python#tornado-application)
   - [Generic Python](https://github.com/epsagon/epsagon-python#generic-python)
-- Custom Data
+- [Custom Data](https://github.com/epsagon/epsagon-python#custom-data)
   - [Custom Labels](https://github.com/epsagon/epsagon-python#custom-labels)
   - [Custom Errors](https://github.com/epsagon/epsagon-python#custom-errors)
   - [Ignore Keys](https://github.com/epsagon/epsagon-python#ignore-keys)
-- Frameworks Integration
+- [Frameworks Integration](https://github.com/epsagon/epsagon-python#frameworks-integration)
   - [Serverless](https://github.com/epsagon/epsagon-python#serverless)
   - [Chalice](https://github.com/epsagon/epsagon-python#chalice)
   - [Zappa](https://github.com/epsagon/epsagon-python#zappa)
@@ -34,6 +34,8 @@ $ pip install epsagon
 More details about lambda deployments are available in the [AWS documentation](https://docs.aws.amazon.com/lambda/latest/dg/lambda-python-how-to-create-deployment-package.html).
 
 ## Usage
+
+Make sure to add `epsagon` under your `requirements.txt` file.
 
 ### AWS Lambda
 
@@ -185,6 +187,8 @@ epsagon.init(
 )
 ```
 ## Frameworks Integration
+
+When using any of the following integrations, make sure to add `epsagon` under your `requirements.txt` file.
 
 ### Serverless
 
