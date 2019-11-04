@@ -53,3 +53,6 @@ def is_strong_key(key):
         if strong_key in key:
             return True
     return False
+
+
+STEP_DICT_NAME = 'Epsagon'

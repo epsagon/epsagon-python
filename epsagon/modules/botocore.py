@@ -3,9 +3,15 @@ botocore patcher module.
 """
 
 from __future__ import absolute_import
+import json
+from uuid import uuid4
 import wrapt
 from epsagon.modules.general_wrapper import wrapper
-from ..events.botocore import BotocoreEventFactory
+from epsagon.constants import STEP_DICT_NAME
+from ..events.botocore import (
+    BotocoreEventFactory,
+    BotocoreStepFunctionEvent
+)
 from .requests import _wrapper as _requests_wrapper
 
 
@@ -18,7 +24,23 @@ def _wrapper(wrapped, instance, args, kwargs):
     :param kwargs: wrapt's kwargs
     :return: None
     """
+    instance_type = instance.__class__.__name__.lower()
+    if instance_type == BotocoreStepFunctionEvent.RESOURCE_TYPE:
+        handle_stepfunc_args(args)
+
     return wrapper(BotocoreEventFactory, wrapped, instance, args, kwargs)
+
+
+def handle_stepfunc_args(args):
+    try:
+        event_operation, request_args = args
+        if event_operation == 'StartExecution':
+            machine_input = json.loads(request_args['input'])
+            machine_input[STEP_DICT_NAME] = {'id': str(uuid4()), 'step_num': -1}
+            request_args['input'] = json.dumps(machine_input)
+
+    except Exception:  # pylint: disable=broad-except
+        pass
 
 
 def patch():
