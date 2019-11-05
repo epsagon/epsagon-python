@@ -81,7 +81,7 @@ class DBAPIEvent(BaseEvent):
             host = connection.extract_hostname
             db_name = connection.extract_dbname
 
-        self.resource['name'] = db_name
+        self.resource['name'] = db_name if db_name else host
 
         # NOTE: The operation might not be identified properly when
         # using 'WITH' clause
