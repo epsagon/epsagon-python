@@ -29,7 +29,8 @@ def _wrapper(wrapped, instance, args, kwargs):
 
     # Detect if URL is blacklisted, and ignore.
     if not is_blacklisted_url(host_url):
-        kwargs['headers']['epsagon-trace-id'] = (
+        headers = kwargs.setdefault('headers', {})
+        headers['epsagon-trace-id'] = (
             '{trace_id}:{span_id}:{parent_span_id}:1'.format(
                 trace_id=trace_id,
                 span_id=span_id,
