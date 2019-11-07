@@ -265,19 +265,33 @@ class ProxyAPIGatewayLambdaTrigger(BaseLambdaTrigger):
         """
 
         super(ProxyAPIGatewayLambdaTrigger, self).__init__(start_time)
-
-        self.event_id = event['requestContext']['requestId']
+        default_request_context = {
+            'requestId': uuid4(),
+            'apiId': 'N/A',
+            'stage': event.get('environment', 'N/A')
+        }
+        request_context = event.get('requestContext', default_request_context)
+        self.event_id = request_context['requestId']
         self.resource['name'] = event['headers'].get(
             'Host',
-            event['requestContext']['apiId']
+            request_context.get('apiId')
         )
 
         self.resource['operation'] = event['httpMethod']
 
+        query_params = event.get(
+            'queryStringParameters',
+            event.get('queryParams', 'N/A')
+        )
+        path_params = event.get(
+            'pathParameters',
+            event.get('pathParams', 'N/A')
+        )
+
         self.resource['metadata'] = {
-            'stage': event['requestContext']['stage'],
-            'query_string_parameters': event['queryStringParameters'],
-            'path_parameters': event['pathParameters'],
+            'stage': request_context.get('stage', 'N/A'),
+            'query_string_parameters': query_params,
+            'path_parameters': path_params,
             'path': event['resource'],
         }
 
