@@ -292,7 +292,7 @@ class ProxyAPIGatewayLambdaTrigger(BaseLambdaTrigger):
             'stage': request_context.get('stage', 'N/A'),
             'query_string_parameters': query_params,
             'path_parameters': path_params,
-            'path': event['resource'],
+            'path': event.get('resource', 'N/A'),
         }
 
         add_data_if_needed(self.resource['metadata'], 'body', event['body'])
