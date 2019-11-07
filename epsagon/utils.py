@@ -4,7 +4,9 @@ Utilities for Epsagon module.
 
 from __future__ import absolute_import
 import os
+import collections
 import socket
+import six
 import requests
 import simplejson as json
 try:
@@ -209,3 +211,30 @@ def collect_container_metadata(metadata):
     new_metadata['Limits'] = container_metadata['Limits']
     METADATA_CACHE['data'] = new_metadata
     metadata['ECS'] = METADATA_CACHE['data']
+
+
+def find_in_object(obj, key):
+    """
+    recursively search for a key in an object
+    :param obj: The dict to search in
+    :param key: The key to search for
+    :return: The value of this key in the object, or None if was not found
+    """
+    result = None
+
+    if isinstance(obj, collections.Mapping):
+        # search key in obj
+        if key in obj:
+            return obj[key]
+
+        # iterate values if not found
+        obj = obj.values()
+
+    if (
+        isinstance(obj, collections.Iterable)
+        and not isinstance(obj, six.string_types)
+    ):
+        for v in obj:
+            result = find_in_object(v, key)
+
+    return result

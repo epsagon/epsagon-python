@@ -11,6 +11,7 @@ import simplejson as json
 from boto3.dynamodb.types import TypeDeserializer
 from boto3.dynamodb.conditions import ConditionExpressionBuilder
 from botocore.exceptions import ClientError
+from epsagon.constants import STEP_DICT_NAME
 from ..trace import trace_factory
 from ..event import BaseEvent
 from ..utils import add_data_if_needed
@@ -1155,6 +1156,14 @@ class BotocoreStepFunctionEvent(BotocoreEvent):
             'Input',
             request_args['input']
         )
+
+        try:
+            machine_input = json.loads(request_args['input'])
+            self.resource['metadata']['steps_dict'] = (
+                machine_input[STEP_DICT_NAME]
+            )
+        except Exception:  # pylint: disable=broad-except
+            pass
 
     def process_start_exec_response(self, response):
         """

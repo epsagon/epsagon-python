@@ -5,6 +5,7 @@ Wrapper for AWS Lambda.
 from __future__ import absolute_import
 import traceback
 import time
+import copy
 import functools
 import warnings
 from uuid import uuid4
@@ -13,12 +14,12 @@ import epsagon.trace
 import epsagon.runners.aws_lambda
 import epsagon.triggers.aws_lambda
 import epsagon.wrappers.python_function
+import epsagon.utils
+from epsagon.constants import STEP_DICT_NAME
 from epsagon.wrappers.return_value import add_return_value
 import epsagon.runners.python_function
 from epsagon.common import EpsagonWarning
 from .. import constants
-
-STEP_DICT_NAME = 'Epsagon'
 
 
 def lambda_wrapper(func):
@@ -185,14 +186,19 @@ def step_lambda_wrapper(func):
         result = None
         try:
             result = func(*args, **kwargs)
+            steps_dict = epsagon.utils.find_in_object(
+                event,
+                STEP_DICT_NAME
+            )
             if isinstance(result, dict):
                 # If the step functions data is not present, then this is the
                 # First step.
-                if STEP_DICT_NAME not in event:
+                if steps_dict is None:
                     steps_dict = {'id': str(uuid4()), 'step_num': 0}
                 # Otherwise, just advance the steps number by one.
                 else:
-                    steps_dict = event[STEP_DICT_NAME]
+                    # don't change trigger data
+                    steps_dict = copy.deepcopy(steps_dict)
                     steps_dict['step_num'] += 1
 
                 result[STEP_DICT_NAME] = steps_dict

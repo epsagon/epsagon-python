@@ -69,9 +69,10 @@ class Urllib3Event(BaseEvent):
         self.resource['name'] = normalize_http_url(url)
         self.resource['operation'] = method
         self.resource['metadata']['url'] = full_url
-        self.resource['metadata']['http_trace_id'] = str(
-            UUID(hex=epsagon_trace_id.split(':')[0])
-        )
+        if epsagon_trace_id:
+            self.resource['metadata']['http_trace_id'] = str(
+                UUID(hex=epsagon_trace_id.split(':')[0])
+            )
 
         if not is_payload_collection_blacklisted(full_url):
             add_data_if_needed(
