@@ -266,7 +266,7 @@ class ProxyAPIGatewayLambdaTrigger(BaseLambdaTrigger):
 
         super(ProxyAPIGatewayLambdaTrigger, self).__init__(start_time)
         default_request_context = {
-            'requestId': uuid4(),
+            'requestId': str(uuid4()),
             'apiId': 'N/A',
             'stage': event.get('environment', 'N/A')
         }
