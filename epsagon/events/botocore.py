@@ -918,6 +918,154 @@ class BotocoreFirehoseEvent(BotocoreEvent):
             metadata['record_id'] = response['RequestResponses'][0]['RecordId']
 
 
+class BotocoreCognitoEvent(BotocoreEvent):
+    """
+    Represents Cognito botocore event
+    """
+    RESOURCE_TYPE = 'cognitoidentityprovider'
+    RESOURCE_TYPE_UPDATE = 'cognito-idp'
+
+    def __init__(self, wrapped, instance, args, kwargs, start_time, response,
+                 exception):
+        self.RESPONSE_TO_FUNC.update({
+            'AdminCreateUser': self.admin_create_user_res,
+            'AdminListGroupsForUser': self.admin_list_user_group_res,
+        })
+
+        self.OPERATION_TO_FUNC.update({
+            'AdminCreateUser': self.admin_create_user_op,
+            'AdminListGroupsForUser': self.admin_list_user_group_op,
+            'AdminSetUserPassword': self.admin_set_pass_op,
+            'DescribeUserPool': self.describe_user_pool_op,
+            'ListUsers': self.list_users_op,
+            'UpdateUserPool': self.update_pool_op,
+        })
+
+        super(BotocoreCognitoEvent, self).__init__(
+            wrapped,
+            instance,
+            args,
+            kwargs,
+            start_time,
+            response,
+            exception
+        )
+        self.resource['type'] = self.RESOURCE_TYPE_UPDATE
+
+        self.OPERATION_TO_FUNC.get(self.resource['operation'], empty_func)(
+            args,
+            kwargs
+        )
+
+    def update_response(self, response):
+        """
+        Adds response data to event.
+        :param response: Response from botocore's Cognito Client
+        """
+        super(BotocoreCognitoEvent, self).update_response(response)
+
+        self.RESPONSE_TO_FUNC.get(self.resource['operation'], empty_func)(
+            response
+        )
+
+    def admin_create_user_op(self, args, _):
+        """
+        Process AdminCreateUser operation
+        :param args: command arguments
+        :param _: unused, kwargs
+        :return: None
+        """
+        _, request_args = args
+        self.resource['name'] = request_args['UserPoolId']
+        add_data_if_needed(
+            self.resource['metadata'],
+            'request',
+            request_args
+        )
+
+    def admin_create_user_res(self, response):
+        """
+        Process AdminCreateUser response
+        :param response: response from Client
+        :return: None
+        """
+        self.resource['metadata']['user'] = response['User']
+
+    def admin_list_user_group_op(self, args, _):
+        """
+        Process AdminListGroupsForUser operation
+        :param args: command arguments
+        :param _: unused, kwargs
+        :return: None
+        """
+        _, request_args = args
+        self.resource['name'] = request_args['UserPoolId']
+        self.resource['metadata']['username'] = request_args['Username']
+
+    def admin_list_user_group_res(self, response):
+        """
+        Process AdminListGroupsForUser response
+        :param response: response from Client
+        :return: None
+        """
+        add_data_if_needed(
+            self.resource['metadata'],
+            'groups',
+            response['Groups']
+        )
+
+    def admin_set_pass_op(self, args, _):
+        """
+        Process AdminSetUserPassword operation
+        :param args: command arguments
+        :param _: unused, kwargs
+        :return: None
+        """
+        _, request_args = args
+        self.resource['name'] = request_args['UserPoolId']
+        self.resource['metadata']['username'] = request_args['Username']
+        self.resource['metadata']['permanent'] = request_args.get(
+            'Permanent',
+            False
+        )
+
+    def describe_user_pool_op(self, args, _):
+        """
+        Process DescribeUserPool operation
+        :param args: command arguments
+        :param _: unused, kwargs
+        :return: None
+        """
+        _, request_args = args
+        self.resource['name'] = request_args['UserPoolId']
+
+    def list_users_op(self, args, _):
+        """
+        Process ListUsers operation
+        :param args: command arguments
+        :param _: unused, kwargs
+        :return: None
+        """
+        _, request_args = args
+        self.resource['name'] = request_args['UserPoolId']
+        add_data_if_needed(
+            self.resource['metadata'],
+            'request',
+            request_args
+        )
+
+    def update_pool_op(self, args, _):
+        """
+        Process UpdateUserPool operation
+        :param args: command arguments
+        :param _: unused, kwargs
+        :return: None
+        """
+        _, request_args = args
+        self.resource['name'] = request_args['UserPoolId']
+        self.resource['metadata'].update(request_args)
+
+
 class BotocoreKMSEvent(BotocoreEvent):
     """
     Represents KMS botocore event
