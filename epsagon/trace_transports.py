@@ -28,6 +28,7 @@ class LogTransport(object):
             trace_json.encode('utf-8')
         ).decode('utf-8')
 
+        # pylint: disable=superfluous-parens
         print('EPSAGON_TRACE: {}'.format(trace_message))
 
 

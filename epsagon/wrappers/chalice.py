@@ -6,7 +6,7 @@ from __future__ import absolute_import
 from .aws_lambda import lambda_wrapper
 
 
-class ChaliceWrapper:
+class ChaliceWrapper(object):
     """
     Class handles wrapping Chalice app.
     In call we expect an invocation to come, and in getattr we allow `app.attr`
