@@ -43,10 +43,10 @@ class PyMongoEvent(BaseEvent):
 
         self.resource['operation'] = \
             'insert_many' if isinstance(documents, list) else 'insert_one'
-        address = [x for x in getattr(  # pylint: disable=unnecessary-comprehension
+        address = list(getattr(
             instance.database.client,
             '_topology_settings'
-        ).seeds][0]
+        ).seeds)[0]
 
         if self.resource['operation'] == 'insert_one':
             documents = [documents]

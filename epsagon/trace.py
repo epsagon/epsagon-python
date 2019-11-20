@@ -501,10 +501,9 @@ class Trace(object):
                 self.timeout_handler
             )
 
-            # pylint: disable=comparison-with-callable
             if (
                     original_handler and
-                    original_handler != self.timeout_handler
+                    original_handler is not self.timeout_handler
             ):
                 warnings.warn(
                     'Epsagon Warning: Overriding existing '
