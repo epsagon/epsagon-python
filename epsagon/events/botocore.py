@@ -219,6 +219,13 @@ class BotocoreKinesisEvent(BotocoreEvent):
             self.resource['metadata']['shard_id'] = response['ShardId']
             self.resource['metadata']['sequence_number'] = \
                 response['SequenceNumber']
+        if self.resource['operation'] == 'PutRecords':
+            self.resource['metadata']['failed_record_count'] = \
+                response['FailedRecordCount']
+            self.resource['metadata']['shard_id'] = \
+                response['Records'][0]['ShardId']
+            self.resource['metadata']['sequence_number'] = \
+                response['Records'][0]['SequenceNumber']
 
 
 class BotocoreSNSEvent(BotocoreEvent):
