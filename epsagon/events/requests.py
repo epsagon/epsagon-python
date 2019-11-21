@@ -12,7 +12,7 @@ from epsagon.utils import add_data_if_needed
 from ..trace import trace_factory
 from ..event import BaseEvent
 from ..http_filters import is_blacklisted_url
-from ..utils import update_api_gateway_headers, normalize_http_url
+from ..utils import update_http_headers, normalize_http_url
 from ..constants import HTTP_ERR_CODE
 
 
@@ -72,7 +72,7 @@ class RequestsEvent(BaseEvent):
         """
 
         self.resource['metadata']['status_code'] = response.status_code
-        self.resource = update_api_gateway_headers(
+        self.resource = update_http_headers(
             self.resource,
             response.headers
         )

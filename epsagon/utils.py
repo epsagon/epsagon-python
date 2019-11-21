@@ -50,17 +50,18 @@ def add_data_if_needed(dictionary, name, data):
         dictionary[name] = data
 
 
-def update_api_gateway_headers(resource_data, response_headers):
+def update_http_headers(resource_data, response_headers):
     """
-    Updates resource data dict with API Gateway if matching header found.
+    Updates resource data dict with AWS entities if matching header found.
     :param resource_data: event's resource data dict
     :param response_headers: response headers from HTTP request
     :return: update resource data dict
     """
     for header_key, header_value in response_headers.items():
         if header_key.lower() == 'x-amzn-requestid':
-            # This is a request to AWS API Gateway
-            resource_data['type'] = 'api_gateway'
+            # This is a request to GraphQL
+            if not resource_data['metadata']['url'].endswith('/graphql'):
+                resource_data['type'] = 'api_gateway'
             resource_data['metadata']['request_trace_id'] = header_value
             break
 
