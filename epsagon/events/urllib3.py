@@ -43,9 +43,6 @@ class Urllib3Event(BaseEvent):
         :param response: response data
         :param exception: Exception (if happened)
         """
-
-        import ipdb; ipdb.set_trace()
-
         super(Urllib3Event, self).__init__(start_time)
 
         self.event_id = 'urllib3-{}'.format(str(uuid4()))
