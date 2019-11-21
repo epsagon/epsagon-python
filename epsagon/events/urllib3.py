@@ -18,7 +18,7 @@ from ..http_filters import (
     is_blacklisted_url,
     is_payload_collection_blacklisted
 )
-from ..utils import update_api_gateway_headers, normalize_http_url
+from ..utils import update_http_headers, normalize_http_url
 from ..constants import HTTP_ERR_CODE
 
 
@@ -43,7 +43,6 @@ class Urllib3Event(BaseEvent):
         :param response: response data
         :param exception: Exception (if happened)
         """
-
         super(Urllib3Event, self).__init__(start_time)
 
         self.event_id = 'urllib3-{}'.format(str(uuid4()))
@@ -101,7 +100,7 @@ class Urllib3Event(BaseEvent):
         """
         self.resource['metadata']['status_code'] = response.status
         headers = dict(response.getheaders())
-        self.resource = update_api_gateway_headers(
+        self.resource = update_http_headers(
             self.resource,
             headers
         )

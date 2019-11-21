@@ -40,6 +40,7 @@ WHITELIST_URL = {
     str.__contains__: [
         '.execute-api.',
         '.elb.amazonaws.com'
+        '.appsync-api.',
     ],
 }
 

@@ -18,7 +18,7 @@ from ..http_filters import (
     is_blacklisted_url,
     is_payload_collection_blacklisted
 )
-from ..utils import update_api_gateway_headers
+from ..utils import update_http_headers
 from ..constants import HTTP_ERR_CODE
 
 
@@ -90,7 +90,7 @@ class Httplib2Event(BaseEvent):
         response_headers, response_body = response
 
         self.resource['metadata']['status'] = int(response_headers['status'])
-        self.resource = update_api_gateway_headers(
+        self.resource = update_http_headers(
             self.resource,
             response_headers
         )
