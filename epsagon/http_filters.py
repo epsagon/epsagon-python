@@ -39,11 +39,8 @@ BLACKLIST_URLS = {
 WHITELIST_URL = {
     str.__contains__: [
         '.execute-api.',
-<<<<<<< Updated upstream
         '.elb.amazonaws.com'
-=======
         '.appsync-api.',
->>>>>>> Stashed changes
     ],
 }
 

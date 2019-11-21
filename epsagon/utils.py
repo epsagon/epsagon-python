@@ -59,8 +59,8 @@ def update_http_headers(resource_data, response_headers):
     """
     for header_key, header_value in response_headers.items():
         if header_key.lower() == 'x-amzn-requestid':
-            # This is a request to GraphQL
-            if not resource_data['metadata']['url'].endswith('/graphql'):
+            # This is a request to API Gateway
+            if not resource_data['metadata']['url'].contains('.appsync-api.'):
                 resource_data['type'] = 'api_gateway'
             resource_data['metadata']['request_trace_id'] = header_value
             break
