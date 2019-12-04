@@ -9,7 +9,7 @@ import traceback
 from ..event import BaseEvent
 from ..trace import trace_factory
 
-MAX_VALUE_SIZE = 25
+MAX_VALUE_SIZE = 1024
 MAX_CMD_PIPELINE = 10
 
 

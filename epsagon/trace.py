@@ -445,6 +445,10 @@ class Trace(object):
 
         if keys_to_ignore:
             self.keys_to_ignore = [self._strip_key(x) for x in keys_to_ignore]
+            if self.debug:
+                print(
+                    'Setting keys_to_ignore={}'.format(keys_to_ignore)
+                )
         else:
             self.keys_to_ignore = []
         self.platform = 'Python {}.{}'.format(
@@ -812,6 +816,10 @@ class Trace(object):
             for key, value in list(input_dict.items()):
                 if self._strip_key(key) in self.keys_to_ignore:
                     input_dict.pop(key)
+                    if self.debug:
+                        print(
+                            'Removed ignored key {}'.format(key)
+                        )
                 else:
                     if isinstance(value, dict):
                         self.remove_ignored_keys(value)
