@@ -2,7 +2,7 @@
 Epsagon generic wrapper used only in Lambda environments.
 """
 
-from .utils import init, import_original_module
+from .utils import init as epsagon_init, import_original_module
 from .wrappers import lambda_wrapper
 
 
@@ -23,5 +23,5 @@ def init_module():
         )
 
 
-init()
+epsagon_init()
 wrapper = lambda_wrapper(init_module())
