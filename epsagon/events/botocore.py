@@ -1382,6 +1382,139 @@ class BotocoreLambdaEvent(BotocoreEvent):
             )
 
 
+class BotocoreEmr(BotocoreEvent):
+    """
+    Represents EMR botocore event.
+    """
+
+    RESOURCE_TYPE = 'emr'
+
+    def __init__(self, wrapped, instance, args, kwargs, start_time, response,
+                 exception):
+        """
+        Initialize.
+        :param wrapped: wrapt's wrapped
+        :param instance: wrapt's instance
+        :param args: wrapt's args
+        :param kwargs: wrapt's kwargs
+        :param start_time: Start timestamp (epoch)
+        :param response: response data
+        :param exception: Exception (if happened)
+        """
+
+        self.OPERATION_TO_FUNC.update({
+            'AddJobFlowSteps': self.add_job_flow_steps_op,
+            'TerminateJobFlows': self.terminate_job_flows_op,
+            'ListClusters': self.list_clusters_op,
+            'RunJobFlow': self.run_job_flow_op
+        })
+
+        self.RESPONSE_TO_FUNC.update({
+            'DescribeCluster': self.describe_cluster_response,
+            'DescribeStep': self.describe_step_response,
+            'AddJobFlowSteps': self.add_job_flow_steps_response,
+            'ListInstances': self.list_instances_response,
+            'ListClusters': self.list_clusters_response,
+            'RunJobFlow': self.run_job_flow_response
+        })
+        _, request_data = args
+        self.request_data = request_data
+        self.response = response
+
+        super(BotocoreEmr, self).__init__(
+            wrapped,
+            instance,
+            args,
+            kwargs,
+            start_time,
+            response,
+            exception
+        )
+
+        self.resource['name'] = request_data.get(
+            'ClusterId',
+            request_data.get('JobFlowId', 'EMR')
+        )
+        self.OPERATION_TO_FUNC.get(self.resource['operation'], empty_func)()
+
+    def add_job_flow_steps_op(self):
+        """
+        Handle add job flow steps operation.
+        """
+        self.resource['metadata']['Steps'] = self.request_data['Steps']
+
+    def terminate_job_flows_op(self):
+        """
+        Handle terminate job flows operation.
+        """
+        self.resource['metadata']['Job Flow IDs'] = self.request_data[
+            'JobFlowIds']
+
+    def list_clusters_op(self):
+        """
+        Handle list clusters operation.
+        """
+        self.resource['metadata']['Fileterd States'] = self.request_data.get(
+            'ClusterStates')
+
+    def run_job_flow_op(self):
+        """
+        Handle run job flow operation.
+        """
+        self.resource['metadata']['Request'] = self.request_data
+
+    def update_response(self, response):
+        """
+        Adds response data to event.
+        :param response: Response from botocore
+        """
+        super(BotocoreEmr, self).update_response(response)
+        self.RESPONSE_TO_FUNC.get(self.resource['operation'], empty_func)()
+
+    def describe_cluster_response(self):
+        """
+        Handle describe cluster response.
+        """
+        cluster = self.response['Cluster']
+        self.resource['metadata']['Status'] = cluster['Status']
+        self.resource['metadata']['Cluster Name'] = cluster['Name']
+        self.resource['metadata']['Cluster ID'] = cluster['Id']
+
+    def describe_step_response(self):
+        """
+        Handle describe step response.
+        """
+        step = self.response['Step']
+        self.resource['metadata']['Step Id'] = step['Id']
+        self.resource['metadata']['Step Name'] = step['Name']
+        self.resource['metadata']['Status'] = step['Status']
+        self.resource['metadata']['Step Config'] = step['Config']
+
+    def add_job_flow_steps_response(self):
+        """
+        Handle add job flow steps response.
+        """
+        self.resource['metadata']['Step Ids'] = self.response['StepIds']
+
+    def list_instances_response(self):
+        """
+        Handle list instances response.
+        """
+        self.resource['metadata']['Instances'] = self.response['Instances']
+
+    def list_clusters_response(self):
+        """
+        Handle list clusters response.
+        """
+        self.resource['metadata']['Clusters'] = self.response['Clusters']
+
+    def run_job_flow_response(self):
+        """
+        Handle run job flow response.
+        """
+        self.resource['metadata']['Job Flow ID'] = self.response['JobFlowId']
+
+
 class BotocoreEventFactory(object):
     """
     Factory class, generates botocore event.
