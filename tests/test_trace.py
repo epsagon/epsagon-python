@@ -861,7 +861,7 @@ def test_event_with_datetime(wrapped_post):
 def test_send_on_error_only_off_with_error(wrapped_post):
     trace = trace_factory.get_or_create_trace()
     trace.token = 'a'
-    trace.runner = mock.MagicMock()
+    trace.runner = RunnerEventMock()
     trace.runner.error_code = ErrorCode.ERROR
     event = EventMock()
     event.resource['metadata'] = datetime.fromtimestamp(1000)
@@ -874,7 +874,7 @@ def test_send_on_error_only_off_with_error(wrapped_post):
 def test_send_on_error_only_off_no_error(wrapped_post):
     trace = trace_factory.get_or_create_trace()
     trace.token = 'a'
-    trace.runner = mock.MagicMock()
+    trace.runner = RunnerEventMock()
     trace.runner.error_code = ErrorCode.OK
     event = EventMock()
     event.resource['metadata'] = datetime.fromtimestamp(1000)
@@ -887,7 +887,7 @@ def test_send_on_error_only_off_no_error(wrapped_post):
 def test_send_on_error_only_no_error(wrapped_post):
     trace = trace_factory.get_or_create_trace()
     trace.send_trace_only_on_error = True
-    trace.runner = mock.MagicMock()
+    trace.runner = RunnerEventMock()
     trace.runner.error_code = ErrorCode.OK
     trace.token = 'a'
     event = EventMock()
@@ -901,7 +901,7 @@ def test_send_on_error_only_no_error(wrapped_post):
 def test_send_on_error_only_with_error(wrapped_post):
     trace = trace_factory.get_or_create_trace()
     trace.send_trace_only_on_error = True
-    trace.runner = mock.MagicMock()
+    trace.runner = RunnerEventMock()
     trace.runner.error_code = ErrorCode.ERROR
     trace.token = 'a'
     event = EventMock()
@@ -916,7 +916,7 @@ def test_send_with_split_on_big_trace(wrapped_post):
     # Should be low enough to force trace split.
     os.environ['EPSAGON_MAX_TRACE_SIZE'] = '500'
     trace = trace_factory.get_or_create_trace()
-    trace.runner = mock.MagicMock()
+    trace.runner = RunnerEventMock()
     trace.add_event(trace.runner)
     trace.token = 'a'
     trace.split_on_send = True
@@ -933,7 +933,7 @@ def test_send_with_split_on_small_trace(wrapped_post):
     # Should be low enough to force trace split.
     os.environ['EPSAGON_MAX_TRACE_SIZE'] = '500'
     trace = trace_factory.get_or_create_trace()
-    trace.runner = mock.MagicMock()
+    trace.runner = RunnerEventMock()
     trace.add_event(trace.runner)
     trace.token = 'a'
     trace.split_on_send = True
@@ -949,7 +949,7 @@ def test_send_with_split_off(wrapped_post):
     # Should be low enough to force trace split.
     os.environ['EPSAGON_MAX_TRACE_SIZE'] = '500'
     trace = trace_factory.get_or_create_trace()
-    trace.runner = mock.MagicMock()
+    trace.runner = RunnerEventMock()
     trace.add_event(trace.runner)
     trace.token = 'a'
     trace.split_on_send = False

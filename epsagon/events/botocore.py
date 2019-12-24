@@ -64,14 +64,15 @@ class BotocoreEvent(BaseEvent):
         if exception is not None:
             self.set_exception(exception, traceback.format_exc())
 
-    def set_exception(self, exception, traceback_data):
+    def set_exception(self, exception, traceback_data, handled=True):
         """
-        Sets exception data on event.
-        :param exception: Exception object
-        :param traceback_data: traceback string
-        :return: None
+        see {Event.set_exception}
         """
-        super(BotocoreEvent, self).set_exception(exception, traceback_data)
+        super(BotocoreEvent, self).set_exception(
+            exception,
+            traceback_data,
+            handled
+        )
 
         # Specific handling for botocore errors
         if isinstance(exception, ClientError):

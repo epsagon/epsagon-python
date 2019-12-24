@@ -249,6 +249,28 @@ def test_lambda_wrapper_invalid_return_value(_):
         FAILED_TO_SERIALIZE_MESSAGE
     )
 
+@mock.patch(
+    'epsagon.trace.trace_factory.get_or_create_trace',
+    side_effect=lambda: trace_mock
+)
+def test_lambda_wrapper_result_status_code(_):
+    result = {'statusCode': 200}
+
+    @epsagon.wrappers.aws_lambda.lambda_wrapper
+    def wrapped_function(event, context):
+        return result
+
+    assert wrapped_function('a', CONTEXT_STUB) == result
+    trace_mock.prepare.assert_called_once()
+    runner = _get_runner_event(trace_mock)
+
+    trace_mock.send_traces.assert_called_once()
+    trace_mock.add_exception.assert_not_called()
+
+    assert (
+            runner.resource['metadata']['status_code'] == result['statusCode']
+    )
+
 
 # step_lambda_wrapper tests
 
@@ -509,6 +531,29 @@ def test_step_lambda_wrapper_invalid_return_value(_):
     assert (
         runner.resource['metadata']['return_value'] ==
         FAILED_TO_SERIALIZE_MESSAGE
+    )
+
+@mock.patch(
+    'epsagon.trace.trace_factory.get_or_create_trace',
+    side_effect=lambda: trace_mock
+)
+def test_step_lambda_wrapper_result_status_code(_):
+    result = {'statusCode': 200}
+
+    @epsagon.wrappers.aws_lambda.step_lambda_wrapper
+    def wrapped_function(event, context):
+        return result
+
+    assert wrapped_function('a', CONTEXT_STUB) == result
+    trace_mock.prepare.assert_called_once()
+    runner = _get_runner_event(trace_mock, runner_type=StepLambdaRunner)
+
+    trace_mock.send_traces.assert_called_once()
+    trace_mock.add_exception.assert_not_called()
+
+    assert (
+            runner.resource['metadata']['status_code'] ==
+            result['statusCode']
     )
 
 
