@@ -71,7 +71,7 @@ class BotocoreEvent(BaseEvent):
         super(BotocoreEvent, self).set_exception(
             exception,
             traceback_data,
-            handled
+            handled=handled
         )
 
         # Specific handling for botocore errors

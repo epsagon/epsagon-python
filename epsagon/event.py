@@ -97,9 +97,8 @@ class BaseEvent(object):
         Sets exception data on event.
         :param exception: Exception object
         :param traceback_data: traceback string
-        :param handled: False if the exception was not handled and led to
-                        a crash
-        :return: None
+        :param handled: False if the exception was raised from the wrapped
+            function
         """
 
         self.error_code = ErrorCode.EXCEPTION
@@ -107,5 +106,4 @@ class BaseEvent(object):
         self.exception['message'] = str(exception)
         self.exception['traceback'] = traceback_data
         self.exception['time'] = time.time()
-        if not handled:
-            self.exception.setdefault('additional_data', {})['unhandled'] = True
+        self.exception.setdefault('additional_data', {})['handled'] = handled

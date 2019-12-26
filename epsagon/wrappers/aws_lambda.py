@@ -31,7 +31,7 @@ def _add_status_code(runner, return_value):
     :param return_value: The return value to extract from
     """
     if isinstance(return_value, collections.Mapping):
-        status_code = return_value.get('statusCode', None)
+        status_code = return_value.get('statusCode')
         if status_code:
             runner.resource['metadata']['status_code'] = status_code
 
@@ -108,7 +108,11 @@ def lambda_wrapper(func):
             return result
         # pylint: disable=W0703
         except Exception as exception:
-            runner.set_exception(exception, traceback.format_exc(), False)
+            runner.set_exception(
+                exception,
+                traceback.format_exc(),
+                handled=False
+            )
             raise
         finally:
             try:
@@ -221,7 +225,11 @@ def step_lambda_wrapper(func):
             return result
         # pylint: disable=W0703
         except Exception as exception:
-            runner.set_exception(exception, traceback.format_exc(), False)
+            runner.set_exception(
+                exception,
+                traceback.format_exc(),
+                handled=False
+            )
             raise
         finally:
             try:
