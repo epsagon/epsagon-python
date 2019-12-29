@@ -8,6 +8,7 @@ import time
 import copy
 import functools
 import warnings
+import collections
 from uuid import uuid4
 
 import epsagon.trace
@@ -20,6 +21,19 @@ from epsagon.wrappers.return_value import add_return_value
 import epsagon.runners.python_function
 from epsagon.common import EpsagonWarning
 from .. import constants
+
+
+def _add_status_code(runner, return_value):
+    """
+    Tries to extract the status code from the return value and add it
+    as a metadata field
+    :param runner: Runner event to update
+    :param return_value: The return value to extract from
+    """
+    if isinstance(return_value, collections.Mapping):
+        status_code = return_value.get('statusCode')
+        if status_code:
+            runner.resource['metadata']['status_code'] = status_code
 
 
 def lambda_wrapper(func):
@@ -94,10 +108,15 @@ def lambda_wrapper(func):
             return result
         # pylint: disable=W0703
         except Exception as exception:
-            runner.set_exception(exception, traceback.format_exc())
+            runner.set_exception(
+                exception,
+                traceback.format_exc(),
+                handled=False
+            )
             raise
         finally:
             try:
+                _add_status_code(runner, result)
                 if not trace.metadata_only:
                     add_return_value(runner, result)
             # pylint: disable=W0703
@@ -206,10 +225,15 @@ def step_lambda_wrapper(func):
             return result
         # pylint: disable=W0703
         except Exception as exception:
-            runner.set_exception(exception, traceback.format_exc())
+            runner.set_exception(
+                exception,
+                traceback.format_exc(),
+                handled=False
+            )
             raise
         finally:
             try:
+                _add_status_code(runner, result)
                 if not trace.metadata_only:
                     add_return_value(runner, result)
             # pylint: disable=W0703

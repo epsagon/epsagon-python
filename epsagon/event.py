@@ -92,12 +92,13 @@ class BaseEvent(object):
 
         self.error_code = ErrorCode.ERROR
 
-    def set_exception(self, exception, traceback_data):
+    def set_exception(self, exception, traceback_data, handled=True):
         """
         Sets exception data on event.
         :param exception: Exception object
         :param traceback_data: traceback string
-        :return: None
+        :param handled: False if the exception was raised from the wrapped
+            function
         """
 
         self.error_code = ErrorCode.EXCEPTION
@@ -105,3 +106,4 @@ class BaseEvent(object):
         self.exception['message'] = str(exception)
         self.exception['traceback'] = traceback_data
         self.exception['time'] = time.time()
+        self.exception.setdefault('additional_data', {})['handled'] = handled
