@@ -28,7 +28,7 @@ def _get_headers_from_args(
     """
     extract headers from arguments
     """
-    # pylint: disable=unused argument
+    # pylint: disable=unused-argument
     # not using '_' in arg names so unrolling will be smoother
     return headers
 
