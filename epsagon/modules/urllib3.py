@@ -11,8 +11,8 @@ from ..http_filters import is_blacklisted_url
 
 
 def _get_headers_from_args(
-        _method,
-        _url,
+        _method=None,
+        _url=None,
         _body=None,
         headers=None,
         **_additional_args
