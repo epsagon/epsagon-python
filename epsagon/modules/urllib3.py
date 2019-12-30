@@ -43,7 +43,9 @@ def _wrapper(wrapped, instance, args, kwargs):
         if headers is None:  # explicitly checking None to not catch {}
             if len(args) >= 4:
                 # we got None headers as in args[3]
+                args = list(args)
                 headers = args[3] = {}
+                args = tuple(args)
             else:
                 # either kwargs['headers'] == None or it doesn't exist
                 headers = kwargs['headers'] = {}
