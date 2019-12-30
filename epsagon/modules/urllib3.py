@@ -11,12 +11,25 @@ from ..http_filters import is_blacklisted_url
 
 
 def _get_headers_from_args(
-        _method=None,
-        _url=None,
-        _body=None,
+        method=None,
+        url=None,
+        body=None,
         headers=None,
-        **_additional_args
+        retries=None,
+        redirect=None,
+        assert_same_host=True,
+        timeout=None,
+        pool_timeout=None,
+        release_conn=None,
+        chunked=False,
+        body_pos=None,
+        **response_kw
 ):
+    """
+    extract headers from arguments
+    """
+    # pylint: disable=unused-argument
+    # not using '_' in arg names so unrolling will be smoother
     return headers
 
 
