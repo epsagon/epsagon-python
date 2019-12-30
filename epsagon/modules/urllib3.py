@@ -11,18 +11,18 @@ from ..http_filters import is_blacklisted_url
 
 
 def _get_headers_from_args(
-        _method=None,
-        _url=None,
-        _body=None,
+        method=None,
+        url=None,
+        body=None,
         headers=None,
-        _retries=None,
-        _redirect=None,
-        _assert_same_host=True,
-        _timeout=None,
-        _pool_timeout=None,
-        _release_conn=None,
-        _chunked=False,
-        _body_pos=None,
+        retries=None,
+        redirect=None,
+        assert_same_host=True,
+        timeout=None,
+        pool_timeout=None,
+        release_conn=None,
+        chunked=False,
+        body_pos=None,
         **response_kw
 ):
     return headers
