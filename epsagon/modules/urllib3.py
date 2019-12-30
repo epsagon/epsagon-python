@@ -10,7 +10,7 @@ from ..events.urllib3 import Urllib3EventFactory
 from ..http_filters import is_blacklisted_url
 
 
-def _get_headers_from_args(  # pylint: disable=unused-arg
+def _get_headers_from_args(
         method=None,
         url=None,
         body=None,
@@ -28,6 +28,8 @@ def _get_headers_from_args(  # pylint: disable=unused-arg
     """
     extract headers from arguments
     """
+    # pylint: disable=unused argument
+    # not using '_' in arg names so unrolling will be smoother
     return headers
 
 
