@@ -11,8 +11,8 @@ from ..http_filters import is_blacklisted_url
 
 
 def _get_headers_from_args(
-        _method,
-        _url,
+        _method=None,
+        _url=None,
         _body=None,
         headers=None,
         **_additional_args
@@ -40,8 +40,13 @@ def _wrapper(wrapped, instance, args, kwargs):
     # Detect if URL is blacklisted, and ignore.
     if not is_blacklisted_url(host_url):
         headers = _get_headers_from_args(*args, **kwargs)
-        if not headers:
-            headers = kwargs.setdefault('headers', {})
+        if headers is None:  # explicitly checking None to not catch {}
+            if len(args) >= 4:
+                # we got None headers as in args[3]
+                headers = args[3] = {}
+            else:
+                # either kwargs['headers'] == None or it doesn't exist
+                headers = kwargs['headers'] = {}
 
         headers['epsagon-trace-id'] = (
             '{trace_id}:{span_id}:{parent_span_id}:1'.format(
