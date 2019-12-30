@@ -10,6 +10,16 @@ from ..events.urllib3 import Urllib3EventFactory
 from ..http_filters import is_blacklisted_url
 
 
+def _get_headers_from_args(
+        _method,
+        _url,
+        _body=None,
+        headers=None,
+        **_additional_args
+):
+    return headers
+
+
 def _wrapper(wrapped, instance, args, kwargs):
     """
     General wrapper for requests instrumentation.
@@ -29,7 +39,10 @@ def _wrapper(wrapped, instance, args, kwargs):
 
     # Detect if URL is blacklisted, and ignore.
     if not is_blacklisted_url(host_url):
-        headers = kwargs.setdefault('headers', {})
+        headers = _get_headers_from_args(*args, **kwargs)
+        if headers is None:  # explicitly checking None to not catch {}
+            headers = kwargs.setdefault('headers', {})
+
         headers['epsagon-trace-id'] = (
             '{trace_id}:{span_id}:{parent_span_id}:1'.format(
                 trace_id=trace_id,
