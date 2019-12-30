@@ -15,7 +15,15 @@ def _get_headers_from_args(
         _url=None,
         _body=None,
         headers=None,
-        **_additional_args
+        _retries=None,
+        _redirect=None,
+        _assert_same_host=True,
+        _timeout=None,
+        _pool_timeout=None,
+        _release_conn=None,
+        _chunked=False,
+        _body_pos=None,
+        **response_kw
 ):
     return headers
 
