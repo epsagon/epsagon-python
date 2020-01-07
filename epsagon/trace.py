@@ -779,20 +779,28 @@ class Trace(object):
         )
         return len(json_trace)
 
+    @staticmethod
+    def _calculate_event_metadata_size(event):
+        """
+        Calculates a given event metadata field size
+        :param event: event
+        :return: event metadata field size
+        """
+        return len(json.dumps(
+                    event.resource.get('metadata', {}),
+                    cls=TraceEncoder,
+                    encoding='latin1'
+        ))
+
     def _strip(self, trace_length):
         """
         Strips a given trace from all operations
         """
         for event in sorted(self.events, key=Trace.events_sorter):
-            event_metadata_length = (
-                len(json.dumps(
-                    event.resource.get('metadata', {}),
-                    cls=TraceEncoder,
-                    encoding='latin1',
-                ))
-            )
+            before_strip_length = Trace._calculate_event_metadata_size(event)
             Trace.trim_metadata(event.resource['metadata'])
-            trace_length -= event_metadata_length
+            after_strip_length = Trace._calculate_event_metadata_size(event)
+            trace_length -= (before_strip_length - after_strip_length)
             if trace_length < self._max_trace_size:
                 break
 
