@@ -132,7 +132,7 @@ def lambda_wrapper(func):
             except Exception:
                 pass
             try:
-                trace.send_traces()
+                epsagon.trace.trace_factory.send_traces()
             # pylint: disable=W0703
             except Exception:
                 pass
@@ -248,7 +248,7 @@ def step_lambda_wrapper(func):
             except Exception:
                 pass
             try:
-                trace.send_traces()
+                epsagon.trace.trace_factory.send_traces()
             # pylint: disable=W0703
             except Exception:
                 pass

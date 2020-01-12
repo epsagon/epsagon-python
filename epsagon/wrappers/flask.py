@@ -160,6 +160,4 @@ class FlaskWrapper(object):
         if not exception and request.url_rule.rule in self.ignored_endpoints:
             return
 
-        trace = epsagon.trace.trace_factory.get_or_create_trace()
-        trace.send_traces()
-        trace.prepare()
+        epsagon.trace.trace_factory.send_traces()
