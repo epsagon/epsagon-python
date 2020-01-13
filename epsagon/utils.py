@@ -68,13 +68,13 @@ def update_http_headers(resource_data, response_headers):
     return resource_data
 
 
-def get_tc_url(use_ssl):
+def get_tc_url(disable_ssl):
     """
     Get the TraceCollector URL.
+    :param disable_ssl: specify whether to disable SSL or not
     :return: TraceCollector URL.
     """
-    protocol = 'https://' if use_ssl else 'http://'
-
+    protocol = 'http://' if disable_ssl else 'https://'
     return TRACE_COLLECTOR_URL.format(protocol=protocol, region=REGION)
 
 
@@ -84,7 +84,7 @@ def init(
     collector_url=None,
     metadata_only=True,
     disable_timeout_send=False,
-    use_ssl=True,
+    disable_ssl=False,
     debug=False,
     send_trace_only_on_error=False,
     url_patterns_to_ignore=None,
@@ -101,7 +101,7 @@ def init(
     :param metadata_only: whether to send only the metadata, or also the data.
     :param disable_timeout_send: whether to disable traces send on timeout
      (when enabled, is t done using a signal handler).
-    :param use_ssl: whether to use SSL or not.
+    :param disable_ssl: whether to disable SSL or not.
     :param debug: debug mode flag,
     :param send_trace_only_on_error: Whether to send trace only when
      there is an error or not.
@@ -113,8 +113,10 @@ def init(
     """
 
     if not collector_url:
+        # disabling SSL only if EPSAGON_SSL environment variable is FALSE
+        # or disable_ssl parameter is True
         collector_url = get_tc_url(
-            ((os.getenv('EPSAGON_SSL') or '').upper() == 'TRUE') | use_ssl
+            ((os.getenv('EPSAGON_SSL') or '').upper() == 'FALSE') | disable_ssl
         )
     # Ignored URLs is a comma separated values, if coming from env.
     ignored_urls = os.getenv('EPSAGON_URLS_TO_IGNORE')

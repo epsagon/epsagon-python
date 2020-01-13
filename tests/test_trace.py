@@ -575,7 +575,7 @@ def test_init_empty_app_name(wrapped_init, _create):
         app_name='',
         collector_url='collector',
         metadata_only=False,
-        use_ssl=True,
+        disable_ssl=False,
     )
     wrapped_init.assert_called_with(
         token='token',
@@ -599,7 +599,7 @@ def test_init_empty_collector_url(wrapped_init, _create):
     wrapped_init.assert_called_with(
         token='token',
         app_name='app-name',
-        collector_url=get_tc_url(True),
+        collector_url=get_tc_url(disable_ssl=False),
         metadata_only=False,
         disable_timeout_send=False,
         debug=False,
@@ -615,7 +615,7 @@ def test_init_empty_collector_url(wrapped_init, _create):
 @mock.patch('epsagon.trace.TraceFactory.initialize')
 def test_init_no_ssl_no_url(wrapped_init, _create):
     epsagon.utils.init(token='token', app_name='app-name', metadata_only=False,
-                       use_ssl=False)
+                       disable_ssl=True)
     wrapped_init.assert_called_with(
         token='token',
         app_name='app-name',
@@ -641,7 +641,7 @@ def test_init_ssl_no_url(wrapped_init, _create):
         token='token',
         app_name='app-name',
         metadata_only=False,
-        use_ssl=True
+        disable_ssl=False
     )
     wrapped_init.assert_called_with(
         token='token',
@@ -669,7 +669,7 @@ def test_init_ssl_with_url(wrapped_init, _create):
         app_name='app-name',
         collector_url="http://abc.com",
         metadata_only=False,
-        use_ssl=True,
+        disable_ssl=False,
     )
     wrapped_init.assert_called_with(
         token='token',
@@ -694,7 +694,7 @@ def test_init_no_ssl_with_url(wrapped_init, _create):
         app_name='app-name',
         collector_url="http://abc.com",
         metadata_only=False,
-        use_ssl=False
+        disable_ssl=True
     )
     wrapped_init.assert_called_with(
         token='token',
