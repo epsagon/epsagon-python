@@ -403,7 +403,7 @@ def test_runner_duration(_wrapped_post):
     trace.token = 'a'
     trace.set_runner(runner)
     time.sleep(0.2)
-    trace.send_traces()
+    trace_factory.send_traces()
 
     assert 0.2 < runner.duration < 0.3
 
@@ -457,7 +457,7 @@ def test_timeout_happyflow_handler_call(wrapped_post):
     trace.set_runner(runner)
 
     trace.token = 'a'
-    trace.send_traces()
+    trace_factory.send_traces()
 
     trace.set_timeout_handler(context)
     time.sleep(0.5)
@@ -471,7 +471,7 @@ def test_timeout_happyflow_handler_call(wrapped_post):
 def test_send_traces_sanity(wrapped_post):
     trace = trace_factory.get_or_create_trace()
     trace.token = 'a'
-    trace.send_traces()
+    trace_factory.send_traces()
     wrapped_post.assert_called_with(
         '',
         data=json.dumps(trace.to_dict()),
@@ -483,7 +483,7 @@ def test_send_traces_sanity(wrapped_post):
 @mock.patch('requests.Session.post')
 def test_send_traces_no_token(wrapped_post):
     trace = trace_factory.get_or_create_trace()
-    trace.send_traces()
+    trace_factory.send_traces()
     wrapped_post.assert_not_called()
 
 
@@ -497,7 +497,7 @@ def test_send_big_trace(wrapped_post):
 
     for _ in range(2):
         trace.add_event(BigEventMock())
-    trace.send_traces()
+    trace_factory.send_traces()
 
     assert len(trace.to_dict()['events']) == 3
     for event in trace.to_dict()['events']:
@@ -517,7 +517,7 @@ def test_send_traces_timeout(wrapped_post):
     trace = trace_factory.get_or_create_trace()
 
     trace.token = 'a'
-    trace.send_traces()
+    trace_factory.send_traces()
     wrapped_post.assert_called_with(
         '',
         data=json.dumps(trace.to_dict()),
@@ -531,7 +531,7 @@ def test_send_traces_post_error(wrapped_post):
     trace = trace_factory.get_or_create_trace()
 
     trace.token = 'a'
-    trace.send_traces()
+    trace_factory.send_traces()
     wrapped_post.assert_called_with(
         '',
         data=json.dumps(trace.to_dict()),
@@ -848,7 +848,7 @@ def test_event_with_datetime(wrapped_post):
     event = EventMock()
     event.resource['metadata'] = datetime.fromtimestamp(1000)
     trace.add_event(event)
-    trace.send_traces()
+    trace_factory.send_traces()
     wrapped_post.assert_called_with(
         '',
         data=json.dumps(trace.to_dict(), cls=TraceEncoder),
@@ -866,7 +866,7 @@ def test_send_on_error_only_off_with_error(wrapped_post):
     event = EventMock()
     event.resource['metadata'] = datetime.fromtimestamp(1000)
     trace.add_event(event)
-    trace.send_traces()
+    trace_factory.send_traces()
     wrapped_post.assert_called_once()
 
 
@@ -879,7 +879,7 @@ def test_send_on_error_only_off_no_error(wrapped_post):
     event = EventMock()
     event.resource['metadata'] = datetime.fromtimestamp(1000)
     trace.add_event(event)
-    trace.send_traces()
+    trace_factory.send_traces()
     wrapped_post.assert_called_once()
 
 
@@ -893,7 +893,7 @@ def test_send_on_error_only_no_error(wrapped_post):
     event = EventMock()
     event.resource['metadata'] = datetime.fromtimestamp(1000)
     trace.add_event(event)
-    trace.send_traces()
+    trace_factory.send_traces()
     wrapped_post.assert_not_called()
 
 
@@ -907,7 +907,7 @@ def test_send_on_error_only_with_error(wrapped_post):
     event = EventMock()
     event.resource['metadata'] = datetime.fromtimestamp(1000)
     trace.add_event(event)
-    trace.send_traces()
+    trace_factory.send_traces()
     wrapped_post.assert_called_once()
 
 
@@ -923,7 +923,7 @@ def test_send_with_split_on_big_trace(wrapped_post):
     for _ in range(10):
         event = EventMock()
         trace.add_event(event)
-    trace.send_traces()
+    trace_factory.send_traces()
     assert wrapped_post.call_count == 2
     os.environ.pop('EPSAGON_MAX_TRACE_SIZE')
 
@@ -939,7 +939,7 @@ def test_send_with_split_on_small_trace(wrapped_post):
     trace.split_on_send = True
     event = EventMock()
     trace.add_event(event)
-    trace.send_traces()
+    trace_factory.send_traces()
     wrapped_post.assert_called_once()
     os.environ.pop('EPSAGON_MAX_TRACE_SIZE')
 
@@ -956,5 +956,5 @@ def test_send_with_split_off(wrapped_post):
     for _ in range(10):
         event = EventMock()
         trace.add_event(event)
-    trace.send_traces()
+    trace_factory.send_traces()
     wrapped_post.assert_called_once()

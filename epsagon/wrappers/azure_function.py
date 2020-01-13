@@ -34,6 +34,6 @@ def azure_wrapper(func):
             raise
         finally:
             runner.terminate()
-            trace.send_traces()
+            trace_factory.send_traces()
 
     return _azure_wrapper

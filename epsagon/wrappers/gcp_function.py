@@ -63,7 +63,7 @@ def gcp_wrapper(func):
                 trace.add_exception(exception, traceback.format_exc())
             try:
                 trace.add_event(runner)
-                trace.send_traces()
+                epsagon.trace.trace_factory.send_traces()
             # pylint: disable=W0703
             except Exception:
                 pass
