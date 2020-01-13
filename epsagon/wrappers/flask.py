@@ -55,14 +55,14 @@ class FlaskWrapper(object):
         Runs when new request comes in.
         :return: None.
         """
-        trace = epsagon.trace.trace_factory.get_or_create_trace()
-        trace.prepare()
-
         # Ignoring non relevant content types.
         self.ignored_request = ignore_request('', request.path.lower())
 
         if self.ignored_request:
             return
+
+        trace = epsagon.trace.trace_factory.get_or_create_trace()
+        trace.prepare()
 
         # Create flask runner with current request.
         try:

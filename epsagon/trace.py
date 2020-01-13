@@ -826,6 +826,8 @@ class Trace(object):
 
     def send_traces(self):
         """
+        Should NOT be called by any wrapper! this method should ONLY be called
+        by TraceFactory.
         If trace size exceeds the maximum size, and split flag is on
         then split the trace into multiple traces.
         :return: None
