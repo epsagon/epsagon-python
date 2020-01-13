@@ -146,6 +146,8 @@ class FlaskWrapper(object):
     def _teardown_request(self, exception):
         """
         Runs at the end of the request. Exception will be passed if happens.
+        If no flask url rule exists for a request, then the request trace
+        will be passed.
         :param exception: Exception (or None).
         :return: None.
         """
@@ -157,7 +159,10 @@ class FlaskWrapper(object):
             self.exception_handler[sys.version_info.major](exception)
 
         # Ignoring endpoint, only if no error happened.
-        if not exception and request.url_rule.rule in self.ignored_endpoints:
+        if (not exception and
+            request.url_rule and
+            request.url_rule.rule in self.ignored_endpoints
+        ):
             return
 
         epsagon.trace.trace_factory.send_traces()
