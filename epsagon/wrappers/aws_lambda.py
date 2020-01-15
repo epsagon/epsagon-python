@@ -140,7 +140,6 @@ def lambda_wrapper(func):
     _lambda_wrapper.__instrumented__ = True
     return _lambda_wrapper
 
-
 def step_lambda_wrapper(func):
     """Epsagon's Step Lambda wrapper."""
 
