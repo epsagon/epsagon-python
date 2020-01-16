@@ -9,7 +9,6 @@ import functools
 import epsagon.trace
 import epsagon.runners.python_function
 from epsagon.utils import collect_container_metadata
-from epsagon.wrappers.return_value import add_return_value
 from epsagon import constants
 
 
@@ -54,7 +53,7 @@ def wrap_python_function(func, args, kwargs):
     finally:
         try:
             if not epsagon.trace.trace_factory.get_trace().metadata_only:
-                add_return_value(runner, result)
+                runner.resource['metadata']['return_value'] = result
         # pylint: disable=W0703
         except Exception as exception:
             epsagon.trace.trace_factory.add_exception(

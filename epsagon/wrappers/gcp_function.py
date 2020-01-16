@@ -9,7 +9,6 @@ import functools
 import warnings
 import epsagon.trace
 import epsagon.wrappers.python_function
-from epsagon.wrappers.return_value import add_return_value
 from epsagon.common import EpsagonWarning
 from ..runners.gcp_function import GoogleFunctionRunner
 from .. import constants
@@ -57,7 +56,7 @@ def gcp_wrapper(func):
         finally:
             try:
                 if not trace.metadata_only:
-                    add_return_value(runner, result)
+                    runner.resource['metadata']['return_value'] = result
             # pylint: disable=W0703
             except Exception as exception:
                 trace.add_exception(exception, traceback.format_exc())

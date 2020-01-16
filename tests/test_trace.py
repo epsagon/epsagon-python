@@ -15,12 +15,15 @@ from epsagon.constants import (
     TRACE_COLLECTOR_URL,
     DEFAULT_REGION
 )
-from epsagon.trace import trace_factory, TraceEncoder
+from epsagon.trace import (
+    trace_factory,
+    TraceEncoder,
+    FAILED_TO_SERIALIZE_MESSAGE
+)
 from epsagon.event import BaseEvent
 from epsagon.utils import get_tc_url
 from epsagon.common import ErrorCode
 from epsagon.trace_transports import HTTPTransport
-
 
 class ContextMock:
     def __init__(self, timeout):
@@ -103,6 +106,12 @@ class RunnerEventMock(EventMock):
 
         return result
 
+class InvalidReturnValueEventMock(RunnerEventMock):
+    def __init__(self):
+        super(InvalidReturnValueEventMock, self).__init__()
+        self.resource = {
+            'metadata': {'return_value': {1: mock}}
+        }
 
 class EventMockWithCounter(EventMock):
     def __init__(self, i):
@@ -503,6 +512,27 @@ def test_send_big_trace(wrapped_post):
     for event in trace.to_dict()['events']:
         if event['origin'] == 'runner':
             assert event['resource']['metadata']['is_trimmed']
+
+    wrapped_post.assert_called_with(
+        '',
+        data=json.dumps(trace.to_dict()),
+        timeout=epsagon.constants.SEND_TIMEOUT,
+        headers={'Authorization': 'Bearer {}'.format(trace.token)}
+    )
+
+@mock.patch('requests.Session.post')
+def test_send_invalid_return_value(wrapped_post):
+    trace = trace_factory.get_or_create_trace()
+    runner = InvalidReturnValueEventMock()
+    trace.set_runner(runner)
+    trace.token = 'a'
+    trace_factory.send_traces()
+
+    assert len(trace.to_dict()['events']) == 1
+    event = trace.to_dict()['events'][0]
+    assert event['origin'] == 'runner'
+    actual_return_value = event['resource']['metadata']['return_value']
+    assert actual_return_value == FAILED_TO_SERIALIZE_MESSAGE
 
     wrapped_post.assert_called_with(
         '',

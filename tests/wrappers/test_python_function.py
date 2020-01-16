@@ -4,7 +4,7 @@ import mock
 import pytest
 import epsagon.wrappers.python_function
 from epsagon.trace import trace_factory
-from epsagon.wrappers.return_value import FAILED_TO_SERIALIZE_MESSAGE
+from epsagon.trace import FAILED_TO_SERIALIZE_MESSAGE
 import epsagon.runners.python_function
 import epsagon.constants
 from .common import get_tracer_patch_kwargs
@@ -40,7 +40,7 @@ def test_function_wrapper_sanity(_, ):
     trace_mock.add_exception.assert_not_called()
 
     assert not epsagon.constants.COLD_START
-    assert event.resource['metadata']['return_value'] == json.dumps(retval)
+    assert event.resource['metadata']['return_value'] == retval
 
 
 @mock.patch.object(
@@ -71,7 +71,7 @@ def test_function_wrapper_function_exception(_, set_exception_mock):
     trace_mock.add_exception.assert_not_called()
 
     assert not epsagon.constants.COLD_START
-    assert event.resource['metadata']['return_value'] == json.dumps(None)
+    assert event.resource['metadata']['return_value'] is None
 
 
 @mock.patch(
@@ -92,32 +92,6 @@ def test_python_wrapper_python_runner_factory_failed(_):
     trace_mock.prepare.assert_called_once()
     trace_mock.send_traces.assert_not_called()
     trace_mock.set_runner.assert_not_called()
-
-
-@mock.patch(
-    'epsagon.trace.trace_factory.get_or_create_trace',
-    side_effect=lambda: trace_mock
-)
-def test_python_wrapper_invalid_return_value(_):
-    @epsagon.wrappers.python_function.python_wrapper
-    def wrapped_function(event, context):
-        return pytest  # Not json-serializable
-
-    assert wrapped_function('a', 'b') == pytest
-
-    trace_mock.prepare.assert_called_once()
-    trace_mock.set_runner.assert_called_once()
-    (event,), _ = trace_mock.set_runner.call_args
-    assert isinstance(event, epsagon.runners.python_function.PythonRunner)
-
-    trace_mock.send_traces.assert_called_once()
-    trace_mock.add_exception.assert_not_called()
-
-    assert not epsagon.constants.COLD_START
-    assert (
-            event.resource['metadata']['return_value'] ==
-            FAILED_TO_SERIALIZE_MESSAGE
-    )
 
 
 @mock.patch(
