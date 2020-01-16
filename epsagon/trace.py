@@ -7,6 +7,7 @@ from __future__ import absolute_import, print_function
 import os
 import sys
 import time
+import decimal
 import traceback
 import warnings
 import signal
@@ -30,7 +31,26 @@ from .constants import (
 MAX_EVENTS_PER_TYPE = 20
 MAX_TRACE_SIZE_BYTES = 64 * (2 ** 10)
 DEFAULT_MAX_TRACE_SIZE_BYTES = 64 * (2 ** 10)
+MAX_METADATA_FIELD_SIZE_LIMIT = 1024 * 3
+FAILED_TO_SERIALIZE_MESSAGE = 'Failed to serialize returned object to JSON'
 
+
+# pylint: disable=invalid-name
+class _number_str(float):
+    """ Taken from `bootstrap.py` of AWS Lambda Python runtime """
+    # pylint: disable=super-init-not-called
+    def __init__(self, o):
+        self.o = o
+
+    def __repr__(self):
+        return str(self.o)
+
+
+def _decimal_serializer(o):
+    """ Taken from `bootstrap.py` of AWS Lambda Python runtime """
+    if isinstance(o, decimal.Decimal):
+        return _number_str(o)
+    raise TypeError(repr(o) + ' is not JSON serializable')
 
 def get_thread_id():
     """
@@ -748,6 +768,29 @@ class Trace(object):
                 metadata.pop(key)
 
     @staticmethod
+    def _trim_dict_values(data, max_size):
+        """
+        Trimms dict values from a given data dict whose size bigger than
+        the given max_size parameter
+        If data is not a dict - the function does nothing.
+        :param data: the data dict to trim fields from
+        :param max_size: the max field size
+        """
+        if not isinstance(data, dict):
+            return
+
+        for field_name in data:
+            value = data[field_name]
+            if isinstance(value, dict):
+                try:
+                    json_value = json.dumps(value, default=_decimal_serializer)
+                    if len(json_value) > max_size:
+                        data[field_name] = json_value[:max_size]
+                # pylint: disable=W0703
+                except Exception:
+                    data[field_name] = FAILED_TO_SERIALIZE_MESSAGE
+
+    @staticmethod
     def events_sorter(event):
         """
         Events sort function
@@ -892,6 +935,10 @@ class Trace(object):
         # Remove ignored keys.
         for event in self.events:
             self.remove_ignored_keys(event.resource['metadata'])
+            type(self)._trim_dict_values(
+                event.resource['metadata'],
+                MAX_METADATA_FIELD_SIZE_LIMIT
+            )
 
         try:
             if self.runner:

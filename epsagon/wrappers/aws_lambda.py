@@ -17,7 +17,6 @@ import epsagon.triggers.aws_lambda
 import epsagon.wrappers.python_function
 import epsagon.utils
 from epsagon.constants import STEP_DICT_NAME
-from epsagon.wrappers.return_value import add_return_value
 import epsagon.runners.python_function
 from epsagon.common import EpsagonWarning
 from .. import constants
@@ -118,7 +117,7 @@ def lambda_wrapper(func):
             try:
                 _add_status_code(runner, result)
                 if not trace.metadata_only:
-                    add_return_value(runner, result)
+                    runner.resource['metadata']['return_value'] = result
             # pylint: disable=W0703
             except Exception as exception:
                 trace.add_exception(
@@ -234,7 +233,7 @@ def step_lambda_wrapper(func):
             try:
                 _add_status_code(runner, result)
                 if not trace.metadata_only:
-                    add_return_value(runner, result)
+                    runner.resource['metadata']['return_value'] = result
             # pylint: disable=W0703
             except Exception as exception:
                 trace.add_exception(
