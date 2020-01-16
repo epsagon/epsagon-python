@@ -157,7 +157,6 @@ class FlaskWrapper(object):
 
         if exception:
             self.exception_handler[sys.version_info.major](exception)
-
         # Ignoring endpoint, only if no error happened.
         if (not exception and
             request.url_rule and
