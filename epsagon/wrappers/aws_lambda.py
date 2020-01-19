@@ -117,7 +117,9 @@ def lambda_wrapper(func):
             try:
                 _add_status_code(runner, result)
                 if not trace.metadata_only:
-                    runner.resource['metadata']['return_value'] = result
+                    runner.resource['metadata']['return_value'] = (
+                        copy.deepcopy(result)
+                    )
             # pylint: disable=W0703
             except Exception as exception:
                 trace.add_exception(
@@ -233,7 +235,9 @@ def step_lambda_wrapper(func):
             try:
                 _add_status_code(runner, result)
                 if not trace.metadata_only:
-                    runner.resource['metadata']['return_value'] = result
+                    runner.resource['metadata']['return_value'] = (
+                        copy.deepcopy(result)
+                    )
             # pylint: disable=W0703
             except Exception as exception:
                 trace.add_exception(
