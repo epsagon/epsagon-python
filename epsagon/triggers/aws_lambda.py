@@ -3,6 +3,7 @@ Triggers for aws_lambda
 """
 
 from __future__ import absolute_import
+import copy
 from uuid import uuid4
 
 import hashlib
@@ -41,7 +42,8 @@ class JSONLambdaTrigger(BaseLambdaTrigger):
         self.resource['operation'] = self.RESOURCE_TYPE
         self.resource['metadata'] = {}
 
-        add_data_if_needed(self.resource['metadata'], 'data', event)
+        add_data_if_needed(self.resource['metadata'], 'data',
+                           copy.deepcopy(event))
 
 
 class S3LambdaTrigger(BaseLambdaTrigger):
