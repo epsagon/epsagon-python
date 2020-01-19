@@ -18,7 +18,8 @@ from epsagon.constants import (
 from epsagon.trace import (
     trace_factory,
     TraceEncoder,
-    FAILED_TO_SERIALIZE_MESSAGE
+    FAILED_TO_SERIALIZE_MESSAGE,
+    MAX_METADATA_FIELD_SIZE_LIMIT
 )
 from epsagon.event import BaseEvent
 from epsagon.utils import get_tc_url
@@ -106,12 +107,16 @@ class RunnerEventMock(EventMock):
 
         return result
 
-class InvalidReturnValueEventMock(RunnerEventMock):
-    def __init__(self):
-        super(InvalidReturnValueEventMock, self).__init__()
+class ReturnValueEventMock(RunnerEventMock):
+    def __init__(self, data):
+        super(ReturnValueEventMock, self).__init__()
         self.resource = {
-            'metadata': {'return_value': {1: mock}}
+            'metadata': {'return_value': data }
         }
+
+class InvalidReturnValueEventMock(ReturnValueEventMock):
+    def __init__(self):
+        super(InvalidReturnValueEventMock, self).__init__({1: mock})
 
 class EventMockWithCounter(EventMock):
     def __init__(self, i):
@@ -126,7 +131,6 @@ class EventMockWithCounter(EventMock):
 
 def setup_function(func):
     trace_factory.get_or_create_trace().__init__()
-
 
 def test_add_exception():
     stack_trace_format = 'stack trace %d'
@@ -541,6 +545,63 @@ def test_send_invalid_return_value(wrapped_post):
         headers={'Authorization': 'Bearer {}'.format(trace.token)}
     )
 
+@mock.patch('requests.Session.post')
+def test_return_value_key_to_ignore(wrapped_post):
+    key_to_ignore = 'key_to_ignore_in_return_value'
+    os.environ['EPSAGON_IGNORED_KEYS'] = key_to_ignore
+    keys_to_ignore = [key_to_ignore]
+    # reset traces created at setup function
+    trace_factory.traces = {}
+    epsagon.utils.init(
+        token='token',
+        app_name='app-name',
+        collector_url='collector',
+        metadata_only=False
+    )
+
+    trace = trace_factory.get_or_create_trace()
+    return_value = {key_to_ignore: 'f'}
+    runner = ReturnValueEventMock(return_value)
+    trace.set_runner(runner)
+    trace.token = 'a'
+    trace_factory.send_traces()
+
+    assert len(trace.to_dict()['events']) == 1
+    event = trace.to_dict()['events'][0]
+    assert event['origin'] == 'runner'
+    actual_return_value = event['resource']['metadata']['return_value']
+    assert key_to_ignore not in actual_return_value
+
+    wrapped_post.assert_called_with(
+        'collector',
+        data=json.dumps(trace.to_dict()),
+        timeout=epsagon.constants.SEND_TIMEOUT,
+        headers={'Authorization': 'Bearer {}'.format(trace.token)}
+    )
+    os.environ.pop('EPSAGON_IGNORED_KEYS')
+
+@mock.patch('requests.Session.post')
+def test_metadata_field_too_big(wrapped_post):
+    trace = trace_factory.get_or_create_trace()
+    max_size = MAX_METADATA_FIELD_SIZE_LIMIT
+    return_value = {'1': 'a' * (max_size + 1)}
+    runner = ReturnValueEventMock(return_value)
+    trace.set_runner(runner)
+    trace.token = 'a'
+    trace_factory.send_traces()
+
+    assert len(trace.to_dict()['events']) == 1
+    event = trace.to_dict()['events'][0]
+    assert event['origin'] == 'runner'
+    actual_return_value = event['resource']['metadata']['return_value']
+    assert actual_return_value == json.dumps(return_value)[:max_size]
+
+    wrapped_post.assert_called_with(
+        '',
+        data=json.dumps(trace.to_dict()),
+        timeout=epsagon.constants.SEND_TIMEOUT,
+        headers={'Authorization': 'Bearer {}'.format(trace.token)}
+    )
 
 @mock.patch('requests.Session.post', side_effect=requests.ReadTimeout)
 def test_send_traces_timeout(wrapped_post):
