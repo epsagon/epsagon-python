@@ -850,11 +850,13 @@ class Trace(object):
 
     def remove_ignored_keys(self, input_dict):
         """
-        Remove ignored keys recursively. If an ignored key has been found in a
-        dict, then the dict is copied (shallow copy) and the ignored key is
-        being removed.
+        Remove ignored keys recursively in input_dict.
+        If an ignored key has been found in a dict, then the
+        dict is copied (shallow copy) and the ignored key is removed.
         :param input_dict: Input dict to remove ignored keys from.
-        :return: Dict without the the ignored keys
+        :return: tuple of -
+        boolean specifying if any key has been removed
+        a dict without the the ignored keys
         """
         # pylint: disable=too-many-nested-blocks
         copied_dict = None
