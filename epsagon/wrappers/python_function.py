@@ -5,7 +5,6 @@ Wrapper for a general python function
 from __future__ import absolute_import
 import time
 import traceback
-import copy
 import functools
 import epsagon.trace
 import epsagon.runners.python_function
@@ -54,9 +53,7 @@ def wrap_python_function(func, args, kwargs):
     finally:
         try:
             if not epsagon.trace.trace_factory.get_trace().metadata_only:
-                runner.resource['metadata']['return_value'] = (
-                    copy.deepcopy(result)
-                )
+                runner.resource['metadata']['return_value'] = result
         # pylint: disable=W0703
         except Exception as exception:
             epsagon.trace.trace_factory.add_exception(

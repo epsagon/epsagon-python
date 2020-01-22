@@ -850,22 +850,35 @@ class Trace(object):
 
     def remove_ignored_keys(self, input_dict):
         """
-        Remove ignored keys recursively.
+        Remove ignored keys recursively. If an ignored key has been found in a
+        dict, then the dict is copied (shallow copy) and the ignored key is
+        being removed.
         :param input_dict: Input dict to remove ignored keys from.
-        :return: None
+        :return: Dict without the the ignored keys
         """
+        copied_dict = None
         if self.keys_to_ignore:
             # Python 2 returns a list, while Python3 returns an iterator.
-            for key, value in list(input_dict.items()):
+            for key in input_dict:
                 if self._strip_key(key) in self.keys_to_ignore:
-                    input_dict.pop(key)
+                    if copied_dict is None:
+                        copied_dict = input_dict.copy()
+                    copied_dict.pop(key)
                     if self.debug:
                         print(
                             'Removed ignored key {}'.format(key)
                         )
                 else:
+                    value = input_dict[key]
                     if isinstance(value, dict):
-                        self.remove_ignored_keys(value)
+                        has_changed, result = self.remove_ignored_keys(value)
+                        if has_changed:
+                            if copied_dict is None:
+                                copied_dict = input_dict.copy()
+                            copied_dict[key] = result
+
+        has_changed = copied_dict is not None
+        return has_changed, copied_dict if has_changed else input_dict
 
     def send_traces(self):
         """
@@ -934,7 +947,10 @@ class Trace(object):
 
         # Remove ignored keys.
         for event in self.events:
-            self.remove_ignored_keys(event.resource['metadata'])
+            has_changed, result = self.remove_ignored_keys(
+                event.resource['metadata'])
+            if has_changed:
+                event.resource['metadata'] = result
             type(self)._trim_dict_values(
                 event.resource['metadata'],
                 MAX_METADATA_FIELD_SIZE_LIMIT
