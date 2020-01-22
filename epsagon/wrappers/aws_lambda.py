@@ -5,6 +5,7 @@ Wrapper for AWS Lambda.
 from __future__ import absolute_import
 import traceback
 import time
+import copy
 import functools
 import warnings
 import collections
