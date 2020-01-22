@@ -856,6 +856,7 @@ class Trace(object):
         :param input_dict: Input dict to remove ignored keys from.
         :return: Dict without the the ignored keys
         """
+        # pylint: disable=too-many-nested-blocks
         copied_dict = None
         if self.keys_to_ignore:
             # Python 2 returns a list, while Python3 returns an iterator.
