@@ -859,7 +859,6 @@ class Trace(object):
         # pylint: disable=too-many-nested-blocks
         if not self.keys_to_ignore:
             return input_dict
-        
         copied_dict = input_dict.copy()
         # Python 2 returns a list, while Python3 returns an iterator.
         for key in input_dict:
