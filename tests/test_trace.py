@@ -545,6 +545,12 @@ def test_send_invalid_return_value(wrapped_post):
         headers={'Authorization': 'Bearer {}'.format(trace.token)}
     )
 
+def _assert_key_not_exist(data, ignored_key):
+    for key, value in data.items():
+        assert key != ignored_key
+        if isinstance(value, dict):
+            _assert_key_not_exist(value, ignored_key)
+
 @mock.patch('requests.Session.post')
 def test_return_value_key_to_ignore(wrapped_post):
     key_to_ignore = 'key_to_ignore_in_return_value'
@@ -560,7 +566,21 @@ def test_return_value_key_to_ignore(wrapped_post):
     )
 
     trace = trace_factory.get_or_create_trace()
-    return_value = {key_to_ignore: 'f'}
+    return_value = {
+        key_to_ignore: 'f',
+        's': {
+            'a': 1,
+            'b': 2,
+            'c': {
+                'f': 1,
+                key_to_ignore: '1',
+                'g': {
+                    key_to_ignore: '1'
+                }
+            }
+        }
+    }
+    copied_return_value = return_value.copy()
     runner = ReturnValueEventMock(return_value)
     trace.set_runner(runner)
     trace.token = 'a'
@@ -570,7 +590,9 @@ def test_return_value_key_to_ignore(wrapped_post):
     event = trace.to_dict()['events'][0]
     assert event['origin'] == 'runner'
     actual_return_value = event['resource']['metadata']['return_value']
-    assert key_to_ignore not in actual_return_value
+    _assert_key_not_exist(actual_return_value, key_to_ignore)
+    # check that original return value hasn't been changed
+    assert copied_return_value == return_value
 
     wrapped_post.assert_called_with(
         'collector',

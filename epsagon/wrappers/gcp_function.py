@@ -5,7 +5,6 @@ Wrapper for Google Function.
 from __future__ import absolute_import
 import traceback
 import time
-import copy
 import functools
 import warnings
 import epsagon.trace
@@ -57,9 +56,7 @@ def gcp_wrapper(func):
         finally:
             try:
                 if not trace.metadata_only:
-                    runner.resource['metadata']['return_value'] = (
-                        copy.deepcopy(result)
-                    )
+                    runner.resource['metadata']['return_value'] = result
             # pylint: disable=W0703
             except Exception as exception:
                 trace.add_exception(exception, traceback.format_exc())
