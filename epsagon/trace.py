@@ -854,34 +854,27 @@ class Trace(object):
         If an ignored key has been found in a dict, then the
         dict is copied (shallow copy) and the ignored key is removed.
         :param input_dict: Input dict to remove ignored keys from.
-        :return: tuple of -
-        boolean specifying if any key has been removed
-        a dict without the the ignored keys
+        :return: a dict without the the ignored keys
         """
         # pylint: disable=too-many-nested-blocks
-        copied_dict = None
-        if self.keys_to_ignore:
-            # Python 2 returns a list, while Python3 returns an iterator.
-            for key in input_dict:
-                if self._strip_key(key) in self.keys_to_ignore:
-                    if copied_dict is None:
-                        copied_dict = input_dict.copy()
-                    copied_dict.pop(key)
-                    if self.debug:
-                        print(
-                            'Removed ignored key {}'.format(key)
-                        )
-                else:
-                    value = input_dict[key]
-                    if isinstance(value, dict):
-                        has_changed, result = self.remove_ignored_keys(value)
-                        if has_changed:
-                            if copied_dict is None:
-                                copied_dict = input_dict.copy()
-                            copied_dict[key] = result
+        if not self.keys_to_ignore:
+            return input_dict
+        
+        copied_dict = input_dict.copy()
+        # Python 2 returns a list, while Python3 returns an iterator.
+        for key in input_dict:
+            if self._strip_key(key) in self.keys_to_ignore:
+                copied_dict.pop(key)
+                if self.debug:
+                    print(
+                        'Removed ignored key {}'.format(key)
+                    )
+            else:
+                value = input_dict[key]
+                if isinstance(value, dict):
+                    copied_dict[key] = self.remove_ignored_keys(value)
+        return copied_dict
 
-        has_changed = copied_dict is not None
-        return has_changed, copied_dict if has_changed else input_dict
 
     def send_traces(self):
         """
@@ -950,10 +943,8 @@ class Trace(object):
 
         # Remove ignored keys.
         for event in self.events:
-            has_changed, result = self.remove_ignored_keys(
+            event.resource['metadata'] = self.remove_ignored_keys(
                 event.resource['metadata'])
-            if has_changed:
-                event.resource['metadata'] = result
             type(self)._trim_dict_values(
                 event.resource['metadata'],
                 MAX_METADATA_FIELD_SIZE_LIMIT
