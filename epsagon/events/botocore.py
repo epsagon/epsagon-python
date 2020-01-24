@@ -9,16 +9,19 @@ import hashlib
 import traceback
 from importlib import import_module
 import simplejson as json
-from botocore.exceptions import ClientError
 from epsagon.constants import STEP_DICT_NAME
 from ..trace import trace_factory
 from ..event import BaseEvent
 from ..utils import add_data_if_needed
 
 # Conditionally importing boto3
+ClientError = Exception  # pylint: disable=invalid-name
 TypeDeserializer = None  # pylint: disable=invalid-name
 ConditionExpressionBuilder = None  # pylint: disable=invalid-name
 try:
+    ClientError = (  # pylint: disable=invalid-name
+        import_module('botocore.exceptions').ClientError
+    )
     TypeDeserializer = (  # pylint: disable=invalid-name
         import_module('boto3.dynamodb.types').TypeDeserializer
     )
