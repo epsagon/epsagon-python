@@ -16,7 +16,7 @@ try:
     TypeDeserializer = (  # pylint: disable=invalid-name
         import_module('boto3.dynamodb.types').TypeDeserializer
     )
-except ModuleNotFoundError:
+except ImportError:
     pass
 
 

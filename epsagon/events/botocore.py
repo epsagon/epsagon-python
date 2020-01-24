@@ -28,7 +28,7 @@ try:
     ConditionExpressionBuilder = (  # pylint: disable=invalid-name
         import_module('boto3.dynamodb.conditions').ConditionExpressionBuilder
     )
-except ModuleNotFoundError:
+except ImportError:
     pass
 
 
