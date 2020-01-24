@@ -7,14 +7,26 @@ from __future__ import absolute_import
 
 import hashlib
 import traceback
+from importlib import import_module
 import simplejson as json
-from boto3.dynamodb.types import TypeDeserializer
-from boto3.dynamodb.conditions import ConditionExpressionBuilder
 from botocore.exceptions import ClientError
 from epsagon.constants import STEP_DICT_NAME
 from ..trace import trace_factory
 from ..event import BaseEvent
 from ..utils import add_data_if_needed
+
+# Conditionally importing boto3
+TypeDeserializer = None  # pylint: disable=invalid-name
+ConditionExpressionBuilder = None  # pylint: disable=invalid-name
+try:
+    TypeDeserializer = (  # pylint: disable=invalid-name
+        import_module('boto3.dynamodb.types').TypeDeserializer
+    )
+    ConditionExpressionBuilder = (  # pylint: disable=invalid-name
+        import_module('boto3.dynamodb.conditions').ConditionExpressionBuilder
+    )
+except ModuleNotFoundError:
+    pass
 
 
 # pylint: disable=W0613
@@ -417,7 +429,7 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
         _, request_data = args
         self.request_data = request_data
         self.response = response
-        self.deserializer = TypeDeserializer()
+        self.deserializer = TypeDeserializer() if TypeDeserializer else None
 
         super(BotocoreDynamoDBEvent, self).__init__(
             wrapped,
@@ -461,9 +473,10 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
         """
         self.resource['name'] = self.request_data['TableName']
         deserialized_key = self._deserialize_item(self.request_data['Key'])
-        self.resource['metadata']['item_hash'] = hashlib.md5(
-            json.dumps(deserialized_key).encode('utf-8')
-        ).hexdigest()
+        if deserialized_key is not None:
+            self.resource['metadata']['item_hash'] = hashlib.md5(
+                json.dumps(deserialized_key).encode('utf-8')
+            ).hexdigest()
         add_data_if_needed(
             self.resource['metadata'],
             'Key',
@@ -482,9 +495,10 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
         """
         self.resource['name'] = self.request_data['TableName']
         deserialized_key = self._deserialize_item(self.request_data['Key'])
-        self.resource['metadata']['item_hash'] = hashlib.md5(
-            json.dumps(deserialized_key).encode('utf-8')
-        ).hexdigest()
+        if deserialized_key is not None:
+            self.resource['metadata']['item_hash'] = hashlib.md5(
+                json.dumps(deserialized_key).encode('utf-8')
+            ).hexdigest()
 
         self.resource['metadata']['Update Parameters'] = {
             'Key': self.request_data['Key'],
@@ -538,6 +552,9 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
         Process the query operation.
         """
         self.resource['name'] = self.request_data['TableName']
+        if ConditionExpressionBuilder is None:
+            return
+
         request_data = self._stringify_conditions(self.request_data.copy())
         if trace_factory.metadata_only:
             # Remove parameters containing non-metadata
@@ -559,6 +576,9 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
         Process the scan operation.
         """
         self.resource['name'] = self.request_data['TableName']
+        if ConditionExpressionBuilder is None:
+            return
+
         request_data = self._stringify_conditions(self.request_data.copy())
         if trace_factory.metadata_only:
             # Remove parameters containing non-metadata
@@ -640,6 +660,8 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
         :param item: The item to deserialize.
         :return: Deserialized item.
         """
+        if self.deserializer is None:
+            return None
         deserialized_item = item.copy()
         for key in item:
             try:

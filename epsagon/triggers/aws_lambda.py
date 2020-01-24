@@ -4,12 +4,20 @@ Triggers for aws_lambda
 
 from __future__ import absolute_import
 from uuid import uuid4
-
+from importlib import import_module
 import hashlib
 import simplejson as json
-from boto3.dynamodb.types import TypeDeserializer
 from epsagon.utils import add_data_if_needed
 from ..event import BaseEvent
+
+# Conditionally importing boto3
+TypeDeserializer = None  # pylint: disable=invalid-name
+try:
+    TypeDeserializer = (  # pylint: disable=invalid-name
+        import_module('boto3.dynamodb.types').TypeDeserializer
+    )
+except ModuleNotFoundError:
+    pass
 
 
 class BaseLambdaTrigger(BaseEvent):
@@ -99,7 +107,7 @@ class DynamoDBLambdaTrigger(BaseLambdaTrigger):
         """
 
         super(DynamoDBLambdaTrigger, self).__init__(start_time)
-        self.deserializer = TypeDeserializer()
+        self.deserializer = TypeDeserializer() if TypeDeserializer else None
 
         record = event['Records'][0]
         self.event_id = record['eventID']
@@ -122,10 +130,12 @@ class DynamoDBLambdaTrigger(BaseLambdaTrigger):
         self.resource['metadata'] = {
             'region': record['awsRegion'],
             'sequence_number': record['dynamodb']['SequenceNumber'],
-            'item_hash': hashlib.md5(
+        }
+
+        if deserialized_item is not None:
+            self.resource['metadata']['item_hash'] = hashlib.md5(
                 json.dumps(deserialized_item, sort_keys=True).encode('utf-8')
             ).hexdigest()
-        }
 
     def _deserialize_item(self, item):
         """
@@ -133,6 +143,8 @@ class DynamoDBLambdaTrigger(BaseLambdaTrigger):
         :param item: The item to deserialize.
         :return: Deserialized item.
         """
+        if self.deserializer is None:
+            return None
         deserialized_item = item.copy()
         for key in item:
             try:
