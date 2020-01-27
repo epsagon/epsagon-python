@@ -8,6 +8,7 @@ botocore module that has a similar interface.
 """
 
 from __future__ import absolute_import
+import wrapt
 from epsagon.modules.general_wrapper import wrapper
 from ..events.requests import RequestsEventFactory
 
@@ -21,7 +22,6 @@ def _wrapper(wrapped, instance, args, kwargs):
     :param kwargs: wrapt's kwargs
     :return: None
     """
-
     return wrapper(RequestsEventFactory, wrapped, instance, args, kwargs)
 
 
@@ -31,8 +31,8 @@ def patch():
     :return: None
     """
 
-    # wrapt.wrap_function_wrapper(
-    #     'requests',
-    #     'Session.send',
-    #     _wrapper
-    # )
+    wrapt.wrap_function_wrapper(
+        'requests',
+        'Session.send',
+        _wrapper
+    )

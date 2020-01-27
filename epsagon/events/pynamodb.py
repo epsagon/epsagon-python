@@ -3,6 +3,7 @@ PynamoDB events module.
 """
 
 from __future__ import absolute_import
+from uuid import uuid4
 import simplejson as json
 from ..trace import trace_factory
 from .botocore import BotocoreDynamoDBEvent
@@ -20,9 +21,9 @@ class NestedObject(object):
                 self.__dict__[k] = v
 
 
-class PynamoDBEventAdapter(object):
+class PynamoDBVendoredEventAdapter(object):
     """
-    Factory class, generates PynamoDB event.
+    Factory class, generates PynamoDB event from botocore vendored.
     """
 
     @staticmethod
@@ -52,6 +53,38 @@ class PynamoDBEventAdapter(object):
             wrapped,
             new_instance,
             new_args,
+            kwargs,
+            start_time,
+            new_response,
+            exception
+        )
+        event.origin = 'pynamodb'
+        event.resource['metadata'].pop('Retry Attempts')
+
+        trace_factory.add_event(event)
+
+
+class PynamoDBEventAdapter(object):
+    """
+    Factory class, generates PynamoDB event from pynamodb module.
+    """
+
+    @staticmethod
+    def create_event(wrapped, instance, args, kwargs, start_time, response,
+                     exception):
+        """Creates DynamoDB event based on PynamoDB data"""
+        new_response = {
+            'ResponseMetadata': {
+                'RequestId': 'pynamodb-{}'.format(str(uuid4())),
+                'HTTPStatusCode': 200,
+                'RetryAttempts': None,
+            },
+        }
+        new_response.update(response)
+        event = BotocoreDynamoDBEvent(
+            wrapped,
+            instance.client,
+            args,
             kwargs,
             start_time,
             new_response,
