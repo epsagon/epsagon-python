@@ -76,7 +76,7 @@ class PynamoDBEventAdapter(object):
         new_response = {
             'ResponseMetadata': {
                 'RequestId': 'pynamodb-{}'.format(str(uuid4())),
-                'HTTPStatusCode': 200,
+                'HTTPStatusCode': 200 if exception is None else 500,
                 'RetryAttempts': None,
             },
         }
