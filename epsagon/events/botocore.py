@@ -90,7 +90,10 @@ class BotocoreEvent(BaseEvent):
         )
 
         # Specific handling for botocore errors
-        if isinstance(exception, ClientError):
+        if (
+            isinstance(exception, ClientError) and
+            'ResponseMetadata' in exception.response
+        ):
             self.event_id = exception.response['ResponseMetadata']['RequestId']
             botocore_error = exception.response['Error']
             self.resource['metadata']['botocore_error'] = True

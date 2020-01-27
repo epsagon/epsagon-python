@@ -80,7 +80,8 @@ class PynamoDBEventAdapter(object):
                 'RetryAttempts': None,
             },
         }
-        new_response.update(response)
+        if response:
+            new_response.update(response)
         event = BotocoreDynamoDBEvent(
             wrapped,
             instance.client,
