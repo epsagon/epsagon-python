@@ -104,7 +104,7 @@ def lambda_wrapper(func):
         result = None
         try:
             result = func(*args, **kwargs)
-            if trace.inject_identifier and isinstance(result, dict):
+            if trace.inject_id and isinstance(result, dict):
                 result[TRACE_ID_DICT_NAME] = runner.event_id
             return result
         # pylint: disable=W0703

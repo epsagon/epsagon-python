@@ -90,7 +90,8 @@ def init(
     url_patterns_to_ignore=None,
     keys_to_ignore=None,
     ignored_endpoints=None,
-    split_on_send=False
+    split_on_send=False,
+    inject_id=False,
 ):
     """
     Initializes trace with user's data.
@@ -157,6 +158,10 @@ def init(
         split_on_send=(
                 ((os.getenv('EPSAGON_SPLIT_ON_SEND') or '').upper() == 'TRUE')
                 | split_on_send
+        ),
+        inject_id=(
+                ((os.getenv('EPSAGON_INJECT_ID') or '').upper() == 'TRUE')
+                | inject_id
         ),
     )
 

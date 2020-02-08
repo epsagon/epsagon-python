@@ -94,6 +94,7 @@ class TraceFactory(object):
         self.transport = NoneTransport()
         self.split_on_send = False
         self.disabled = False
+        self.inject_id = False
 
     def initialize(
             self,
@@ -108,6 +109,7 @@ class TraceFactory(object):
             keys_to_ignore,
             transport,
             split_on_send,
+            inject_id,
     ):
         """
         Initializes The factory with user's data.
@@ -142,6 +144,7 @@ class TraceFactory(object):
         self.keys_to_ignore = [] if keys_to_ignore is None else keys_to_ignore
         self.transport = transport
         self.split_on_send = split_on_send
+        self.inject_id = inject_id
 
         self.update_tracers()
 
@@ -167,6 +170,7 @@ class TraceFactory(object):
             tracer.keys_to_ignore = self.keys_to_ignore
             tracer.transport = self.transport
             tracer.split_on_send = self.split_on_send
+            tracer.inject_id = self.inject_id
 
     def switch_to_multiple_traces(self):
         """
@@ -193,6 +197,7 @@ class TraceFactory(object):
             self.keys_to_ignore,
             unique_id,
             self.split_on_send,
+            self.inject_id
         )
 
     def get_or_create_trace(self, unique_id=None):
@@ -441,7 +446,7 @@ class Trace(object):
             unique_id=None,
             split_on_send=False,
             transport=NoneTransport(),
-            inject_identifer=False,
+            inject_id=False,
     ):
         """
         initialize.
@@ -463,7 +468,7 @@ class Trace(object):
         self.url_patterns_to_ignore = url_patterns_to_ignore
         self.transport = transport
         self.split_on_send = split_on_send
-        self.inject_identifier = inject_identifer
+        self.inject_id = inject_id
 
         if keys_to_ignore:
             self.keys_to_ignore = [self._strip_key(x) for x in keys_to_ignore]
