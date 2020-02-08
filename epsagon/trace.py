@@ -441,6 +441,7 @@ class Trace(object):
             unique_id=None,
             split_on_send=False,
             transport=NoneTransport(),
+            inject_identifer=False,
     ):
         """
         initialize.
@@ -462,6 +463,7 @@ class Trace(object):
         self.url_patterns_to_ignore = url_patterns_to_ignore
         self.transport = transport
         self.split_on_send = split_on_send
+        self.inject_identifier = inject_identifer
 
         if keys_to_ignore:
             self.keys_to_ignore = [self._strip_key(x) for x in keys_to_ignore]

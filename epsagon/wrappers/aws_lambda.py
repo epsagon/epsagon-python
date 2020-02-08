@@ -16,7 +16,7 @@ import epsagon.runners.aws_lambda
 import epsagon.triggers.aws_lambda
 import epsagon.wrappers.python_function
 import epsagon.utils
-from epsagon.constants import STEP_DICT_NAME
+from epsagon.constants import STEP_DICT_NAME, TRACE_ID_DICT_NAME
 import epsagon.runners.python_function
 from epsagon.common import EpsagonWarning
 from .. import constants
@@ -104,6 +104,8 @@ def lambda_wrapper(func):
         result = None
         try:
             result = func(*args, **kwargs)
+            if trace.inject_identifier and isinstance(result, dict):
+                result[TRACE_ID_DICT_NAME] = runner.event_id
             return result
         # pylint: disable=W0703
         except Exception as exception:

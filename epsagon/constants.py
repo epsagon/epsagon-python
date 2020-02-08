@@ -56,3 +56,4 @@ def is_strong_key(key):
 
 
 STEP_DICT_NAME = 'Epsagon'
+TRACE_ID_DICT_NAME = '_epsagon_trace_id'
