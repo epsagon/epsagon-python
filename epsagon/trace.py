@@ -702,7 +702,7 @@ class Trace(object):
     def set_error(self, exception, traceback_data=None):
         """
         Sets the error value of the runner
-        :param exception: Exception object to set.
+        :param exception: Exception object or String to set.
         :param traceback_data: traceback string
         """
         if not self.runner:
@@ -719,6 +719,9 @@ class Trace(object):
                 traceback_data = ''.join(
                     traceback.format_list(traceback.extract_stack())
                 )
+        # Convert exception string to Exception type
+        if isinstance(exception, str):
+            exception = Exception(exception)
         self.runner.set_exception(exception, traceback_data)
 
     def update_runner_with_labels(self):

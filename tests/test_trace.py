@@ -374,6 +374,18 @@ def test_set_error_with_traceback():
     )
 
 
+def test_set_error_string():
+    event = RunnerEventMock()
+    trace = trace_factory.get_or_create_trace()
+    trace.clear_events()
+    trace.set_runner(event)
+    msg = 'oops'
+    trace.set_error(msg)
+
+    assert trace.to_dict()['events'][0]['exception']['message'] == msg
+    assert trace.to_dict()['events'][0]['exception']['type'] == 'Exception'
+
+
 def test_custom_labels_override_trace():
     event = RunnerEventMock()
     trace = trace_factory.get_or_create_trace()
