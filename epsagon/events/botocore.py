@@ -285,12 +285,34 @@ class BotocoreSNSEvent(BotocoreEvent):
             )
             self.resource['name'] = arn.split(':')[-1]
 
-        if 'Message' in request_data:
-            add_data_if_needed(
-                self.resource['metadata'],
-                'Notification Message',
-                request_data['Message']
-            )
+        self._process_request_data(request_data)
+
+    def _process_request_data(self, request_data):
+        """
+        Process the SNS message request data - adding relevant message data
+        :param request_data: the request_data to process
+        """
+        message_fields_description = {
+            'Message': 'Notification Message',
+            'MessageAttributes': 'Notification Message Attributes',
+        }
+        for field, description in message_fields_description.items():
+            if field in request_data:
+                add_data_if_needed(
+                    self.resource['metadata'],
+                    description,
+                    request_data[field]
+                )
+
+        header_data = {
+            key: value for key, value in request_data.items()
+            if key not in message_fields_description
+        }
+        add_data_if_needed(
+            self.resource['metadata'],
+            'Notification Message Headers',
+            header_data
+        )
 
     def update_response(self, response):
         """
