@@ -155,22 +155,30 @@ main()
 You can add custom labels to your traces. Filters can later be used for filtering
 traces that contains specific labels:
 ```python
-@epsagon.lambda_wrapper
 def handler(event, context):
-  epsagon.label('label', 'something_to_filter_afterwards')
-  epsagon.label('number_of_records_parsed_successfully', 42)
-  pass
+    epsagon.label('key', 'value')
+    epsagon.label('user_id', event['headers']['auth'])
+    epsagon.label('number_of_records_parsed_successfully', 42)
 ```
 
 ### Custom Errors
 
-Set a custom error, maybe without even failing the function:
+You can manually set a trace as an error, even if handled correctly.
+Please refer to the full documentation, about handling of this errors in the issues management.
+
 ```python
-@epsagon.lambda_wrapper
 def handler(event, context):
-  if 'my_param' not in event:
-      epsagon.error(ValueError('event missing my_param'))
-  pass
+    try:
+        fail = 1 / 0
+    except Exception as ex:
+        epsagon.error(ex)
+        
+    # or
+
+    if 'my_param' not in event:
+        epsagon.error(ValueError('event missing my_param'))
+        # or
+        epsagon.error('event missing my_param')
 ```
 
 

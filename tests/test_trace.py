@@ -23,7 +23,7 @@ from epsagon.trace import (
 )
 from epsagon.event import BaseEvent
 from epsagon.utils import get_tc_url
-from epsagon.common import ErrorCode
+from epsagon.common import ErrorCode, EpsagonException
 from epsagon.trace_transports import HTTPTransport
 
 class ContextMock:
@@ -371,6 +371,20 @@ def test_set_error_with_traceback():
     assert trace.to_dict()['events'][0]['exception']['message'] == msg
     assert (
         trace.to_dict()['events'][0]['exception']['traceback'] == traceback_data
+    )
+
+
+def test_set_error_string():
+    event = RunnerEventMock()
+    trace = trace_factory.get_or_create_trace()
+    trace.clear_events()
+    trace.set_runner(event)
+    msg = 'oops'
+    trace.set_error(msg)
+
+    assert trace.to_dict()['events'][0]['exception']['message'] == msg
+    assert trace.to_dict()['events'][0]['exception']['type'] == (
+        EpsagonException.__name__
     )
 
 
