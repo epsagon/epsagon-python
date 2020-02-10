@@ -18,7 +18,7 @@ import simplejson as json
 import requests
 import requests.exceptions
 from epsagon.event import BaseEvent
-from epsagon.common import EpsagonWarning, ErrorCode
+from epsagon.common import EpsagonWarning, ErrorCode, EpsagonException
 from epsagon.trace_encoder import TraceEncoder
 from epsagon.trace_transports import NoneTransport, HTTPTransport, LogTransport
 from .constants import (
@@ -719,9 +719,9 @@ class Trace(object):
                 traceback_data = ''.join(
                     traceback.format_list(traceback.extract_stack())
                 )
-        # Convert exception string to Exception type
+        # Convert exception string to EpsagonException type
         if isinstance(exception, str):
-            exception = Exception(exception)
+            exception = EpsagonException(exception)
         self.runner.set_exception(exception, traceback_data)
 
     def update_runner_with_labels(self):

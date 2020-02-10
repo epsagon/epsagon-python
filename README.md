@@ -163,7 +163,9 @@ def handler(event, context):
 
 ### Custom Errors
 
-Set a custom error, even if handled correctly:
+You can manually set a trace as an error, even if handled correctly.
+Please refer to the full documentation, about handling of this errors in the issues management.
+
 ```python
 def handler(event, context):
     try:

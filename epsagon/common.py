@@ -15,3 +15,9 @@ class EpsagonWarning(Warning):
     """
     An Epsagon warning.
     """
+
+
+class EpsagonException(Exception):
+    """
+    An Epsagon exception.
+    """
