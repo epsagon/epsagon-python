@@ -130,7 +130,7 @@ class TraceFactory(object):
          exceeds the maximum size.
         :return: None
         """
-
+        print('--- transport', transport)
         self.app_name = app_name
         self.token = token
         self.collector_url = collector_url
@@ -145,8 +145,11 @@ class TraceFactory(object):
         self.transport = transport
         self.split_on_send = split_on_send
         self.propagate_id = propagate_id
+        print('--- transport x', self.transport)
 
         self.update_tracers()
+        print('--- transport y', self.transport)
+
 
     def update_tracers(self):
         """
@@ -186,18 +189,18 @@ class TraceFactory(object):
         :return: new trace
         """
         return Trace(
-            self.app_name,
-            self.token,
-            self.collector_url,
-            self.metadata_only,
-            self.disable_timeout_send,
-            self.debug,
-            self.send_trace_only_on_error,
-            self.url_patterns_to_ignore,
-            self.keys_to_ignore,
-            unique_id,
-            self.split_on_send,
-            self.propagate_id
+            app_name=self.app_name,
+            token=self.token,
+            collector_url=self.collector_url,
+            metadata_only=self.metadata_only,
+            disable_timeout_send=self.disable_timeout_send,
+            debug=self.debug,
+            send_trace_only_on_error=self.send_trace_only_on_error,
+            url_patterns_to_ignore=self.url_patterns_to_ignore,
+            keys_to_ignore=self.keys_to_ignore,
+            unique_id=unique_id,
+            split_on_send=self.split_on_send,
+            propagate_id=False,
         )
 
     def get_or_create_trace(self, unique_id=None):

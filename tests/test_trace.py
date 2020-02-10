@@ -1120,7 +1120,7 @@ def test_init_propagate_identifier_env(wrapped_init, _create):
         url_patterns_to_ignore=None,
         transport=default_http,
         keys_to_ignore=None,
-        split_on_send=True,
+        split_on_send=False,
         propagate_id=True
     )
     os.environ.pop('EPSAGON_PROPAGATE_ID')
@@ -1147,6 +1147,6 @@ def test_init_propagate_identifier_init(wrapped_init, _create):
         url_patterns_to_ignore=None,
         transport=default_http,
         keys_to_ignore=None,
-        split_on_send=True,
+        split_on_send=False,
         propagate_id=True
     )

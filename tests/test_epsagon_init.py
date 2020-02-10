@@ -73,7 +73,7 @@ def test_epsagon_disable_epsagon_and_disable_patch(wrapped_get, wrapped_patch):
     'EPSAGON_SEND_TRACE_ON_ERROR': 'FALSE',
     'EPSAGON_URLS_TO_IGNORE': '',
     'EPSAGON_ENDPOINTS_TO_IGNORE': '',
-    'EPSAGON_IGNORED_KEYS': ''
+    'EPSAGON_IGNORED_KEYS': '',
 }[x]))
 def test_epsagon_wrapper_env_init(wrapped_get):
     reload(epsagon)
@@ -131,7 +131,7 @@ default_http = HTTPTransport("epsagon", "1234")
     'EPSAGON_LOG_TRANSPORT': 'FALSE',
     'EPSAGON_ENDPOINTS_TO_IGNORE': '',
     'EPSAGON_SPLIT_ON_SEND': 'FALSE',
-    'EPSAGON_PROPAGATE_ID': 'FALSE'
+    'EPSAGON_PROPAGATE_ID': 'FALSE',
 }[x]))
 def test_epsagon_wrapper_env_init(_wrapped_get, wrapped_init, _create):
     reload(epsagon)
@@ -170,7 +170,7 @@ def test_epsagon_wrapper_env_init(_wrapped_get, wrapped_init, _create):
     'EPSAGON_ENDPOINTS_TO_IGNORE': '/health,/test',
     'EPSAGON_LOG_TRANSPORT': 'FALSE',
     'EPSAGON_SPLIT_ON_SEND': 'FALSE',
-    'EPSAGON_PROPAGATE_ID': 'FALSE'
+    'EPSAGON_PROPAGATE_ID': 'FALSE',
 }[x]))
 def test_epsagon_wrapper_env_endpoints(_wrapped_get, wrapped_http):
     reload(epsagon)
