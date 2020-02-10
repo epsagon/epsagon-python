@@ -130,7 +130,6 @@ class TraceFactory(object):
          exceeds the maximum size.
         :return: None
         """
-        print('--- transport', transport)
         self.app_name = app_name
         self.token = token
         self.collector_url = collector_url
@@ -145,11 +144,7 @@ class TraceFactory(object):
         self.transport = transport
         self.split_on_send = split_on_send
         self.propagate_id = propagate_id
-        print('--- transport x', self.transport)
-
         self.update_tracers()
-        print('--- transport y', self.transport)
-
 
     def update_tracers(self):
         """
