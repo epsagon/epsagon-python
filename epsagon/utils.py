@@ -91,7 +91,7 @@ def init(
     keys_to_ignore=None,
     ignored_endpoints=None,
     split_on_send=False,
-    inject_id=False,
+    propagate_id=False,
 ):
     """
     Initializes trace with user's data.
@@ -110,6 +110,8 @@ def init(
       collection.
     :param keys_to_ignore: List of keys to ignore while extracting metadata.
     :param ignored_endpoints: List of ignored endpoints for web frameworks.
+    :param split_on_send: Split the trace on send flag
+    :param propagate_id: Inject identifiers via return value flag
     :return: None
     """
 
@@ -159,9 +161,9 @@ def init(
                 ((os.getenv('EPSAGON_SPLIT_ON_SEND') or '').upper() == 'TRUE')
                 | split_on_send
         ),
-        inject_id=(
-                ((os.getenv('EPSAGON_INJECT_ID') or '').upper() == 'TRUE')
-                | inject_id
+        propagate_id=(
+                ((os.getenv('EPSAGON_PROPAGATE_ID') or '').upper() == 'TRUE')
+                | propagate_id
         ),
     )
 
