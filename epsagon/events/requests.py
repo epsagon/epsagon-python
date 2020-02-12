@@ -6,6 +6,7 @@ For regular requests lib, we use urllib3
 
 from __future__ import absolute_import
 import traceback
+import json
 from uuid import uuid4
 
 from epsagon.utils import add_data_if_needed
@@ -89,7 +90,7 @@ class RequestsEvent(BaseEvent):
             add_data_if_needed(
                 self.resource['metadata'],
                 'response_body',
-                response.json()
+                json.loads(response.content)
             )
         except ValueError:
             pass
