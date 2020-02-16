@@ -90,7 +90,8 @@ def init(
     url_patterns_to_ignore=None,
     keys_to_ignore=None,
     ignored_endpoints=None,
-    split_on_send=False
+    split_on_send=False,
+    propagate_lambda_id=False,
 ):
     """
     Initializes trace with user's data.
@@ -109,6 +110,8 @@ def init(
       collection.
     :param keys_to_ignore: List of keys to ignore while extracting metadata.
     :param ignored_endpoints: List of ignored endpoints for web frameworks.
+    :param split_on_send: Split the trace on send flag
+    :param propagate_lambda_id: Inject identifiers via return value flag
     :return: None
     """
 
@@ -157,6 +160,11 @@ def init(
         split_on_send=(
                 ((os.getenv('EPSAGON_SPLIT_ON_SEND') or '').upper() == 'TRUE')
                 | split_on_send
+        ),
+        propagate_lambda_id=(
+                ((os.getenv('EPSAGON_PROPAGATE_LAMBDA_ID') or '').upper() ==
+                 'TRUE')
+                | propagate_lambda_id
         ),
     )
 

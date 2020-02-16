@@ -561,3 +561,84 @@ def test_lambda_wrapper_avoid_multi_wrap():
     new_wrapped = epsagon.wrappers.aws_lambda.lambda_wrapper(wrapped_lambda)
     assert getattr(wrapped_lambda, '__instrumented__', False) == True
     assert new_wrapped == wrapped_lambda
+
+
+@mock.patch.object(LambdaRunner, 'set_exception')
+@mock.patch(
+    'epsagon.trace.trace_factory.get_or_create_trace',
+    side_effect=lambda: trace_mock
+)
+@mock.patch(
+    'epsagon.triggers.aws_lambda.LambdaTriggerFactory.factory',
+    side_effect=['trigger']
+)
+def test_propagate_lambda_id_to_dict_sanity(
+        trigger_factory_mock,
+        _,
+        set_exception_mock
+):
+    retval = {
+        'hello': 2,
+        epsagon.constants.EPSAGON_EVENT_ID_KEY: 'test_request_id'
+    }
+
+    trace_mock.propagate_lambda_id = True
+
+    @epsagon.wrappers.aws_lambda.lambda_wrapper
+    def wrapped_lambda(_event, _context):
+        return {'hello': 2}
+
+    assert wrapped_lambda('a', CONTEXT_STUB) == retval
+    trace_mock.propagate_lambda_id = False
+
+    trace_mock.prepare.assert_called()
+    runner = _get_runner_event(trace_mock)
+
+    trigger_factory_mock.assert_called()
+    set_exception_mock.assert_not_called()
+
+    trace_mock.set_timeout_handler.assert_called()
+
+    trace_mock.send_traces.assert_called()
+    trace_mock.add_exception.assert_not_called()
+    assert not epsagon.constants.COLD_START
+    assert runner.resource['metadata']['return_value'] == retval
+
+
+@mock.patch.object(LambdaRunner, 'set_exception')
+@mock.patch(
+    'epsagon.trace.trace_factory.get_or_create_trace',
+    side_effect=lambda: trace_mock
+)
+@mock.patch(
+    'epsagon.triggers.aws_lambda.LambdaTriggerFactory.factory',
+    side_effect=['trigger']
+)
+def test_skip_propagate_lambda_id_to_non_dict_sanity(
+        trigger_factory_mock,
+        _,
+        set_exception_mock
+):
+    retval = 'hey'
+
+    trace_mock.propagate_lambda_id = True
+
+    @epsagon.wrappers.aws_lambda.lambda_wrapper
+    def wrapped_lambda(_event, _context):
+        return 'hey'
+
+    assert wrapped_lambda('a', CONTEXT_STUB) == retval
+    trace_mock.propagate_lambda_id = False
+
+    trace_mock.prepare.assert_called()
+    runner = _get_runner_event(trace_mock)
+
+    trigger_factory_mock.assert_called()
+    set_exception_mock.assert_not_called()
+
+    trace_mock.set_timeout_handler.assert_called()
+
+    trace_mock.send_traces.assert_called()
+    trace_mock.add_exception.assert_not_called()
+    assert not epsagon.constants.COLD_START
+    assert runner.resource['metadata']['return_value'] == retval

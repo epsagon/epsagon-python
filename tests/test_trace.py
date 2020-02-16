@@ -690,7 +690,8 @@ def test_init_sanity(wrapped_init, _create):
         url_patterns_to_ignore=None,
         keys_to_ignore=None,
         transport=default_http,
-        split_on_send=False
+        split_on_send=False,
+        propagate_lambda_id=False
     )
 
 
@@ -715,7 +716,8 @@ def test_init_empty_app_name(wrapped_init, _create):
         url_patterns_to_ignore=None,
         keys_to_ignore=None,
         transport=default_http,
-        split_on_send=False
+        split_on_send=False,
+        propagate_lambda_id=False
     )
 
 
@@ -734,7 +736,8 @@ def test_init_empty_collector_url(wrapped_init, _create):
         url_patterns_to_ignore=None,
         keys_to_ignore=None,
         transport=default_http,
-        split_on_send=False
+        split_on_send=False,
+        propagate_lambda_id=False
     )
 
 
@@ -757,7 +760,8 @@ def test_init_no_ssl_no_url(wrapped_init, _create):
         url_patterns_to_ignore=None,
         keys_to_ignore=None,
         transport=default_http,
-        split_on_send=False
+        split_on_send=False,
+        propagate_lambda_id=False
     )
 
 
@@ -784,7 +788,8 @@ def test_init_ssl_no_url(wrapped_init, _create):
         url_patterns_to_ignore=None,
         keys_to_ignore=None,
         transport=default_http,
-        split_on_send=False
+        split_on_send=False,
+        propagate_lambda_id=False
     )
 
 
@@ -809,7 +814,8 @@ def test_init_ssl_with_url(wrapped_init, _create):
         url_patterns_to_ignore=None,
         keys_to_ignore=None,
         transport=default_http,
-        split_on_send=False
+        split_on_send=False,
+        propagate_lambda_id=False
     )
 
 
@@ -834,7 +840,8 @@ def test_init_no_ssl_with_url(wrapped_init, _create):
         url_patterns_to_ignore=None,
         keys_to_ignore=None,
         transport=default_http,
-        split_on_send=False
+        split_on_send=False,
+        propagate_lambda_id=False
     )
 
 
@@ -859,7 +866,8 @@ def test_init_ignored_urls_env(wrapped_init, _create):
         url_patterns_to_ignore=['test.com', 'test2.com'],
         keys_to_ignore=None,
         transport=default_http,
-        split_on_send=False
+        split_on_send=False,
+        propagate_lambda_id=False
     )
     os.environ.pop('EPSAGON_URLS_TO_IGNORE')
 
@@ -885,7 +893,8 @@ def test_init_keys_to_ignore(wrapped_init, _create):
         url_patterns_to_ignore=None,
         keys_to_ignore=['a', 'b', 'c'],
         transport=default_http,
-        split_on_send=False
+        split_on_send=False,
+        propagate_lambda_id=False
     )
 
 
@@ -911,7 +920,8 @@ def test_init_keys_to_ignore_env(wrapped_init, _create):
         url_patterns_to_ignore=None,
         keys_to_ignore=['a', 'b', 'c'],
         transport=default_http,
-        split_on_send=False
+        split_on_send=False,
+        propagate_lambda_id=False
     )
     os.environ.pop('EPSAGON_IGNORED_KEYS')
 
@@ -937,7 +947,8 @@ def test_init_split_on_send(wrapped_init, _create):
         url_patterns_to_ignore=None,
         transport=default_http,
         keys_to_ignore=None,
-        split_on_send=True
+        split_on_send=True,
+        propagate_lambda_id=False
     )
 
 
@@ -962,7 +973,8 @@ def test_init_split_on_send_env(wrapped_init, _create):
         url_patterns_to_ignore=None,
         transport=default_http,
         keys_to_ignore=None,
-        split_on_send=True
+        split_on_send=True,
+        propagate_lambda_id=False
     )
     os.environ.pop('EPSAGON_SPLIT_ON_SEND')
 
@@ -1085,3 +1097,56 @@ def test_send_with_split_off(wrapped_post):
         trace.add_event(event)
     trace_factory.send_traces()
     wrapped_post.assert_called_once()
+
+
+@mock.patch('epsagon.utils.create_transport', side_effect=lambda x, y: default_http)
+@mock.patch('epsagon.trace.TraceFactory.initialize')
+def test_init_propagate_lambda_identifier_env(wrapped_init, _create):
+    os.environ['EPSAGON_PROPAGATE_LAMBDA_ID'] = 'TRUE'
+    epsagon.utils.init(
+        token='token',
+        app_name='app-name',
+        collector_url="http://abc.com",
+        metadata_only=False,
+    )
+    wrapped_init.assert_called_with(
+        token='token',
+        app_name='app-name',
+        metadata_only=False,
+        collector_url="http://abc.com",
+        disable_timeout_send=False,
+        debug=False,
+        send_trace_only_on_error=False,
+        url_patterns_to_ignore=None,
+        transport=default_http,
+        keys_to_ignore=None,
+        split_on_send=False,
+        propagate_lambda_id=True
+    )
+    os.environ.pop('EPSAGON_PROPAGATE_LAMBDA_ID')
+
+
+@mock.patch('epsagon.utils.create_transport', side_effect=lambda x, y: default_http)
+@mock.patch('epsagon.trace.TraceFactory.initialize')
+def test_init_propagate_lambda_identifier_init(wrapped_init, _create):
+    epsagon.utils.init(
+        token='token',
+        app_name='app-name',
+        collector_url="http://abc.com",
+        metadata_only=False,
+        propagate_lambda_id=True,
+    )
+    wrapped_init.assert_called_with(
+        token='token',
+        app_name='app-name',
+        metadata_only=False,
+        collector_url="http://abc.com",
+        disable_timeout_send=False,
+        debug=False,
+        send_trace_only_on_error=False,
+        url_patterns_to_ignore=None,
+        transport=default_http,
+        keys_to_ignore=None,
+        split_on_send=False,
+        propagate_lambda_id=True
+    )
