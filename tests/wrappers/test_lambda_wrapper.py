@@ -572,7 +572,7 @@ def test_lambda_wrapper_avoid_multi_wrap():
     'epsagon.triggers.aws_lambda.LambdaTriggerFactory.factory',
     side_effect=['trigger']
 )
-def test_propagate_id_to_dict_sanity(
+def test_propagate_lambda_id_to_dict_sanity(
         trigger_factory_mock,
         _,
         set_exception_mock
@@ -582,14 +582,14 @@ def test_propagate_id_to_dict_sanity(
         '_epsagon_trace_id': 'test_request_id'
     }
 
-    trace_mock.propagate_id = True
+    trace_mock.propagate_lambda_id = True
 
     @epsagon.wrappers.aws_lambda.lambda_wrapper
     def wrapped_lambda(_event, _context):
         return {'hello': 2}
 
     assert wrapped_lambda('a', CONTEXT_STUB) == retval
-    trace_mock.propagate_id = False
+    trace_mock.propagate_lambda_id = False
 
     trace_mock.prepare.assert_called()
     runner = _get_runner_event(trace_mock)
@@ -614,21 +614,21 @@ def test_propagate_id_to_dict_sanity(
     'epsagon.triggers.aws_lambda.LambdaTriggerFactory.factory',
     side_effect=['trigger']
 )
-def test_skip_propagate_id_to_non_dict_sanity(
+def test_skip_propagate_lambda_id_to_non_dict_sanity(
         trigger_factory_mock,
         _,
         set_exception_mock
 ):
     retval = 'hey'
 
-    trace_mock.propagate_id = True
+    trace_mock.propagate_lambda_id = True
 
     @epsagon.wrappers.aws_lambda.lambda_wrapper
     def wrapped_lambda(_event, _context):
         return 'hey'
 
     assert wrapped_lambda('a', CONTEXT_STUB) == retval
-    trace_mock.propagate_id = False
+    trace_mock.propagate_lambda_id = False
 
     trace_mock.prepare.assert_called()
     runner = _get_runner_event(trace_mock)
