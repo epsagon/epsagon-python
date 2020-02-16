@@ -579,7 +579,7 @@ def test_propagate_lambda_id_to_dict_sanity(
 ):
     retval = {
         'hello': 2,
-        '_epsagon_trace_id': 'test_request_id'
+        epsagon.constants.EPSAGON_EVENT_ID_KEY: 'test_request_id'
     }
 
     trace_mock.propagate_lambda_id = True
