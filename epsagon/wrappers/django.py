@@ -12,7 +12,8 @@ import epsagon.triggers.http
 import epsagon.runners.django
 
 from epsagon.common import EpsagonWarning
-from epsagon.utils import collect_container_metadata, get_traceback_data_from_exception
+from epsagon.utils import collect_container_metadata,\
+    get_traceback_data_from_exception
 from ..http_filters import ignore_request
 
 
@@ -29,15 +30,17 @@ class DjangoMiddleware(object):
         self.ignored_request = False
         epsagon.trace.trace_factory.switch_to_multiple_traces()
 
-    def process_exception(self, request, process_exception):
+    def process_exception(self, _, process_exception):
         if process_exception:
-            traceback_data = get_traceback_data_from_exception(process_exception)
+            traceback_data = get_traceback_data_from_exception(
+                process_exception
+            )
             self.runner.set_exception(process_exception, traceback_data, False)
 
     def __call__(self, request):
         self.request = request
 
-         # Link epsagon to the request object for easy-access to epsagon library.
+        # Link epsagon to the request object for easy-access to epsagon library.
         self.request.epsagon = epsagon
         self._before_request()
 

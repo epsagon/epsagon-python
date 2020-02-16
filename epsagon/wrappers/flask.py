@@ -3,18 +3,17 @@ Wrapper for Python Flask.
 """
 
 from __future__ import absolute_import
-import sys
 import traceback
 import time
 import warnings
-import six
 
 from flask import request
 import epsagon.trace
 import epsagon.triggers.http
 import epsagon.runners.flask
 from epsagon.common import EpsagonWarning
-from epsagon.utils import collect_container_metadata, get_traceback_data_from_exception
+from epsagon.utils import collect_container_metadata,\
+    get_traceback_data_from_exception
 from ..http_filters import ignore_request
 
 

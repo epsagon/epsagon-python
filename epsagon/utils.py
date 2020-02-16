@@ -6,9 +6,9 @@ from __future__ import absolute_import
 import os
 import collections
 import socket
-import six
 import sys
 import traceback
+import six
 import requests
 import simplejson as json
 try:
@@ -256,10 +256,9 @@ def collect_exception_python3(exception):
     ))
     return traceback_data
 
-def collect_exception_python2(exception):
+def collect_exception_python2():
     """
     Collect exception from exception sys.exc_info.
-    :param exception: Exception from Flask.
     :return: traceback data
     """
 
@@ -275,7 +274,7 @@ def get_traceback_data_from_exception(exception):
     """
     python_version = sys.version_info.major
     if python_version == 2:
-        return collect_exception_python2(exception)
+        return collect_exception_python2()
     if python_version == 3:
         return collect_exception_python3(exception)
     return ''
