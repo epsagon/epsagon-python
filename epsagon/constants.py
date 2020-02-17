@@ -56,3 +56,4 @@ def is_strong_key(key):
 
 
 STEP_DICT_NAME = 'Epsagon'
+EPSAGON_EVENT_ID_KEY = '_epsagon_event_id'
