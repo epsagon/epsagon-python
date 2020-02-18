@@ -6,6 +6,8 @@ from __future__ import absolute_import
 import os
 import collections
 import socket
+import sys
+import traceback
 import six
 import requests
 import simplejson as json
@@ -247,3 +249,40 @@ def find_in_object(obj, key):
             result = find_in_object(v, key)
 
     return result
+
+def collect_exception_python3(exception):
+    """
+    Collect exception from exception __traceback__.
+    :param exception: Exception from Flask.
+    :return: traceback data
+    """
+
+    traceback_data = ''.join(traceback.format_exception(
+        type(exception),
+        exception,
+        exception.__traceback__,
+    ))
+    return traceback_data
+
+def collect_exception_python2():
+    """
+    Collect exception from exception sys.exc_info.
+    :return: traceback data
+    """
+
+    traceback_data = six.StringIO()
+    traceback.print_exception(*sys.exc_info(), file=traceback_data)
+    return traceback_data.getvalue()
+
+def get_traceback_data_from_exception(exception):
+    """
+    Get traceback data from exception
+    :param exception: the Exception
+    :return: traceback data
+    """
+    python_version = sys.version_info.major
+    if python_version == 2:
+        return collect_exception_python2()
+    if python_version == 3:
+        return collect_exception_python3(exception)
+    return ''

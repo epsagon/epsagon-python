@@ -89,8 +89,8 @@ class BaseEvent(object):
         Sets general error.
         :return: None
         """
-
-        self.error_code = ErrorCode.ERROR
+        if self.error_code != ErrorCode.EXCEPTION:
+            self.error_code = ErrorCode.ERROR
 
     def set_exception(self, exception, traceback_data, handled=True):
         """

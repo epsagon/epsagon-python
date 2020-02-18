@@ -3,18 +3,17 @@ Wrapper for Python Flask.
 """
 
 from __future__ import absolute_import
-import sys
 import traceback
 import time
 import warnings
-import six
 
 from flask import request
 import epsagon.trace
 import epsagon.triggers.http
 import epsagon.runners.flask
 from epsagon.common import EpsagonWarning
-from epsagon.utils import collect_container_metadata
+from epsagon.utils import collect_container_metadata,\
+    get_traceback_data_from_exception
 from ..http_filters import ignore_request
 
 
@@ -40,10 +39,6 @@ class FlaskWrapper(object):
         self.app.after_request(self._after_request)
         self.app.teardown_request(self._teardown_request)
 
-        self.exception_handler = {
-            2: self._collect_exception_python2,
-            3: self._collect_exception_python3,
-        }
         self.runner = None
 
         # Whether we ignore this request or not.
@@ -118,31 +113,6 @@ class FlaskWrapper(object):
         self.runner.update_response(response)
         return response
 
-    def _collect_exception_python3(self, exception):
-        """
-        Collect exception from exception __traceback__.
-        :param exception: Exception from Flask.
-        :return: None
-        """
-
-        traceback_data = ''.join(traceback.format_exception(
-            type(exception),
-            exception,
-            exception.__traceback__,
-        ))
-        self.runner.set_exception(exception, traceback_data)
-
-    def _collect_exception_python2(self, exception):
-        """
-        Collect exception from exception sys.exc_info.
-        :param exception: Exception from Flask.
-        :return: None
-        """
-
-        traceback_data = six.StringIO()
-        traceback.print_exception(*sys.exc_info(), file=traceback_data)
-        self.runner.set_exception(exception, traceback_data.getvalue())
-
     def _teardown_request(self, exception):
         """
         Runs at the end of the request. Exception will be passed if happens.
@@ -156,7 +126,8 @@ class FlaskWrapper(object):
             return
 
         if exception:
-            self.exception_handler[sys.version_info.major](exception)
+            traceback_data = get_traceback_data_from_exception(exception)
+            self.runner.set_exception(exception, traceback_data)
         # Ignoring endpoint, only if no error happened.
         if (not exception and
             request.url_rule and
