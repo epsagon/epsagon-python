@@ -1,6 +1,5 @@
 wrapt
 requests
-boto3
 simplejson
 six
 future

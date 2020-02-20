@@ -16,8 +16,7 @@ import epsagon.runners.aws_lambda
 import epsagon.triggers.aws_lambda
 import epsagon.wrappers.python_function
 import epsagon.utils
-from epsagon.constants import STEP_DICT_NAME
-from epsagon.wrappers.return_value import add_return_value
+from epsagon.constants import STEP_DICT_NAME, EPSAGON_EVENT_ID_KEY
 import epsagon.runners.python_function
 from epsagon.common import EpsagonWarning
 from .. import constants
@@ -105,6 +104,8 @@ def lambda_wrapper(func):
         result = None
         try:
             result = func(*args, **kwargs)
+            if trace.propagate_lambda_id and isinstance(result, dict):
+                result[EPSAGON_EVENT_ID_KEY] = runner.event_id
             return result
         # pylint: disable=W0703
         except Exception as exception:
@@ -118,7 +119,7 @@ def lambda_wrapper(func):
             try:
                 _add_status_code(runner, result)
                 if not trace.metadata_only:
-                    add_return_value(runner, result)
+                    runner.resource['metadata']['return_value'] = result
             # pylint: disable=W0703
             except Exception as exception:
                 trace.add_exception(
@@ -234,7 +235,9 @@ def step_lambda_wrapper(func):
             try:
                 _add_status_code(runner, result)
                 if not trace.metadata_only:
-                    add_return_value(runner, result)
+                    runner.resource['metadata']['return_value'] = (
+                        copy.deepcopy(result)
+                    )
             # pylint: disable=W0703
             except Exception as exception:
                 trace.add_exception(

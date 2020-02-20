@@ -7,6 +7,7 @@ from __future__ import absolute_import, print_function
 import os
 import sys
 import time
+import decimal
 import traceback
 import warnings
 import signal
@@ -17,7 +18,7 @@ import simplejson as json
 import requests
 import requests.exceptions
 from epsagon.event import BaseEvent
-from epsagon.common import EpsagonWarning, ErrorCode
+from epsagon.common import EpsagonWarning, ErrorCode, EpsagonException
 from epsagon.trace_encoder import TraceEncoder
 from epsagon.trace_transports import NoneTransport, HTTPTransport, LogTransport
 from .constants import (
@@ -30,7 +31,26 @@ from .constants import (
 MAX_EVENTS_PER_TYPE = 20
 MAX_TRACE_SIZE_BYTES = 64 * (2 ** 10)
 DEFAULT_MAX_TRACE_SIZE_BYTES = 64 * (2 ** 10)
+MAX_METADATA_FIELD_SIZE_LIMIT = 1024 * 3
+FAILED_TO_SERIALIZE_MESSAGE = 'Failed to serialize returned object to JSON'
 
+
+# pylint: disable=invalid-name
+class _number_str(float):
+    """ Taken from `bootstrap.py` of AWS Lambda Python runtime """
+    # pylint: disable=super-init-not-called
+    def __init__(self, o):
+        self.o = o
+
+    def __repr__(self):
+        return str(self.o)
+
+
+def _decimal_serializer(o):
+    """ Taken from `bootstrap.py` of AWS Lambda Python runtime """
+    if isinstance(o, decimal.Decimal):
+        return _number_str(o)
+    raise TypeError(repr(o) + ' is not JSON serializable')
 
 def get_thread_id():
     """
@@ -74,6 +94,7 @@ class TraceFactory(object):
         self.transport = NoneTransport()
         self.split_on_send = False
         self.disabled = False
+        self.propagate_lambda_id = False
 
     def initialize(
             self,
@@ -88,6 +109,7 @@ class TraceFactory(object):
             keys_to_ignore,
             transport,
             split_on_send,
+            propagate_lambda_id,
     ):
         """
         Initializes The factory with user's data.
@@ -108,7 +130,6 @@ class TraceFactory(object):
          exceeds the maximum size.
         :return: None
         """
-
         self.app_name = app_name
         self.token = token
         self.collector_url = collector_url
@@ -122,7 +143,7 @@ class TraceFactory(object):
         self.keys_to_ignore = [] if keys_to_ignore is None else keys_to_ignore
         self.transport = transport
         self.split_on_send = split_on_send
-
+        self.propagate_lambda_id = propagate_lambda_id
         self.update_tracers()
 
     def update_tracers(self):
@@ -132,7 +153,7 @@ class TraceFactory(object):
         """
         tracers_to_update = (
             [self.singleton_trace, ] if self.singleton_trace else
-            self.traces
+            self.traces.values()
         )
 
         for tracer in tracers_to_update:
@@ -147,6 +168,7 @@ class TraceFactory(object):
             tracer.keys_to_ignore = self.keys_to_ignore
             tracer.transport = self.transport
             tracer.split_on_send = self.split_on_send
+            tracer.propagate_lambda_id = self.propagate_lambda_id
 
     def switch_to_multiple_traces(self):
         """
@@ -162,17 +184,18 @@ class TraceFactory(object):
         :return: new trace
         """
         return Trace(
-            self.app_name,
-            self.token,
-            self.collector_url,
-            self.metadata_only,
-            self.disable_timeout_send,
-            self.debug,
-            self.send_trace_only_on_error,
-            self.url_patterns_to_ignore,
-            self.keys_to_ignore,
-            unique_id,
-            self.split_on_send,
+            app_name=self.app_name,
+            token=self.token,
+            collector_url=self.collector_url,
+            metadata_only=self.metadata_only,
+            disable_timeout_send=self.disable_timeout_send,
+            debug=self.debug,
+            send_trace_only_on_error=self.send_trace_only_on_error,
+            url_patterns_to_ignore=self.url_patterns_to_ignore,
+            keys_to_ignore=self.keys_to_ignore,
+            unique_id=unique_id,
+            split_on_send=self.split_on_send,
+            propagate_lambda_id=False,
         )
 
     def get_or_create_trace(self, unique_id=None):
@@ -421,6 +444,7 @@ class Trace(object):
             unique_id=None,
             split_on_send=False,
             transport=NoneTransport(),
+            propagate_lambda_id=False,
     ):
         """
         initialize.
@@ -442,6 +466,7 @@ class Trace(object):
         self.url_patterns_to_ignore = url_patterns_to_ignore
         self.transport = transport
         self.split_on_send = split_on_send
+        self.propagate_lambda_id = propagate_lambda_id
 
         if keys_to_ignore:
             self.keys_to_ignore = [self._strip_key(x) for x in keys_to_ignore]
@@ -682,7 +707,7 @@ class Trace(object):
     def set_error(self, exception, traceback_data=None):
         """
         Sets the error value of the runner
-        :param exception: Exception object to set.
+        :param exception: Exception object or String to set.
         :param traceback_data: traceback string
         """
         if not self.runner:
@@ -699,6 +724,9 @@ class Trace(object):
                 traceback_data = ''.join(
                     traceback.format_list(traceback.extract_stack())
                 )
+        # Convert exception string to EpsagonException type
+        if isinstance(exception, str):
+            exception = EpsagonException(exception)
         self.runner.set_exception(exception, traceback_data)
 
     def update_runner_with_labels(self):
@@ -746,6 +774,29 @@ class Trace(object):
         for key in list(metadata.keys()):
             if not is_strong_key(key):
                 metadata.pop(key)
+
+    @staticmethod
+    def _trim_dict_values(data, max_size):
+        """
+        Trimms dict values from a given data dict whose size bigger than
+        the given max_size parameter
+        If data is not a dict - the function does nothing.
+        :param data: the data dict to trim fields from
+        :param max_size: the max field size
+        """
+        if not isinstance(data, dict):
+            return
+
+        for field_name in data:
+            value = data[field_name]
+            if isinstance(value, dict):
+                try:
+                    json_value = json.dumps(value, default=_decimal_serializer)
+                    if len(json_value) > max_size:
+                        data[field_name] = json_value[:max_size]
+                # pylint: disable=W0703
+                except Exception:
+                    data[field_name] = FAILED_TO_SERIALIZE_MESSAGE
 
     @staticmethod
     def events_sorter(event):
@@ -807,22 +858,30 @@ class Trace(object):
 
     def remove_ignored_keys(self, input_dict):
         """
-        Remove ignored keys recursively.
+        Remove ignored keys recursively in input_dict.
+        If an ignored key has been found in a dict, then the
+        dict is copied (shallow copy) and the ignored key is removed.
         :param input_dict: Input dict to remove ignored keys from.
-        :return: None
+        :return: a dict without the the ignored keys
         """
-        if self.keys_to_ignore:
-            # Python 2 returns a list, while Python3 returns an iterator.
-            for key, value in list(input_dict.items()):
-                if self._strip_key(key) in self.keys_to_ignore:
-                    input_dict.pop(key)
-                    if self.debug:
-                        print(
-                            'Removed ignored key {}'.format(key)
-                        )
-                else:
-                    if isinstance(value, dict):
-                        self.remove_ignored_keys(value)
+        # pylint: disable=too-many-nested-blocks
+        if not self.keys_to_ignore:
+            return input_dict
+        copied_dict = input_dict.copy()
+        # Python 2 returns a list, while Python3 returns an iterator.
+        for key in input_dict:
+            if self._strip_key(key) in self.keys_to_ignore:
+                copied_dict.pop(key)
+                if self.debug:
+                    print(
+                        'Removed ignored key {}'.format(key)
+                    )
+            else:
+                value = input_dict[key]
+                if isinstance(value, dict):
+                    copied_dict[key] = self.remove_ignored_keys(value)
+        return copied_dict
+
 
     def send_traces(self):
         """
@@ -891,7 +950,12 @@ class Trace(object):
 
         # Remove ignored keys.
         for event in self.events:
-            self.remove_ignored_keys(event.resource['metadata'])
+            event.resource['metadata'] = self.remove_ignored_keys(
+                event.resource['metadata'])
+            type(self)._trim_dict_values(
+                event.resource['metadata'],
+                MAX_METADATA_FIELD_SIZE_LIMIT
+            )
 
         try:
             if self.runner:

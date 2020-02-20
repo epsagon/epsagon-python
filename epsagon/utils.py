@@ -6,6 +6,8 @@ from __future__ import absolute_import
 import os
 import collections
 import socket
+import sys
+import traceback
 import six
 import requests
 import simplejson as json
@@ -60,7 +62,7 @@ def update_http_headers(resource_data, response_headers):
     for header_key, header_value in response_headers.items():
         if header_key.lower() == 'x-amzn-requestid':
             # This is a request to API Gateway
-            if not resource_data['metadata']['url'].contains('.appsync-api.'):
+            if '.appsync-api.' not in resource_data['metadata']['url']:
                 resource_data['type'] = 'api_gateway'
             resource_data['metadata']['request_trace_id'] = header_value
             break
@@ -90,7 +92,8 @@ def init(
     url_patterns_to_ignore=None,
     keys_to_ignore=None,
     ignored_endpoints=None,
-    split_on_send=False
+    split_on_send=False,
+    propagate_lambda_id=False,
 ):
     """
     Initializes trace with user's data.
@@ -109,6 +112,8 @@ def init(
       collection.
     :param keys_to_ignore: List of keys to ignore while extracting metadata.
     :param ignored_endpoints: List of ignored endpoints for web frameworks.
+    :param split_on_send: Split the trace on send flag
+    :param propagate_lambda_id: Inject identifiers via return value flag
     :return: None
     """
 
@@ -157,6 +162,11 @@ def init(
         split_on_send=(
                 ((os.getenv('EPSAGON_SPLIT_ON_SEND') or '').upper() == 'TRUE')
                 | split_on_send
+        ),
+        propagate_lambda_id=(
+                ((os.getenv('EPSAGON_PROPAGATE_LAMBDA_ID') or '').upper() ==
+                 'TRUE')
+                | propagate_lambda_id
         ),
     )
 
@@ -239,3 +249,40 @@ def find_in_object(obj, key):
             result = find_in_object(v, key)
 
     return result
+
+def collect_exception_python3(exception):
+    """
+    Collect exception from exception __traceback__.
+    :param exception: Exception from Flask.
+    :return: traceback data
+    """
+
+    traceback_data = ''.join(traceback.format_exception(
+        type(exception),
+        exception,
+        exception.__traceback__,
+    ))
+    return traceback_data
+
+def collect_exception_python2():
+    """
+    Collect exception from exception sys.exc_info.
+    :return: traceback data
+    """
+
+    traceback_data = six.StringIO()
+    traceback.print_exception(*sys.exc_info(), file=traceback_data)
+    return traceback_data.getvalue()
+
+def get_traceback_data_from_exception(exception):
+    """
+    Get traceback data from exception
+    :param exception: the Exception
+    :return: traceback data
+    """
+    python_version = sys.version_info.major
+    if python_version == 2:
+        return collect_exception_python2()
+    if python_version == 3:
+        return collect_exception_python3(exception)
+    return ''

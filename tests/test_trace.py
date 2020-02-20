@@ -15,12 +15,16 @@ from epsagon.constants import (
     TRACE_COLLECTOR_URL,
     DEFAULT_REGION
 )
-from epsagon.trace import trace_factory, TraceEncoder
+from epsagon.trace import (
+    trace_factory,
+    TraceEncoder,
+    FAILED_TO_SERIALIZE_MESSAGE,
+    MAX_METADATA_FIELD_SIZE_LIMIT
+)
 from epsagon.event import BaseEvent
 from epsagon.utils import get_tc_url
-from epsagon.common import ErrorCode
+from epsagon.common import ErrorCode, EpsagonException
 from epsagon.trace_transports import HTTPTransport
-
 
 class ContextMock:
     def __init__(self, timeout):
@@ -103,6 +107,16 @@ class RunnerEventMock(EventMock):
 
         return result
 
+class ReturnValueEventMock(RunnerEventMock):
+    def __init__(self, data):
+        super(ReturnValueEventMock, self).__init__()
+        self.resource = {
+            'metadata': {'return_value': data }
+        }
+
+class InvalidReturnValueEventMock(ReturnValueEventMock):
+    def __init__(self):
+        super(InvalidReturnValueEventMock, self).__init__({1: mock})
 
 class EventMockWithCounter(EventMock):
     def __init__(self, i):
@@ -117,7 +131,6 @@ class EventMockWithCounter(EventMock):
 
 def setup_function(func):
     trace_factory.get_or_create_trace().__init__()
-
 
 def test_add_exception():
     stack_trace_format = 'stack trace %d'
@@ -361,6 +374,20 @@ def test_set_error_with_traceback():
     )
 
 
+def test_set_error_string():
+    event = RunnerEventMock()
+    trace = trace_factory.get_or_create_trace()
+    trace.clear_events()
+    trace.set_runner(event)
+    msg = 'oops'
+    trace.set_error(msg)
+
+    assert trace.to_dict()['events'][0]['exception']['message'] == msg
+    assert trace.to_dict()['events'][0]['exception']['type'] == (
+        EpsagonException.__name__
+    )
+
+
 def test_custom_labels_override_trace():
     event = RunnerEventMock()
     trace = trace_factory.get_or_create_trace()
@@ -511,6 +538,106 @@ def test_send_big_trace(wrapped_post):
         headers={'Authorization': 'Bearer {}'.format(trace.token)}
     )
 
+@mock.patch('requests.Session.post')
+def test_send_invalid_return_value(wrapped_post):
+    trace = trace_factory.get_or_create_trace()
+    runner = InvalidReturnValueEventMock()
+    trace.set_runner(runner)
+    trace.token = 'a'
+    trace_factory.send_traces()
+
+    assert len(trace.to_dict()['events']) == 1
+    event = trace.to_dict()['events'][0]
+    assert event['origin'] == 'runner'
+    actual_return_value = event['resource']['metadata']['return_value']
+    assert actual_return_value == FAILED_TO_SERIALIZE_MESSAGE
+
+    wrapped_post.assert_called_with(
+        '',
+        data=json.dumps(trace.to_dict()),
+        timeout=epsagon.constants.SEND_TIMEOUT,
+        headers={'Authorization': 'Bearer {}'.format(trace.token)}
+    )
+
+def _assert_key_not_exist(data, ignored_key):
+    for key, value in data.items():
+        assert key != ignored_key
+        if isinstance(value, dict):
+            _assert_key_not_exist(value, ignored_key)
+
+@mock.patch('requests.Session.post')
+def test_return_value_key_to_ignore(wrapped_post):
+    key_to_ignore = 'key_to_ignore_in_return_value'
+    os.environ['EPSAGON_IGNORED_KEYS'] = key_to_ignore
+    keys_to_ignore = [key_to_ignore]
+    # reset traces created at setup function
+    trace_factory.traces = {}
+    epsagon.utils.init(
+        token='token',
+        app_name='app-name',
+        collector_url='collector',
+        metadata_only=False
+    )
+
+    trace = trace_factory.get_or_create_trace()
+    return_value = {
+        key_to_ignore: 'f',
+        's': {
+            'a': 1,
+            'b': 2,
+            'c': {
+                'f': 1,
+                key_to_ignore: '1',
+                'g': {
+                    key_to_ignore: '1'
+                }
+            }
+        }
+    }
+    copied_return_value = return_value.copy()
+    runner = ReturnValueEventMock(return_value)
+    trace.set_runner(runner)
+    trace.token = 'a'
+    trace_factory.send_traces()
+
+    assert len(trace.to_dict()['events']) == 1
+    event = trace.to_dict()['events'][0]
+    assert event['origin'] == 'runner'
+    actual_return_value = event['resource']['metadata']['return_value']
+    _assert_key_not_exist(actual_return_value, key_to_ignore)
+    # check that original return value hasn't been changed
+    assert copied_return_value == return_value
+
+    wrapped_post.assert_called_with(
+        'collector',
+        data=json.dumps(trace.to_dict()),
+        timeout=epsagon.constants.SEND_TIMEOUT,
+        headers={'Authorization': 'Bearer {}'.format(trace.token)}
+    )
+    os.environ.pop('EPSAGON_IGNORED_KEYS')
+
+@mock.patch('requests.Session.post')
+def test_metadata_field_too_big(wrapped_post):
+    trace = trace_factory.get_or_create_trace()
+    max_size = MAX_METADATA_FIELD_SIZE_LIMIT
+    return_value = {'1': 'a' * (max_size + 1)}
+    runner = ReturnValueEventMock(return_value)
+    trace.set_runner(runner)
+    trace.token = 'a'
+    trace_factory.send_traces()
+
+    assert len(trace.to_dict()['events']) == 1
+    event = trace.to_dict()['events'][0]
+    assert event['origin'] == 'runner'
+    actual_return_value = event['resource']['metadata']['return_value']
+    assert actual_return_value == json.dumps(return_value)[:max_size]
+
+    wrapped_post.assert_called_with(
+        '',
+        data=json.dumps(trace.to_dict()),
+        timeout=epsagon.constants.SEND_TIMEOUT,
+        headers={'Authorization': 'Bearer {}'.format(trace.token)}
+    )
 
 @mock.patch('requests.Session.post', side_effect=requests.ReadTimeout)
 def test_send_traces_timeout(wrapped_post):
@@ -563,7 +690,8 @@ def test_init_sanity(wrapped_init, _create):
         url_patterns_to_ignore=None,
         keys_to_ignore=None,
         transport=default_http,
-        split_on_send=False
+        split_on_send=False,
+        propagate_lambda_id=False
     )
 
 
@@ -588,7 +716,8 @@ def test_init_empty_app_name(wrapped_init, _create):
         url_patterns_to_ignore=None,
         keys_to_ignore=None,
         transport=default_http,
-        split_on_send=False
+        split_on_send=False,
+        propagate_lambda_id=False
     )
 
 
@@ -607,7 +736,8 @@ def test_init_empty_collector_url(wrapped_init, _create):
         url_patterns_to_ignore=None,
         keys_to_ignore=None,
         transport=default_http,
-        split_on_send=False
+        split_on_send=False,
+        propagate_lambda_id=False
     )
 
 
@@ -630,7 +760,8 @@ def test_init_no_ssl_no_url(wrapped_init, _create):
         url_patterns_to_ignore=None,
         keys_to_ignore=None,
         transport=default_http,
-        split_on_send=False
+        split_on_send=False,
+        propagate_lambda_id=False
     )
 
 
@@ -657,7 +788,8 @@ def test_init_ssl_no_url(wrapped_init, _create):
         url_patterns_to_ignore=None,
         keys_to_ignore=None,
         transport=default_http,
-        split_on_send=False
+        split_on_send=False,
+        propagate_lambda_id=False
     )
 
 
@@ -682,7 +814,8 @@ def test_init_ssl_with_url(wrapped_init, _create):
         url_patterns_to_ignore=None,
         keys_to_ignore=None,
         transport=default_http,
-        split_on_send=False
+        split_on_send=False,
+        propagate_lambda_id=False
     )
 
 
@@ -707,7 +840,8 @@ def test_init_no_ssl_with_url(wrapped_init, _create):
         url_patterns_to_ignore=None,
         keys_to_ignore=None,
         transport=default_http,
-        split_on_send=False
+        split_on_send=False,
+        propagate_lambda_id=False
     )
 
 
@@ -732,7 +866,8 @@ def test_init_ignored_urls_env(wrapped_init, _create):
         url_patterns_to_ignore=['test.com', 'test2.com'],
         keys_to_ignore=None,
         transport=default_http,
-        split_on_send=False
+        split_on_send=False,
+        propagate_lambda_id=False
     )
     os.environ.pop('EPSAGON_URLS_TO_IGNORE')
 
@@ -758,7 +893,8 @@ def test_init_keys_to_ignore(wrapped_init, _create):
         url_patterns_to_ignore=None,
         keys_to_ignore=['a', 'b', 'c'],
         transport=default_http,
-        split_on_send=False
+        split_on_send=False,
+        propagate_lambda_id=False
     )
 
 
@@ -784,7 +920,8 @@ def test_init_keys_to_ignore_env(wrapped_init, _create):
         url_patterns_to_ignore=None,
         keys_to_ignore=['a', 'b', 'c'],
         transport=default_http,
-        split_on_send=False
+        split_on_send=False,
+        propagate_lambda_id=False
     )
     os.environ.pop('EPSAGON_IGNORED_KEYS')
 
@@ -810,7 +947,8 @@ def test_init_split_on_send(wrapped_init, _create):
         url_patterns_to_ignore=None,
         transport=default_http,
         keys_to_ignore=None,
-        split_on_send=True
+        split_on_send=True,
+        propagate_lambda_id=False
     )
 
 
@@ -835,7 +973,8 @@ def test_init_split_on_send_env(wrapped_init, _create):
         url_patterns_to_ignore=None,
         transport=default_http,
         keys_to_ignore=None,
-        split_on_send=True
+        split_on_send=True,
+        propagate_lambda_id=False
     )
     os.environ.pop('EPSAGON_SPLIT_ON_SEND')
 
@@ -958,3 +1097,56 @@ def test_send_with_split_off(wrapped_post):
         trace.add_event(event)
     trace_factory.send_traces()
     wrapped_post.assert_called_once()
+
+
+@mock.patch('epsagon.utils.create_transport', side_effect=lambda x, y: default_http)
+@mock.patch('epsagon.trace.TraceFactory.initialize')
+def test_init_propagate_lambda_identifier_env(wrapped_init, _create):
+    os.environ['EPSAGON_PROPAGATE_LAMBDA_ID'] = 'TRUE'
+    epsagon.utils.init(
+        token='token',
+        app_name='app-name',
+        collector_url="http://abc.com",
+        metadata_only=False,
+    )
+    wrapped_init.assert_called_with(
+        token='token',
+        app_name='app-name',
+        metadata_only=False,
+        collector_url="http://abc.com",
+        disable_timeout_send=False,
+        debug=False,
+        send_trace_only_on_error=False,
+        url_patterns_to_ignore=None,
+        transport=default_http,
+        keys_to_ignore=None,
+        split_on_send=False,
+        propagate_lambda_id=True
+    )
+    os.environ.pop('EPSAGON_PROPAGATE_LAMBDA_ID')
+
+
+@mock.patch('epsagon.utils.create_transport', side_effect=lambda x, y: default_http)
+@mock.patch('epsagon.trace.TraceFactory.initialize')
+def test_init_propagate_lambda_identifier_init(wrapped_init, _create):
+    epsagon.utils.init(
+        token='token',
+        app_name='app-name',
+        collector_url="http://abc.com",
+        metadata_only=False,
+        propagate_lambda_id=True,
+    )
+    wrapped_init.assert_called_with(
+        token='token',
+        app_name='app-name',
+        metadata_only=False,
+        collector_url="http://abc.com",
+        disable_timeout_send=False,
+        debug=False,
+        send_trace_only_on_error=False,
+        url_patterns_to_ignore=None,
+        transport=default_http,
+        keys_to_ignore=None,
+        split_on_send=False,
+        propagate_lambda_id=True
+    )

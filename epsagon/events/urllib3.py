@@ -131,6 +131,15 @@ class Urllib3EventFactory(object):
         """
         Create an event according to the given api_name.
         """
+        # Ignore requests events since they are being instrumented.
+        is_requests = (
+            str(kwargs.get('headers', {}).get('User-Agent', '')).startswith(
+                'python-requests'
+            )
+        )
+        if is_requests:
+            return
+
         path = args[1] if len(args) > 1 else kwargs.get('url', '')
         port_part = ':' + str(instance.port) if instance.port else ''
         host_url = '{}://{}'.format(instance.scheme, instance.host)
