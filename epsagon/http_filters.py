@@ -39,7 +39,7 @@ BLACKLIST_URLS = {
 WHITELIST_URL = {
     str.__contains__: [
         '.execute-api.',
-        '.elb.amazonaws.com'
+        '.elb.amazonaws.com',
         '.appsync-api.',
     ],
 }
@@ -54,7 +54,6 @@ def is_blacklisted_url(url):
     """
 
     url = urllib.parse.urlparse(url).netloc
-
     for method in WHITELIST_URL:
         for whitelist_url in WHITELIST_URL[method]:
             if method(url, whitelist_url):
