@@ -39,15 +39,16 @@ class DjangoMiddleware(object):
 
     def __call__(self, request):
         self.request = request
-
-        # Link epsagon to the request object for easy-access to epsagon library.
-        self.request.epsagon = epsagon
-        self._before_request()
-
+        is_ignored_endpoint = epsagon.http_filters.is_ignored_endpoint(
+            self.request.path
+        )
+        if not is_ignored_endpoint:
+            # Link epsagon to the request object for easy-access to epsagon lib
+            self.request.epsagon = epsagon
+            self._before_request()
         self.response = self.get_response(request)
-
-        self._after_request()
-
+        if not is_ignored_endpoint:
+            self._after_request()
         return self.response
 
     def _before_request(self):
