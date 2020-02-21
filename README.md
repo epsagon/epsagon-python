@@ -74,6 +74,15 @@ MIDDLEWARE = [
 ]
 ```
 
+Use ignored_endpoints to blacklist specific paths and prevent Epsagon from sending a trace.
+```python
+import epsagon
+epsagon.init(
+    ...
+    ignored_endpoints=['/path', '/path/to/ignore']
+)
+```
+
 ### Flask Application
 
 Use the example snippet:
