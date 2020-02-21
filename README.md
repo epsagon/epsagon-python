@@ -74,7 +74,7 @@ MIDDLEWARE = [
 ]
 ```
 
-Use ignored_endpoints to blacklist specific paths and prevent Epsagon from sending a trace.
+For web frameworks: Use ignored_endpoints to blacklist specific paths and prevent Epsagon from sending a trace.
 ```python
 import epsagon
 epsagon.init(
