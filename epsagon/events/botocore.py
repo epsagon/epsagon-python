@@ -1295,7 +1295,6 @@ class BotocoreStepFunctionEvent(BotocoreEvent):
     """
     RESOURCE_TYPE = 'sfn'
     REAL_RESOURCE_TYPE = 'stepfunctions'
-
     DEFAULT_EXECTUTION_NAME = 'Unnamed Execution'
 
     def __init__(self, wrapped, instance, args, kwargs, start_time, response,
