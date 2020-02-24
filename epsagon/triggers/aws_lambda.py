@@ -373,14 +373,15 @@ class ElasticLoadBalancerLambdaTrigger(BaseLambdaTrigger):
         :param event: event dict from the entry point
         :param context: the context dict from the entry point
         """
-
         super(ElasticLoadBalancerLambdaTrigger, self).__init__(start_time)
 
         self.event_id = 'elb-{}'.format(str(uuid4()))
         self.resource['name'] = event['headers']['host']
         self.resource['operation'] = event['httpMethod']
 
+        epsagon_trace_id = event['headers'].get('epsagon-trace-id')
         self.resource['metadata'] = {
+            'http_trace_id': epsagon_trace_id,
             'query_string_parameters': event['queryStringParameters'],
             'target_group_arn': (
                 event['requestContext']['elb']['targetGroupArn']

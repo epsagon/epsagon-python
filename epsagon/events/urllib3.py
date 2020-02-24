@@ -9,7 +9,7 @@ try:
 except ImportError:
     from urlparse import urlparse, urlunparse
 import traceback
-from uuid import uuid4, UUID
+from uuid import uuid4
 
 from epsagon.utils import add_data_if_needed
 from ..trace import trace_factory
@@ -51,7 +51,10 @@ class Urllib3Event(BaseEvent):
         body = kwargs.get('body')
         headers = kwargs.get('headers')
         if headers:
-            epsagon_trace_id = headers.get('epsagon-trace-id')
+            # Make sure trace ID is present in case headers will be removed.
+            self.resource['metadata']['http_trace_id'] = headers.get(
+                'epsagon-trace-id'
+            )
 
         parsed_url = urlparse(url)
         # Omitting ports (`:80'/':443') for the host URL.
@@ -68,10 +71,6 @@ class Urllib3Event(BaseEvent):
         self.resource['name'] = normalize_http_url(url)
         self.resource['operation'] = method
         self.resource['metadata']['url'] = full_url
-        if epsagon_trace_id:
-            self.resource['metadata']['http_trace_id'] = str(
-                UUID(hex=epsagon_trace_id.split(':')[0])
-            )
 
         if not is_payload_collection_blacklisted(full_url):
             add_data_if_needed(

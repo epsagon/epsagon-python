@@ -25,7 +25,7 @@ class RequestsEvent(BaseEvent):
     ORIGIN = 'requests'
     RESOURCE_TYPE = 'http'
 
-    #pylint: disable=W0613
+    # pylint: disable=W0613
     def __init__(self, wrapped, instance, args, kwargs, start_time, response,
                  exception):
         """
@@ -53,6 +53,10 @@ class RequestsEvent(BaseEvent):
             dict(prepared_request.headers)
         )
 
+        # Make sure trace ID is present in case headers will be removed.
+        self.resource['metadata']['http_trace_id'] = (
+            prepared_request.headers.get('epsagon-trace-id')
+        )
         add_data_if_needed(
             self.resource['metadata'],
             'request_body',
