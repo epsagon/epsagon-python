@@ -1371,7 +1371,7 @@ class BotocoreStepFunctionEvent(BotocoreEvent):
 
         try:
             machine_input = json.loads(request_args['input'])
-            self.initialize_step_dict(self, machine_input)
+            self.initialize_step_dict(machine_input)
         except Exception:  # pylint: disable=broad-except
             pass
 
@@ -1385,7 +1385,7 @@ class BotocoreStepFunctionEvent(BotocoreEvent):
         _, request_args = args
         try:
             machine_input = json.loads(request_args['output'])
-            self.initialize_step_dict(self, machine_input)
+            self.initialize_step_dict(machine_input)
         except Exception:  # pylint: disable=broad-except
             pass
 
