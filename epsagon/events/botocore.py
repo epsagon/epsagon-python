@@ -1301,10 +1301,13 @@ class BotocoreStepFunctionEvent(BotocoreEvent):
                  exception):
         self.RESPONSE_TO_FUNC.update({
             'StartExecution': self.process_start_exec_response,
+            'SendTaskHeartbeat': self.process_send_task_heartbeat_response,
+            'DescribeExecution': self.process_describe_execution_response,
         })
 
         self.OPERATION_TO_FUNC.update({
             'StartExecution': self.process_start_exec_operation,
+            'SendTaskSuccess': self.process_send_task_success_exec_operation,
         })
 
         super(BotocoreStepFunctionEvent, self).__init__(
@@ -1323,6 +1326,14 @@ class BotocoreStepFunctionEvent(BotocoreEvent):
             self.resource['operation'],
             empty_func
         )(args, kwargs)
+
+    def initialize_step_dict(self, machine_input):
+        try:
+            self.resource['metadata']['steps_dict'] = (
+                machine_input[STEP_DICT_NAME]
+            )
+        except Exception:  # pylint: disable=broad-except
+            pass
 
     def update_response(self, response):
         """
@@ -1345,7 +1356,6 @@ class BotocoreStepFunctionEvent(BotocoreEvent):
         """
         _, request_args = args
 
-        self.resource['name'] = request_args['stateMachineArn'].split(':')[-1]
         self.resource['metadata']['State Machine ARN'] = (
             request_args['stateMachineArn']
         )
@@ -1361,9 +1371,21 @@ class BotocoreStepFunctionEvent(BotocoreEvent):
 
         try:
             machine_input = json.loads(request_args['input'])
-            self.resource['metadata']['steps_dict'] = (
-                machine_input[STEP_DICT_NAME]
-            )
+            self.initialize_step_dict(self, machine_input)
+        except Exception:  # pylint: disable=broad-except
+            pass
+
+    def process_send_task_success_exec_operation(self, args, _):
+        """
+        Process sendTaskSuccess operation
+        :param args: command arguments
+        :param _: unused, kwargs
+        :return: None
+        """
+        _, request_args = args
+        try:
+            machine_input = json.loads(request_args['output'])
+            self.initialize_step_dict(self, machine_input)
         except Exception:  # pylint: disable=broad-except
             pass
 
@@ -1378,6 +1400,34 @@ class BotocoreStepFunctionEvent(BotocoreEvent):
             'executionArn',
             ''
         )
+
+    def process_send_task_heartbeat_response(self, response):
+        """
+        Process sendTaskHeartbeat response
+        :param response: response from Step function Client
+        :return: None
+        """
+        self.resource['metadata']['Response Metadata'] = response.get(
+            'ResponseMetadata',
+            ''
+        )
+
+    def process_describe_execution_response(self, response):
+        """
+        Process describeExecution response
+        :param response: response from Step function Client
+        :return: None
+        """
+        self.resource['metadata']['Execution ARN'] = response.get(
+            'executionArn')
+        self.resource['metadata']['Input'] = response.get('input')
+        self.resource['metadata']['Name'] = response.get('name')
+        self.resource['metadata']['Output'] = response.get('output')
+        self.resource['metadata']['Start Date'] = response.get('startDate')
+        self.resource['metadata']['Status'] = response.get('status')
+        stop_date = response.get('stopDate')
+        if stop_date:
+            self.resource['metadata']['Stop Date'] = stop_date
 
 
 class BotocoreLambdaEvent(BotocoreEvent):

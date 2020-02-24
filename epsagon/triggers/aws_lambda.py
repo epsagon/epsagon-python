@@ -253,12 +253,17 @@ class SQSLambdaTrigger(BaseLambdaTrigger):
                 'ApproximateFirstReceiveTimestamp'
             ],
         }
-
+        sqs_message_body = record['body'] or '{}'
         add_data_if_needed(
             self.resource['metadata'],
             'Message Body',
-            str(record['body'])
+            sqs_message_body
         )
+        message_body = json.loads(sqs_message_body)
+        if message_body['input'] and message_body['input']['Epsagon']:
+            self.resource['metadata'] = {
+                'steps_dict': message_body['input']['Epsagon']
+            }
 
 
 class ProxyAPIGatewayLambdaTrigger(BaseLambdaTrigger):

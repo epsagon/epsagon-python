@@ -31,14 +31,20 @@ def _wrapper(wrapped, instance, args, kwargs):
     return wrapper(BotocoreEventFactory, wrapped, instance, args, kwargs)
 
 
+def initial_steps_dict(request_args, params_property_name):
+    machine_input = json.loads(request_args[params_property_name])
+    machine_input[STEP_DICT_NAME] = {'id': str(uuid4()), 'step_num': -1}
+    request_args[params_property_name] = json.dumps(machine_input)
+
+
 def handle_stepfunc_args(args):
     try:
         event_operation, request_args = args
-        if event_operation == 'StartExecution':
-            machine_input = json.loads(request_args['input'])
-            machine_input[STEP_DICT_NAME] = {'id': str(uuid4()), 'step_num': -1}
-            request_args['input'] = json.dumps(machine_input)
 
+        if event_operation == 'StartExecution':
+            initial_steps_dict(request_args, 'input')
+        elif event_operation == 'SendTaskSuccess':
+            initial_steps_dict(request_args, 'output')
     except Exception:  # pylint: disable=broad-except
         pass
 
