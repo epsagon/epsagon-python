@@ -12,8 +12,7 @@ import simplejson as json
 from epsagon.constants import STEP_DICT_NAME
 from ..trace import trace_factory
 from ..event import BaseEvent
-from ..utils import add_data_if_needed, camel_case_to_title_case,\
-    add_data_to_resource_metadata
+from ..utils import add_data_if_needed, add_data_to_resource_metadata
 
 # Conditionally importing boto3
 ClientError = Exception  # pylint: disable=invalid-name

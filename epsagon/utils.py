@@ -8,9 +8,9 @@ import collections
 import socket
 import sys
 import traceback
+import re
 import six
 import requests
-import re
 import simplejson as json
 try:
     from urllib.parse import urlparse
@@ -313,7 +313,7 @@ def camel_case_to_title_case(camel_case_string):
     """
     if not isinstance(camel_case_string, str):
         return None
-    title_case = re.sub("([^-])([A-Z][a-z-]+)", r"\1 \2", camel_case_string)\
+    title_case = re.sub('([^-])([A-Z][a-z-]+)', r'\1 \2', camel_case_string)\
         .title()
     return title_case
 
@@ -332,4 +332,3 @@ def add_data_to_resource_metadata(resource, dictionary, key):
     title_case_key = camel_case_to_title_case(key)
     resource['metadata'][title_case_key] = value
     return True
-
