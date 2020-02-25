@@ -12,7 +12,8 @@ import simplejson as json
 from epsagon.constants import STEP_DICT_NAME
 from ..trace import trace_factory
 from ..event import BaseEvent
-from ..utils import add_data_if_needed
+from ..utils import add_data_if_needed, camel_case_to_title_case,\
+    add_data_to_resource_metadata
 
 # Conditionally importing boto3
 ClientError = Exception  # pylint: disable=invalid-name
@@ -1308,6 +1309,8 @@ class BotocoreStepFunctionEvent(BotocoreEvent):
         self.OPERATION_TO_FUNC.update({
             'StartExecution': self.process_start_exec_operation,
             'SendTaskSuccess': self.process_send_task_success_exec_operation,
+            'SendTaskHeartbeat': self.process_send_task_heartbeat_operation,
+            'DescribeExecution': self.process_describe_execution_operation,
         })
 
         super(BotocoreStepFunctionEvent, self).__init__(
@@ -1327,8 +1330,9 @@ class BotocoreStepFunctionEvent(BotocoreEvent):
             empty_func
         )(args, kwargs)
 
-    def initialize_step_dict(self, machine_input):
+    def initialize_step_dict(self, request_args, params_property_name):
         try:
+            machine_input = json.loads(request_args[params_property_name])
             self.resource['metadata']['steps_dict'] = (
                 machine_input[STEP_DICT_NAME]
             )
@@ -1355,7 +1359,7 @@ class BotocoreStepFunctionEvent(BotocoreEvent):
         :return: None
         """
         _, request_args = args
-
+        self.resource['name'] = self.REAL_RESOURCE_TYPE
         self.resource['metadata']['State Machine ARN'] = (
             request_args['stateMachineArn']
         )
@@ -1369,11 +1373,7 @@ class BotocoreStepFunctionEvent(BotocoreEvent):
             request_args['input']
         )
 
-        try:
-            machine_input = json.loads(request_args['input'])
-            self.initialize_step_dict(machine_input)
-        except Exception:  # pylint: disable=broad-except
-            pass
+        self.initialize_step_dict(request_args, 'input')
 
     def process_send_task_success_exec_operation(self, args, _):
         """
@@ -1383,11 +1383,29 @@ class BotocoreStepFunctionEvent(BotocoreEvent):
         :return: None
         """
         _, request_args = args
-        try:
-            machine_input = json.loads(request_args['output'])
-            self.initialize_step_dict(machine_input)
-        except Exception:  # pylint: disable=broad-except
-            pass
+
+        self.initialize_step_dict(request_args, 'output')
+
+    def process_send_task_heartbeat_operation(self, args, _):
+        """
+        Process sendTaskSuccess operation
+        :param args: command arguments
+        :param _: unused, kwargs
+        :return: None
+        """
+        _, request_args = args
+        add_data_to_resource_metadata(self.resource, request_args, 'taskToken')
+
+    def process_describe_execution_operation(self, args, _):
+        """
+        Process sendTaskSuccess operation
+        :param args: command arguments
+        :param _: unused, kwargs
+        :return: None
+        """
+        _, request_args = args
+        add_data_to_resource_metadata(self.resource, request_args,
+                                      'executionArn')
 
     def process_start_exec_response(self, response):
         """
@@ -1395,11 +1413,7 @@ class BotocoreStepFunctionEvent(BotocoreEvent):
         :param response: response from Step function Client
         :return: None
         """
-
-        self.resource['metadata']['Execution Arn'] = response.get(
-            'executionArn',
-            ''
-        )
+        add_data_to_resource_metadata(self.resource, response, 'executionArn')
 
     def process_send_task_heartbeat_response(self, response):
         """
@@ -1407,10 +1421,9 @@ class BotocoreStepFunctionEvent(BotocoreEvent):
         :param response: response from Step function Client
         :return: None
         """
-        self.resource['metadata']['Response Metadata'] = response.get(
-            'ResponseMetadata',
-            ''
-        )
+
+        add_data_to_resource_metadata(self.resource, response,
+                                      'ResponseMetadata')
 
     def process_describe_execution_response(self, response):
         """
@@ -1418,16 +1431,9 @@ class BotocoreStepFunctionEvent(BotocoreEvent):
         :param response: response from Step function Client
         :return: None
         """
-        self.resource['metadata']['Execution ARN'] = response.get(
-            'executionArn')
-        self.resource['metadata']['Input'] = response.get('input')
-        self.resource['metadata']['Name'] = response.get('name')
-        self.resource['metadata']['Output'] = response.get('output')
-        self.resource['metadata']['Start Date'] = response.get('startDate')
-        self.resource['metadata']['Status'] = response.get('status')
-        stop_date = response.get('stopDate')
-        if stop_date:
-            self.resource['metadata']['Stop Date'] = stop_date
+        if isinstance(response, dict):
+            for key in response:
+                add_data_to_resource_metadata(self.resource, response, key)
 
 
 class BotocoreLambdaEvent(BotocoreEvent):

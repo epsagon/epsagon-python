@@ -10,6 +10,7 @@ import sys
 import traceback
 import six
 import requests
+import re
 import simplejson as json
 try:
     from urllib.parse import urlparse
@@ -250,6 +251,7 @@ def find_in_object(obj, key):
 
     return result
 
+
 def collect_exception_python3(exception):
     """
     Collect exception from exception __traceback__.
@@ -264,6 +266,7 @@ def collect_exception_python3(exception):
     ))
     return traceback_data
 
+
 def collect_exception_python2():
     """
     Collect exception from exception sys.exc_info.
@@ -273,6 +276,7 @@ def collect_exception_python2():
     traceback_data = six.StringIO()
     traceback.print_exception(*sys.exc_info(), file=traceback_data)
     return traceback_data.getvalue()
+
 
 def get_traceback_data_from_exception(exception):
     """
@@ -286,3 +290,46 @@ def get_traceback_data_from_exception(exception):
     if python_version == 3:
         return collect_exception_python3(exception)
     return ''
+
+
+def parse_json(json_string):
+    """
+    Parse JSON string to a Python Dictionary
+    :param json_string: JSON string
+    :return: Python Dictionary
+    """
+    try:
+        return json.loads(json_string)
+    except ValueError:
+        return None
+
+
+def camel_case_to_title_case(camel_case_string):
+    """
+    Turn Camel Case string into Title Case string in which first characters of
+    all the words are capitalized.
+    :param camel_case_string: Camel Case string
+    :return: Title Case string
+    """
+    if not isinstance(camel_case_string, str):
+        return None
+    title_case = re.sub("([^-])([A-Z][a-z-]+)", r"\1 \2", camel_case_string)\
+        .title()
+    return title_case
+
+
+def add_data_to_resource_metadata(resource, dictionary, key):
+    """
+    Add new data to resource metadata
+    :param resource: Resource
+    :param dictionary: Argument Dictionary
+    :param key: Property key
+    :return: True if added, else False
+    """
+    value = dictionary.get(key)
+    if not value:
+        return False
+    title_case_key = camel_case_to_title_case(key)
+    resource['metadata'][title_case_key] = value
+    return True
+
