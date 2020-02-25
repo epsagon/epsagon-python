@@ -388,6 +388,9 @@ class ElasticLoadBalancerLambdaTrigger(BaseLambdaTrigger):
             ),
             'path': event['path']
         }
+        epsagon_trace_id = event['headers'].get('epsagon-trace-id')
+        if epsagon_trace_id:
+            self.resource['metadata']['http_trace_id'] = epsagon_trace_id
 
         add_data_if_needed(
             self.resource['metadata'],
