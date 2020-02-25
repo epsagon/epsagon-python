@@ -52,9 +52,9 @@ class Urllib3Event(BaseEvent):
         headers = kwargs.get('headers')
         if headers:
             # Make sure trace ID is present in case headers will be removed.
-            self.resource['metadata']['http_trace_id'] = headers.get(
-                'epsagon-trace-id'
-            )
+            epsagon_trace_id =  headers.get('epsagon-trace-id')
+            if epsagon_trace_id:
+                self.resource['metadata']['http_trace_id'] = epsagon_trace_id
 
         parsed_url = urlparse(url)
         # Omitting ports (`:80'/':443') for the host URL.

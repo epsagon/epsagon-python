@@ -379,15 +379,16 @@ class ElasticLoadBalancerLambdaTrigger(BaseLambdaTrigger):
         self.resource['name'] = event['headers']['host']
         self.resource['operation'] = event['httpMethod']
 
-        epsagon_trace_id = event['headers'].get('epsagon-trace-id')
         self.resource['metadata'] = {
-            'http_trace_id': epsagon_trace_id,
             'query_string_parameters': event['queryStringParameters'],
             'target_group_arn': (
                 event['requestContext']['elb']['targetGroupArn']
             ),
             'path': event['path']
         }
+        epsagon_trace_id = event['headers'].get('epsagon-trace-id')
+        if epsagon_trace_id:
+            self.resource['metadata']['http_trace_id'] = epsagon_trace_id
 
         add_data_if_needed(
             self.resource['metadata'],

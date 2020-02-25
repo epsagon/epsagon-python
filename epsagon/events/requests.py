@@ -53,10 +53,11 @@ class RequestsEvent(BaseEvent):
             dict(prepared_request.headers)
         )
 
+        epsagon_trace_id = prepared_request.headers.get('epsagon-trace-id')
         # Make sure trace ID is present in case headers will be removed.
-        self.resource['metadata']['http_trace_id'] = (
-            prepared_request.headers.get('epsagon-trace-id')
-        )
+        if epsagon_trace_id:
+            self.resource['metadata']['http_trace_id'] = epsagon_trace_id
+
         add_data_if_needed(
             self.resource['metadata'],
             'request_body',
