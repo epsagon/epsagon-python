@@ -357,8 +357,7 @@ def test_multi_value_labels_sanity():
         'test2_label': 15,
         'test3_label': 'test',
         4: 'hey'
-    }
-                    )
+    })
     trace_metadata = trace.to_dict()['events'][0]['resource']['metadata']
     assert trace_metadata.get('labels') is not None
     assert json.loads(trace_metadata['labels']) == {
