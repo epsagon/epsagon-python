@@ -696,6 +696,10 @@ class Trace(object):
         :param key: Key for the label data (string)
         :param value: Value for the label data (string)
         """
+        if isinstance(value, dict):
+            for dict_key, dict_value in value.items():
+                self.add_label(f'{key}.{dict_key}', dict_value)
+
         # Convert numbers to string.
         if isinstance(value, (int, float)):
             value = str(value)
