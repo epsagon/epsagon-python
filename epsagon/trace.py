@@ -698,7 +698,7 @@ class Trace(object):
         """
         if isinstance(value, dict):
             for dict_key, dict_value in value.items():
-                self.add_label(f'{key}.{dict_key}', dict_value)
+                self.add_label('{}.{}'.format(dict_key, dict_value), dict_value)
 
         # Convert numbers to string.
         if isinstance(value, (int, float)):
