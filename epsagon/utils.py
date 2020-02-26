@@ -318,7 +318,7 @@ def camel_case_to_title_case(camel_case_string):
     return title_case
 
 
-def add_data_to_resource_metadata(resource, dictionary, key):
+def add_metadata_from_dict(resource, dictionary, key):
     """
     Add new data to resource metadata
     :param resource: Resource
@@ -327,8 +327,7 @@ def add_data_to_resource_metadata(resource, dictionary, key):
     :return: True if added, else False
     """
     value = dictionary.get(key)
-    if not value:
-        return False
+    if not value and not isinstance(value, str):
+        return
     title_case_key = camel_case_to_title_case(key)
     resource['metadata'][title_case_key] = value
-    return True

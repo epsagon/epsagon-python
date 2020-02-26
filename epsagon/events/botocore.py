@@ -12,7 +12,7 @@ import simplejson as json
 from epsagon.constants import STEP_DICT_NAME
 from ..trace import trace_factory
 from ..event import BaseEvent
-from ..utils import add_data_if_needed, add_data_to_resource_metadata
+from ..utils import add_data_if_needed, add_metadata_from_dict
 
 # Conditionally importing boto3
 ClientError = Exception  # pylint: disable=invalid-name
@@ -1393,7 +1393,7 @@ class BotocoreStepFunctionEvent(BotocoreEvent):
         :return: None
         """
         _, request_args = args
-        add_data_to_resource_metadata(self.resource, request_args, 'taskToken')
+        add_metadata_from_dict(self.resource, request_args, 'taskToken')
 
     def process_describe_execution_operation(self, args, _):
         """
@@ -1403,7 +1403,7 @@ class BotocoreStepFunctionEvent(BotocoreEvent):
         :return: None
         """
         _, request_args = args
-        add_data_to_resource_metadata(self.resource, request_args,
+        add_metadata_from_dict(self.resource, request_args,
                                       'executionArn')
 
     def process_start_exec_response(self, response):
@@ -1412,7 +1412,7 @@ class BotocoreStepFunctionEvent(BotocoreEvent):
         :param response: response from Step function Client
         :return: None
         """
-        add_data_to_resource_metadata(self.resource, response, 'executionArn')
+        add_metadata_from_dict(self.resource, response, 'executionArn')
 
     def process_send_task_heartbeat_response(self, response):
         """
@@ -1421,7 +1421,7 @@ class BotocoreStepFunctionEvent(BotocoreEvent):
         :return: None
         """
 
-        add_data_to_resource_metadata(self.resource, response,
+        add_metadata_from_dict(self.resource, response,
                                       'ResponseMetadata')
 
     def process_describe_execution_response(self, response):
@@ -1432,7 +1432,7 @@ class BotocoreStepFunctionEvent(BotocoreEvent):
         """
         if isinstance(response, dict):
             for key in response:
-                add_data_to_resource_metadata(self.resource, response, key)
+                add_metadata_from_dict(self.resource, response, key)
 
 
 class BotocoreLambdaEvent(BotocoreEvent):
