@@ -195,7 +195,7 @@ class TraceFactory(object):
             keys_to_ignore=self.keys_to_ignore,
             unique_id=unique_id,
             split_on_send=self.split_on_send,
-            propagate_lambda_id=False,
+            propagate_lambda_id=self.propagate_lambda_id,
         )
 
     def get_or_create_trace(self, unique_id=None):
