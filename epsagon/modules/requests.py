@@ -1,10 +1,5 @@
 """
 requests patcher module.
-
-This is deprecated now that we have urllib3 support as requests is using urllib3
-under the hood.
-This is left here both as future reference and because it is used in the
-botocore module that has a similar interface.
 """
 
 from __future__ import absolute_import
