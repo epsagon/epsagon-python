@@ -14,7 +14,7 @@ class CeleryRunner(BaseEvent):
     """
 
     ORIGIN = 'runner'
-    RESOURCE_TYPE = 'python_celery'
+    RESOURCE_TYPE = 'celery'
     OPERATION = 'execute'
 
     def __init__(
@@ -60,10 +60,8 @@ class CeleryRunner(BaseEvent):
                 retval
             )
 
-    def finalize(self):
+    def set_retry(self, attempt_number):
         """
-        Adds response data to event.
-        :return: None
+        Setting retry attempt number
         """
-        self.terminate()
-
+        self.resource['metadata']['attempt_number'] = attempt_number

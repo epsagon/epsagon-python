@@ -21,9 +21,9 @@ def patch():
     :return: None
     """
     signals = import_module('celery.signals')
-    signals.task_prerun.connect(wrap_prerun, weak=False)
-    signals.task_postrun.connect(wrap_postrun, weak=False)
     signals.before_task_publish.connect(wrap_before_publish, weak=False)
     signals.after_task_publish.connect(wrap_after_publish, weak=False)
+    signals.task_prerun.connect(wrap_prerun, weak=False)
     signals.task_retry.connect(wrap_retry, weak=False)
     signals.task_failure.connect(wrap_failure, weak=False)
+    signals.task_postrun.connect(wrap_postrun, weak=False)
