@@ -25,6 +25,10 @@ class CeleryEvent(BaseEvent):
     ORIGIN = 'celery'
     RESOURCE_TYPE = 'celery'
     OPERATION = 'publish'
+    DRIVER_MAPPING = {
+        'amqp': 'rabbitmq',
+        'redis': 'redis',
+    }
 
     def __init__(
             self,
@@ -50,8 +54,19 @@ class CeleryEvent(BaseEvent):
             'id': headers['id'],
             'routing_key': routing_key,
             'hostname': app_conn.hostname,
+            'virtual_host': app_conn.virtual_host,
             'driver': app_conn.transport.driver_type,
         }
+
+        # Check if this is a known driver to update the resource details
+        driver_map = self.DRIVER_MAPPING.get(app_conn.transport.driver_type)
+        if driver_map:
+            self.resource['name'] = app_conn.hostname
+            self.resource['type'] = '{}_{}'.format(
+                self.RESOURCE_TYPE,
+                driver_map
+            )
+
         add_data_if_needed(
             self.resource['metadata'],
             'body',
