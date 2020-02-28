@@ -13,8 +13,8 @@ from ..event import BaseEvent
 from ..utils import add_data_if_needed
 from ..runners.celery import CeleryRunner
 
-# Stores all events
-EVENTS = {}
+# A map of all active events and pending runners. The key is the `{sender}-{id}`
+ACTIVE_EVENTS = {}
 
 
 class CeleryEvent(BaseEvent):
@@ -30,29 +30,30 @@ class CeleryEvent(BaseEvent):
         'redis': 'redis',
     }
 
-    def __init__(
-            self,
-            start_time,
-            sender,
-            routing_key,
-            body,
-            headers,
-            app_conn
-    ):
+    def __init__(self, *args, **kwargs):  # pylint: disable=unused-argument
         """
         Initialize.
         """
-        super(CeleryEvent, self).__init__(start_time)
+        super(CeleryEvent, self).__init__(time.time())
 
         self.event_id = str(uuid4())
-        self.resource['name'] = sender
+        self.resource['name'] = kwargs.get('sender', '')
         self.resource['operation'] = self.OPERATION
 
+        body = kwargs.get('body', [None])[0]
+        if body:
+            # Body comes in tuple which is not serializable
+            # so we change it to list
+            body = list(body)
+
+        app_conn = import_module('celery').current_app.connection()
+        headers = kwargs.get('headers', {})
+
         self.resource['metadata'] = {
-            'origin': headers['origin'],
-            'retries': headers['retries'],
-            'id': headers['id'],
-            'routing_key': routing_key,
+            'origin': headers.get('origin', ''),
+            'retries': headers.get('retries', ''),
+            'id': headers.get('id', ''),
+            'routing_key': kwargs.get('routing_key', ''),
             'hostname': app_conn.hostname,
             'virtual_host': app_conn.virtual_host,
             'driver': app_conn.transport.driver_type,
@@ -76,18 +77,25 @@ class CeleryEvent(BaseEvent):
 
 def get_event_key(*args, **kwargs):  # pylint: disable=unused-argument
     """
-    Returns the event key to get from EVENTS.
-    :return: `sender-id` string
+    Returns the event key to get from ACTIVE_EVENTS.
+    :return: `sender-id` string or None if input does not match
     """
     if 'task_id' in kwargs:
+        # Comes from pre and post run, and failure signals
         event_id = kwargs.get('task_id', '')
-        sender = kwargs.get('sender').name
+        sender = kwargs.get('sender').name if kwargs.get('sender') else ''
     elif 'request' in kwargs:
+        # Comes from retry signals
         event_id = kwargs.get('request', {}).get('id', '')
-        sender = kwargs.get('sender').name
+        sender = kwargs.get('sender').name if kwargs.get('sender') else ''
     else:
+        # Comes from before and after publish signals
         event_id = kwargs.get('headers', {}).get('id', '')
         sender = kwargs.get('sender', '')
+
+    if event_id == '' or sender == '':
+        return None
+
     return '{}-{}'.format(sender, event_id)
 
 
@@ -105,7 +113,7 @@ def signal_wrapper(func):
         try:
             return func(*args, **kwargs)
         except Exception as exception:  # pylint: disable=broad-except
-            event = EVENTS.get(get_event_key(*args, **kwargs))
+            event = ACTIVE_EVENTS.get(get_event_key(*args, **kwargs))
             if event:
                 trace_factory.add_exception(
                     exception,
@@ -124,21 +132,9 @@ def wrap_before_publish(*args, **kwargs):
     """
     Wraps before publish signal (task.delay or task.apply_async)
     """
-    body = kwargs.get('body', [None])[0]
-    if body:
-        body = list(body)
-
-    app_conn = import_module('celery').current_app.connection()
-    event = CeleryEvent(
-        time.time(),
-        kwargs.get('sender', ''),
-        kwargs.get('routing_key', ''),
-        body,
-        kwargs.get('headers', ''),
-        app_conn,
-    )
-
-    EVENTS[get_event_key(*args, **kwargs)] = event
+    event_key = get_event_key(*args, **kwargs)
+    if event_key:
+        ACTIVE_EVENTS[event_key] = CeleryEvent(*args, **kwargs)
 
 
 @signal_wrapper
@@ -147,11 +143,11 @@ def wrap_after_publish(*args, **kwargs):
     Wraps after publish signal (task.delay or task.apply_async)
     """
     event_key = get_event_key(*args, **kwargs)
-    event = EVENTS.get(event_key)
+    event = ACTIVE_EVENTS.get(event_key)
     if event:
         event.terminate()
         trace_factory.add_event(event)
-        EVENTS.pop(event_key)
+        ACTIVE_EVENTS.pop(event_key)
 
 
 # ----------------------
@@ -163,20 +159,12 @@ def wrap_prerun(*args, **kwargs):
     """
     Wraps pre-run signal of worker
     """
-    app_conn = import_module('celery').current_app.connection()
-    trace_factory.prepare()
-    runner = CeleryRunner(
-        time.time(),
-        kwargs.get('sender').name,
-        kwargs.get('task_id', ''),
-        kwargs.get('args'),
-        kwargs.get('retval'),
-        kwargs.get('state', ''),
-        app_conn,
-    )
-
-    EVENTS[get_event_key(*args, **kwargs)] = runner
-    trace_factory.set_runner(runner)
+    event_key = get_event_key(*args, **kwargs)
+    if event_key:
+        trace_factory.prepare()
+        runner = CeleryRunner(*args, **kwargs)
+        ACTIVE_EVENTS[event_key] = runner
+        trace_factory.set_runner(runner)
 
 
 @signal_wrapper
@@ -185,11 +173,11 @@ def wrap_postrun(*args, **kwargs):
     Wraps post-run signal of worker
     """
     event_key = get_event_key(*args, **kwargs)
-    event = EVENTS.get(event_key)
+    event = ACTIVE_EVENTS.get(event_key)
     if event:
         event.terminate()
         trace_factory.send_traces()
-        EVENTS.pop(event_key)
+        ACTIVE_EVENTS.pop(event_key)
 
 
 @signal_wrapper
@@ -197,7 +185,7 @@ def wrap_retry(*args, **kwargs):
     """
     Wraps retry signal of worker
     """
-    event = EVENTS.get(get_event_key(*args, **kwargs))
+    event = ACTIVE_EVENTS.get(get_event_key(*args, **kwargs))
     if event:
         event.set_retry(kwargs.get('request', {}).get('retries', 0))
 
@@ -207,7 +195,7 @@ def wrap_failure(*args, **kwargs):
     """
     Wraps failure signal of worker
     """
-    event = EVENTS.get(get_event_key(*args, **kwargs))
+    event = ACTIVE_EVENTS.get(get_event_key(*args, **kwargs))
     if event:
         event.set_exception(
             kwargs.get('exception', Exception),
