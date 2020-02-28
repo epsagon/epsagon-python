@@ -29,7 +29,11 @@ class CeleryRunner(BaseEvent):
 
         self.event_id = str(uuid4())
 
-        self.resource['name'] = kwargs.get('sender', {}).get('name', '')
+        self.resource['name'] = (
+            kwargs.get('sender').name
+            if kwargs.get('sender')
+            else ''
+        )
         self.resource['operation'] = self.OPERATION
 
         app_conn = import_module('celery').current_app.connection()
