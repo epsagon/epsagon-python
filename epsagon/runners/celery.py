@@ -46,6 +46,7 @@ class CeleryRunner(BaseEvent):
             'id': task_id,
             'state': state,
             'hostname': app_conn.hostname,
+            'virtual_host': app_conn.virtual_host,
             'driver': app_conn.transport.driver_type,
         }
 
