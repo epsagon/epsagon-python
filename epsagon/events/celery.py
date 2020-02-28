@@ -131,10 +131,12 @@ def wrap_after_publish(*args, **kwargs):
     """
     Wraps after publish signal (task.delay or task.apply_async)
     """
-    event = EVENTS.get(get_event_key(*args, **kwargs))
+    event_key = get_event_key(*args, **kwargs)
+    event = EVENTS.get(event_key)
     if event:
         event.terminate()
         trace_factory.add_event(event)
+        EVENTS.pop(event_key)
 
 
 # ----------------------
@@ -167,10 +169,12 @@ def wrap_postrun(*args, **kwargs):
     """
     Wraps post-run signal of worker
     """
-    event = EVENTS.get(get_event_key(*args, **kwargs))
+    event_key = get_event_key(*args, **kwargs)
+    event = EVENTS.get(event_key)
     if event:
         event.terminate()
         trace_factory.send_traces()
+        EVENTS.pop(event_key)
 
 
 @signal_wrapper
