@@ -10,6 +10,8 @@ REGION = os.getenv('AWS_REGION', DEFAULT_REGION)
 TRACE_COLLECTOR_URL = '{protocol}{region}.tc.epsagon.com'
 COLD_START = True
 
+DEBUG_MODE = ((os.getenv('EPSAGON_DEBUG') or '').upper() == 'TRUE')
+
 # Customer original handler.
 EPSAGON_HANDLER = 'EPSAGON_HANDLER'
 

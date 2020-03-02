@@ -20,7 +20,7 @@ except ImportError:
 from epsagon import http_filters
 from epsagon.constants import TRACE_COLLECTOR_URL, REGION
 from .trace import trace_factory, create_transport
-from .constants import EPSAGON_HANDLER
+from .constants import EPSAGON_HANDLER, DEBUG_MODE
 
 
 METADATA_CACHE = {
@@ -331,3 +331,8 @@ def add_metadata_from_dict(resource, dictionary, key):
         return
     title_case_key = camel_case_to_title_case(key)
     resource['metadata'][title_case_key] = value
+
+
+def print_debug(log):
+    if DEBUG_MODE:
+        print('[EPSAGON_DEBUG]: {}'.format(log))

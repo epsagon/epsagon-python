@@ -1,4 +1,5 @@
 wrapt
+autowrapt
 requests
 simplejson
 six

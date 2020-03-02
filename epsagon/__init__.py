@@ -4,13 +4,21 @@ Epsagon's init.
 
 from __future__ import absolute_import
 import os
-from .utils import init
+from .utils import init, print_debug
 from .patcher import patch_all
 from .constants import __version__, EPSAGON_HANDLER
 from .trace import trace_factory
 
 if os.getenv(EPSAGON_HANDLER):
     from .handler import wrapper
+
+
+def auto_load(_):
+    """
+    Called when setting `AUTOWRAPT_BOOTSTRAP=epsagon` (auto-tracing).
+    """
+    print_debug('Initialized using auto-tracing')
+    init()
 
 
 def dummy_wrapper(func):
@@ -66,6 +74,7 @@ __all__ = [
     'wrapper',
     'gcp_wrapper',
     'chalice_wrapper',
+    'auto_load',
 ]
 
 
