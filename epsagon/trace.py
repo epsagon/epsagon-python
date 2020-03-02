@@ -95,6 +95,7 @@ class TraceFactory(object):
         self.split_on_send = False
         self.disabled = False
         self.propagate_lambda_id = False
+        self.min_error_code = None
 
     def initialize(
             self,
@@ -110,6 +111,7 @@ class TraceFactory(object):
             transport,
             split_on_send,
             propagate_lambda_id,
+            min_error_code
     ):
         """
         Initializes The factory with user's data.
@@ -144,6 +146,7 @@ class TraceFactory(object):
         self.transport = transport
         self.split_on_send = split_on_send
         self.propagate_lambda_id = propagate_lambda_id
+        self.min_error_code = min_error_code
         self.update_tracers()
 
     def update_tracers(self):
@@ -169,6 +172,7 @@ class TraceFactory(object):
             tracer.transport = self.transport
             tracer.split_on_send = self.split_on_send
             tracer.propagate_lambda_id = self.propagate_lambda_id
+            tracer.min_error_code = self.min_error_code
 
     def switch_to_multiple_traces(self):
         """
@@ -196,6 +200,7 @@ class TraceFactory(object):
             unique_id=unique_id,
             split_on_send=self.split_on_send,
             propagate_lambda_id=self.propagate_lambda_id,
+            min_error_code=self.min_error_code
         )
 
     def get_or_create_trace(self, unique_id=None):
@@ -445,6 +450,7 @@ class Trace(object):
             split_on_send=False,
             transport=NoneTransport(),
             propagate_lambda_id=False,
+            min_error_code=None,
     ):
         """
         initialize.
@@ -467,6 +473,7 @@ class Trace(object):
         self.transport = transport
         self.split_on_send = split_on_send
         self.propagate_lambda_id = propagate_lambda_id
+        self.min_error_code = min_error_code
 
         if keys_to_ignore:
             self.keys_to_ignore = [self._strip_key(x) for x in keys_to_ignore]
@@ -939,6 +946,16 @@ class Trace(object):
         """
         if self.token == '' or self.trace_sent:
             return
+        if self.min_error_code and self.runner:
+            return_value = self.runner.resource['metadata'].get(
+                'return_value', {}
+            )
+            if return_value is not dict:
+                return_value = parse_json(return_value)
+            if return_value is dict:
+                status_code = return_value.get('statusCode', -1)
+                if status_code >= self.min_error_code:
+                    self.runner.error_code = ErrorCode.ERROR
         if (
                 self.send_trace_only_on_error and
                 self.runner and
