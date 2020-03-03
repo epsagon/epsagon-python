@@ -5,6 +5,7 @@ flask patcher module.
 from __future__ import absolute_import
 import wrapt
 from ..wrappers.flask import FlaskWrapper
+from ..utils import print_debug
 
 
 def _wrapper(wrapped, instance, args, kwargs):
@@ -15,12 +16,12 @@ def _wrapper(wrapped, instance, args, kwargs):
     :param args: wrapt's args
     :param kwargs: wrapt's kwargs
     """
+    response = wrapped(*args, **kwargs)
     try:
-        response = wrapped(*args, **kwargs)
         FlaskWrapper(instance)
-        return response
     except Exception:  # pylint: disable=broad-except
-        raise
+        print_debug('Could not add Flask wrapper')
+    return response
 
 
 def patch():
