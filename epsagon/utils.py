@@ -333,6 +333,14 @@ def add_metadata_from_dict(resource, dictionary, key):
     resource['metadata'][title_case_key] = value
 
 
+def is_lambda_env():
+    """
+    Returns True if the current environment is running on a Lambda function.
+    :return: bool
+    """
+    return os.getenv('AWS_LAMBDA_FUNCTION_NAME') is not None
+
+
 def print_debug(log):
     if DEBUG_MODE:
         print('[EPSAGON_DEBUG]: {}'.format(log))

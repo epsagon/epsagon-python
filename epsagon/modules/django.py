@@ -4,7 +4,7 @@ Django patcher module.
 
 from __future__ import absolute_import
 import wrapt
-from ..utils import print_debug
+from ..utils import print_debug, is_lambda_env
 
 EPSAGON_MIDDLEWARE = 'epsagon.wrappers.django.DjangoMiddleware'
 
@@ -18,7 +18,12 @@ def _wrapper(wrapped, _instance, args, kwargs):
     :param kwargs: wrapt's kwargs
     """
 
+    # Skip on Lambda environment since it's not relevant and might be duplicate
+    if is_lambda_env():
+        return wrapped(*args, **kwargs)
+
     try:
+        # pylint: disable=import-outside-toplevel
         from django.conf import settings
         # Extract middleware engine (varying between Django versions)
         if hasattr(settings, 'MIDDLEWARE') and settings.MIDDLEWARE is not None:
