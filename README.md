@@ -67,13 +67,6 @@ epsagon.init(
 )
 ```
 
-Add Epsagon middleware to the application's middleware list (located in `settings.py`)
-```python
-MIDDLEWARE = [
-    '....',
-    'epsagon.wrappers.django.DjangoMiddleware',
-]
-```
 
 For web frameworks: Use ignored_endpoints to blacklist specific paths and prevent Epsagon from sending a trace.
 ```python
@@ -98,7 +91,6 @@ epsagon.init(
 )
 
 app = Flask(__name__)
-epsagon.flask_wrapper(app)
 
 @app.route('/')
 def hello():
