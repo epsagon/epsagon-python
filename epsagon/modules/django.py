@@ -6,6 +6,11 @@ from __future__ import absolute_import
 import wrapt
 from ..utils import print_debug, is_lambda_env
 
+try:
+    from django.conf import settings
+except ImportError:
+    settings = None  # pylint: disable=invalid-name
+
 EPSAGON_MIDDLEWARE = 'epsagon.wrappers.django.DjangoMiddleware'
 
 
@@ -23,8 +28,6 @@ def _wrapper(wrapped, _instance, args, kwargs):
         return wrapped(*args, **kwargs)
 
     try:
-        # pylint: disable=import-outside-toplevel
-        from django.conf import settings
         # Extract middleware engine (varying between Django versions)
         if hasattr(settings, 'MIDDLEWARE') and settings.MIDDLEWARE is not None:
             # Check if not instrumented already
