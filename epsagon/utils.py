@@ -2,7 +2,7 @@
 Utilities for Epsagon module.
 """
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 import os
 import collections
 import socket
@@ -20,7 +20,7 @@ except ImportError:
 from epsagon import http_filters
 from epsagon.constants import TRACE_COLLECTOR_URL, REGION
 from .trace import trace_factory, create_transport
-from .constants import EPSAGON_HANDLER
+from .constants import EPSAGON_HANDLER, DEBUG_MODE
 
 
 METADATA_CACHE = {
@@ -331,3 +331,16 @@ def add_metadata_from_dict(resource, dictionary, key):
         return
     title_case_key = camel_case_to_title_case(key)
     resource['metadata'][title_case_key] = value
+
+
+def is_lambda_env():
+    """
+    Returns True if the current environment is running on a Lambda function.
+    :return: bool
+    """
+    return os.getenv('AWS_LAMBDA_FUNCTION_NAME') is not None
+
+
+def print_debug(log):
+    if DEBUG_MODE:
+        print('[EPSAGON_DEBUG]: {}'.format(log))

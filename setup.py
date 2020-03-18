@@ -33,8 +33,12 @@ setup(
     license='MIT',
     setup_requires=['pytest-runner'],
     tests_require=['pytest'],
+    entry_points={
+        'epsagon': ['string = epsagon:auto_load']
+    },
     keywords=[
         'serverless',
+        'microservices',
         'epsagon',
         'tracing',
         'distributed-tracing',

@@ -21,6 +21,7 @@ class FlaskWrapper(object):
     """
     Wraps Flask wsgi application.
     """
+    EPSAGON_MARKER = '_epsagon_wrapper'
 
     def __init__(self, app, ignored_endpoints=None):
         """
@@ -28,7 +29,10 @@ class FlaskWrapper(object):
         :param app: the :class:`flask.Flask` application object.
         :param ignored_endpoints: endpoint paths to ignore.
         """
-
+        # Wrapping app only once
+        if getattr(app, self.EPSAGON_MARKER, False):
+            return
+        setattr(app, self.EPSAGON_MARKER, True)
         self.app = app
         self.ignored_endpoints = []
         if ignored_endpoints:

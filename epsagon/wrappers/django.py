@@ -12,8 +12,10 @@ import epsagon.triggers.http
 import epsagon.runners.django
 
 from epsagon.common import EpsagonWarning
-from epsagon.utils import collect_container_metadata,\
-    get_traceback_data_from_exception
+from epsagon.utils import (
+    collect_container_metadata,
+    get_traceback_data_from_exception,
+)
 from ..http_filters import ignore_request
 
 
@@ -106,9 +108,13 @@ class DjangoMiddleware(object):
         if self.ignored_request:
             return
 
-        # Ignoring non relevant content typoes.
+        # Ignoring non relevant content types.
         if ignore_request(self.response.get('Content-Type', '').lower(), ''):
             self.ignored_request = True
+            return
+
+        # Safety in case we run on an old Django version
+        if not self.runner:
             return
 
         self.runner.update_response(self.response)

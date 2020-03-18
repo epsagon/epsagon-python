@@ -12,6 +12,7 @@ This package provides an instrumentation to Python code running on functions for
   - [Flask Application](https://github.com/epsagon/epsagon-python#flask-application)
   - [Tornado Application](https://github.com/epsagon/epsagon-python#tornado-application)
   - [Generic Python](https://github.com/epsagon/epsagon-python#generic-python)
+  - [Auto-tracing](https://github.com/epsagon/epsagon-python#auto-tracing)
 - [Custom Data](https://github.com/epsagon/epsagon-python#custom-data)
   - [Custom Labels](https://github.com/epsagon/epsagon-python#custom-labels)
   - [Custom Errors](https://github.com/epsagon/epsagon-python#custom-errors)
@@ -66,13 +67,6 @@ epsagon.init(
 )
 ```
 
-Add Epsagon middleware to the application's middleware list (located in `settings.py`)
-```python
-MIDDLEWARE = [
-    '....',
-    'epsagon.wrappers.django.DjangoMiddleware',
-]
-```
 
 For web frameworks: Use ignored_endpoints to blacklist specific paths and prevent Epsagon from sending a trace.
 ```python
@@ -97,7 +91,6 @@ epsagon.init(
 )
 
 app = Flask(__name__)
-epsagon.flask_wrapper(app)
 
 @app.route('/')
 def hello():
@@ -155,6 +148,20 @@ def main():
     return 'It worked!'
   
 main()
+```
+
+### Auto-tracing
+
+You can apply Epsagon tracing without any code changes using:
+
+```bash
+AUTOWRAPT_BOOTSTRAP=epsagon <command>
+```
+
+For example:
+
+```bash
+AUTOWRAPT_BOOTSTRAP=epsagon python app.py
 ```
 
 ## Custom Data

@@ -31,7 +31,6 @@ class DjangoRunner(BaseEvent):
 
         self.resource['metadata'] = {
             'Path': request.path,
-            'User Agent': request.headers.get('User-Agent', 'N/A'),
         }
 
         if request.body:
@@ -41,11 +40,13 @@ class DjangoRunner(BaseEvent):
                 request.body
             )
 
-        add_data_if_needed(
-            self.resource['metadata'],
-            'Request Headers',
-            dict(request.headers)
-        )
+        # request.headers introduced since django==2.2
+        if hasattr(request, 'headers'):
+            add_data_if_needed(
+                self.resource['metadata'],
+                'Request Headers',
+                dict(request.headers)
+            )
 
     def update_response(self, response):
         """
