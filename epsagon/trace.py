@@ -861,6 +861,24 @@ class Trace(object):
         """
         return key.lower().replace('-', '').replace('_', '').replace(' ', '')
 
+    def _check_key_validation(self, key):
+        """
+        Check keys_to_allow (if initialized by the user) contain the key
+        and keys_to_ignore doesn't contain the key.
+        :param key: dict key.
+        :return: True/False.
+        """
+        is_valid = True
+        strip_key = self._strip_key(key)
+        if self.keys_to_allow:
+            # if keys_to_allow exist, is_valid default should be False.
+            is_valid = False
+            if strip_key in self.keys_to_allow:
+                is_valid = True
+        if self.keys_to_ignore and strip_key in self.keys_to_ignore:
+            is_valid = False
+        return is_valid
+
     def remove_ignored_keys(self, input_dict):
         """
         Remove ignored keys recursively in input_dict.
@@ -870,12 +888,12 @@ class Trace(object):
         :return: a dict without the the ignored keys
         """
         # pylint: disable=too-many-nested-blocks
-        if not self.keys_to_ignore:
+        if not self.keys_to_ignore and not self.keys_to_allow:
             return input_dict
         copied_dict = input_dict.copy()
         # Python 2 returns a list, while Python3 returns an iterator.
         for key in input_dict:
-            if self._strip_key(key) in self.keys_to_ignore:
+            if not self._check_key_validation(key):
                 copied_dict.pop(key)
                 if self.debug:
                     print(
@@ -886,7 +904,6 @@ class Trace(object):
                 if isinstance(value, dict):
                     copied_dict[key] = self.remove_ignored_keys(value)
         return copied_dict
-
 
     def send_traces(self):
         """

@@ -210,6 +210,22 @@ epsagon.init(
     keys_to_ignore=['Request Data', 'Status_Code']
 )
 ```
+
+### Allow keys
+
+You can allow data to be sent to epsagon by filtering specific keys in initialization.
+
+Need to know - when enabling this feature, your traces metadata would contain only these keys.
+```python
+import epsagon
+epsagon.init(
+    token='my-secret-token',
+    app_name='my-app-name',
+    metadata_only=False,
+    keys_to_allow=['Request Data', 'Status_Code']
+)
+```
+
 ## Frameworks Integration
 
 When using any of the following integrations, make sure to add `epsagon` under your `requirements.txt` file.
