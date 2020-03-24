@@ -92,10 +92,10 @@ def init(
     send_trace_only_on_error=False,
     url_patterns_to_ignore=None,
     keys_to_ignore=None,
+    keys_to_allow=None,
     ignored_endpoints=None,
     split_on_send=False,
     propagate_lambda_id=False,
-    keys_to_allow=None,
 ):
     """
     Initializes trace with user's data.
@@ -113,6 +113,7 @@ def init(
     :param url_patterns_to_ignore: URL patterns to ignore in HTTP data
       collection.
     :param keys_to_ignore: List of keys to ignore while extracting metadata.
+    :param keys_to_allow: List of keys to allow while extracting metadata.
     :param ignored_endpoints: List of ignored endpoints for web frameworks.
     :param split_on_send: Split the trace on send flag
     :param propagate_lambda_id: Inject identifiers via return value flag
