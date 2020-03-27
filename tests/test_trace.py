@@ -636,7 +636,7 @@ def test_return_value_key_to_ignore(wrapped_post):
     )
     os.environ.pop('EPSAGON_IGNORED_KEYS')
 
-def test_whitelist():
+def test_whitelist_unit_tests():
     key_to_allow = 'key_to_allow_in_return_value'
     os.environ['EPSAGON_ALLOWED_KEYS'] = key_to_allow
     keys_to_allow = [key_to_allow]
@@ -708,6 +708,87 @@ def test_whitelist():
         assert result == expected_result
     os.environ.pop('EPSAGON_ALLOWED_KEYS')
 
+@mock.patch('requests.Session.post')
+def test_whitelist_full_flow(wrapped_post):
+    key_to_allow = 'key_to_allow_in_return_value'
+    os.environ['EPSAGON_ALLOWED_KEYS'] = key_to_allow
+    keys_to_allow = [key_to_allow]
+    # reset traces created at setup function
+    trace_factory.traces = {}
+    epsagon.utils.init(
+        token='token',
+        app_name='app-name',
+        collector_url='collector',
+        metadata_only=False
+    )
+
+    trace = trace_factory.get_or_create_trace()
+    input_dict, expected_dict = (
+        {
+            key_to_allow: 'b',
+            'a': {
+                key_to_allow: 'end-of-branch',
+                'd': {
+                    'e': {
+                        'f': 'end-of-branch'
+                    }
+                },
+                'e': {
+                    key_to_allow: {
+                        'g': 'end-of-branch'
+                    },
+                    'g': {
+                        'h': 'end-of-branch',
+                        'i': {
+                            key_to_allow: 'end-of-branch'
+                        },
+                        'j': {
+                            'k': {
+                                'l': 'end-of-branch'
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        {
+            key_to_allow: 'b',
+            'a': {
+                key_to_allow: 'end-of-branch',
+                'e': {
+                    key_to_allow: {
+                        'g': 'end-of-branch'
+                    },
+                    'g': {
+                        'i': {
+                            key_to_allow: 'end-of-branch'
+                        },
+                    }
+                }
+            }
+        }
+    )
+    copied_input_dict = input_dict.copy()
+    runner = ReturnValueEventMock(input_dict)
+    trace.set_runner(runner)
+    trace.token = 'a'
+    trace_factory.send_traces()
+
+    assert len(trace.to_dict()['events']) == 1
+    event = trace.to_dict()['events'][0]
+    assert event['origin'] == 'runner'
+    actual_return_value = event['resource']['metadata']['return_value']
+    assert actual_return_value == expected_dict
+    # check that original return value hasn't been changed
+    assert copied_input_dict == input_dict
+
+    wrapped_post.assert_called_with(
+        'collector',
+        data=json.dumps(trace.to_dict()),
+        timeout=epsagon.constants.SEND_TIMEOUT,
+        headers={'Authorization': 'Bearer {}'.format(trace.token)}
+    )
+    os.environ.pop('EPSAGON_ALLOWED_KEYS')
 
 
 @mock.patch('requests.Session.post')
