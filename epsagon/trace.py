@@ -88,6 +88,7 @@ class TraceFactory(object):
         self.send_trace_only_on_error = False
         self.url_patterns_to_ignore = None
         self.keys_to_ignore = None
+        self.keys_to_allow = None
         self.use_single_trace = True
         self.singleton_trace = None
         self.local_thread_to_unique_id = {}
@@ -107,6 +108,7 @@ class TraceFactory(object):
             send_trace_only_on_error,
             url_patterns_to_ignore,
             keys_to_ignore,
+            keys_to_allow,
             transport,
             split_on_send,
             propagate_lambda_id,
@@ -126,6 +128,7 @@ class TraceFactory(object):
         :param url_patterns_to_ignore: URL patterns to ignore in HTTP data
          collection.
         :param keys_to_ignore: List of keys to ignore while extracting metadata.
+        :param keys_to_allow: List of keys to allow while extracting metadata.
         :param split_on_send: Split trace into multiple traces in case it's size
          exceeds the maximum size.
         :return: None
@@ -141,6 +144,7 @@ class TraceFactory(object):
             set(url_patterns_to_ignore) if url_patterns_to_ignore else set()
         )
         self.keys_to_ignore = [] if keys_to_ignore is None else keys_to_ignore
+        self.keys_to_allow = [] if keys_to_allow is None else keys_to_allow
         self.transport = transport
         self.split_on_send = split_on_send
         self.propagate_lambda_id = propagate_lambda_id
@@ -166,6 +170,7 @@ class TraceFactory(object):
             tracer.send_trace_only_on_error = self.send_trace_only_on_error
             tracer.url_patterns_to_ignore = self.url_patterns_to_ignore
             tracer.keys_to_ignore = self.keys_to_ignore
+            tracer.keys_to_allow = self.keys_to_allow
             tracer.transport = self.transport
             tracer.split_on_send = self.split_on_send
             tracer.propagate_lambda_id = self.propagate_lambda_id
@@ -193,6 +198,7 @@ class TraceFactory(object):
             send_trace_only_on_error=self.send_trace_only_on_error,
             url_patterns_to_ignore=self.url_patterns_to_ignore,
             keys_to_ignore=self.keys_to_ignore,
+            keys_to_allow=self.keys_to_allow,
             unique_id=unique_id,
             split_on_send=self.split_on_send,
             propagate_lambda_id=self.propagate_lambda_id,
@@ -441,6 +447,7 @@ class Trace(object):
             send_trace_only_on_error=False,
             url_patterns_to_ignore=None,
             keys_to_ignore=None,
+            keys_to_allow=None,
             unique_id=None,
             split_on_send=False,
             transport=NoneTransport(),
@@ -476,6 +483,14 @@ class Trace(object):
                 )
         else:
             self.keys_to_ignore = []
+        if keys_to_allow:
+            self.keys_to_allow = [self._strip_key(x) for x in keys_to_allow]
+            if self.debug:
+                print(
+                    'Setting keys_to_allow={}'.format(keys_to_allow)
+                )
+        else:
+            self.keys_to_allow = []
         self.platform = 'Python {}.{}'.format(
             sys.version_info.major,
             sys.version_info.minor
@@ -887,6 +902,27 @@ class Trace(object):
                     copied_dict[key] = self.remove_ignored_keys(value)
         return copied_dict
 
+    def get_dict_with_allow_keys(self, input_dict):
+        """
+        Keeping only the branches which contains allowed keys.
+        Any branch that doesn't contain allowed key will be deleted.
+        :param input_dict: Input dict to remove branches without allowed keys.
+        :return: a dict that contains branches which contains allowed keys
+        """
+        copied_dict = input_dict.copy()
+        for key in input_dict:
+            is_key_in_whitelist = self._strip_key(key) in self.keys_to_allow
+            if not is_key_in_whitelist:
+                value = input_dict[key]
+                if isinstance(value, dict):
+                    child_dict = self.get_dict_with_allow_keys(value)
+                    if not child_dict:
+                        copied_dict.pop(key)
+                    else:
+                        copied_dict[key] = child_dict
+                else:
+                    copied_dict.pop(key)
+        return copied_dict
 
     def send_traces(self):
         """
@@ -955,6 +991,9 @@ class Trace(object):
 
         # Remove ignored keys.
         for event in self.events:
+            if self.keys_to_allow:
+                event.resource['metadata'] = self.get_dict_with_allow_keys(
+                    event.resource['metadata'])
             event.resource['metadata'] = self.remove_ignored_keys(
                 event.resource['metadata'])
             type(self)._trim_dict_values(

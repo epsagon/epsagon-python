@@ -636,6 +636,80 @@ def test_return_value_key_to_ignore(wrapped_post):
     )
     os.environ.pop('EPSAGON_IGNORED_KEYS')
 
+def test_whitelist():
+    key_to_allow = 'key_to_allow_in_return_value'
+    os.environ['EPSAGON_ALLOWED_KEYS'] = key_to_allow
+    keys_to_allow = [key_to_allow]
+    # reset traces created at setup function
+    trace_factory.traces = {}
+    epsagon.utils.init(
+        token='token',
+        app_name='app-name',
+        collector_url='collector',
+        metadata_only=False,
+    )
+    trace = trace_factory.get_or_create_trace()
+    test_array = [
+        ({}, {}),
+        ({key_to_allow: 'b'}, {key_to_allow: 'b'}),
+        ({'a': {'b': 'c'}, 'd': 'e'}, {}),
+        ({'a': {'b': 'c'}, 'd': key_to_allow}, {}),
+        ({'a': {key_to_allow: 'c'}, 'd': 'e'}, {'a': {key_to_allow: 'c'}}),
+        ({key_to_allow: {'b': 'c'}, key_to_allow: 'e'},
+         {key_to_allow: {'b': 'c'}, key_to_allow: 'e'}),
+        (
+            {
+                key_to_allow: 'b',
+                'a': {
+                    key_to_allow: 'end-of-branch',
+                    'd': {
+                        'e': {
+                            'f': 'end-of-branch'
+                        }
+                    },
+                    'e': {
+                        key_to_allow: {
+                            'g': 'end-of-branch'
+                        },
+                        'g': {
+                            'h': 'end-of-branch',
+                            'i': {
+                                key_to_allow: 'end-of-branch'
+                            },
+                            'j': {
+                                'k': {
+                                    'l': 'end-of-branch'
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                key_to_allow: 'b',
+                'a': {
+                    key_to_allow: 'end-of-branch',
+                    'e': {
+                        key_to_allow: {
+                            'g': 'end-of-branch'
+                        },
+                        'g': {
+                            'i': {
+                                key_to_allow: 'end-of-branch'
+                            },
+                        }
+                    }
+                }
+            }
+        )
+    ]
+    for input_dict, expected_result in test_array:
+        result = trace.get_dict_with_allow_keys(input_dict)
+        assert result == expected_result
+    os.environ.pop('EPSAGON_ALLOWED_KEYS')
+
+
+
 @mock.patch('requests.Session.post')
 def test_metadata_field_too_big(wrapped_post):
     trace = trace_factory.get_or_create_trace()
@@ -709,6 +783,7 @@ def test_init_sanity(wrapped_init, _create):
         send_trace_only_on_error=False,
         url_patterns_to_ignore=None,
         keys_to_ignore=None,
+        keys_to_allow=None,
         transport=default_http,
         split_on_send=False,
         propagate_lambda_id=False
@@ -735,6 +810,7 @@ def test_init_empty_app_name(wrapped_init, _create):
         send_trace_only_on_error=False,
         url_patterns_to_ignore=None,
         keys_to_ignore=None,
+        keys_to_allow=None,
         transport=default_http,
         split_on_send=False,
         propagate_lambda_id=False
@@ -755,6 +831,7 @@ def test_init_empty_collector_url(wrapped_init, _create):
         send_trace_only_on_error=False,
         url_patterns_to_ignore=None,
         keys_to_ignore=None,
+        keys_to_allow=None,
         transport=default_http,
         split_on_send=False,
         propagate_lambda_id=False
@@ -779,6 +856,7 @@ def test_init_no_ssl_no_url(wrapped_init, _create):
         send_trace_only_on_error=False,
         url_patterns_to_ignore=None,
         keys_to_ignore=None,
+        keys_to_allow=None,
         transport=default_http,
         split_on_send=False,
         propagate_lambda_id=False
@@ -807,6 +885,7 @@ def test_init_ssl_no_url(wrapped_init, _create):
         send_trace_only_on_error=False,
         url_patterns_to_ignore=None,
         keys_to_ignore=None,
+        keys_to_allow=None,
         transport=default_http,
         split_on_send=False,
         propagate_lambda_id=False
@@ -833,6 +912,7 @@ def test_init_ssl_with_url(wrapped_init, _create):
         send_trace_only_on_error=False,
         url_patterns_to_ignore=None,
         keys_to_ignore=None,
+        keys_to_allow=None,
         transport=default_http,
         split_on_send=False,
         propagate_lambda_id=False
@@ -859,6 +939,7 @@ def test_init_no_ssl_with_url(wrapped_init, _create):
         send_trace_only_on_error=False,
         url_patterns_to_ignore=None,
         keys_to_ignore=None,
+        keys_to_allow=None,
         transport=default_http,
         split_on_send=False,
         propagate_lambda_id=False
@@ -885,6 +966,7 @@ def test_init_ignored_urls_env(wrapped_init, _create):
         send_trace_only_on_error=False,
         url_patterns_to_ignore=['test.com', 'test2.com'],
         keys_to_ignore=None,
+        keys_to_allow=None,
         transport=default_http,
         split_on_send=False,
         propagate_lambda_id=False
@@ -912,6 +994,7 @@ def test_init_keys_to_ignore(wrapped_init, _create):
         send_trace_only_on_error=False,
         url_patterns_to_ignore=None,
         keys_to_ignore=['a', 'b', 'c'],
+        keys_to_allow=None,
         transport=default_http,
         split_on_send=False,
         propagate_lambda_id=False
@@ -939,6 +1022,7 @@ def test_init_keys_to_ignore_env(wrapped_init, _create):
         send_trace_only_on_error=False,
         url_patterns_to_ignore=None,
         keys_to_ignore=['a', 'b', 'c'],
+        keys_to_allow=None,
         transport=default_http,
         split_on_send=False,
         propagate_lambda_id=False
@@ -967,6 +1051,7 @@ def test_init_split_on_send(wrapped_init, _create):
         url_patterns_to_ignore=None,
         transport=default_http,
         keys_to_ignore=None,
+        keys_to_allow=None,
         split_on_send=True,
         propagate_lambda_id=False
     )
@@ -993,6 +1078,7 @@ def test_init_split_on_send_env(wrapped_init, _create):
         url_patterns_to_ignore=None,
         transport=default_http,
         keys_to_ignore=None,
+        keys_to_allow=None,
         split_on_send=True,
         propagate_lambda_id=False
     )
@@ -1140,6 +1226,7 @@ def test_init_propagate_lambda_identifier_env(wrapped_init, _create):
         url_patterns_to_ignore=None,
         transport=default_http,
         keys_to_ignore=None,
+        keys_to_allow=None,
         split_on_send=False,
         propagate_lambda_id=True
     )
@@ -1167,6 +1254,7 @@ def test_init_propagate_lambda_identifier_init(wrapped_init, _create):
         url_patterns_to_ignore=None,
         transport=default_http,
         keys_to_ignore=None,
+        keys_to_allow=None,
         split_on_send=False,
         propagate_lambda_id=True
     )
