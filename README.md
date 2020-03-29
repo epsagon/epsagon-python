@@ -163,6 +163,23 @@ For example:
 ```bash
 AUTOWRAPT_BOOTSTRAP=epsagon python app.py
 ```
+### Configuration
+You can customize your library usage using flags. The flags
+should be set as enviroment variables in your code runtime enviroment.
+
+EPSAGON_SEND_TIMEOUT_SEC - Set a custom trace send timeout.
+EPSAGON_HTTP_ERR_CODE - Minimum HTTP status to be treated as an error.
+EPSAGON_SSL - TRUE / FALSE. Disable SSL for trace send. Default is TRUE.
+EPSAGON_ENDPOINTS_TO_IGNORE - Endpoints to ignore, comma seperated. aka: "endpoint1, endpoint2"
+EPSAGON_TOKEN - Account Epsagon token.
+EPSAGON_APP_NAME - Application name that will be set for traces.
+EPSAGON_METADATA - TRUE / FALSE. Whether to send all collected data, or just metadata. Default is FALSE.
+EPSAGON_SPLIT_ON_SEND - TRUE / FALSE. Split big traces into multiple parts. Default is FALSE.
+
+### Lambda specific flags
+EPSAGON_DISABLE_ON_TIMEOUT - TRUE / FALSE. Don't send trace on timeout. Default is FALSE.
+
+
 
 ## Custom Data
 
