@@ -476,7 +476,8 @@ class Trace(object):
         self.propagate_lambda_id = propagate_lambda_id
 
         if keys_to_ignore:
-            self.keys_to_ignore = [self._strip_key(x) for x in keys_to_ignore]
+            self.keys_to_ignore = [self._strip_key(key) for key in
+                                   keys_to_ignore]
             if self.debug:
                 print(
                     'Setting keys_to_ignore={}'.format(keys_to_ignore)
@@ -484,7 +485,7 @@ class Trace(object):
         else:
             self.keys_to_ignore = []
         if keys_to_allow:
-            self.keys_to_allow = [self._strip_key(x) for x in keys_to_allow]
+            self.keys_to_allow = [self._strip_key(key) for key in keys_to_allow]
             if self.debug:
                 print(
                     'Setting keys_to_allow={}'.format(keys_to_allow)
@@ -991,11 +992,11 @@ class Trace(object):
 
         # Remove ignored keys.
         for event in self.events:
+            event.resource['metadata'] = self.remove_ignored_keys(
+                event.resource['metadata'])
             if self.keys_to_allow:
                 event.resource['metadata'] = self.get_dict_with_allow_keys(
                     event.resource['metadata'])
-            event.resource['metadata'] = self.remove_ignored_keys(
-                event.resource['metadata'])
             type(self)._trim_dict_values(
                 event.resource['metadata'],
                 MAX_METADATA_FIELD_SIZE_LIMIT
