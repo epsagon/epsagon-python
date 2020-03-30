@@ -990,10 +990,12 @@ class Trace(object):
             else create_transport(self.collector_url, self.token)
         )
 
-        # Remove ignored keys.
+        # Update events resource metadata.
         for event in self.events:
+            # Remove ignored keys.
             event.resource['metadata'] = self.remove_ignored_keys(
                 event.resource['metadata'])
+            # Keep allowed keys.
             if self.keys_to_allow:
                 event.resource['metadata'] = self.get_dict_with_allow_keys(
                     event.resource['metadata'])
