@@ -167,14 +167,16 @@ AUTOWRAPT_BOOTSTRAP=epsagon python app.py
 You can customize your library usage using flags. The flags
 should be set as enviroment variables in your code runtime enviroment.
 
-EPSAGON_SEND_TIMEOUT_SEC - Set a custom trace send timeout.
-EPSAGON_HTTP_ERR_CODE - Minimum HTTP status to be treated as an error.
-EPSAGON_SSL - TRUE / FALSE. Disable SSL for trace send. Default is TRUE.
-EPSAGON_ENDPOINTS_TO_IGNORE - Endpoints to ignore, comma seperated. aka: "endpoint1, endpoint2"
-EPSAGON_TOKEN - Account Epsagon token.
-EPSAGON_APP_NAME - Application name that will be set for traces.
-EPSAGON_METADATA - TRUE / FALSE. Whether to send all collected data, or just metadata. Default is FALSE.
-EPSAGON_SPLIT_ON_SEND - TRUE / FALSE. Split big traces into multiple parts. Default is FALSE.
+```EPSAGON_SEND_TIMEOUT_SEC``` - Set a custom trace send timeout.<br /> 
+```EPSAGON_HTTP_ERR_CODE``` - Minimum HTTP status to be treated as an error.<br /> 
+```EPSAGON_SSL``` - TRUE / FALSE. Disable SSL for trace send. Default is TRUE.<br /> 
+```EPSAGON_ENDPOINTS_TO_IGNORE``` - Endpoints to ignore, comma seperated. aka: "endpoint1, endpoint2"<br /> 
+```EPSAGON_TOKEN``` - Account Epsagon token.<br /> 
+```EPSAGON_APP_NAME``` - Application name that will be set for traces.<br /> 
+```EPSAGON_METADATA``` - TRUE / FALSE. Whether to send all collected data, or just metadata. Default is FALSE.<br /> 
+```EPSAGON_SPLIT_ON_SEND``` - TRUE / FALSE. Split big traces into multiple parts. Default is FALSE.<br /> 
+```EPSAGON_IGNORED_KEYS``` - TRUE / FALSE. Prevent data from being sent to epsagon by filtering specific keys in initialization. Default is FALSE.<br /> 
+```EPSAGON_ALLOWED_KEYS``` - TRUE / FALSE. Allow data to be sent to epsagon by filtering specific keys in initialization. Default is FALSE.
 
 ### Lambda specific flags
 EPSAGON_DISABLE_ON_TIMEOUT - TRUE / FALSE. Don't send trace on timeout. Default is FALSE.
@@ -232,7 +234,7 @@ epsagon.init(
 ### Allowed keys
 You can allow data to be sent to epsagon by filtering specific keys in initialization.
 Only keys included in this list will be sent to epsagon.
-Good to know - keys_to_ignore is stronger then keys_to_allow if you use both.
+NOTE - Keys found in keys_to_ignore override this setting
 
 ```python
 import epsagon
