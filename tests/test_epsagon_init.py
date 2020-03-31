@@ -74,6 +74,7 @@ def test_epsagon_disable_epsagon_and_disable_patch(wrapped_get, wrapped_patch):
     'EPSAGON_URLS_TO_IGNORE': '',
     'EPSAGON_ENDPOINTS_TO_IGNORE': '',
     'EPSAGON_IGNORED_KEYS': '',
+    'EPSAGON_ALLOWED_KEYS': '',
 }[x]))
 def test_epsagon_wrapper_env_init(wrapped_get):
     reload(epsagon)
@@ -84,6 +85,7 @@ def test_epsagon_wrapper_env_init(wrapped_get):
         mock.call('EPSAGON_URLS_TO_IGNORE'),
         mock.call('EPSAGON_ENDPOINTS_TO_IGNORE'),
         mock.call('EPSAGON_IGNORED_KEYS'),
+        mock.call('EPSAGON_ALLOWED_KEYS'),
         mock.call('EPSAGON_TOKEN'),
         mock.call('EPSAGON_APP_NAME'),
         mock.call('EPSAGON_COLLECTOR_URL'),
@@ -98,6 +100,7 @@ def test_epsagon_wrapper_env_init(wrapped_get):
         mock.call('EPSAGON_URLS_TO_IGNORE'),
         mock.call('EPSAGON_ENDPOINTS_TO_IGNORE'),
         mock.call('EPSAGON_IGNORED_KEYS'),
+        mock.call('EPSAGON_ALLOWED_KEYS'),
         mock.call('EPSAGON_TOKEN'),
         mock.call('EPSAGON_APP_NAME'),
         mock.call('EPSAGON_COLLECTOR_URL'),
@@ -128,6 +131,7 @@ default_http = HTTPTransport("epsagon", "1234")
     'EPSAGON_SEND_TRACE_ON_ERROR': 'FALSE',
     'EPSAGON_URLS_TO_IGNORE': '',
     'EPSAGON_IGNORED_KEYS': '',
+    'EPSAGON_ALLOWED_KEYS': '',
     'EPSAGON_LOG_TRANSPORT': 'FALSE',
     'EPSAGON_ENDPOINTS_TO_IGNORE': '',
     'EPSAGON_SPLIT_ON_SEND': 'FALSE',
@@ -146,6 +150,7 @@ def test_epsagon_wrapper_env_init(_wrapped_get, wrapped_init, _create):
         send_trace_only_on_error=False,
         url_patterns_to_ignore=None,
         keys_to_ignore=None,
+        keys_to_allow=None,
         transport=default_http,
         split_on_send=False,
         propagate_lambda_id=False,
@@ -167,6 +172,7 @@ def test_epsagon_wrapper_env_init(_wrapped_get, wrapped_init, _create):
     'EPSAGON_SEND_TRACE_ON_ERROR': 'FALSE',
     'EPSAGON_URLS_TO_IGNORE': '',
     'EPSAGON_IGNORED_KEYS': '',
+    'EPSAGON_ALLOWED_KEYS': '',
     'EPSAGON_ENDPOINTS_TO_IGNORE': '/health,/test',
     'EPSAGON_LOG_TRANSPORT': 'FALSE',
     'EPSAGON_SPLIT_ON_SEND': 'FALSE',

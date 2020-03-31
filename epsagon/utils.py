@@ -92,6 +92,7 @@ def init(
     send_trace_only_on_error=False,
     url_patterns_to_ignore=None,
     keys_to_ignore=None,
+    keys_to_allow=None,
     ignored_endpoints=None,
     split_on_send=False,
     propagate_lambda_id=False,
@@ -112,6 +113,7 @@ def init(
     :param url_patterns_to_ignore: URL patterns to ignore in HTTP data
       collection.
     :param keys_to_ignore: List of keys to ignore while extracting metadata.
+    :param keys_to_allow: List of keys to allow while extracting metadata
     :param ignored_endpoints: List of ignored endpoints for web frameworks.
     :param split_on_send: Split the trace on send flag
     :param propagate_lambda_id: Inject identifiers via return value flag
@@ -137,6 +139,10 @@ def init(
     if ignored_keys:
         ignored_keys = ignored_keys.split(',')
 
+    allowed_keys = os.getenv('EPSAGON_ALLOWED_KEYS')
+    if allowed_keys:
+        allowed_keys = allowed_keys.split(',')
+
     trace_factory.initialize(
         token=os.getenv('EPSAGON_TOKEN') or token,
         app_name=os.getenv('EPSAGON_APP_NAME') or app_name,
@@ -159,6 +165,7 @@ def init(
         ),
         url_patterns_to_ignore=ignored_urls or url_patterns_to_ignore,
         keys_to_ignore=ignored_keys or keys_to_ignore,
+        keys_to_allow=allowed_keys or keys_to_allow,
         transport=create_transport(collector_url, token),
         split_on_send=(
                 ((os.getenv('EPSAGON_SPLIT_ON_SEND') or '').upper() == 'TRUE')
