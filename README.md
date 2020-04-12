@@ -11,7 +11,7 @@
 
 # Epsagon Tracing for Python
 
-This package provides tracing to Node.js applications for collection of distributed tracing and performance metrics in [Epsagon](https://dashboard.epsagon.com/?utm_source=github).
+This package provides tracing to Node.js applications for the collection of distributed tracing and performance metrics in [Epsagon](https://dashboard.epsagon.com/?utm_source=github).
 
 
 ## Contents
@@ -128,8 +128,8 @@ epsagon.init(
 )
 ```
 
-The `keys_to_ignore` and `keys_to_allow` properties can contain strings (will perform a lose match, so that `First Name` also matches `first_name`).
-Also you can set `url_patterns_to_ignore` to ignore HTTP calls to specific domains.
+The `keys_to_ignore` and `keys_to_allow` properties can contain strings (will perform a loose match, so that `First Name` also matches `first_name`).
+Also, you can set `url_patterns_to_ignore` to ignore HTTP calls to specific domains.
 
 
 ### Ignore Endpoints
@@ -146,7 +146,7 @@ epsagon.init(
 
 ## Frameworks
 
-The following frameworks are supported with Epsagon:
+The following frameworks are supported by Epsagon:
 
 |Framework                               |Supported Version          |Auto-tracing Supported                               |
 |----------------------------------------|---------------------------|-----------------------------------------------------|
