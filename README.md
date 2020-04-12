@@ -101,7 +101,7 @@ except Exception as ex:
 epsagon.error(Exception('My custom error'))
 ```
 
-In some [frameworks](#frameworks) custom errors can be done in different ways.
+In some [frameworks](#frameworks) custom errors can be declared in different ways.
 
 ### Filter Sensitive Data
 
@@ -163,7 +163,7 @@ The following frameworks are supported by Epsagon:
 
 ### AWS Lambda
 
-Tracing Lambda functions can be declared in three methods:
+Tracing Lambda functions can be done in three methods:
 1. Auto-tracing through the Epsagon dashboard.
 2. Using the [`serverless-plugin-epsagon`](https://github.com/epsagon/serverless-plugin-epsagon) if you're using The Serverless Framework.
 3. Calling the SDK.
@@ -206,7 +206,7 @@ def handle(event, context):
 
 ### Django
 
-Tracing Django application can be declared in two methods:
+Tracing Django application can be done in two methods:
 1. [Auto-tracing](#auto-tracing) using the environment variable.
 2. Calling the SDK.
 
@@ -223,7 +223,7 @@ epsagon.init(
 
 ### Flask
 
-Tracing Flask application can be declared in two methods:
+Tracing Flask application can be done in two methods:
 1. [Auto-tracing](#auto-tracing) using the environment variable.
 2. Calling the SDK.
 
@@ -239,7 +239,7 @@ epsagon.init(
 
 ### Tornado
 
-Tracing Tornado application can be declared in two methods:
+Tracing Tornado application can be done in two methods:
 1. [Auto-tracing](#auto-tracing) using the environment variable.
 2. Calling the SDK.
 
@@ -255,7 +255,7 @@ epsagon.init(
 
 ### Celery
 
-Tracing Celery consumer can be declared in two methods:
+Tracing Celery consumer can be done in two methods:
 1. [Auto-tracing](#auto-tracing) using the environment variable.
 2. Calling the SDK.
 
@@ -271,7 +271,7 @@ epsagon.init(
 
 ### Chalice
 
-Tracing Chalice applications running on Lambda functions can be declared by:
+Tracing Chalice applications running on Lambda functions can be done by:
 ```python
 from chalice import Chalice
 import epsagon
@@ -289,7 +289,7 @@ app = epsagon.chalice_wrapper(app)
 
 ### Zappa
 
-Tracing web applications running on Lambda functions using Zappa can be declared by:
+Tracing web applications running on Lambda functions using Zappa can be done by:
 ```python
 from zappa.handler import lambda_handler
 import epsagon
