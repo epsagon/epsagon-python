@@ -11,7 +11,7 @@
 
 # Epsagon Tracing for Python
 
-This package provides tracing to Node.js applications for the collection of distributed tracing and performance metrics in [Epsagon](https://dashboard.epsagon.com/?utm_source=github).
+This package provides tracing to Python applications for the collection of distributed tracing and performance metrics in [Epsagon](https://dashboard.epsagon.com/?utm_source=github).
 
 
 ## Contents
@@ -54,7 +54,7 @@ For example:
 ```sh
 export EPSAGON_TOKEN=<your-token>
 export EPSAGON_APP_NAME=django-prod
-NODE_OPTIONS='-r epsagon-frameworks' python app.py
+AUTOWRAPT_BOOTSTRAP=epsagon python app.py
 ```
 
 You can see the list of auto-tracing [supported frameworks](#frameworks)
@@ -393,10 +393,10 @@ If you have any issue around using the library or the product, please don't hesi
 
 ## Opening Issues
 
-If you encounter a bug with the Epsagon library for Node.js, we want to hear about it.
+If you encounter a bug with the Epsagon library for Python, we want to hear about it.
 
 When opening a new issue, please provide as much information about the environment:
-* Library version, Node.js runtime version, dependencies, etc.
+* Library version, Python runtime version, dependencies, etc.
 * Snippet of the usage.
 * A reproducible example can really help.
 
