@@ -1,341 +1,410 @@
-# Epsagon Instrumentation for Python
+<p align="center">
+  <a href="https://epsagon.com" target="_blank" align="center">
+    <img src="https://cdn2.hubspot.net/hubfs/4636301/Positive%20RGB_Logo%20Horizontal%20-01.svg" width="300">
+  </a>
+  <br />
+</p>
+
 [![Build Status](https://travis-ci.com/epsagon/epsagon-python.svg?token=wsveVqcNtBtmq6jpZfSf&branch=master)](https://travis-ci.com/epsagon/epsagon-python)
 [![Pyversions](https://img.shields.io/pypi/pyversions/epsagon.svg?style=flat)](https://pypi.org/project/epsagon/)
 [![PypiVersions](https://img.shields.io/pypi/v/epsagon.svg)](https://pypi.org/project/epsagon/)
 
-This package provides an instrumentation to Python code running on functions for collection of distributed tracing and performance monitoring.
+# Epsagon Tracing for Python
 
-- [Installation](https://github.com/epsagon/epsagon-python#installation)
-- [Usage](https://github.com/epsagon/epsagon-python#usage)
-  - [AWS Lambda](https://github.com/epsagon/epsagon-python#aws-lambda)
-  - [Django Application](https://github.com/epsagon/epsagon-python#django-application)
-  - [Flask Application](https://github.com/epsagon/epsagon-python#flask-application)
-  - [Tornado Application](https://github.com/epsagon/epsagon-python#tornado-application)
-  - [Generic Python](https://github.com/epsagon/epsagon-python#generic-python)
-  - [Auto-tracing](https://github.com/epsagon/epsagon-python#auto-tracing)
-- [Custom Data](https://github.com/epsagon/epsagon-python#custom-data)
-  - [Custom Labels](https://github.com/epsagon/epsagon-python#custom-labels)
-  - [Custom Errors](https://github.com/epsagon/epsagon-python#custom-errors)
-  - [Ignore Keys](https://github.com/epsagon/epsagon-python#ignore-keys)
-- [Frameworks Integration](https://github.com/epsagon/epsagon-python#frameworks-integration)
-  - [Serverless](https://github.com/epsagon/epsagon-python#serverless)
-  - [Chalice](https://github.com/epsagon/epsagon-python#chalice)
-  - [Zappa](https://github.com/epsagon/epsagon-python#zappa)
-- [Copyright](https://github.com/epsagon/epsagon-python#copyright)
+This package provides tracing to Node.js applications for collection of distributed tracing and performance metrics in [Epsagon](https://dashboard.epsagon.com/?utm_source=github).
+
+
+## Contents
+
+- [Installation](#installation)
+- [Usage](#usage)
+  - [Auto-tracing](#auto-tracing)
+  - [Calling the SDK](#calling-the-sdk)
+  - [Tagging Traces](#tagging-traces)
+  - [Custom Errors](#custom-errors)
+  - [Filter Sensitive Data](#filter-sensitive-data)
+  - [Ignore Endpoints](#ignore-endpoints)
+- [Frameworks](#frameworks)
+- [Integrations](#integrations)
+- [Configuration](#configuration)
+- [Getting Help](#getting-help)
+- [Opening Issues](#opening-issues)
+- [License](#license)
 
 
 ## Installation
 
-From your project directory:
-
+To install Epsagon, simply run:
+```sh
+pip install -U epsagon
 ```
-$ pip install epsagon
-```
-
-More details about lambda deployments are available in the [AWS documentation](https://docs.aws.amazon.com/lambda/latest/dg/lambda-python-how-to-create-deployment-package.html).
 
 ## Usage
 
-Make sure to add `epsagon` under your `requirements.txt` file.
-
-### AWS Lambda
-
-Simply use our decorator to report metrics:
-
-```python
-import epsagon
-epsagon.init(
-    token='my-secret-token',
-    app_name='my-app-name',
-    metadata_only=False,  # Optional, send more trace data
-)
-
-@epsagon.lambda_wrapper
-def handler(event, context):
-  pass
-```
-
-### Django Application
-
-Add the following code to the `settings.py` file:
-```python
-import epsagon
-epsagon.init(
-    token='my-secret-token',
-    app_name='my-app-name',
-    metadata_only=False,  # Optional, send more trace data
-)
-```
-
-
-For web frameworks: Use ignored_endpoints to blacklist specific paths and prevent Epsagon from sending a trace.
-```python
-import epsagon
-epsagon.init(
-    ...
-    ignored_endpoints=['/path', '/path/to/ignore']
-)
-```
-
-### Flask Application
-
-Use the example snippet:
-```python
-from flask import Flask
-import epsagon
-
-epsagon.init(
-    token='my-secret-token',
-    app_name='my-app-name',
-    metadata_only=False
-)
-
-app = Flask(__name__)
-
-@app.route('/')
-def hello():
-    return "Hello World!"
-
-app.run()
-```
-
-### Tornado Application
-
-Use the example snippet:
-```python
-import tornado.ioloop
-import tornado.web
-import epsagon
-
-epsagon.init(
-    token='my-secret-token',
-    app_name='my-app-name',
-    metadata_only=False
-)
-
-
-class MainHandler(tornado.web.RequestHandler):
-    def get(self):
-        self.write('Hello, world')
-
-
-def make_app():
-    return tornado.web.Application([
-        (r'/', MainHandler),
-    ])
-
-
-if __name__ == '__main__':
-    app = make_app()
-    app.listen(8888)
-    tornado.ioloop.IOLoop.current().start()
-```
-
-### Generic Python
-
-Use the example snippet:
-```python
-import epsagon
-epsagon.init(
-    token='my-secret-token',
-    app_name='my-app-name',
-    metadata_only=False
-)
-
-
-@epsagon.python_wrapper
-def main():
-    return 'It worked!'
-  
-main()
-```
-
 ### Auto-tracing
 
-You can apply Epsagon tracing without any code changes using:
-
-```bash
+The simplest way to get started is to run your python command with the following environment variable:
+```sh
+export EPSAGON_TOKEN=<epsagon-token>
+export EPSAGON_APP_NAME=<app-name-stage>
 AUTOWRAPT_BOOTSTRAP=epsagon <command>
 ```
 
 For example:
-
-```bash
-AUTOWRAPT_BOOTSTRAP=epsagon python app.py
+```sh
+export EPSAGON_TOKEN=<your-token>
+export EPSAGON_APP_NAME=django-prod
+NODE_OPTIONS='-r epsagon-frameworks' python app.py
 ```
-### Configuration
-You can customize your library usage using flags. The flags
-should be set as enviroment variables in your code runtime enviroment.
 
-| Parameter                   | Type    | Default | Description                                                                                             |   |
-|-----------------------------|---------|---------|---------------------------------------------------------------------------------------------------------|---|
-| EPSAGON_SEND_TIMEOUT_SEC    | String  | 0       | Set a custom trace send timeout                                                                         |   |
-| EPSAGON_HTTP_ERR_CODE       | String  | 500     | Minimum HTTP status to be treated as an error                                                           |   |
-| EPSAGON_SSL                 | Boolean | TRUE    | Disable SSL for trace send                                                                              |   |
-| EPSAGON_ENDPOINTS_TO_IGNORE | String  | None    | Endpoints to ignore, comma seperated. aka: "endpoint1, endpoint2"                                       |   |
-| EPSAGON_TOKEN               | String  | None    | Account Epsagon token                                                                                   |   |
-| EPSAGON_APP_NAME            | String  | None    | Application name that will be set for traces                                                            |   |
-| EPSAGON_METADATA            | Boolean | FALSE   | Whether to send all collected data, or just metadata                                                    |   |
-| EPSAGON_SPLIT_ON_SEND       | Boolean | FALSE   | Split big traces into multiple parts                                                                    |   |
-| EPSAGON_IGNORED_KEYS        | String  | None    | Prevent data from being sent to epsagon by filtering specific keys in initialization. aka: "key1, key2" |   |
-| EPSAGON_ALLOWED_KEYS        | String  | None    | Allow data to be sent to epsagon by filtering specific keys in initialization.aka: "key1, key2"         |   |
+You can see the list of auto-tracing [supported frameworks](#frameworks)
 
+### Calling the SDK
 
-### Lambda specific flags
-EPSAGON_DISABLE_ON_TIMEOUT - TRUE / FALSE. Don't send trace on timeout. Default is FALSE.
-
-
-
-## Custom Data
-
-### Custom Labels
-
-You can add custom labels to your traces. Filters can later be used for filtering
-traces that contains specific labels:
+Another simple alternative is to copy the snippet into your code:
 ```python
-def handler(event, context):
-    epsagon.label('key', 'value')
-    epsagon.label('user_id', event['headers']['auth'])
-    epsagon.label('number_of_records_parsed_successfully', 42)
+import epsagon
+epsagon.init(
+    token='epsagon-token',
+    app_name='app-name-stage',
+    metadata_only=False,
+)
 ```
+
+To run on your framework please refer to [supported frameworks](#frameworks)
+
+
+### Tagging Traces
+
+You can add custom tags to your traces, for easier filtering and aggregations.
+
+Add the following call inside your code:
+```python
+epsagon.label('key', 'value')
+epsagon.label('user_id', user_id)
+```
+
+In some [frameworks](#frameworks) tagging can be done in different ways.
 
 ### Custom Errors
 
-You can manually set a trace as an error, even if handled correctly.
-Please refer to the full documentation, about handling of this errors in the issues management.
+You can set a trace as an error (although handled correctly) to get an alert or just follow it on the dashboard.
 
+Add the following call inside your code:
 ```python
-def handler(event, context):
-    try:
-        fail = 1 / 0
-    except Exception as ex:
-        epsagon.error(ex)
-        
-    # or
+try:
+    fail = 1 / 0
+except Exception as ex:
+    epsagon.error(ex)
 
-    if 'my_param' not in event:
-        epsagon.error(ValueError('event missing my_param'))
-        # or
-        epsagon.error('event missing my_param')
+# Or manually specify Exception object
+epsagon.error(Exception('My custom error'))
 ```
 
+In some [frameworks](#frameworks) custom errors can be done in different ways.
 
-### Ignore keys
+### Filter Sensitive Data
 
-You can prevent data from being sent to epsagon by filtering specific keys in initialization.
+You can pass a list of sensitive properties and hostnames and they will be filtered out from the traces:
+
 ```python
-
-import epsagon
 epsagon.init(
-    token='my-secret-token',
-    app_name='my-app-name',
+    token='epsagon-token',
+    app_name='app-name-stage',
     metadata_only=False,
-    keys_to_ignore=['Request Data', 'Status_Code']
+    keys_to_ignore=['password', 'user_name'],
+    url_patterns_to_ignore=['example.com', 'auth.com']
 )
 ```
 
-### Allowed keys
-You can allow data to be sent to epsagon by filtering specific keys in initialization.
-Only keys included in this list will be sent to epsagon.
-NOTE - Keys found in keys_to_ignore override this setting
+Or specify keys that are allowed:
+
+```python
+epsagon.init(
+    token='epsagon-token',
+    app_name='app-name-stage',
+    metadata_only=False,
+    keys_to_allow=['Request Data', 'Status_Code'],
+)
+```
+
+The `keys_to_ignore` and `keys_to_allow` properties can contain strings (will perform a lose match, so that `First Name` also matches `first_name`).
+Also you can set `url_patterns_to_ignore` to ignore HTTP calls to specific domains.
+
+
+### Ignore Endpoints
+
+You can ignore certain incoming requests by specifying endpoints:
+```python
+epsagon.init(
+    token='epsagon-token',
+    app_name='app-name-stage',
+    metadata_only=False,
+    ignored_endpoints=['/healthcheck'],
+)
+```
+
+## Frameworks
+
+The following frameworks are supported with Epsagon:
+
+|Framework                               |Supported Version          |Auto-tracing Supported                               |
+|----------------------------------------|---------------------------|-----------------------------------------------------|
+|[AWS Lambda](#aws-lambda)               |All                        |<ul><li>- [x] (Through the dashboard only)</li></ul> |
+|[Step Functions](#step-functions)       |All                        |<ul><li>- [ ] </li></ul>                             |
+|[Generic](#generic)                     |All                        |<ul><li>- [ ] </li></ul>                             |
+|[Django](#django)                       |`>=1.11`                   |<ul><li>- [x] </li></ul>                             |
+|[Flask](#flask)                         |`>=0.5`                    |<ul><li>- [x] </li></ul>                             |
+|[Tornado](#tornado)                     |`>=4.0`                    |<ul><li>- [x] </li></ul>                             |
+|[Celery](#celery)                       |`>=4.0.0`                  |<ul><li>- [x] </li></ul>                             |
+|[Chalice](#chalice)                     |`>=1.0.0`                  |<ul><li>- [ ] </li></ul>                             |
+|[Zappa](#zappa)                         |`>=0.30.0`                 |<ul><li>- [ ] </li></ul>                             |
+
+
+### AWS Lambda
+
+Tracing Lambda functions can be declared in three methods:
+1. Auto-tracing through the Epsagon dashboard.
+2. Using the [`serverless-plugin-epsagon`](https://github.com/epsagon/serverless-plugin-epsagon) if you're using The Serverless Framework.
+3. Calling the SDK.
+
+**Make sure to choose just one of the methods**
+
+Calling the SDK is simple:
 
 ```python
 import epsagon
 epsagon.init(
-    token='my-secret-token',
-    app_name='my-app-name',
+    token='<epsagon-token>',
+    app_name='<app-name-stage>',
     metadata_only=False,
-    keys_to_allow=['Request Data', 'Status_Code']
+)
+
+# Wrap your entry point:
+@epsagon.lambda_wrapper
+def handle(event, context):
+    # Your code is here
+```
+
+### Step Functions
+
+Tracing Step Functions is similar to regular Lambda functions, but the wrapper changes from `lambda_wrapper` to `step_lambda_wrapper`:
+
+```python
+import epsagon
+epsagon.init(
+    token='<epsagon-token>',
+    app_name='<app-name-stage>',
+    metadata_only=False,
+)
+
+# Wrap your entry point:
+@epsagon.step_lambda_wrapper
+def handle(event, context):
+    # Your code is here
+```
+
+### Django
+
+Tracing Django application can be declared in two methods:
+1. [Auto-tracing](#auto-tracing) using the environment variable.
+2. Calling the SDK.
+
+Calling the SDK is simple, and should be done in your main `settings.py` file where the application is being initialized:
+```python
+import epsagon
+epsagon.init(
+    token='<epsagon-token>',
+    app_name='<app-name-stage>',
+    metadata_only=False,
 )
 ```
 
-## Frameworks Integration
 
-When using any of the following integrations, make sure to add `epsagon` under your `requirements.txt` file.
+### Flask
 
-### Serverless
+Tracing Flask application can be declared in two methods:
+1. [Auto-tracing](#auto-tracing) using the environment variable.
+2. Calling the SDK.
 
-Using Epsagon with [Serverless](https://github.com/serverless/serverless) is simple, by using the [serverless-plugin-epsagon](https://github.com/epsagon/serverless-plugin-epsagon).
+Calling the SDK is simple, and should be done in your main `py` file where the application is being initialized:
+```python
+import epsagon
+epsagon.init(
+    token='<epsagon-token>',
+    app_name='<app-name-stage>',
+    metadata_only=False,
+)
+```
+
+### Tornado
+
+Tracing Tornado application can be declared in two methods:
+1. [Auto-tracing](#auto-tracing) using the environment variable.
+2. Calling the SDK.
+
+Calling the SDK is simple, and should be done in your main `py` file where the application is being initialized:
+```python
+import epsagon
+epsagon.init(
+    token='<epsagon-token>',
+    app_name='<app-name-stage>',
+    metadata_only=False,
+)
+```
+
+### Celery
+
+Tracing Celery consumer can be declared in two methods:
+1. [Auto-tracing](#auto-tracing) using the environment variable.
+2. Calling the SDK.
+
+Calling the SDK is simple, and should be done in your main `py` file where the consumer is being initialized:
+```python
+import epsagon
+epsagon.init(
+    token='epsagon-token',
+    app_name='app-name-stage',
+    metadata_only=False,
+)
+```
 
 ### Chalice
 
-Using Epsagon with [Chalice](https://github.com/aws/chalice) is simple, follow this example:
-
+Tracing Chalice applications running on Lambda functions can be declared by:
 ```python
 from chalice import Chalice
 import epsagon
 epsagon.init(
-    token='my-secret-token',
-    app_name='my-app-name',
+    token='epsagon-token',
+    app_name='app-name-stage',
     metadata_only=False
 )
-app = Chalice(app_name="hello-world")
+app = Chalice(app_name='hello-world')
 
-
-@app.route("/")
-def index():
-    return {"hello": "world"}
+# Your code is here
 
 app = epsagon.chalice_wrapper(app)
 ```
 
-or In S3 trigger example:
-```python
-from chalice import Chalice
-
-app = Chalice(app_name="helloworld")
-
-import epsagon
-epsagon.init(
-    token='my-secret-token',
-    app_name='my-app-name',
-    metadata_only=False
-)
-# Whenever an object is uploaded to 'mybucket'
-# this lambda function will be invoked.
-
-@epsagon.lambda_wrapper
-@app.on_s3_event(bucket='mybucket')
-def handler(event):
-    print("Object uploaded for bucket: %s, key: %s"
-          % (event.bucket, event.key))
-```
-
 ### Zappa
 
-Using Epsagon with [Zappa](https://github.com/Miserlou/Zappa) is simple, follow this example:
-
+Tracing web applications running on Lambda functions using Zappa can be declared by:
 ```python
-from flask import Flask
 from zappa.handler import lambda_handler
 import epsagon
 
 epsagon.init(
-    token='my-secret-token',
-    app_name='my-app-name',
+    token='epsagon-token',
+    app_name='app-name-stage',
     metadata_only=False
 )
-app = Flask(__name__)
 
-
-@app.route('/')
-def hello_world():
-    return 'Hello, World!'
-
+# Your code is here
 
 epsagon_handler = epsagon.lambda_wrapper(lambda_handler)
 ```
 
 And in your `zappa_settings.json` file include the following:
+
 ```json
 {
   "lambda_handler": "module.path_to.epsagon_handler"
 }
 ```
 
-## Copyright
+### Generic
 
+For any tracing, you can simply use the generic Epsagon wrapper using the following example:
+
+```python
+import epsagon
+epsagon.init(
+    token='epsagon-token',
+    app_name='app-name-stage',
+    metadata_only=False,
+)
+
+# Wrap your entry point:
+@epsagon.python_wrapper
+def main(params):
+    # Your code is here
+```
+
+## Integrations
+
+Epsagon provides out-of-the-box instrumentation (tracing) for many popular frameworks and libraries.
+
+|Library             |Supported Version          |
+|--------------------|---------------------------|
+|logging             |Fully supported            |
+|urllib              |Fully supported            |
+|urllib3             |Fully supported            |
+|requests            |`>=2.0.0`                  |
+|httplib2            |`>=0.9.2`                  |
+|redis               |`>=2.10.0`                 |
+|pymongo             |`>=3.0.0`                  |
+|pynamodb            |`>=2.0.0`                  |
+|PyMySQL             |`>=0.7.0`                  |
+|MySQLdb             |`>=1.0.0`                  |
+|psycopg2            |`>=2.2.0`                  |
+|pg8000              |`>=1.9.0`                  |
+|botocore (boto3)    |`>=1.4.0`                  |
+|celery              |`>=4.0.0`                  |
+|grpc                |`>=0.3-10`                 |
+
+
+
+## Configuration
+
+Advanced options can be configured as a parameter to the init() method or as environment variables.
+
+|Parameter             |Environment Variable          |Type   |Default      |Description                                                                        |
+|----------------------|------------------------------|-------|-------------|-----------------------------------------------------------------------------------|
+|token                 |EPSAGON_TOKEN                 |String |-            |Epsagon account token                                                              |
+|app_name              |EPSAGON_APP_NAME              |String |`Application`|Application name that will be set for traces                                       |
+|metadata_only         |EPSAGON_METADATA              |Boolean|`True`       |Whether to send only the metadata (`True`) or also the payloads (`False`)          |
+|use_ssl               |EPSAGON_SSL                   |Boolean|`True`       |Whether to send the traces over HTTPS SSL or not                                   |
+|collector_url         |EPSAGON_COLLECTOR_URL         |String |-            |The address of the trace collector to send trace to                                |
+|keys_to_ignore        |EPSAGON_IGNORED_KEYS          |List   |-            |List of keys names to be removed from the trace                                    |
+|keys_to_allow         |EPSAGON_ALLOWED_KEYS          |List   |-            |List of keys names to be included from the trace                                   |
+|ignored_endpoints     |EPSAGON_ENDPOINTS_TO_IGNORE   |List   |-            |List of endpoints to ignore from tracing (for example `/healthcheck`                |
+|url_patterns_to_ignore|EPSAGON_URLS_TO_IGNORE        |List   |`[]`         |Array of URL patterns to ignore the calls                                          |
+|debug                 |EPSAGON_DEBUG                 |Boolean|`False`      |Enable debug prints for troubleshooting                                            |
+|disable_timeout_send  |EPSAGON_DISABLE_ON_TIMEOUT    |Boolean|`False`      |Disable timeout detection in Lambda functions                                      |
+|split_on_send         |EPSAGON_SPLIT_ON_SEND         |Boolean|`False`      |Split the trace into multiple chunks to support large traces                       |
+|propagate_lambda_id   |EPSAGON_PROPAGATE_LAMBDA_ID   |Boolean|`False`      |Insert Lambda request ID into the response payload                                 |
+|-                     |EPSAGON_HTTP_ERR_CODE         |Integer|`500`        |The minimum number of an HTTP response status code to treat as an error            |
+|-                     |EPSAGON_SEND_TIMEOUT_SEC      |Float  |`0.2`        |The timeout duration in seconds to send the traces to the trace collector          |
+|-                     |EPSAGON_DISABLE_LOGGING_ERRORS|Boolean|`false`      |Disable the automatic capture of error messages into `logging`                     |
+|-                     |DISABLE_EPSAGON               |Boolean|`False`      |A flag to completely disable Epsagon (can be used for tests or locally)            |
+|-                     |DISABLE_EPSAGON_PATCH         |Boolean|`false`      |Disable the library patching (instrumentation)                                     |
+
+
+
+## Getting Help
+
+If you have any issue around using the library or the product, please don't hesitate to:
+
+* Use the [documentation](https://docs.epsagon.com).
+* Use the help widget inside the product.
+* Open an issue in GitHub.
+
+
+## Opening Issues
+
+If you encounter a bug with the Epsagon library for Node.js, we want to hear about it.
+
+When opening a new issue, please provide as much information about the environment:
+* Library version, Node.js runtime version, dependencies, etc.
+* Snippet of the usage.
+* A reproducible example can really help.
+
+The GitHub issues are intended for bug reports and feature requests.
+For help and questions about Epsagon, use the help widget inside the product.
+
+## License
 
 Provided under the MIT license. See LICENSE for details.
 
-Copyright 2019, Epsagon.
+Copyright 2020, Epsagon
