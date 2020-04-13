@@ -106,6 +106,7 @@ def lambda_wrapper(func):
             result = func(*args, **kwargs)
             if trace.propagate_lambda_id and isinstance(result, dict):
                 result[EPSAGON_EVENT_ID_KEY] = runner.event_id
+                runner.resource['metadata']['propagation_enabled'] = True
             return result
         # pylint: disable=W0703
         except Exception as exception:

@@ -2,12 +2,13 @@
 Utilities for Epsagon module.
 """
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 import os
 import collections
 import socket
 import sys
 import traceback
+import re
 import six
 import requests
 import simplejson as json
@@ -19,7 +20,7 @@ except ImportError:
 from epsagon import http_filters
 from epsagon.constants import TRACE_COLLECTOR_URL, REGION
 from .trace import trace_factory, create_transport
-from .constants import EPSAGON_HANDLER
+from .constants import EPSAGON_HANDLER, DEBUG_MODE
 
 
 METADATA_CACHE = {
@@ -91,6 +92,7 @@ def init(
     send_trace_only_on_error=False,
     url_patterns_to_ignore=None,
     keys_to_ignore=None,
+    keys_to_allow=None,
     ignored_endpoints=None,
     split_on_send=False,
     propagate_lambda_id=False,
@@ -111,6 +113,7 @@ def init(
     :param url_patterns_to_ignore: URL patterns to ignore in HTTP data
       collection.
     :param keys_to_ignore: List of keys to ignore while extracting metadata.
+    :param keys_to_allow: List of keys to allow while extracting metadata
     :param ignored_endpoints: List of ignored endpoints for web frameworks.
     :param split_on_send: Split the trace on send flag
     :param propagate_lambda_id: Inject identifiers via return value flag
@@ -136,6 +139,10 @@ def init(
     if ignored_keys:
         ignored_keys = ignored_keys.split(',')
 
+    allowed_keys = os.getenv('EPSAGON_ALLOWED_KEYS')
+    if allowed_keys:
+        allowed_keys = allowed_keys.split(',')
+
     trace_factory.initialize(
         token=os.getenv('EPSAGON_TOKEN') or token,
         app_name=os.getenv('EPSAGON_APP_NAME') or app_name,
@@ -158,6 +165,7 @@ def init(
         ),
         url_patterns_to_ignore=ignored_urls or url_patterns_to_ignore,
         keys_to_ignore=ignored_keys or keys_to_ignore,
+        keys_to_allow=allowed_keys or keys_to_allow,
         transport=create_transport(collector_url, token),
         split_on_send=(
                 ((os.getenv('EPSAGON_SPLIT_ON_SEND') or '').upper() == 'TRUE')
@@ -250,6 +258,7 @@ def find_in_object(obj, key):
 
     return result
 
+
 def collect_exception_python3(exception):
     """
     Collect exception from exception __traceback__.
@@ -264,6 +273,7 @@ def collect_exception_python3(exception):
     ))
     return traceback_data
 
+
 def collect_exception_python2():
     """
     Collect exception from exception sys.exc_info.
@@ -273,6 +283,7 @@ def collect_exception_python2():
     traceback_data = six.StringIO()
     traceback.print_exception(*sys.exc_info(), file=traceback_data)
     return traceback_data.getvalue()
+
 
 def get_traceback_data_from_exception(exception):
     """
@@ -286,3 +297,57 @@ def get_traceback_data_from_exception(exception):
     if python_version == 3:
         return collect_exception_python3(exception)
     return ''
+
+
+def parse_json(json_string):
+    """
+    Parse JSON string to a Python Dictionary
+    :param json_string: JSON string
+    :return: Python Dictionary
+    """
+    try:
+        return json.loads(json_string)
+    except ValueError:
+        return None
+
+
+def camel_case_to_title_case(camel_case_string):
+    """
+    Turn Camel Case string into Title Case string in which first characters of
+    all the words are capitalized.
+    :param camel_case_string: Camel Case string
+    :return: Title Case string
+    """
+    if not isinstance(camel_case_string, str):
+        return None
+    title_case = re.sub('([^-])([A-Z][a-z-]+)', r'\1 \2', camel_case_string)\
+        .title()
+    return title_case
+
+
+def add_metadata_from_dict(resource, dictionary, key):
+    """
+    Add new data to resource metadata
+    :param resource: Resource
+    :param dictionary: Argument Dictionary
+    :param key: Property key
+    :return: True if added, else False
+    """
+    value = dictionary.get(key)
+    if not value and not isinstance(value, str):
+        return
+    title_case_key = camel_case_to_title_case(key)
+    resource['metadata'][title_case_key] = value
+
+
+def is_lambda_env():
+    """
+    Returns True if the current environment is running on a Lambda function.
+    :return: bool
+    """
+    return os.getenv('AWS_LAMBDA_FUNCTION_NAME') is not None
+
+
+def print_debug(log):
+    if DEBUG_MODE:
+        print('[EPSAGON_DEBUG]: {}'.format(log))

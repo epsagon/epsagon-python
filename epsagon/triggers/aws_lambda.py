@@ -7,7 +7,7 @@ from uuid import uuid4
 from importlib import import_module
 import hashlib
 import simplejson as json
-from epsagon.utils import add_data_if_needed
+from epsagon.utils import add_data_if_needed, parse_json
 from ..event import BaseEvent
 
 # Conditionally importing boto3
@@ -254,14 +254,27 @@ class SQSLambdaTrigger(BaseLambdaTrigger):
                 'ApproximateFirstReceiveTimestamp'
             ],
         }
+        sqs_message_body = record['body']
 
         self.resource['metadata']['Number Of Messages'] = len(event['Records'])
 
         add_data_if_needed(
             self.resource['metadata'],
             'Message Body',
-            str(record['body'])
+            str(sqs_message_body)
         )
+
+        message_body = parse_json(sqs_message_body)
+        if not message_body:
+            return
+        message_body_input = message_body.get('input')
+        if not message_body_input:
+            return
+        if isinstance(message_body_input, dict):
+            steps_dict = message_body_input.get('Epsagon')
+            if not steps_dict:
+                return
+            self.resource['metadata'] = {'steps_dict': steps_dict}
 
 
 class ProxyAPIGatewayLambdaTrigger(BaseLambdaTrigger):

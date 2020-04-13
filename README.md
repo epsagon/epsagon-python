@@ -12,6 +12,7 @@ This package provides an instrumentation to Python code running on functions for
   - [Flask Application](https://github.com/epsagon/epsagon-python#flask-application)
   - [Tornado Application](https://github.com/epsagon/epsagon-python#tornado-application)
   - [Generic Python](https://github.com/epsagon/epsagon-python#generic-python)
+  - [Auto-tracing](https://github.com/epsagon/epsagon-python#auto-tracing)
 - [Custom Data](https://github.com/epsagon/epsagon-python#custom-data)
   - [Custom Labels](https://github.com/epsagon/epsagon-python#custom-labels)
   - [Custom Errors](https://github.com/epsagon/epsagon-python#custom-errors)
@@ -66,13 +67,6 @@ epsagon.init(
 )
 ```
 
-Add Epsagon middleware to the application's middleware list (located in `settings.py`)
-```python
-MIDDLEWARE = [
-    '....',
-    'epsagon.wrappers.django.DjangoMiddleware',
-]
-```
 
 For web frameworks: Use ignored_endpoints to blacklist specific paths and prevent Epsagon from sending a trace.
 ```python
@@ -97,7 +91,6 @@ epsagon.init(
 )
 
 app = Flask(__name__)
-epsagon.flask_wrapper(app)
 
 @app.route('/')
 def hello():
@@ -157,6 +150,42 @@ def main():
 main()
 ```
 
+### Auto-tracing
+
+You can apply Epsagon tracing without any code changes using:
+
+```bash
+AUTOWRAPT_BOOTSTRAP=epsagon <command>
+```
+
+For example:
+
+```bash
+AUTOWRAPT_BOOTSTRAP=epsagon python app.py
+```
+### Configuration
+You can customize your library usage using flags. The flags
+should be set as enviroment variables in your code runtime enviroment.
+
+| Parameter                   | Type    | Default | Description                                                                                             |   |
+|-----------------------------|---------|---------|---------------------------------------------------------------------------------------------------------|---|
+| EPSAGON_SEND_TIMEOUT_SEC    | String  | 0       | Set a custom trace send timeout                                                                         |   |
+| EPSAGON_HTTP_ERR_CODE       | String  | 500     | Minimum HTTP status to be treated as an error                                                           |   |
+| EPSAGON_SSL                 | Boolean | TRUE    | Disable SSL for trace send                                                                              |   |
+| EPSAGON_ENDPOINTS_TO_IGNORE | String  | None    | Endpoints to ignore, comma seperated. aka: "endpoint1, endpoint2"                                       |   |
+| EPSAGON_TOKEN               | String  | None    | Account Epsagon token                                                                                   |   |
+| EPSAGON_APP_NAME            | String  | None    | Application name that will be set for traces                                                            |   |
+| EPSAGON_METADATA            | Boolean | FALSE   | Whether to send all collected data, or just metadata                                                    |   |
+| EPSAGON_SPLIT_ON_SEND       | Boolean | FALSE   | Split big traces into multiple parts                                                                    |   |
+| EPSAGON_IGNORED_KEYS        | String  | None    | Prevent data from being sent to epsagon by filtering specific keys in initialization. aka: "key1, key2" |   |
+| EPSAGON_ALLOWED_KEYS        | String  | None    | Allow data to be sent to epsagon by filtering specific keys in initialization.aka: "key1, key2"         |   |
+
+
+### Lambda specific flags
+EPSAGON_DISABLE_ON_TIMEOUT - TRUE / FALSE. Don't send trace on timeout. Default is FALSE.
+
+
+
 ## Custom Data
 
 ### Custom Labels
@@ -195,6 +224,7 @@ def handler(event, context):
 
 You can prevent data from being sent to epsagon by filtering specific keys in initialization.
 ```python
+
 import epsagon
 epsagon.init(
     token='my-secret-token',
@@ -203,6 +233,22 @@ epsagon.init(
     keys_to_ignore=['Request Data', 'Status_Code']
 )
 ```
+
+### Allowed keys
+You can allow data to be sent to epsagon by filtering specific keys in initialization.
+Only keys included in this list will be sent to epsagon.
+NOTE - Keys found in keys_to_ignore override this setting
+
+```python
+import epsagon
+epsagon.init(
+    token='my-secret-token',
+    app_name='my-app-name',
+    metadata_only=False,
+    keys_to_allow=['Request Data', 'Status_Code']
+)
+```
+
 ## Frameworks Integration
 
 When using any of the following integrations, make sure to add `epsagon` under your `requirements.txt` file.
