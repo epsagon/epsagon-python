@@ -83,7 +83,7 @@ def get_tc_url(use_ssl):
 
 def init(
     token='',
-    app_name='default',
+    app_name='Application',
     collector_url=None,
     metadata_only=True,
     disable_timeout_send=False,
