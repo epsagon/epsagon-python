@@ -184,6 +184,7 @@ class KinesisLambdaTrigger(BaseLambdaTrigger):
             'invoke_identity': event['Records'][0]['invokeIdentityArn'],
             'sequence_number': event['Records'][0]['kinesis']['sequenceNumber'],
             'partition_key': event['Records'][0]['kinesis']['partitionKey'],
+            'record_count': len(event['Records'])
         }
 
 
@@ -253,6 +254,8 @@ class SQSLambdaTrigger(BaseLambdaTrigger):
                 'ApproximateFirstReceiveTimestamp'
             ],
         }
+
+        self.resource['metadata']['Number Of Messages'] = len(event['Records'])
 
         add_data_if_needed(
             self.resource['metadata'],
