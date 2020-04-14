@@ -143,14 +143,15 @@ def init(
     if allowed_keys:
         allowed_keys = allowed_keys.split(',')
 
+    # If EPSAGON_METADATA exists as an env var - use it
+    if os.getenv('EPSAGON_METADATA'):
+        metadata_only = (os.getenv('EPSAGON_METADATA') or '').upper() == 'TRUE'
+
     trace_factory.initialize(
         token=os.getenv('EPSAGON_TOKEN') or token,
         app_name=os.getenv('EPSAGON_APP_NAME') or app_name,
         collector_url=os.getenv('EPSAGON_COLLECTOR_URL') or collector_url,
-        metadata_only=(
-            ((os.getenv('EPSAGON_METADATA') or '').upper() == 'TRUE') |
-            metadata_only
-        ),
+        metadata_only=metadata_only,
         disable_timeout_send=(
             ((os.getenv('EPSAGON_DISABLE_ON_TIMEOUT') or '')
                 .upper() == 'TRUE')
