@@ -40,6 +40,8 @@ class FlaskRunner(BaseEvent):
             'Base URL': request.base_url,
             'Path': request.path,
             'User Agent': request.headers.get('User-Agent', 'N/A'),
+            'Flask Application': app.name,
+            'Endpoint': request.endpoint,
         }
 
         if request.query_string:

@@ -217,7 +217,7 @@ def collect_container_metadata(metadata):
         metadata['is_k8s'] = True
         metadata['k8s_pod_name'] = socket.gethostname()
 
-    if METADATA_CACHE['queried']:
+    if METADATA_CACHE['queried'] and METADATA_CACHE['data']:
         metadata['ECS'] = METADATA_CACHE['data']
         return
 
@@ -230,7 +230,8 @@ def collect_container_metadata(metadata):
     new_metadata = container_metadata['Labels'].copy()
     new_metadata['Limits'] = container_metadata['Limits']
     METADATA_CACHE['data'] = new_metadata
-    metadata['ECS'] = METADATA_CACHE['data']
+    if METADATA_CACHE['data']:
+        metadata['ECS'] = METADATA_CACHE['data']
 
 
 def find_in_object(obj, key):
