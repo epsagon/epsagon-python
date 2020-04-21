@@ -83,7 +83,7 @@ def get_tc_url(use_ssl):
 
 def init(
     token='',
-    app_name='default',
+    app_name='Application',
     collector_url=None,
     metadata_only=True,
     disable_timeout_send=False,
@@ -143,14 +143,15 @@ def init(
     if allowed_keys:
         allowed_keys = allowed_keys.split(',')
 
+    # If EPSAGON_METADATA exists as an env var - use it
+    if os.getenv('EPSAGON_METADATA'):
+        metadata_only = (os.getenv('EPSAGON_METADATA') or '').upper() == 'TRUE'
+
     trace_factory.initialize(
         token=os.getenv('EPSAGON_TOKEN') or token,
         app_name=os.getenv('EPSAGON_APP_NAME') or app_name,
         collector_url=os.getenv('EPSAGON_COLLECTOR_URL') or collector_url,
-        metadata_only=(
-            ((os.getenv('EPSAGON_METADATA') or '').upper() == 'TRUE') |
-            metadata_only
-        ),
+        metadata_only=metadata_only,
         disable_timeout_send=(
             ((os.getenv('EPSAGON_DISABLE_ON_TIMEOUT') or '')
                 .upper() == 'TRUE')
@@ -216,7 +217,7 @@ def collect_container_metadata(metadata):
         metadata['is_k8s'] = True
         metadata['k8s_pod_name'] = socket.gethostname()
 
-    if METADATA_CACHE['queried']:
+    if METADATA_CACHE['queried'] and METADATA_CACHE['data']:
         metadata['ECS'] = METADATA_CACHE['data']
         return
 
@@ -229,7 +230,8 @@ def collect_container_metadata(metadata):
     new_metadata = container_metadata['Labels'].copy()
     new_metadata['Limits'] = container_metadata['Limits']
     METADATA_CACHE['data'] = new_metadata
-    metadata['ECS'] = METADATA_CACHE['data']
+    if METADATA_CACHE['data']:
+        metadata['ECS'] = METADATA_CACHE['data']
 
 
 def find_in_object(obj, key):
