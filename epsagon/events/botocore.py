@@ -245,6 +245,8 @@ class BotocoreKinesisEvent(BotocoreEvent):
                 response['Records'][0]['ShardId']
             self.resource['metadata']['sequence_number'] = \
                 response['Records'][0]['SequenceNumber']
+            self.resource['metadata']['record_count'] = \
+                len(response['Records'])
 
 
 class BotocoreSNSEvent(BotocoreEvent):
@@ -1362,9 +1364,8 @@ class BotocoreStepFunctionEvent(BotocoreEvent):
         self.resource['metadata']['State Machine ARN'] = (
             request_args['stateMachineArn']
         )
-        self.resource['metadata']['Execution Name'] = (
-            request_args.get('name', self.DEFAULT_EXECTUTION_NAME)
-        )
+        if 'name' in request_args:
+            self.resource['metadata']['Execution Name'] = request_args['name']
 
         add_data_if_needed(
             self.resource['metadata'],
@@ -1559,7 +1560,7 @@ class BotocoreEmr(BotocoreEvent):
         """
         Handle list clusters operation.
         """
-        self.resource['metadata']['Fileterd States'] = self.request_data.get(
+        self.resource['metadata']['Cluster States'] = self.request_data.get(
             'ClusterStates')
 
     def run_job_flow_op(self):
