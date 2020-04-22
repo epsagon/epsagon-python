@@ -382,6 +382,16 @@ class TraceFactory(object):
         if self.get_trace():
             self.get_trace().add_label(key, value)
 
+    def get_label(self, key, default=None):
+        """
+        Get the value of a previously set label
+        :param key:
+        :param default:
+        """
+        if self.get_trace():
+            return self.get_trace().get_label(key, default)
+        return default
+
     def set_error(self, exception, traceback_data=None):
         """
         Set an error for the current thread's trace.
@@ -728,6 +738,15 @@ class Trace(object):
         if not self.verify_custom_label(key, value):
             return
         self.custom_labels[key] = value
+
+    def get_label(self, key, default=None):
+        """
+        Get a previously set label (or defaul value)
+        :param key: Key for the label data (string)
+        :return: the value set for the label `key` or
+            default if it was not set yet
+        """
+        return self.custom_labels.get(key, default)
 
     def set_error(self, exception, traceback_data=None):
         """
