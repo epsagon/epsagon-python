@@ -4,7 +4,6 @@ logging patcher module.
 
 from __future__ import absolute_import
 from functools import partial
-import uuid
 import os
 import wrapt
 from ..trace import trace_factory
@@ -33,11 +32,7 @@ def _get_log_id():
     """
     retrieve or generate the log id for this trace
     """
-    log_id = trace_factory.get_label(LOG_ID_LABEL_NAME)
-    if not log_id:
-        log_id = uuid.uuid4().hex
-        trace_factory.add_label(LOG_ID_LABEL_NAME, log_id)
-    return log_id
+    return trace_factory.get_log_id()
 
 
 def _epsagon_log_id_wrapper(msg_index, wrapped, _instance, args, kwargs):
@@ -49,8 +44,9 @@ def _epsagon_log_id_wrapper(msg_index, wrapped, _instance, args, kwargs):
     :param kwargs: wrapt's kwargs
     :return: None
     """
-    msg = ' '.join([_get_log_id(), args[msg_index]])
-    args = args[0:msg_index] + (msg,) + args[(msg_index+1):]
+    if trace_factory.get_log_id_flag():
+        msg = ' '.join([_get_log_id(), args[msg_index]])
+        args = args[0:msg_index] + (msg,) + args[(msg_index+1):]
     return wrapped(*args, **kwargs)
 
 
