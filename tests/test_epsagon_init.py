@@ -1,3 +1,6 @@
+"""
+Test epsagon init
+"""
 import mock
 import epsagon
 import os
@@ -154,6 +157,7 @@ def test_epsagon_wrapper_env_init(_wrapped_get, wrapped_init, _create):
         transport=default_http,
         split_on_send=False,
         propagate_lambda_id=False,
+        add_log_id=False,
     )
 
 
