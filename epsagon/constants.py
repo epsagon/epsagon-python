@@ -40,7 +40,9 @@ STRONG_KEYS = [
     'sequence_number',
     'trace_id',
     'job_id',
-    'activation_id'
+    'activation_id',
+    'hostname',
+    'virtual_host',
 ]
 
 
