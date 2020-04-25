@@ -686,11 +686,11 @@ class Trace(object):
         :return: True/False
         """
         if not isinstance(key, str):
-            print('EPSAGON: epsagon.label() key support only string type')
+            print('EPSAGON: label key support only string type')
             print('Received {key}:{value}'.format(key=key, value=value))
             return False
         if not isinstance(value, (int, float, str)):
-            print('EPSAGON: epsagon.label() value support only string, int, float types')
+            print('EPSAGON: label value support only string, int, float types')
             print('Received {key}:{value}'.format(key=key, value=value))
             return False
 
