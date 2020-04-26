@@ -760,7 +760,7 @@ class Trace(object):
         if self.add_log_id:
             if self.log_id:
                 return self.log_id
-            self.log_id = uuid.uuid4().hex
+            self.log_id = 'E#' + uuid.uuid4().hex + '#E'
             return self.log_id
         return None
 

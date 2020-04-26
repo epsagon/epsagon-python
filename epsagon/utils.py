@@ -179,7 +179,10 @@ def init(
                  'TRUE')
                 | propagate_lambda_id
         ),
-        add_log_id=add_log_id,
+        add_log_id=(
+            ((os.getenv('EPSAGON_ADD_LOG_ID') or '').upper() == 'TRUE')
+            | add_log_id
+        ),
     )
 
     # Append to ignored endpoints

@@ -9,9 +9,6 @@ import wrapt
 from ..trace import trace_factory
 
 
-LOG_ID_LABEL_NAME = 'epsagon_log_id'
-
-
 def _wrapper(wrapped, _instance, args, kwargs):
     """
     Wrapper for logging module.
