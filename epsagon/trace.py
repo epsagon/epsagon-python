@@ -687,16 +687,14 @@ class Trace(object):
         """
         if not isinstance(key, str):
             print('EPSAGON: label key support only string type')
-            print('Received {key}:{value}'.format(key=key, value=value))
+            print('Received {key}, key type={type}'.format(key=key, type=type(key)))
             return False
         if not isinstance(value, (int, float, str)):
             print('EPSAGON: label value support only string, int, float types')
-            print('Received {key}:{value}'.format(key=key, value=value))
+            print('Received {key}, value type={type}'.format(key=key, type=type(value)))
             return False
 
-        if len(key) + len(str(value)) > MAX_LABEL_SIZE:
-            return False
-
+        # Even for numeric types we are checking the length of the stringified value.
         if (
                 len(key) +
                 len(str(value)) +
@@ -713,16 +711,12 @@ class Trace(object):
         Adds a custom label given by the user to the runner
         of the current trace
         :param key: Key for the label data (string)
-        :param value: Value for the label data (string)
+        :param value: Value for the label data (string, bool, int, float)
         """
         if isinstance(value, dict):
             for dict_key, dict_value in value.items():
                 self.add_label('{}.{}'.format(key, dict_key), dict_value)
             return
-
-        # Convert boolean to string.
-        if isinstance(value, bool):
-            value = str(value).lower()
 
         if not self.verify_custom_label(key, value):
             return

@@ -346,7 +346,7 @@ def test_custom_labels_sanity():
         'test_label': 'test_value',
         'test_label_2': 42,
         'test_label_3': 42.2,
-        'test_label_4': 'true',
+        'test_label_4': True,
     }
 
 
@@ -368,7 +368,7 @@ def test_multi_value_labels_sanity():
         'test_label.test2_label': 15,
         'test_label.test3_label': 'test',
         'test_label.test4_label': 15.12345,
-        'test_label.test5_label': 'false',
+        'test_label.test5_label': False,
         'test_label.4': 'hey',
     }
 
