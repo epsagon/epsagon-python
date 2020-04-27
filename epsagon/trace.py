@@ -685,23 +685,31 @@ class Trace(object):
         :param value: Value for the label data (string)
         :return: True/False
         """
-        if not isinstance(key, str) or not isinstance(value, str):
-            print('EPSAGON: epsagon.label() only supports '
-                  'label keys and values of type string.')
-            print('Received {key}:{value}'.format(key=key, value=value))
+        if not isinstance(key, str):
+            print('EPSAGON: label key support only string type')
+            print('Received {key}, key type={type}'.format(
+                key=key,
+                type=type(key)
+            ))
+            return False
+        if not isinstance(value, (int, float, str)):
+            print('EPSAGON: label value support only string, int, float types')
+            print('Received {key}, value type={type}'.format(
+                key=key,
+                type=type(value)
+            ))
             return False
 
-        if len(key) + len(value) > MAX_LABEL_SIZE:
-            return False
-
+        # Even for numeric types we are checking the length of the
+        # stringified value.
         if (
                 len(key) +
-                len(value) +
+                len(str(value)) +
                 self.custom_labels_size > MAX_LABEL_SIZE
         ):
             return False
 
-        self.custom_labels_size += len(key) + len(value)
+        self.custom_labels_size += len(key) + len(str(value))
 
         return True
 
@@ -710,16 +718,12 @@ class Trace(object):
         Adds a custom label given by the user to the runner
         of the current trace
         :param key: Key for the label data (string)
-        :param value: Value for the label data (string)
+        :param value: Value for the label data (string, bool, int, float)
         """
         if isinstance(value, dict):
             for dict_key, dict_value in value.items():
                 self.add_label('{}.{}'.format(key, dict_key), dict_value)
             return
-
-        # Convert numbers to string.
-        if isinstance(value, (int, float)):
-            value = str(value)
 
         if not self.verify_custom_label(key, value):
             return

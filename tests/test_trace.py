@@ -336,6 +336,7 @@ def test_custom_labels_sanity():
     trace.add_label('test_label', 'test_value')
     trace.add_label('test_label_2', 42)
     trace.add_label('test_label_3', 42.2)
+    trace.add_label('test_label_4', True)
     # This is not an invalid label, but it won't be added because dict is empty.
     trace.add_label('test_label_invalid', {})
     trace_metadata = trace.to_dict()['events'][0]['resource']['metadata']
@@ -343,8 +344,9 @@ def test_custom_labels_sanity():
     assert trace_metadata.get('labels') is not None
     assert json.loads(trace_metadata['labels']) == {
         'test_label': 'test_value',
-        'test_label_2': '42',
-        'test_label_3': '42.2',
+        'test_label_2': 42,
+        'test_label_3': 42.2,
+        'test_label_4': True,
     }
 
 
@@ -356,13 +358,17 @@ def test_multi_value_labels_sanity():
     trace.add_label('test_label', {
         'test2_label': 15,
         'test3_label': 'test',
+        'test4_label': 15.12345,
+        'test5_label': False,
         4: 'hey'
     })
     trace_metadata = trace.to_dict()['events'][0]['resource']['metadata']
     assert trace_metadata.get('labels') is not None
     assert json.loads(trace_metadata['labels']) == {
-        'test_label.test2_label': '15',
+        'test_label.test2_label': 15,
         'test_label.test3_label': 'test',
+        'test_label.test4_label': 15.12345,
+        'test_label.test5_label': False,
         'test_label.4': 'hey',
     }
 

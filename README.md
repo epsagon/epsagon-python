@@ -84,6 +84,13 @@ epsagon.label('key', 'value')
 epsagon.label('user_id', user_id)
 ```
 
+You can also use it to ship custom metrics:
+```python
+epsagon.label('key', 'metric')
+epsagon.label('items_in_cart', items_in_cart)
+```
+
+Valid types are `string`, `bool`, `int` and `float`.
 In some [frameworks](#frameworks) tagging can be done in different ways.
 
 ### Custom Errors
