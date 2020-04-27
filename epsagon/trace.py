@@ -687,14 +687,21 @@ class Trace(object):
         """
         if not isinstance(key, str):
             print('EPSAGON: label key support only string type')
-            print('Received {key}, key type={type}'.format(key=key, type=type(key)))
+            print('Received {key}, key type={type}'.format(
+                key=key,
+                type=type(key)
+            ))
             return False
         if not isinstance(value, (int, float, str)):
             print('EPSAGON: label value support only string, int, float types')
-            print('Received {key}, value type={type}'.format(key=key, type=type(value)))
+            print('Received {key}, value type={type}'.format(
+                key=key,
+                type=type(value)
+            ))
             return False
 
-        # Even for numeric types we are checking the length of the stringified value.
+        # Even for numeric types we are checking the length of the
+        # stringified value.
         if (
                 len(key) +
                 len(str(value)) +
