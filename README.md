@@ -375,12 +375,13 @@ Advanced options can be configured as a parameter to the init() method or as env
 |collector_url         |EPSAGON_COLLECTOR_URL         |String |-            |The address of the trace collector to send trace to                                |
 |keys_to_ignore        |EPSAGON_IGNORED_KEYS          |List   |-            |List of keys names to be removed from the trace                                    |
 |keys_to_allow         |EPSAGON_ALLOWED_KEYS          |List   |-            |List of keys names to be included from the trace                                   |
-|ignored_endpoints     |EPSAGON_ENDPOINTS_TO_IGNORE   |List   |-            |List of endpoints to ignore from tracing (for example `/healthcheck`                |
+|ignored_endpoints     |EPSAGON_ENDPOINTS_TO_IGNORE   |List   |-            |List of endpoints to ignore from tracing (for example `/healthcheck`               |
 |url_patterns_to_ignore|EPSAGON_URLS_TO_IGNORE        |List   |`[]`         |Array of URL patterns to ignore the calls                                          |
 |debug                 |EPSAGON_DEBUG                 |Boolean|`False`      |Enable debug prints for troubleshooting                                            |
 |disable_timeout_send  |EPSAGON_DISABLE_ON_TIMEOUT    |Boolean|`False`      |Disable timeout detection in Lambda functions                                      |
 |split_on_send         |EPSAGON_SPLIT_ON_SEND         |Boolean|`False`      |Split the trace into multiple chunks to support large traces                       |
 |propagate_lambda_id   |EPSAGON_PROPAGATE_LAMBDA_ID   |Boolean|`False`      |Insert Lambda request ID into the response payload                                 |
+|add_log_id            |EPSAGON_ADD_LOG_ID            |Boolean|`False`      |Add Epsagon Log id to all prints and `logging` messages                            |
 |-                     |EPSAGON_HTTP_ERR_CODE         |Integer|`500`        |The minimum number of an HTTP response status code to treat as an error            |
 |-                     |EPSAGON_SEND_TIMEOUT_SEC      |Float  |`0.2`        |The timeout duration in seconds to send the traces to the trace collector          |
 |-                     |EPSAGON_DISABLE_LOGGING_ERRORS|Boolean|`false`      |Disable the automatic capture of error messages into `logging`                     |
