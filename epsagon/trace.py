@@ -523,9 +523,6 @@ class Trace(object):
         self.runner = None
         self.trace_sent = False
 
-        if self.logging_tracing_enabled:
-            self.trace_id = 'E#' + uuid.uuid4().hex + '#E'
-
     # pylint: disable=unused-argument, unused-variable
     def timeout_handler(self, signum, frame):
         """
@@ -687,6 +684,9 @@ class Trace(object):
         self.add_event(runner, should_terminate=False)
         self.runner = runner
 
+        if self.logging_tracing_enabled:
+            self.runner.trace_id = 'E#' + uuid.uuid4().hex + '#E'
+
     def clear_events(self):
         """
         Clears the events list
@@ -762,7 +762,7 @@ class Trace(object):
         else return None
         """
         if self.logging_tracing_enabled:
-            return self.trace_id
+            return self.runner.trace_id
         return None
 
     def set_error(self, exception, traceback_data=None):
@@ -1049,7 +1049,8 @@ class Trace(object):
                 self.runner.terminate()
 
                 if self.trace_id:
-                    self.runner.resource['metadata']['trace_id'] = self.trace_id
+                    self.runner.resource['metadata']['trace_id'] = (
+                        self.runner.trace_id)
                     if self.logging_tracing_enabled:
                         self.runner.resource['metadata'][
                             'logging_tracing_enabled'] = True
