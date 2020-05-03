@@ -96,7 +96,7 @@ def init(
     ignored_endpoints=None,
     split_on_send=False,
     propagate_lambda_id=False,
-    add_log_id=False,
+    logging_tracing_enabled=False,
 ):
     """
     Initializes trace with user's data.
@@ -118,7 +118,7 @@ def init(
     :param ignored_endpoints: List of ignored endpoints for web frameworks.
     :param split_on_send: Split the trace on send flag
     :param propagate_lambda_id: Inject identifiers via return value flag
-    :param add_log_id: Add an epsagon log id to all loggings and prints
+    :param logging_tracing_enabled: Add an epsagon log id to all loggings and prints
     :return: None
     """
 
@@ -179,9 +179,9 @@ def init(
                  'TRUE')
                 | propagate_lambda_id
         ),
-        add_log_id=(
-            ((os.getenv('EPSAGON_ADD_LOG_ID') or '').upper() == 'TRUE')
-            | add_log_id
+        logging_tracing_enabled=(
+            ((os.getenv('EPSAGON_LOGGING_TRACING_ENABLED') or '').upper() == 'TRUE')
+            | logging_tracing_enabled
         ),
     )
 
