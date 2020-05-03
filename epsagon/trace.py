@@ -681,7 +681,11 @@ class Trace(object):
         Sets the runner of the current tracer
         :param runner: Runner to set
         """
+        if self.add_log_id:
+            runner.resource['metadata']['logging_tracing_enabled'] = True
+
         self.add_event(runner, should_terminate=False)
+
         self.runner = runner
 
     def clear_events(self):
@@ -757,11 +761,11 @@ class Trace(object):
         """
         Get the log id if the add_log_id flag is on, else return None
         """
-        if self.add_log_id:
-            if self.log_id:
-                return self.log_id
-            self.log_id = 'E#' + uuid.uuid4().hex + '#E'
-            return self.log_id
+        if self.add_log_id and self.runner:
+            trace_id = self.runner.resource['metadata'].get('trace_id')
+            if trace_id:
+                return 'E#' + uuid.UUID(trace_id).hex + '#E'
+
         return None
 
     def set_error(self, exception, traceback_data=None):
@@ -1046,9 +1050,6 @@ class Trace(object):
         try:
             if self.runner:
                 self.runner.terminate()
-
-                if self.log_id:
-                    self.runner.resource['metadata']['log_id'] = self.log_id
 
             trace = json.dumps(
                 self.to_dict(),

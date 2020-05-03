@@ -41,8 +41,9 @@ def _epsagon_log_id_wrapper(msg_index, wrapped, _instance, args, kwargs):
     :param kwargs: wrapt's kwargs
     :return: None
     """
-    if trace_factory.get_log_id_flag():
-        msg = ' '.join([_get_log_id(), args[msg_index]])
+    log_id = _get_log_id()
+    if log_id:
+        msg = ' '.join([log_id, args[msg_index]])
         args = args[0:msg_index] + (msg,) + args[(msg_index+1):]
     return wrapped(*args, **kwargs)
 

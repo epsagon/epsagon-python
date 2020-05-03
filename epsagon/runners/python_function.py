@@ -39,11 +39,11 @@ class PythonRunner(BaseEvent):
         self.event_id = str(uuid.uuid4())
         self.resource['name'] = wrapped_function.__name__
         self.resource['operation'] = self.OPERATION
-        self.resource['metadata'] = {
+        self.resource['metadata'].update({
             'module': wrapped_function.__module__,
             'args_length': len(wrapped_args),
             'kwargs_length': len(wrapped_kwargs)
-        }
+        })
 
         # Add arguments only if they are serializable.
         try:
