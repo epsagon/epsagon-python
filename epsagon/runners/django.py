@@ -29,9 +29,7 @@ class DjangoRunner(BaseEvent):
         self.resource['name'] = request.get_host()
         self.resource['operation'] = request.method
 
-        self.resource['metadata'] = {
-            'Path': request.path,
-        }
+        self.resource['metadata'].update({'Path': request.path})
 
         if request.body:
             add_data_if_needed(

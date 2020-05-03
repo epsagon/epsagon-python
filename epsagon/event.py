@@ -4,6 +4,7 @@ Base Event class
 
 from __future__ import absolute_import
 import time
+import uuid
 from .common import ErrorCode
 
 
@@ -35,6 +36,9 @@ class BaseEvent(object):
             'operation': '',
             'metadata': {},
         }
+
+        if self.origin == 'runner':
+            self.resource['metadata']['trace_id'] = str(uuid.uuid4())
 
     @staticmethod
     def load_from_dict(event_data):

@@ -34,7 +34,7 @@ class GoogleFunctionRunner(BaseEvent):
         )
         self.resource['operation'] = self.OPERATION
 
-        self.resource['metadata'] = {
+        self.resource['metadata'].update({
             'gcp_project': os.getenv('GCP_PROJECT', ''),
             'function_version': os.getenv('X_GOOGLE_FUNCTION_VERSION', ''),
             'memory':  os.getenv('FUNCTION_MEMORY_MB', ''),
@@ -46,4 +46,4 @@ class GoogleFunctionRunner(BaseEvent):
             ),
             'virtual_env': os.getenv('VIRTUAL_ENV', ''),
             'worker_port': os.getenv('WORKER_PORT', ''),
-        }
+        })

@@ -25,11 +25,11 @@ def _wrapper(wrapped, _instance, args, kwargs):
     return wrapped(*args, **kwargs)
 
 
-def _get_trace_id():
+def _get_log_id():
     """
     retrieve or generate the log id for this trace
     """
-    return trace_factory.get_trace_id()
+    return trace_factory.get_log_id()
 
 
 def _epsagon_trace_id_wrapper(msg_index, wrapped, _instance, args, kwargs):
@@ -41,8 +41,8 @@ def _epsagon_trace_id_wrapper(msg_index, wrapped, _instance, args, kwargs):
     :param kwargs: wrapt's kwargs
     :return: None
     """
-    if trace_factory.get_trace_id_flag():
-        msg = ' '.join([_get_trace_id(), args[msg_index]])
+    if trace_factory.is_logging_tracing_enabled():
+        msg = ' '.join([_get_log_id(), args[msg_index]])
         args = args[0:msg_index] + (msg,) + args[(msg_index+1):]
     return wrapped(*args, **kwargs)
 
