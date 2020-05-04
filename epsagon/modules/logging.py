@@ -56,8 +56,8 @@ def patch():
     wrapt.wrap_function_wrapper('logging', 'Logger.exception', _wrapper)
     wrapt.wrap_function_wrapper(
         'logging', 'Logger.log', partial(_epsagon_trace_id_wrapper, 1))
-    wrapt.wrap_function_wrapper(
-        'builtins', 'print', partial(_epsagon_trace_id_wrapper, 0))
+    # wrapt.wrap_function_wrapper(
+    #     'builtins', 'print', partial(_epsagon_trace_id_wrapper, 0))
     for log_function in ['info', 'debug', 'error',
                          'warning', 'exception', 'critical']:
         wrapt.wrap_function_wrapper(
