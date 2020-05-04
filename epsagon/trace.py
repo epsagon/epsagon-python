@@ -53,6 +53,7 @@ def _decimal_serializer(o):
         return _number_str(o)
     raise TypeError(repr(o) + ' is not JSON serializable')
 
+
 def get_thread_id():
     """
     Return current thread id
@@ -134,7 +135,8 @@ class TraceFactory(object):
         :param keys_to_allow: List of keys to allow while extracting metadata.
         :param split_on_send: Split trace into multiple traces in case it's size
          exceeds the maximum size.
-        :param logging_tracing_enabled: Add an epsagon log id to all loggings and prints
+        :param logging_tracing_enabled:
+            Add an epsagon log id to all loggings and prints
         :return: None
         """
         self.app_name = app_name

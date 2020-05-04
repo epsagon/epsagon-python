@@ -118,7 +118,8 @@ def init(
     :param ignored_endpoints: List of ignored endpoints for web frameworks.
     :param split_on_send: Split the trace on send flag
     :param propagate_lambda_id: Inject identifiers via return value flag
-    :param logging_tracing_enabled: Add an epsagon log id to all loggings and prints
+    :param logging_tracing_enabled:
+        Add an epsagon log id to all loggings and prints
     :return: None
     """
 
@@ -180,7 +181,8 @@ def init(
                 | propagate_lambda_id
         ),
         logging_tracing_enabled=(
-            ((os.getenv('EPSAGON_LOGGING_TRACING_ENABLED') or '').upper() == 'TRUE')
+            ((os.getenv('EPSAGON_LOGGING_TRACING_ENABLED') or '').upper() ==
+             'TRUE')
             | logging_tracing_enabled
         ),
     )
