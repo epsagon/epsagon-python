@@ -36,13 +36,13 @@ class FlaskRunner(BaseEvent):
         )
         self.resource['operation'] = request.method
 
-        self.resource['metadata'].update({
+        self.resource['metadata'] = {
             'Base URL': request.base_url,
             'Path': request.path,
             'User Agent': request.headers.get('User-Agent', 'N/A'),
             'Flask Application': app.name,
             'Endpoint': request.endpoint,
-        })
+        }
 
         if request.query_string:
             self.resource['metadata']['Query String'] = request.query_string

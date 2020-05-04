@@ -31,7 +31,7 @@ class AzureFunctionRunner(BaseEvent):
         )
         self.resource['operation'] = self.OPERATION
 
-        self.resource['metadata'].update({
+        self.resource['metadata'] = {
             'region': os.getenv('REGION_NAME', ''),
             'memory': os.getenv('WEBSITE_MEMORY_LIMIT_MB', ''),
-        })
+        }

@@ -874,7 +874,7 @@ def test_init_sanity(wrapped_init, _create):
         transport=default_http,
         split_on_send=False,
         propagate_lambda_id=False,
-        logging_tracing_enabled=False,
+        add_log_id=False,
     )
 
 
@@ -902,7 +902,7 @@ def test_init_empty_app_name(wrapped_init, _create):
         transport=default_http,
         split_on_send=False,
         propagate_lambda_id=False,
-        logging_tracing_enabled=False,
+        add_log_id=False,
     )
 
 
@@ -924,7 +924,7 @@ def test_init_empty_collector_url(wrapped_init, _create):
         transport=default_http,
         split_on_send=False,
         propagate_lambda_id=False,
-        logging_tracing_enabled=False,
+        add_log_id=False,
     )
 
 
@@ -950,7 +950,7 @@ def test_init_no_ssl_no_url(wrapped_init, _create):
         transport=default_http,
         split_on_send=False,
         propagate_lambda_id=False,
-        logging_tracing_enabled=False,
+        add_log_id=False,
     )
 
 
@@ -980,7 +980,7 @@ def test_init_ssl_no_url(wrapped_init, _create):
         transport=default_http,
         split_on_send=False,
         propagate_lambda_id=False,
-        logging_tracing_enabled=False,
+        add_log_id=False,
     )
 
 
@@ -1008,7 +1008,7 @@ def test_init_ssl_with_url(wrapped_init, _create):
         transport=default_http,
         split_on_send=False,
         propagate_lambda_id=False,
-        logging_tracing_enabled=False,
+        add_log_id=False,
     )
 
 
@@ -1036,7 +1036,7 @@ def test_init_no_ssl_with_url(wrapped_init, _create):
         transport=default_http,
         split_on_send=False,
         propagate_lambda_id=False,
-        logging_tracing_enabled=False,
+        add_log_id=False,
     )
 
 
@@ -1064,7 +1064,7 @@ def test_init_ignored_urls_env(wrapped_init, _create):
         transport=default_http,
         split_on_send=False,
         propagate_lambda_id=False,
-        logging_tracing_enabled=False,
+        add_log_id=False,
     )
     os.environ.pop('EPSAGON_URLS_TO_IGNORE')
 
@@ -1093,7 +1093,7 @@ def test_init_keys_to_ignore(wrapped_init, _create):
         transport=default_http,
         split_on_send=False,
         propagate_lambda_id=False,
-        logging_tracing_enabled=False,
+        add_log_id=False,
     )
 
 
@@ -1122,7 +1122,7 @@ def test_init_keys_to_ignore_env(wrapped_init, _create):
         transport=default_http,
         split_on_send=False,
         propagate_lambda_id=False,
-        logging_tracing_enabled=False,
+        add_log_id=False,
     )
     os.environ.pop('EPSAGON_IGNORED_KEYS')
 
@@ -1151,7 +1151,7 @@ def test_init_split_on_send(wrapped_init, _create):
         keys_to_allow=None,
         split_on_send=True,
         propagate_lambda_id=False,
-        logging_tracing_enabled=False,
+        add_log_id=False,
     )
 
 
@@ -1179,7 +1179,7 @@ def test_init_split_on_send_env(wrapped_init, _create):
         keys_to_allow=None,
         split_on_send=True,
         propagate_lambda_id=False,
-        logging_tracing_enabled=False,
+        add_log_id=False,
     )
     os.environ.pop('EPSAGON_SPLIT_ON_SEND')
 
@@ -1328,7 +1328,7 @@ def test_init_propagate_lambda_identifier_env(wrapped_init, _create):
         keys_to_allow=None,
         split_on_send=False,
         propagate_lambda_id=True,
-        logging_tracing_enabled=False,
+        add_log_id=False,
     )
     os.environ.pop('EPSAGON_PROPAGATE_LAMBDA_ID')
 
@@ -1357,5 +1357,5 @@ def test_init_propagate_lambda_identifier_init(wrapped_init, _create):
         keys_to_allow=None,
         split_on_send=False,
         propagate_lambda_id=True,
-        logging_tracing_enabled=False,
+        add_log_id=False,
     )

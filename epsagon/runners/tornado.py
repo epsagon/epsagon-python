@@ -34,14 +34,14 @@ class TornadoRunner(BaseEvent):
         self.resource['name'] = request.host
         self.resource['operation'] = request.method
 
-        self.resource['metadata'].update({
+        self.resource['metadata'] = {
             'Host': request.host,
             'Protocol': request.protocol,
             'Path': request.path,
             'Version': request.version,
             'Remote IP': request.remote_ip,
             'User Agent': request.headers.get('User-Agent', 'N/A'),
-        })
+        }
 
         if request.query:
             add_data_if_needed(
