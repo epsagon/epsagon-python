@@ -53,6 +53,7 @@ def _decimal_serializer(o):
         return _number_str(o)
     raise TypeError(repr(o) + ' is not JSON serializable')
 
+
 def get_thread_id():
     """
     Return current thread id
@@ -97,7 +98,7 @@ class TraceFactory(object):
         self.split_on_send = False
         self.disabled = False
         self.propagate_lambda_id = False
-        self.add_log_id = False
+        self.logging_tracing_enabled = False
 
     def initialize(
         self,
@@ -114,7 +115,7 @@ class TraceFactory(object):
         transport,
         split_on_send,
         propagate_lambda_id,
-        add_log_id,
+        logging_tracing_enabled,
     ):
         """
         Initializes The factory with user's data.
@@ -134,7 +135,8 @@ class TraceFactory(object):
         :param keys_to_allow: List of keys to allow while extracting metadata.
         :param split_on_send: Split trace into multiple traces in case it's size
          exceeds the maximum size.
-        :param add_log_id: Add an epsagon log id to all loggings and prints
+        :param logging_tracing_enabled:
+            Add an epsagon log id to all loggings and prints
         :return: None
         """
         self.app_name = app_name
@@ -152,7 +154,7 @@ class TraceFactory(object):
         self.transport = transport
         self.split_on_send = split_on_send
         self.propagate_lambda_id = propagate_lambda_id
-        self.add_log_id = add_log_id
+        self.logging_tracing_enabled = logging_tracing_enabled
         self.update_tracers()
 
     def update_tracers(self):
@@ -179,7 +181,7 @@ class TraceFactory(object):
             tracer.transport = self.transport
             tracer.split_on_send = self.split_on_send
             tracer.propagate_lambda_id = self.propagate_lambda_id
-            tracer.add_log_id = self.add_log_id
+            tracer.logging_tracing_enabled = self.logging_tracing_enabled
 
     def switch_to_multiple_traces(self):
         """
@@ -208,7 +210,7 @@ class TraceFactory(object):
             unique_id=unique_id,
             split_on_send=self.split_on_send,
             propagate_lambda_id=self.propagate_lambda_id,
-            add_log_id=self.add_log_id,
+            logging_tracing_enabled=self.logging_tracing_enabled,
         )
 
     def get_or_create_trace(self, unique_id=None):
@@ -389,11 +391,11 @@ class TraceFactory(object):
         if self.get_trace():
             self.get_trace().add_label(key, value)
 
-    def get_log_id_flag(self):
+    def is_logging_tracing_enabled(self):
         """
-        Get the value of the add_log_id flag
+        Get the value of the logging_tracing_enabled flag
         """
-        return self.add_log_id
+        return self.logging_tracing_enabled
 
     def get_log_id(self):
         """
@@ -473,7 +475,7 @@ class Trace(object):
         split_on_send=False,
         transport=NoneTransport(),
         propagate_lambda_id=False,
-        add_log_id=False,
+        logging_tracing_enabled=False,
     ):
         """
         initialize.
@@ -496,8 +498,7 @@ class Trace(object):
         self.transport = transport
         self.split_on_send = split_on_send
         self.propagate_lambda_id = propagate_lambda_id
-        self.add_log_id = add_log_id
-        self.log_id = None
+        self.logging_tracing_enabled = logging_tracing_enabled
 
         if keys_to_ignore:
             self.keys_to_ignore = [self._strip_key(key) for key in
@@ -681,6 +682,9 @@ class Trace(object):
         Sets the runner of the current tracer
         :param runner: Runner to set
         """
+        if self.logging_tracing_enabled:
+            runner.resource['metadata']['logging_tracing_enabled'] = True
+
         self.add_event(runner, should_terminate=False)
         self.runner = runner
 
@@ -755,13 +759,14 @@ class Trace(object):
 
     def get_log_id(self):
         """
-        Get the log id if the add_log_id flag is on, else return None
+        Get the log id if the logging_tracing_enabled flag is on,
+        else return None
         """
-        if self.add_log_id:
-            if self.log_id:
-                return self.log_id
-            self.log_id = 'E#' + uuid.uuid4().hex + '#E'
-            return self.log_id
+        if self.logging_tracing_enabled and self.runner:
+            trace_id = self.runner.resource['metadata'].get('trace_id')
+            if trace_id:
+                return 'E#' + uuid.UUID(trace_id).hex + '#E'
+
         return None
 
     def set_error(self, exception, traceback_data=None):
@@ -1046,9 +1051,6 @@ class Trace(object):
         try:
             if self.runner:
                 self.runner.terminate()
-
-                if self.log_id:
-                    self.runner.resource['metadata']['log_id'] = self.log_id
 
             trace = json.dumps(
                 self.to_dict(),

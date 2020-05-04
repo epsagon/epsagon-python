@@ -3,17 +3,8 @@ import re
 import os
 from setuptools import setup, find_packages
 
-try:
-    # For pip >= 10.
-    from pip._internal.req import parse_requirements
-    from pip._internal.download import PipSession
-except ImportError:
-    # For pip <= 9.0.3.
-    from pip.req import parse_requirements
-    from pip.download import PipSession
-
-install_reqs = parse_requirements('./requirements.txt', session=PipSession())
-reqs = [str(ir.req) for ir in install_reqs]
+with open('./requirements.txt', 'r') as reqs_file:
+    reqs = reqs_file.readlines()
 
 # Get version
 with open(os.path.join('epsagon', 'constants.py'), 'rt') as consts_file:

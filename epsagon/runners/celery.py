@@ -42,13 +42,13 @@ class CeleryRunner(BaseEvent):
         retval = kwargs.get('retval')
         state = kwargs.get('state', '')
 
-        self.resource['metadata'] = {
+        self.resource['metadata'].update({
             'id': task_id,
             'state': state,
             'hostname': app_conn.hostname,
             'virtual_host': app_conn.virtual_host,
             'driver': app_conn.transport.driver_type,
-        }
+        })
 
         if body:
             add_data_if_needed(

@@ -39,7 +39,7 @@ class AbstractLambdaRunner(BaseEvent):
         self.resource['operation'] = self.OPERATION
 
         arn_split = context.invoked_function_arn.split(':')
-        self.resource['metadata'] = {
+        self.resource['metadata'].update({
             'log_stream_name': context.log_stream_name,
             'log_group_name': context.log_group_name,
             'function_version': context.function_version,
@@ -47,7 +47,7 @@ class AbstractLambdaRunner(BaseEvent):
             'aws_account': arn_split[self.AWS_ACCOUNT_IND],
             'cold_start': constants.COLD_START,
             'region': os.getenv('AWS_REGION', ''),
-        }
+        })
 
         # Extract Function alias if exists
         if len(arn_split) == self.ARN_WITH_ALIAS_LENGTH:
