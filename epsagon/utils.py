@@ -96,7 +96,7 @@ def init(
     ignored_endpoints=None,
     split_on_send=False,
     propagate_lambda_id=False,
-    logging_tracing_enabled=False,
+    logging_tracing_enabled=True,
 ):
     """
     Initializes trace with user's data.
@@ -118,8 +118,7 @@ def init(
     :param ignored_endpoints: List of ignored endpoints for web frameworks.
     :param split_on_send: Split the trace on send flag
     :param propagate_lambda_id: Inject identifiers via return value flag
-    :param logging_tracing_enabled:
-        Add an epsagon log id to all loggings and prints
+    :param logging_tracing_enabled: Add an epsagon log id to logging calls
     :return: None
     """
 
@@ -149,6 +148,16 @@ def init(
     # If EPSAGON_METADATA exists as an env var - use it
     if os.getenv('EPSAGON_METADATA'):
         metadata_only = (os.getenv('EPSAGON_METADATA') or '').upper() == 'TRUE'
+
+    # If EPSAGON_LOGGING_TRACING_ENABLED exists as an env var - use it
+    if os.getenv('EPSAGON_LOGGING_TRACING_ENABLED'):
+        logging_tracing_enabled = (
+            os.getenv('EPSAGON_LOGGING_TRACING_ENABLED') or ''
+        ).upper() == 'TRUE'
+
+    # In case we're running on AWS Lambda, logging correlation is disabled
+    if is_lambda_env():
+        logging_tracing_enabled = False
 
     trace_factory.initialize(
         token=os.getenv('EPSAGON_TOKEN') or token,
@@ -180,11 +189,7 @@ def init(
                  'TRUE')
                 | propagate_lambda_id
         ),
-        logging_tracing_enabled=(
-            ((os.getenv('EPSAGON_LOGGING_TRACING_ENABLED') or '').upper() ==
-             'TRUE')
-            | logging_tracing_enabled
-        ),
+        logging_tracing_enabled=logging_tracing_enabled,
     )
 
     # Append to ignored endpoints
