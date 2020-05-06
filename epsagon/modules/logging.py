@@ -3,10 +3,13 @@ logging patcher module.
 """
 
 from __future__ import absolute_import
-from functools import partial
-import os
+
 import json
+import os
+from functools import partial
+
 import wrapt
+
 from ..trace import trace_factory
 
 LOGGING_FUNCTIONS = (
@@ -48,6 +51,10 @@ def _epsagon_trace_id_wrapper(msg_index, wrapped, _instance, args, kwargs):
     """
     if trace_factory.is_logging_tracing_enabled():
         trace_log_id = trace_factory.get_log_id()
+
+        if not trace_log_id:
+            return wrapped(*args, **kwargs)
+
         try:
             # Check if message is in json format
             json_log = json.loads(args[msg_index])
