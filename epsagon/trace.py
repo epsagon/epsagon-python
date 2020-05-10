@@ -13,7 +13,6 @@ import warnings
 import signal
 import pprint
 import threading
-import uuid
 import simplejson as json
 
 import requests
@@ -765,7 +764,7 @@ class Trace(object):
         if self.logging_tracing_enabled and self.runner:
             trace_id = self.runner.resource['metadata'].get('trace_id')
             if trace_id:
-                return 'E#' + uuid.UUID(trace_id).hex + '#E'
+                return 'E#' + str(trace_id) + '#E'
 
         return None
 
