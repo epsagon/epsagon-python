@@ -28,7 +28,6 @@ jobs:
         - "node"
       edge: true
       script:
-        - sleep 60 # waits for the new version
         - ./scripts/publish.sh
 
 stages:
