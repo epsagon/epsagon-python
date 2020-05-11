@@ -3,7 +3,10 @@ Epsagon Acceptance Tests
 """
 import platform
 import json
+import logging
 import epsagon
+
+logging.getLogger().setLevel(logging.INFO)
 
 
 epsagon.init(
@@ -61,5 +64,29 @@ def labels(event, _):
     epsagon.label(12, 12)
     epsagon.label(12, None)
     epsagon.label('12', None)
+
+    return response
+
+
+@epsagon.lambda_wrapper
+def logging_test(event, _):
+    """
+    Basic test, using the Epsagon lambda-wrapper
+    :param event: events args
+    :param _: context, unused
+    :return: Success indication
+    """
+    body = {
+        'message': 'Epsagon: General Acceptance Test (py {})'.format(
+            platform.python_version()
+        ),
+        'input': event
+    }
+    logging.info(event)
+
+    response = {
+        'statusCode': 200,
+        'body': json.dumps(body)
+    }
 
     return response
