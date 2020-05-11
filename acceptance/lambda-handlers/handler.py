@@ -3,7 +3,10 @@ Epsagon Acceptance Tests
 """
 import platform
 import json
+import logging
 import epsagon
+
+logging.getLogger().setLevel(logging.INFO)
 
 
 epsagon.init(
@@ -26,6 +29,7 @@ def sanity(event, _):
         ),
         'input': event
     }
+    logging.info({'body': [body, body]})
 
     response = {
         'statusCode': 200,
