@@ -3,10 +3,13 @@ logging patcher module.
 """
 
 from __future__ import absolute_import
-from functools import partial
-import os
+
 import json
+import os
+from functools import partial
+
 import wrapt
+
 from ..trace import trace_factory
 
 LOGGING_FUNCTIONS = (
@@ -35,6 +38,22 @@ def _wrapper(wrapped, _instance, args, kwargs):
     return wrapped(*args, **kwargs)
 
 
+def _add_log_id(trace_log_id, msg):
+    """
+    adds log id to the msg
+    """
+    try:
+        # Check if message is in json format
+        json_log = json.loads(msg)
+        json_log['epsagon'] = {'trace_id': trace_log_id}
+        return json.dumps(json_log)
+    except Exception:   # pylint: disable=broad-except
+        # message is a regular string, add the ID to the beginning
+        if not isinstance(msg, str):
+            msg = str(msg)
+        return ' '.join([trace_log_id, msg])
+
+
 def _epsagon_trace_id_wrapper(msg_index, wrapped, _instance, args, kwargs):
     """
     Wrapper for logging module.
@@ -48,13 +67,15 @@ def _epsagon_trace_id_wrapper(msg_index, wrapped, _instance, args, kwargs):
     """
     if trace_factory.is_logging_tracing_enabled():
         trace_log_id = trace_factory.get_log_id()
+
+        if not trace_log_id:
+            return wrapped(*args, **kwargs)
+
         try:
-            # Check if message is in json format
-            json_log = json.loads(args[msg_index])
-            json_log['epsagon'] = {'trace_id': trace_log_id}
-            message = json.dumps(json_log)
-        except Exception:  # pylint: disable=broad-except
-            message = ' '.join([trace_log_id, args[msg_index]])
+            message = _add_log_id(trace_log_id, args[msg_index])
+        except Exception:   # pylint: disable=broad-except
+            # total failure to add log id
+            return wrapped(*args, **kwargs)
         args = (
             args[0:msg_index] +
             (message,) +

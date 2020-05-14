@@ -59,5 +59,19 @@ class TestLambdaWrapper:
         body = json.loads(content['body'])
         assert body['input'] == input
 
-
-
+    @pytest.mark.parametrize("input", [
+        '',
+        '{afwe',
+        [],
+        [1, 2, 3],
+        {},
+        {'test': 'test'},
+        {'test': 'test', 'more': [1, 2, '3']},
+    ])
+    def test_logging(self, input):
+        response = invoke('logging', json.dumps(input))
+        assert response['StatusCode'] == 200
+        content = json.loads(response['Payload'].read())
+        assert content['statusCode'] == 200
+        body = json.loads(content['body'])
+        assert body['input'] == input

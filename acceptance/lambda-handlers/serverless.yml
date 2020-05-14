@@ -24,6 +24,8 @@ functions:
     handler: handler.sanity
   labels:
     handler: handler.labels
+  logging:
+    handler: handler.logging_test
 
 plugins:
   - serverless-python-requirements
