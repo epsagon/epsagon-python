@@ -54,7 +54,6 @@ def _epsagon_trace_id_wrapper(msg_index, wrapped, _instance, args, kwargs):
             json_log['epsagon'] = {'trace_id': trace_log_id}
             message = json.dumps(json_log)
         except Exception:  # pylint: disable=broad-except
-            # message is a regular string, add the ID to the beginning
             message = ' '.join([trace_log_id, args[msg_index]])
         args = (
             args[0:msg_index] +
