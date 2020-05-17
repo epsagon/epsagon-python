@@ -875,6 +875,7 @@ def test_init_sanity(wrapped_init, _create):
         split_on_send=False,
         propagate_lambda_id=False,
         logging_tracing_enabled=True,
+        step_dict_output_path=None,
     )
 
 
@@ -903,6 +904,7 @@ def test_init_empty_app_name(wrapped_init, _create):
         split_on_send=False,
         propagate_lambda_id=False,
         logging_tracing_enabled=True,
+        step_dict_output_path=None,
     )
 
 
@@ -925,6 +927,7 @@ def test_init_empty_collector_url(wrapped_init, _create):
         split_on_send=False,
         propagate_lambda_id=False,
         logging_tracing_enabled=True,
+        step_dict_output_path=None,
     )
 
 
@@ -951,6 +954,7 @@ def test_init_no_ssl_no_url(wrapped_init, _create):
         split_on_send=False,
         propagate_lambda_id=False,
         logging_tracing_enabled=True,
+        step_dict_output_path=None,
     )
 
 
@@ -981,6 +985,7 @@ def test_init_ssl_no_url(wrapped_init, _create):
         split_on_send=False,
         propagate_lambda_id=False,
         logging_tracing_enabled=True,
+        step_dict_output_path=None,
     )
 
 
@@ -1009,6 +1014,7 @@ def test_init_ssl_with_url(wrapped_init, _create):
         split_on_send=False,
         propagate_lambda_id=False,
         logging_tracing_enabled=True,
+        step_dict_output_path=None,
     )
 
 
@@ -1037,6 +1043,7 @@ def test_init_no_ssl_with_url(wrapped_init, _create):
         split_on_send=False,
         propagate_lambda_id=False,
         logging_tracing_enabled=True,
+        step_dict_output_path=None,
     )
 
 
@@ -1065,6 +1072,7 @@ def test_init_ignored_urls_env(wrapped_init, _create):
         split_on_send=False,
         propagate_lambda_id=False,
         logging_tracing_enabled=True,
+        step_dict_output_path=None,
     )
     os.environ.pop('EPSAGON_URLS_TO_IGNORE')
 
@@ -1094,6 +1102,7 @@ def test_init_keys_to_ignore(wrapped_init, _create):
         split_on_send=False,
         propagate_lambda_id=False,
         logging_tracing_enabled=True,
+        step_dict_output_path=None,
     )
 
 
@@ -1123,6 +1132,7 @@ def test_init_keys_to_ignore_env(wrapped_init, _create):
         split_on_send=False,
         propagate_lambda_id=False,
         logging_tracing_enabled=True,
+        step_dict_output_path=None,
     )
     os.environ.pop('EPSAGON_IGNORED_KEYS')
 
@@ -1152,6 +1162,7 @@ def test_init_split_on_send(wrapped_init, _create):
         split_on_send=True,
         propagate_lambda_id=False,
         logging_tracing_enabled=True,
+        step_dict_output_path=None,
     )
 
 
@@ -1180,6 +1191,7 @@ def test_init_split_on_send_env(wrapped_init, _create):
         split_on_send=True,
         propagate_lambda_id=False,
         logging_tracing_enabled=True,
+        step_dict_output_path=None,
     )
     os.environ.pop('EPSAGON_SPLIT_ON_SEND')
 
@@ -1209,8 +1221,39 @@ def test_init_logging_disabled_on_lambda(wrapped_init, _create):
         split_on_send=False,
         propagate_lambda_id=False,
         logging_tracing_enabled=False,
+        step_dict_output_path=None,
     )
     os.environ.pop('AWS_LAMBDA_FUNCTION_NAME')
+
+
+@mock.patch('epsagon.utils.create_transport', side_effect=lambda x, y: default_http)
+@mock.patch('epsagon.trace.TraceFactory.initialize')
+def test_init_step_dict_output_env(wrapped_init, _create):
+    os.environ['EPSAGON_STEPS_OUTPUT_PATH'] = 'a.b.c'
+    epsagon.utils.init(
+        token='token',
+        app_name='app-name',
+        collector_url="http://abc.com",
+        metadata_only=False,
+    )
+    wrapped_init.assert_called_with(
+        token='token',
+        app_name='app-name',
+        metadata_only=False,
+        collector_url="http://abc.com",
+        disable_timeout_send=False,
+        debug=False,
+        send_trace_only_on_error=False,
+        url_patterns_to_ignore=None,
+        transport=default_http,
+        keys_to_ignore=None,
+        keys_to_allow=None,
+        split_on_send=False,
+        propagate_lambda_id=False,
+        logging_tracing_enabled=True,
+        step_dict_output_path=['a', 'b', 'c'],
+    )
+    os.environ.pop('EPSAGON_STEPS_OUTPUT_PATH')
 
 
 @mock.patch('requests.Session.post', side_effect=requests.ReadTimeout)
@@ -1358,6 +1401,7 @@ def test_init_propagate_lambda_identifier_env(wrapped_init, _create):
         split_on_send=False,
         propagate_lambda_id=True,
         logging_tracing_enabled=True,
+        step_dict_output_path=None,
     )
     os.environ.pop('EPSAGON_PROPAGATE_LAMBDA_ID')
 
@@ -1387,4 +1431,5 @@ def test_init_propagate_lambda_identifier_init(wrapped_init, _create):
         split_on_send=False,
         propagate_lambda_id=True,
         logging_tracing_enabled=True,
+        step_dict_output_path=None,
     )

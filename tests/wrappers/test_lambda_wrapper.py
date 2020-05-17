@@ -341,6 +341,46 @@ def test_step_lambda_wrapper_sanity_not_first_step(trigger_factory_mock,
     'epsagon.triggers.aws_lambda.LambdaTriggerFactory.factory',
     side_effect=['trigger']
 )
+def test_step_lambda_wrapper_sanity_not_first_step_unqiue_path(trigger_factory_mock,
+                                                   _):
+    unique_path = 'data'
+    @epsagon.wrappers.aws_lambda.step_lambda_wrapper
+    def wrapped_lambda(event, context):
+        return {'result': 'success', unique_path: {'test':' test'}}
+
+    lambda_runner_mock = mock.MagicMock(set_exception=mock.MagicMock())
+    with mock.patch(
+            'epsagon.runners.aws_lambda.StepLambdaRunner',
+            side_effect=[lambda_runner_mock]
+    ):
+        result = wrapped_lambda(
+            {'a': 'a', unique_path: {'Epsagon': {'step_num': 1, 'id': 1}}},
+            CONTEXT_STUB
+        )
+        assert ('result', 'success',) in result.items()
+        assert 'Epsagon' in result[unique_path]
+        assert ('step_num', 2,) in result[unique_path]['Epsagon'].items()
+        assert 'id' in result[unique_path]['Epsagon']
+
+    trigger_factory_mock.assert_called()
+    lambda_runner_mock.set_exception.assert_not_called()
+
+    trace_mock.prepare.assert_called()
+    trace_mock.add_event.assert_called()
+    trace_mock.send_traces.assert_called()
+    trace_mock.add_exception.assert_not_called()
+
+    assert not epsagon.constants.COLD_START
+
+
+@mock.patch(
+    'epsagon.trace.trace_factory.get_or_create_trace',
+    side_effect=lambda: trace_mock
+)
+@mock.patch(
+    'epsagon.triggers.aws_lambda.LambdaTriggerFactory.factory',
+    side_effect=['trigger']
+)
 def test_step_lambda_wrapper_wrapped_function_doesnt_return_object(
         trigger_factory_mock, _):
     @epsagon.wrappers.aws_lambda.step_lambda_wrapper

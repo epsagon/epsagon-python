@@ -97,6 +97,7 @@ def init(
     split_on_send=False,
     propagate_lambda_id=False,
     logging_tracing_enabled=True,
+    step_dict_output_path=None,
 ):
     """
     Initializes trace with user's data.
@@ -119,6 +120,8 @@ def init(
     :param split_on_send: Split the trace on send flag
     :param propagate_lambda_id: Inject identifiers via return value flag
     :param logging_tracing_enabled: Add an epsagon log id to logging calls
+    :param step_dict_output_path:
+        Path in the result dict to append the Epsagon steps data
     :return: None
     """
 
@@ -144,6 +147,10 @@ def init(
     allowed_keys = os.getenv('EPSAGON_ALLOWED_KEYS')
     if allowed_keys:
         allowed_keys = allowed_keys.split(',')
+
+    step_dict_output_path_env = os.getenv('EPSAGON_STEPS_OUTPUT_PATH')
+    if step_dict_output_path_env:
+        step_dict_output_path_env = step_dict_output_path_env.split('.')
 
     # If EPSAGON_METADATA exists as an env var - use it
     if os.getenv('EPSAGON_METADATA'):
@@ -190,6 +197,9 @@ def init(
                 | propagate_lambda_id
         ),
         logging_tracing_enabled=logging_tracing_enabled,
+        step_dict_output_path=(
+            step_dict_output_path_env or step_dict_output_path
+        )
     )
 
     # Append to ignored endpoints
@@ -249,32 +259,36 @@ def collect_container_metadata(metadata):
         metadata['ECS'] = METADATA_CACHE['data']
 
 
-def find_in_object(obj, key):
+def find_in_object(obj, key, path=None):
     """
     recursively search for a key in an object
     :param obj: The dict to search in
     :param key: The key to search for
-    :return: The value of this key in the object, or None if was not found
+    :param path: The path (as an array) of the key nested in the object
+    :return: The value and path of this key in the object,
+        or None if was not found
     """
-    result = None
+    if not path:
+        path = []
 
     if isinstance(obj, collections.Mapping):
         # search key in obj
         if key in obj:
-            return obj[key]
-
-        # iterate values if not found
-        obj = obj.values()
+            return obj[key], path
 
     if (
         isinstance(obj, collections.Iterable)
         and not isinstance(obj, six.string_types)
     ):
-        for v in obj:
-            result = find_in_object(v, key)
+        for k in obj:
+            # Handle lists as well
+            element = k if isinstance(obj, list) else obj[k]
+            nested_path = None if isinstance(obj, list) else path + [k]
+            result = find_in_object(element, key, nested_path)
+            if result:
+                return result
 
-    return result
-
+    return None
 
 def collect_exception_python3(exception):
     """

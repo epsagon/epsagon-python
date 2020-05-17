@@ -382,11 +382,12 @@ Advanced options can be configured as a parameter to the init() method or as env
 |split_on_send           |EPSAGON_SPLIT_ON_SEND          |Boolean|`False`      |Split the trace into multiple chunks to support large traces                       |
 |propagate_lambda_id     |EPSAGON_PROPAGATE_LAMBDA_ID    |Boolean|`False`      |Insert Lambda request ID into the response payload                                 |
 |logging_tracing_enabled |EPSAGON_LOGGING_TRACING_ENABLED|Boolean|`True`      |Add Epsagon Log Id to all `logging` messages                            |
+|step_dict_output_path |EPSAGON_STEPS_OUTPUT_PATH|List|`None`      |Path in the result dict to append the Epsagon steps data  |
 |-                       |EPSAGON_HTTP_ERR_CODE          |Integer|`500`        |The minimum number of an HTTP response status code to treat as an error            |
 |-                       |EPSAGON_SEND_TIMEOUT_SEC       |Float  |`0.2`        |The timeout duration in seconds to send the traces to the trace collector          |
-|-                       |EPSAGON_DISABLE_LOGGING_ERRORS |Boolean|`false`      |Disable the automatic capture of error messages into `logging`                     |
+|-                       |EPSAGON_DISABLE_LOGGING_ERRORS |Boolean|`False`      |Disable the automatic capture of error messages into `logging`                     |
 |-                       |DISABLE_EPSAGON                |Boolean|`False`      |A flag to completely disable Epsagon (can be used for tests or locally)            |
-|-                       |DISABLE_EPSAGON_PATCH          |Boolean|`false`      |Disable the library patching (instrumentation)                                     |
+|-                       |DISABLE_EPSAGON_PATCH          |Boolean|`False`      |Disable the library patching (instrumentation)                                     |
 
 
 

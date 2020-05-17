@@ -11,7 +11,6 @@ import decimal
 import traceback
 import warnings
 import signal
-import pprint
 import threading
 import simplejson as json
 
@@ -98,6 +97,7 @@ class TraceFactory(object):
         self.disabled = False
         self.propagate_lambda_id = False
         self.logging_tracing_enabled = False
+        self.step_dict_output_path = None
 
     def initialize(
         self,
@@ -115,6 +115,7 @@ class TraceFactory(object):
         split_on_send,
         propagate_lambda_id,
         logging_tracing_enabled,
+        step_dict_output_path,
     ):
         """
         Initializes The factory with user's data.
@@ -136,6 +137,8 @@ class TraceFactory(object):
          exceeds the maximum size.
         :param logging_tracing_enabled:
             Add an epsagon log id to all loggings and prints
+        :param step_dict_output_path:
+            Path in the result dict to append the Epsagon steps data
         :return: None
         """
         self.app_name = app_name
@@ -154,6 +157,7 @@ class TraceFactory(object):
         self.split_on_send = split_on_send
         self.propagate_lambda_id = propagate_lambda_id
         self.logging_tracing_enabled = logging_tracing_enabled
+        self.step_dict_output_path = step_dict_output_path
         self.update_tracers()
 
     def update_tracers(self):
@@ -181,6 +185,7 @@ class TraceFactory(object):
             tracer.split_on_send = self.split_on_send
             tracer.propagate_lambda_id = self.propagate_lambda_id
             tracer.logging_tracing_enabled = self.logging_tracing_enabled
+            tracer.step_dict_output_path = self.step_dict_output_path
 
     def switch_to_multiple_traces(self):
         """
@@ -210,6 +215,7 @@ class TraceFactory(object):
             split_on_send=self.split_on_send,
             propagate_lambda_id=self.propagate_lambda_id,
             logging_tracing_enabled=self.logging_tracing_enabled,
+            step_dict_output_path=self.step_dict_output_path,
         )
 
     def get_or_create_trace(self, unique_id=None):
@@ -475,6 +481,7 @@ class Trace(object):
         transport=NoneTransport(),
         propagate_lambda_id=False,
         logging_tracing_enabled=False,
+        step_dict_output_path=None,
     ):
         """
         initialize.
@@ -498,6 +505,7 @@ class Trace(object):
         self.split_on_send = split_on_send
         self.propagate_lambda_id = propagate_lambda_id
         self.logging_tracing_enabled = logging_tracing_enabled
+        self.step_dict_output_path = step_dict_output_path
 
         if keys_to_ignore:
             self.keys_to_ignore = [self._strip_key(key) for key in
@@ -1087,7 +1095,7 @@ class Trace(object):
             ))
         finally:
             if self.debug:
-                pprint.pprint(self.to_dict())
+                print('trace:', trace)
 
 
 # pylint: disable=C0103
