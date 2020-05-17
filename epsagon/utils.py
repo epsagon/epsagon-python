@@ -284,6 +284,7 @@ def find_in_object(obj, key, path=None):
             if result:
                 return result
 
+    return None
 
 def collect_exception_python3(exception):
     """
