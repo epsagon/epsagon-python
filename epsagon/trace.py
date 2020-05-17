@@ -11,7 +11,6 @@ import decimal
 import traceback
 import warnings
 import signal
-import pprint
 import threading
 import simplejson as json
 
@@ -138,7 +137,8 @@ class TraceFactory(object):
          exceeds the maximum size.
         :param logging_tracing_enabled:
             Add an epsagon log id to all loggings and prints
-        :param step_dict_output_path: Path in the result dict to append the Epsagon steps data
+        :param step_dict_output_path:
+            Path in the result dict to append the Epsagon steps data
         :return: None
         """
         self.app_name = app_name

@@ -120,7 +120,8 @@ def init(
     :param split_on_send: Split the trace on send flag
     :param propagate_lambda_id: Inject identifiers via return value flag
     :param logging_tracing_enabled: Add an epsagon log id to logging calls
-    :param step_dict_output_path: Path in the result dict to append the Epsagon steps data
+    :param step_dict_output_path:
+        Path in the result dict to append the Epsagon steps data
     :return: None
     """
 
@@ -196,7 +197,9 @@ def init(
                 | propagate_lambda_id
         ),
         logging_tracing_enabled=logging_tracing_enabled,
-        step_dict_output_path=step_dict_output_path_env or step_dict_output_path,
+        step_dict_output_path=(
+            step_dict_output_path_env or step_dict_output_path,
+        )
     )
 
     # Append to ignored endpoints
@@ -262,7 +265,8 @@ def find_in_object(obj, key, path=None):
     :param obj: The dict to search in
     :param key: The key to search for
     :param path: The path (as an array) of the key nested in the object
-    :return: The value and path of this key in the object, or None if was not found
+    :return: The value and path of this key in the object,
+        or None if was not found
     """
     if not path:
         path = []

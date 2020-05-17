@@ -143,6 +143,7 @@ def lambda_wrapper(func):
     return _lambda_wrapper
 
 
+# pylint: disable=too-many-statements
 def step_lambda_wrapper(func):
     """Epsagon's Step Lambda wrapper."""
 
@@ -214,12 +215,16 @@ def step_lambda_wrapper(func):
 
             if isinstance(result, dict):
                 epsagon.utils.print_debug(
-                    'Step function result type is dict, steps_data={}'.format(steps_data)
+                    'Step function result type is dict, steps_data={}'.format(
+                        steps_data
+                    )
                 )
                 # If the step functions data is not present, then this is the
                 # First step.
                 if steps_data is None:
-                    epsagon.utils.print_debug('Could not find existing steps data')
+                    epsagon.utils.print_debug(
+                        'Could not find existing steps data'
+                    )
                     steps_dict = {'id': str(uuid4()), 'step_num': 0}
                     path = []
                 # Otherwise, just advance the steps number by one.
@@ -228,24 +233,33 @@ def step_lambda_wrapper(func):
                     steps_dict, path = steps_data
                     steps_dict = copy.deepcopy(steps_dict)
                     steps_dict['step_num'] += 1
-                    epsagon.utils.print_debug('Steps data found, new dict={}'.format(steps_dict))
+                    epsagon.utils.print_debug(
+                        'Steps data found, new dict={}'.format(steps_dict)
+                    )
 
                 result_path = result
-                # Tries to inject the steps data in the configured or same path where it was found
+                # Tries to inject the steps data in the configured
+                # or same path where it was found
                 if isinstance(trace.step_dict_output_path, list):
                     path = trace.step_dict_output_path
                 try:
                     for sub_path in path:
                         result_path = result_path.get(sub_path)
                 except Exception as exception:  # pylint: disable=broad-except
-                    epsagon.utils.print_debug('Could not put steps in path={}'.format(path))
+                    epsagon.utils.print_debug(
+                        'Could not put steps in path={}'.format(path)
+                    )
                 if result_path:
                     epsagon.utils.print_debug(
-                        'Adding steps dict to result_path={}'.format(result_path)
+                        'Adding steps dict to result_path={}'.format(
+                            result_path
+                        )
                     )
                     result_path[STEP_DICT_NAME] = steps_dict
                 else:
-                    epsagon.utils.print_debug('Adding steps dict to root result')
+                    epsagon.utils.print_debug(
+                        'Adding steps dict to root result'
+                    )
                     result[STEP_DICT_NAME] = steps_dict
 
                 runner.add_step_data(steps_dict)
