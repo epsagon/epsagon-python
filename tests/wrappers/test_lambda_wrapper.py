@@ -353,7 +353,6 @@ def test_step_lambda_wrapper_sanity_not_first_step_unqiue_path(trigger_factory_m
             'epsagon.runners.aws_lambda.StepLambdaRunner',
             side_effect=[lambda_runner_mock]
     ):
-        import pdb;pdb.set_trace()
         result = wrapped_lambda(
             {'a': 'a', unique_path: {'Epsagon': {'step_num': 1, 'id': 1}}},
             CONTEXT_STUB

@@ -198,7 +198,7 @@ def init(
         ),
         logging_tracing_enabled=logging_tracing_enabled,
         step_dict_output_path=(
-            step_dict_output_path_env or step_dict_output_path,
+            step_dict_output_path_env or step_dict_output_path
         )
     )
 
