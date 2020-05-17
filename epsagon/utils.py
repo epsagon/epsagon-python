@@ -277,7 +277,10 @@ def find_in_object(obj, key, path=None):
         and not isinstance(obj, six.string_types)
     ):
         for k in obj:
-            result = find_in_object(obj[k], key, path + [k])
+            # Handle lists as well
+            element = k if isinstance(obj, list) else obj[k]
+            nested_path = None if isinstance(obj, list) else path + [k]
+            result = find_in_object(element, key, nested_path)
             if result:
                 return result
 
