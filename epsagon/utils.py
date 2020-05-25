@@ -240,7 +240,9 @@ def collect_container_metadata(metadata):
         metadata['is_k8s'] = True
         metadata['k8s_pod_name'] = socket.gethostname()
         with open('/proc/self/cgroup', 'r') as proc_file:
-            metadata['k8s_container_id'] = proc_file.readline().split('/')[-1]
+            metadata['k8s_container_id'] = (
+                proc_file.readline().split('/')[-1].rstrip('\n')
+            )
 
     if METADATA_CACHE['queried'] and METADATA_CACHE['data']:
         metadata['ECS'] = METADATA_CACHE['data']
