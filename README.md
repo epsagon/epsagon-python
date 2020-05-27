@@ -193,6 +193,18 @@ def handle(event, context):
     # Your code is here
 ```
 
+### AppSync
+
+Tracing AppSync functions can be done in two methods:
+1. Auto-tracing through the Epsagon dashboard.
+2. Using the [`serverless-plugin-epsagon`](https://github.com/epsagon/serverless-plugin-epsagon) if you're using The Serverless Framework.
+
+**Make sure to choose just one of the methods**
+
+Correlating between lambda services and AppSync lambda resolvers can be done by:
+1. Setting the Lambda request id propagation flag (`EPSAGON_PROPAGATE_LAMBDA_ID`) to forward the request_id through the lambda's return value
+**The return value must be a dictionary**
+
 ### Step Functions
 
 Tracing Step Functions is similar to regular Lambda functions, but the wrapper changes from `lambda_wrapper` to `step_lambda_wrapper`:
@@ -380,7 +392,7 @@ Advanced options can be configured as a parameter to the init() method or as env
 |debug                   |EPSAGON_DEBUG                  |Boolean|`False`      |Enable debug prints for troubleshooting                                            |
 |disable_timeout_send    |EPSAGON_DISABLE_ON_TIMEOUT     |Boolean|`False`      |Disable timeout detection in Lambda functions                                      |
 |split_on_send           |EPSAGON_SPLIT_ON_SEND          |Boolean|`False`      |Split the trace into multiple chunks to support large traces                       |
-|propagate_lambda_id     |EPSAGON_PROPAGATE_LAMBDA_ID    |Boolean|`False`      |Insert Lambda request ID into the response payload                                 |
+|propagate_lambda_id     |EPSAGON_PROPAGATE_LAMBDA_ID    |Boolean|`False`      |Insert Lambda request ID into the response payload (type requirement: `dict`)                                 |
 |logging_tracing_enabled |EPSAGON_LOGGING_TRACING_ENABLED|Boolean|`True`      |Add Epsagon Log Id to all `logging` messages                            |
 |step_dict_output_path |EPSAGON_STEPS_OUTPUT_PATH|List|`None`      |Path in the result dict to append the Epsagon steps data  |
 |-                       |EPSAGON_HTTP_ERR_CODE          |Integer|`500`        |The minimum number of an HTTP response status code to treat as an error            |
