@@ -1442,6 +1442,7 @@ class BotocoreLambdaEvent(BotocoreEvent):
     """
 
     RESOURCE_TYPE = 'lambda'
+    AWS_ACCOUNT_IND = 4
 
     def __init__(self, wrapped, instance, args, kwargs, start_time, response,
                  exception):
@@ -1467,11 +1468,13 @@ class BotocoreLambdaEvent(BotocoreEvent):
         )
 
         _, request_data = args
-
         func_name = request_data.get('FunctionName', '')
         if ':' in func_name:
-            func_name = func_name.split(':')[-1]
-
+            splitted_func_name = func_name.split(':')
+            self.resource['metadata']['aws_account'] = splitted_func_name[
+                self.AWS_ACCOUNT_IND
+            ]
+            func_name = splitted_func_name[-1]
         self.resource['name'] = func_name
         if 'Payload' in request_data:
             add_data_if_needed(
