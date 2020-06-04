@@ -1471,9 +1471,7 @@ class BotocoreLambdaEvent(BotocoreEvent):
         func_name = request_data.get('FunctionName', '')
         if ':' in func_name:
             splitted_func_name = func_name.split(':')
-            self.resource['metadata'].update({
-                'aws_account': splitted_func_name[self.AWS_ACCOUNT_IND]
-            })
+            self.resource['metadata']['aws_account'] = splitted_func_name[self.AWS_ACCOUNT_IND]
             func_name = splitted_func_name[-1]
         self.resource['name'] = func_name
         if 'Payload' in request_data:
