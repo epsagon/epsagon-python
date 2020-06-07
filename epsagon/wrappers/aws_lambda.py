@@ -240,7 +240,9 @@ def step_lambda_wrapper(func):
                     else:
                         steps_dict = {'id': str(uuid4()), 'step_num': 0}
                         epsagon.utils.print_debug(
-                            'Steps data not found, new dict={}'.format(steps_dict)
+                            'Steps data not found, new dict={}'.format(
+                                steps_dict
+                            )
                         )
 
                 result_path = result
