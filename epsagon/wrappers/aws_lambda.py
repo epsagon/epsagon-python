@@ -161,49 +161,49 @@ def step_lambda_wrapper(func):
             # This can happen when someone manually calls handler without
             # parameters / sends kwargs. In such case we ignore this trace.
             return func(*args, **kwargs)
-        #
-        # try:
-        #     runner = epsagon.runners.aws_lambda.StepLambdaRunner(
-        #         time.time(),
-        #         context
-        #     )
-        #     trace.set_runner(runner)
-        # # pylint: disable=W0703
-        # except Exception as exception:
-        #     # Regress to python runner.
-        #     warnings.warn(
-        #         'Lambda context is invalid, using simple python wrapper',
-        #         EpsagonWarning
-        #     )
-        #     trace.add_exception(
-        #         exception,
-        #         traceback.format_exc()
-        #     )
-        #     return epsagon.wrappers.python_function.wrap_python_function(
-        #         func,
-        #         args,
-        #         kwargs
-        #     )
-        #
-        # constants.COLD_START = False
-        #
-        # try:
-        #     trace.add_event(
-        #         epsagon.triggers.aws_lambda.LambdaTriggerFactory.factory(
-        #             time.time(),
-        #             event,
-        #             context
-        #         )
-        #     )
-        # # pylint: disable=W0703
-        # except Exception as exception:
-        #     trace.add_exception(
-        #         exception,
-        #         traceback.format_exc(),
-        #         additional_data={'event': event}
-        #     )
-        #
-        # trace.set_timeout_handler(context)
+
+        try:
+            runner = epsagon.runners.aws_lambda.StepLambdaRunner(
+                time.time(),
+                context
+            )
+            trace.set_runner(runner)
+        # pylint: disable=W0703
+        except Exception as exception:
+            # Regress to python runner.
+            warnings.warn(
+                'Lambda context is invalid, using simple python wrapper',
+                EpsagonWarning
+            )
+            trace.add_exception(
+                exception,
+                traceback.format_exc()
+            )
+            return epsagon.wrappers.python_function.wrap_python_function(
+                func,
+                args,
+                kwargs
+            )
+
+        constants.COLD_START = False
+
+        try:
+            trace.add_event(
+                epsagon.triggers.aws_lambda.LambdaTriggerFactory.factory(
+                    time.time(),
+                    event,
+                    context
+                )
+            )
+        # pylint: disable=W0703
+        except Exception as exception:
+            trace.add_exception(
+                exception,
+                traceback.format_exc(),
+                additional_data={'event': event}
+            )
+
+        trace.set_timeout_handler(context)
 
         result = None
         try:
