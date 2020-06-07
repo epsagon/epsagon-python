@@ -232,10 +232,18 @@ def step_lambda_wrapper(func):
                     # don't change trigger data
                     steps_dict, path = steps_data
                     steps_dict = copy.deepcopy(steps_dict)
-                    steps_dict['step_num'] += 1
-                    epsagon.utils.print_debug(
-                        'Steps data found, new dict={}'.format(steps_dict)
-                    )
+                    if 'step_num' in steps_dict:
+                        steps_dict['step_num'] += 1
+                        epsagon.utils.print_debug(
+                            'Steps data found, new dict={}'.format(steps_dict)
+                        )
+                    else:
+                        steps_dict = {'id': str(uuid4()), 'step_num': 0}
+                        epsagon.utils.print_debug(
+                            'Steps data not found, new dict={}'.format(
+                                steps_dict
+                            )
+                        )
 
                 result_path = result
                 # Tries to inject the steps data in the configured
