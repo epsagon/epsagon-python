@@ -221,7 +221,6 @@ def step_lambda_wrapper(func):
                 )
                 # If the step functions data is not present, then this is the
                 # First step.
-                import ipdb;ipdb.set_trace()
                 if steps_data is None:
                     epsagon.utils.print_debug(
                         'Could not find existing steps data'
