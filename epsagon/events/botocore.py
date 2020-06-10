@@ -347,10 +347,11 @@ class BotocoreSQSEvent(BotocoreEvent):
         :param response: response data
         :param exception: Exception (if happened)
         """
-        self.RESPONSE_TO_FUNC.update(
-            {'SendMessage': self.process_send_message_response,
-             'ReceiveMessage': self.process_receive_message_response}
-        )
+        self.RESPONSE_TO_FUNC.update({
+            'SendMessage': self.process_send_message_response,
+            'SendMessageBatch': self.process_send_message_batch_response,
+            'ReceiveMessage': self.process_receive_message_response
+        })
         _, request_data = args
         self.request_data = request_data
         self.response = response
@@ -395,6 +396,19 @@ class BotocoreSQSEvent(BotocoreEvent):
         self.resource['metadata']['Message ID'] = self.response['MessageId']
         self.resource['metadata']['MD5 Of Message Body'] = (
             self.response['MD5OfMessageBody']
+        )
+
+    def process_send_message_batch_response(self):
+        """
+        Process the send message batch response
+        """
+        # Check for at least one message sent successfully
+        if not self.response.get('Successful'):
+            return
+        message = self.response['Successful'][0]
+        self.resource['metadata']['Message ID'] = message['MessageId']
+        self.resource['metadata']['MD5 Of Message Body'] = (
+            message['MD5OfMessageBody']
         )
 
     # pylint: disable=invalid-name
