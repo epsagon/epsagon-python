@@ -65,22 +65,21 @@ def _epsagon_trace_id_wrapper(msg_index, wrapped, _instance, args, kwargs):
     :param kwargs: wrapt's kwargs
     :return: None
     """
-    if trace_factory.is_logging_tracing_enabled():
-        trace_log_id = trace_factory.get_log_id()
+    trace_log_id = trace_factory.get_log_id()
 
-        if not trace_log_id:
-            return wrapped(*args, **kwargs)
+    if not trace_log_id:
+        return wrapped(*args, **kwargs)
 
-        try:
-            message = _add_log_id(trace_log_id, args[msg_index])
-        except Exception:   # pylint: disable=broad-except
-            # total failure to add log id
-            return wrapped(*args, **kwargs)
-        args = (
-            args[0:msg_index] +
-            (message,) +
-            args[(msg_index + 1):]
-        )
+    try:
+        message = _add_log_id(trace_log_id, args[msg_index])
+    except Exception:   # pylint: disable=broad-except
+        # total failure to add log id
+        return wrapped(*args, **kwargs)
+    args = (
+        args[0:msg_index] +
+        (message,) +
+        args[(msg_index + 1):]
+    )
     return wrapped(*args, **kwargs)
 
 
@@ -94,17 +93,18 @@ def patch():
     wrapt.wrap_function_wrapper('logging', 'Logger.exception', _wrapper)
 
     # Instrument logging with Epsagon trace ID
-    wrapt.wrap_function_wrapper(
-        'logging',
-        'Logger.log',
-        partial(_epsagon_trace_id_wrapper, 1)
-    )
-    for log_function in LOGGING_FUNCTIONS:
+    if trace_factory.is_logging_tracing_enabled():
         wrapt.wrap_function_wrapper(
             'logging',
-            'Logger.{}'.format(log_function),
-            partial(_epsagon_trace_id_wrapper, 0)
+            'Logger.log',
+            partial(_epsagon_trace_id_wrapper, 1)
         )
+        for log_function in LOGGING_FUNCTIONS:
+            wrapt.wrap_function_wrapper(
+                'logging',
+                'Logger.{}'.format(log_function),
+                partial(_epsagon_trace_id_wrapper, 0)
+            )
 
     # Instrument print function is disabled
     # wrapt.wrap_function_wrapper(
