@@ -160,6 +160,7 @@ The following frameworks are supported by Epsagon:
 |[AWS Lambda](#aws-lambda)               |All                        |<ul><li>- [x] (Through the dashboard only)</li></ul> |
 |[Step Functions](#step-functions)       |All                        |<ul><li>- [ ] </li></ul>                             |
 |[Generic](#generic)                     |All                        |<ul><li>- [ ] </li></ul>                             |
+|[Gunicorn](#gunicorn)                   |`>=20.0.4`                 |<ul><li>- [x] </li></ul>                             |
 |[Django](#django)                       |`>=1.11`                   |<ul><li>- [x] </li></ul>                             |
 |[Flask](#flask)                         |`>=0.5`                    |<ul><li>- [x] </li></ul>                             |
 |[Tornado](#tornado)                     |`>=4.0`                    |<ul><li>- [x] </li></ul>                             |
@@ -272,6 +273,22 @@ import epsagon
 epsagon.init(
     token='epsagon-token',
     app_name='app-name-stage',
+    metadata_only=False,
+)
+```
+
+### Gunicorn
+
+Tracing Gunicorn application can be done in two methods:
+1. [Auto-tracing](#auto-tracing) using the environment variable.
+2. Calling the SDK.
+
+Calling the SDK is simple, and should be done in your main `py` file where the application is being initialized:
+```python
+import epsagon
+epsagon.init(
+    token='<epsagon-token>',
+    app_name='<app-name-stage>',
     metadata_only=False,
 )
 ```
