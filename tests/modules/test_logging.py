@@ -4,7 +4,7 @@ from epsagon.trace import trace_factory
 import epsagon.runners.python_function
 import epsagon.constants
 import logging
-from .wrappers.common import get_tracer_patch_kwargs
+from ..wrappers.common import get_tracer_patch_kwargs
 
 trace_mock = mock.MagicMock()
 
