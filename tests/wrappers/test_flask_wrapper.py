@@ -12,6 +12,10 @@ app_test = Flask('test')
 FlaskWrapper(app_test)
 
 
+def setup_function(func):
+    trace_factory.use_single_trace = False
+
+
 @app_test.route('/')
 def test():
     return RETURN_VALUE
