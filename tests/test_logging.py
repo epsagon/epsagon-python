@@ -20,7 +20,7 @@ def test_logging_exception_capture():
     retval = 'success'
 
     @epsagon.wrappers.python_function.python_wrapper
-    def wrapped_function():
+    def wrapped_function(event, context):
         logging.exception('test')
         return retval
 
@@ -32,7 +32,7 @@ def test_logging_exception_capture_with_args():
     retval = 'success'
 
     @epsagon.wrappers.python_function.python_wrapper
-    def wrapped_function():
+    def wrapped_function(event, context):
         logging.exception('test %s %s', 'test', 'test')
         return retval
 
