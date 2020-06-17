@@ -37,4 +37,4 @@ def test_logging_exception_capture_with_args():
         return retval
 
     assert wrapped_function('a', 'b') == retval
-    trace_mock.set_error.assert_called_with('test %s %s', None)
+    trace_mock.set_error.assert_called_with('test test test', None)

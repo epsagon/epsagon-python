@@ -32,18 +32,14 @@ def _wrapper(wrapped, _instance, args, kwargs):
     :param kwargs: wrapt's kwargs
     :return: None
     """
-    if (
-        os.getenv('EPSAGON_DISABLE_LOGGING_ERRORS', '').upper() == 'TRUE'
-        or len(args) == 0
-    ):
-        return wrapped(*args, **kwargs)
-
-    try:
-        trace_factory.set_error(args[0])
-    except Exception:  # pylint: disable=broad-except
-        print_debug('Could not capture exception from log: {}'.format(
-            args
-        ))
+    if not os.getenv('EPSAGON_DISABLE_LOGGING_ERRORS', '').upper() == 'TRUE':
+        try:
+            message = args[0] % args[1:]
+            trace_factory.set_error(message)
+        except Exception:  # pylint: disable=broad-except
+            print_debug('Could not capture exception from log: {}'.format(
+                args
+            ))
 
     return wrapped(*args, **kwargs)
 
