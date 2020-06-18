@@ -60,7 +60,7 @@ class GunicornRunner(BaseEvent):
     """
 
     ORIGIN = 'runner'
-    RESOURCE_TYPE = 'gunicorn'
+    RESOURCE_TYPE = 'python_gunicorn'
     OPERATION = 'request'
 
     def __init__(self, start_time, request):
