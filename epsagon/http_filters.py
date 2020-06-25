@@ -33,6 +33,7 @@ BLACKLIST_URLS = {
     ],
     str.__contains__: [
         'accounts.google.com',
+        'documents.azure.com',
         '169.254.170.2'  # AWS Task Metadata Endpoint
     ],
 }

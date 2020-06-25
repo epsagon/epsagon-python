@@ -357,6 +357,7 @@ Epsagon provides out-of-the-box instrumentation (tracing) for many popular frame
 |psycopg2            |`>=2.2.0`                  |
 |pg8000              |`>=1.9.0`                  |
 |botocore (boto3)    |`>=1.4.0`                  |
+|azure.cosmos        |`>=4.0.0`                  |
 |celery              |`>=4.0.0`                  |
 |grpc                |`>=0.3-10`                 |
 
