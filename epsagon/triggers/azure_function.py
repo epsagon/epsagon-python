@@ -87,6 +87,10 @@ class AzureTriggerFactory(object):
         :param event: event dict from the entry point
         :return: Event or None
         """
+        import logging
+        logging.info('in trig')
         if 'req' in event:
+            logging.info('in trig - req')
             return HTTPAzureTrigger(start_time, event['req'])
+        logging.info('in trig - none')
         return None
