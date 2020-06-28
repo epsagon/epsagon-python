@@ -9,6 +9,7 @@ import warnings
 import functools
 from ..trace import trace_factory
 from ..runners.azure_function import AzureFunctionRunner
+from ..triggers.azure_function import AzureTriggerFactory
 from ..common import EpsagonWarning
 
 
@@ -23,13 +24,18 @@ def azure_wrapper(func):
         trace = trace_factory.get_or_create_trace()
         trace.prepare()
 
+        import logging
+        logging.info('kwargs = %s', kwargs)
+
         context = kwargs.get('context')
+        logging.info('context = %s', context)
         if not context:
             return func(*args, **kwargs)
 
         # Create Runner
         # try:
         runner = AzureFunctionRunner(time.time(), context)
+        logging.info('runner = %s', runner)
         trace.set_runner(runner)
         # except Exception as exception:  # pylint: disable=broad-except
         #     warnings.warn(
@@ -40,8 +46,14 @@ def azure_wrapper(func):
 
         # Create Trigger
         # try:
-        runner = AzureFunctionRunner(time.time(), context)
-        trace.set_runner(runner)
+
+        trace.add_event(
+            AzureTriggerFactory.factory(
+                time.time(),
+                kwargs
+            )
+        )
+        logging.info('after trigger')
         # except Exception as exception:  # pylint: disable=broad-except
         #     warnings.warn(
         #         'Could not create Azure Function runner',
@@ -52,6 +64,7 @@ def azure_wrapper(func):
 
         try:
             result = func(*args, **kwargs)
+            logging.info('after result')
             return result
         except Exception as exception:
             runner.set_exception(exception, traceback.format_exc())
