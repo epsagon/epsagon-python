@@ -1064,7 +1064,12 @@ class Trace(object):
                 cls=TraceEncoder,
                 encoding='latin1'
             )
-
+            import logging
+            logging.info('post trace = %s', json.dumps(
+                self.to_dict(),
+                cls=TraceEncoder,
+                encoding='latin1'
+            ))
             trace_length = len(trace)
             if trace_length > self._max_trace_size:
                 # Trace too big.
@@ -1085,10 +1090,12 @@ class Trace(object):
                     len(trace)
                 ))
         except requests.exceptions.ReadTimeout:
+            logging.info('fail trace')
             print('Failed to send trace (size: {}) (timeout)'.format(
                 len(trace)
             ))
         except Exception as exception:
+            logging.info('fail trace2')
             print('Failed to send trace (size: {}): {}'.format(
                 len(trace),
                 exception
