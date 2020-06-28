@@ -9,7 +9,7 @@ import warnings
 import functools
 from ..trace import trace_factory
 from ..runners.azure_function import AzureFunctionRunner
-from epsagon.common import EpsagonWarning
+from ..common import EpsagonWarning
 
 
 def azure_wrapper(func):
@@ -28,26 +28,26 @@ def azure_wrapper(func):
             return func(*args, **kwargs)
 
         # Create Runner
-        try:
-            runner = AzureFunctionRunner(time.time(), context)
-            trace.set_runner(runner)
-        except Exception as exception:  # pylint: disable=broad-except
-            warnings.warn(
-                'Could not create Azure Function runner',
-                EpsagonWarning
-            )
-            return func(*args, **kwargs)
+        # try:
+        runner = AzureFunctionRunner(time.time(), context)
+        trace.set_runner(runner)
+        # except Exception as exception:  # pylint: disable=broad-except
+        #     warnings.warn(
+        #         'Could not create Azure Function runner',
+        #         EpsagonWarning
+        #     )
+        #     return func(*args, **kwargs)
 
         # Create Trigger
-        try:
-            runner = AzureFunctionRunner(time.time(), context)
-            trace.set_runner(runner)
-        except Exception as exception:  # pylint: disable=broad-except
-            warnings.warn(
-                'Could not create Azure Function runner',
-                EpsagonWarning
-            )
-            return func(*args, **kwargs)
+        # try:
+        runner = AzureFunctionRunner(time.time(), context)
+        trace.set_runner(runner)
+        # except Exception as exception:  # pylint: disable=broad-except
+        #     warnings.warn(
+        #         'Could not create Azure Function runner',
+        #         EpsagonWarning
+        #     )
+        #     return func(*args, **kwargs)
 
 
         try:
