@@ -5,9 +5,11 @@ Wrapper for Azure Function.
 from __future__ import absolute_import
 import time
 import traceback
+import warnings
 import functools
 from ..trace import trace_factory
 from ..runners.azure_function import AzureFunctionRunner
+from epsagon.common import EpsagonWarning
 
 
 def azure_wrapper(func):
@@ -21,10 +23,32 @@ def azure_wrapper(func):
         trace = trace_factory.get_or_create_trace()
         trace.prepare()
 
-        # Trigger event is not supported yet.
+        context = kwargs.get('context')
+        if not context:
+            return func(*args, **kwargs)
 
-        runner = AzureFunctionRunner(time.time())
-        trace.add_event(runner)
+        # Create Runner
+        try:
+            runner = AzureFunctionRunner(time.time(), context)
+            trace.set_runner(runner)
+        except Exception as exception:  # pylint: disable=broad-except
+            warnings.warn(
+                'Could not create Azure Function runner',
+                EpsagonWarning
+            )
+            return func(*args, **kwargs)
+
+        # Create Trigger
+        try:
+            runner = AzureFunctionRunner(time.time(), context)
+            trace.set_runner(runner)
+        except Exception as exception:  # pylint: disable=broad-except
+            warnings.warn(
+                'Could not create Azure Function runner',
+                EpsagonWarning
+            )
+            return func(*args, **kwargs)
+
 
         try:
             result = func(*args, **kwargs)
