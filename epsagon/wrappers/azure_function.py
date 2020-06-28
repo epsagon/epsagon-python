@@ -24,55 +24,47 @@ def azure_wrapper(func):
         trace = trace_factory.get_or_create_trace()
         trace.prepare()
 
-        import logging
-        logging.info('kwargs = %s', kwargs)
-
         context = kwargs.get('context')
-        logging.info('context = %s', context)
         if not context:
             return func(*args, **kwargs)
 
         # Create Runner
-        # try:
-        runner = AzureFunctionRunner(time.time(), context)
-        logging.info('runner = %s', runner)
-        trace.set_runner(runner)
-        # except Exception as exception:  # pylint: disable=broad-except
-        #     warnings.warn(
-        #         'Could not create Azure Function runner',
-        #         EpsagonWarning
-        #     )
-        #     return func(*args, **kwargs)
+        try:
+            runner = AzureFunctionRunner(time.time(), context)
+            trace.set_runner(runner)
+        except Exception as exception:  # pylint: disable=broad-except
+            warnings.warn(
+                'Could not create Azure Function runner: {}'.format(exception),
+                EpsagonWarning
+            )
+            return func(*args, **kwargs)
 
-        # Create Trigger
-        # try:
-
-        logging.info('before trigger')
-        azure_trigger = AzureTriggerFactory.factory(
-            time.time(),
-            kwargs
-        )
-        if azure_trigger:
-            logging.info('in trigger = %s', azure_trigger)
-            trace.add_event(azure_trigger)
-        logging.info('after trigger')
-        # except Exception as exception:  # pylint: disable=broad-except
-        #     warnings.warn(
-        #         'Could not create Azure Function runner',
-        #         EpsagonWarning
-        #     )
-        #     return func(*args, **kwargs)
-
-
+        result = None
         try:
             result = func(*args, **kwargs)
-            logging.info('after result')
-            return result
         except Exception as exception:
             runner.set_exception(exception, traceback.format_exc())
             raise
         finally:
             runner.terminate()
-            trace_factory.send_traces()
+
+        # Create Trigger
+        try:
+            azure_trigger = AzureTriggerFactory.factory(
+                time.time(),
+                kwargs,
+                result
+            )
+            if azure_trigger:
+                trace.add_event(azure_trigger)
+        except Exception as exception:  # pylint: disable=broad-except
+            warnings.warn(
+                'Could not create Azure Function trigger: {}'.format(exception),
+                EpsagonWarning
+            )
+            return func(*args, **kwargs)
+
+        trace_factory.send_traces()
+        return result
 
     return _azure_wrapper

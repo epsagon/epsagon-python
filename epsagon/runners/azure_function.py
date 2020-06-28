@@ -33,5 +33,5 @@ class AzureFunctionRunner(BaseEvent):
             'azure.resource_group': os.getenv('ResourceGroupName', ''),
             'azure.location': os.getenv('Location', ''),
             'azure.function.log': os.getenv('LOGNAME', ''),
-            'azure.function.name': os.getenv('WEBSITE_SITE_NAME', ''),
+            'azure.function.app': os.getenv('WEBSITE_SITE_NAME', ''),
         })

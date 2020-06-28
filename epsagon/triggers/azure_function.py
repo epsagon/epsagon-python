@@ -25,30 +25,26 @@ class HTTPAzureTrigger(BaseAzureTrigger):
     """
     RESOURCE_TYPE = 'http'
 
-    def __init__(self, start_time, event):
+    def __init__(self, start_time, event, response):
         """
         Initialize.
         :param start_time: event's start time (epoch)
         :param event: event dict from the entry point, azure.functions.HttpRequest
+        :param response: http response, azure.functions.HttpResponse
         """
 
         super(HTTPAzureTrigger, self).__init__(start_time)
-        import logging
-        logging.info('in trigger')
         self.resource['operation'] = event.method
-        logging.info('method = %s', event.method)
         url_data = urlparse(event.url)
         self.resource['name'] = url_data.netloc
-        logging.info('url_data = %s', url_data)
 
         self.event_id = event.headers.get('x-arr-log-id', str(uuid4()))
-        logging.info('event_id = %s', self.event_id)
 
         self.resource['metadata'] = {
             'http.request.path': url_data.path,
+            'http.status_code': response.status_code,
         }
 
-        logging.info('metadata = %s', self.resource['metadata'])
         if event.params:
             add_data_if_needed(
                 self.resource['metadata'],
@@ -56,13 +52,17 @@ class HTTPAzureTrigger(BaseAzureTrigger):
                 event.params
             )
 
-        logging.info('metadata = %s', self.resource['metadata'])
         add_data_if_needed(
             self.resource['metadata'],
             'http.request.headers',
             event.headers.__http_headers__
         )
-        logging.info('metadata = %s', self.resource['metadata'])
+
+        add_data_if_needed(
+            self.resource['metadata'],
+            'http.response.headers',
+            response.headers.__http_headers__
+        )
 
         try:
             add_data_if_needed(
@@ -80,17 +80,14 @@ class AzureTriggerFactory(object):
     """
 
     @staticmethod
-    def factory(start_time, event):
+    def factory(start_time, event, result):
         """
         Creates trigger event object.
         :param start_time: event's start time (epoch)
         :param event: event dict from the entry point
+        :param result: function result, can be relevant in HTTP
         :return: Event or None
         """
-        import logging
-        logging.info('in trig')
         if 'req' in event:
-            logging.info('in trig - req')
-            return HTTPAzureTrigger(start_time, event['req'])
-        logging.info('in trig - none')
+            return HTTPAzureTrigger(start_time, event['req'], result)
         return None
