@@ -33,16 +33,22 @@ class HTTPAzureTrigger(BaseAzureTrigger):
         """
 
         super(HTTPAzureTrigger, self).__init__(start_time)
+        import logging
+        logging.info('in trigger')
         self.resource['operation'] = event.method
+        logging.info('method = %s', event.method)
         url_data = urlparse(event.url)
         self.resource['name'] = url_data.netloc
+        logging.info('url_data = %s', url_data)
 
         self.event_id = event.headers.get('x-arr-log-id', str(uuid4()))
+        logging.info('event_id = %s', self.event_id)
 
         self.resource['metadata'] = {
             'http.request.path': url_data.path,
         }
 
+        logging.info('metadata = %s', self.resource['metadata'])
         if event.params:
             add_data_if_needed(
                 self.resource['metadata'],
@@ -50,11 +56,13 @@ class HTTPAzureTrigger(BaseAzureTrigger):
                 event.params
             )
 
+        logging.info('metadata = %s', self.resource['metadata'])
         add_data_if_needed(
             self.resource['metadata'],
             'http.request.headers',
             event.headers.__http_headers__
         )
+        logging.info('metadata = %s', self.resource['metadata'])
 
         try:
             add_data_if_needed(

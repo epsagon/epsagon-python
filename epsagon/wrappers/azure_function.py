@@ -47,12 +47,14 @@ def azure_wrapper(func):
         # Create Trigger
         # try:
 
-        trace.add_event(
-            AzureTriggerFactory.factory(
-                time.time(),
-                kwargs
-            )
+        logging.info('before trigger')
+        azure_trigger = AzureTriggerFactory.factory(
+            time.time(),
+            kwargs
         )
+        if azure_trigger:
+            logging.info('in trigger = %s', azure_trigger)
+            trace.add_event(azure_trigger)
         logging.info('after trigger')
         # except Exception as exception:  # pylint: disable=broad-except
         #     warnings.warn(
