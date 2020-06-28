@@ -49,7 +49,7 @@ class HTTPAzureTrigger(BaseAzureTrigger):
             add_data_if_needed(
                 self.resource['metadata'],
                 'http.request.path_params',
-                event.params
+                dict(event.params.items())
             )
 
         add_data_if_needed(
