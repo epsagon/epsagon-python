@@ -29,7 +29,8 @@ class HTTPAzureTrigger(BaseAzureTrigger):
         """
         Initialize.
         :param start_time: event's start time (epoch)
-        :param event: event dict from the entry point, azure.functions.HttpRequest
+        :param event: event dict from the entry point,
+            azure.functions.HttpRequest
         :param response: http response, azure.functions.HttpResponse
         """
 
