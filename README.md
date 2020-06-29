@@ -165,6 +165,7 @@ The following frameworks are supported by Epsagon:
 |[Flask](#flask)                         |`>=0.5`                    |<ul><li>- [x] </li></ul>                             |
 |[Tornado](#tornado)                     |`>=4.0`                    |<ul><li>- [x] </li></ul>                             |
 |[Celery](#celery)                       |`>=4.0.0`                  |<ul><li>- [x] </li></ul>                             |
+|[Azure Functions](#azure-functions)     |`>=2.0.0`                  |<ul><li>- [ ] </li></ul>                             |
 |[Chalice](#chalice)                     |`>=1.0.0`                  |<ul><li>- [ ] </li></ul>                             |
 |[Zappa](#zappa)                         |`>=0.30.0`                 |<ul><li>- [ ] </li></ul>                             |
 
@@ -291,6 +292,24 @@ epsagon.init(
     app_name='<app-name-stage>',
     metadata_only=False,
 )
+```
+
+### Azure Functions
+
+Tracing Azure Functions can be done in the following method:
+
+```python
+import azure.functions as func
+import epsagon
+epsagon.init(
+    token='epsagon-token',
+    app_name='app-name-stage',
+    metadata_only=False,
+)
+
+@epsagon.azure_wrapper
+def main(req):
+    return func.HttpResponse('Success')
 ```
 
 ### Chalice

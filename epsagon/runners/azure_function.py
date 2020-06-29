@@ -16,22 +16,22 @@ class AzureFunctionRunner(BaseEvent):
     RESOURCE_TYPE = 'azure_function'
     OPERATION = 'Invoke'
 
-    def __init__(self, start_time):
+    def __init__(self, start_time, context):
         """
         Initialize.
         :param start_time: event's start time (epoch)
+        :param context: function's context, azure.functions.Context
         """
 
         super(AzureFunctionRunner, self).__init__(start_time)
 
-        self.event_id = os.getenv('EXECUTION_CONTEXT_INVOCATIONID', '')
-        self.resource['name'] = os.getenv(
-            'EXECUTION_CONTEXT_FUNCTIONNAME',
-            ''
-        )
+        self.event_id = context.invocation_id
+        self.resource['name'] = context.function_name
         self.resource['operation'] = self.OPERATION
 
         self.resource['metadata'].update({
-            'region': os.getenv('REGION_NAME', ''),
-            'memory': os.getenv('WEBSITE_MEMORY_LIMIT_MB', ''),
+            'azure.resource_group': os.getenv('ResourceGroupName', ''),
+            'azure.location': os.getenv('Location', ''),
+            'azure.function.log': os.getenv('LOGNAME', ''),
+            'azure.function.app': os.getenv('WEBSITE_SITE_NAME', ''),
         })
