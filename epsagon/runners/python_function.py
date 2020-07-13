@@ -49,11 +49,15 @@ class PythonRunner(BaseEvent):
 
         if wrapped_args:
             self.add_json_field('python.function.args', wrapped_args)
-            self.resource['metadata']['python.function.args_length'] = len(wrapped_args)
+            self.resource['metadata']['python.function.args_length'] = len(
+                wrapped_args
+            )
 
         if wrapped_kwargs:
             self.add_json_field('python.function.kwargs', wrapped_kwargs)
-            self.resource['metadata']['python.function.kwargs_length'] = len(wrapped_kwargs)
+            self.resource['metadata']['python.function.kwargs_length'] = len(
+                wrapped_kwargs
+            )
 
     def add_json_field(self, name, data):
         """
