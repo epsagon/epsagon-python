@@ -369,7 +369,7 @@ epsagon.init(
 )
 
 # Wrap your entry point:
-@epsagon.python_wrapper
+@epsagon.python_wrapper(name='my-resource')
 def main(params):
     # Your code is here
 ```

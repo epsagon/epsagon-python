@@ -5,8 +5,9 @@ Runner for a general python function
 from __future__ import absolute_import
 import uuid
 import json
+import epsagon.trace
 from ..event import BaseEvent
-from ..utils import add_data_if_needed
+from ..trace_encoder import TraceEncoder
 
 
 class PythonRunner(BaseEvent):
@@ -19,11 +20,12 @@ class PythonRunner(BaseEvent):
     OPERATION = 'invoke'
 
     def __init__(
-            self,
-            start_time,
-            wrapped_function,
-            wrapped_args,
-            wrapped_kwargs
+        self,
+        start_time,
+        wrapped_function,
+        wrapped_args,
+        wrapped_kwargs,
+        name=None
     ):
         """
         Initialize.
@@ -37,21 +39,32 @@ class PythonRunner(BaseEvent):
         super(PythonRunner, self).__init__(start_time)
 
         self.event_id = str(uuid.uuid4())
-        self.resource['name'] = wrapped_function.__name__
+        self.resource['name'] = name if name else wrapped_function.__name__
         self.resource['operation'] = self.OPERATION
+
         self.resource['metadata'].update({
-            'module': wrapped_function.__module__,
-            'args_length': len(wrapped_args),
-            'kwargs_length': len(wrapped_kwargs)
+            'python.module': wrapped_function.__module__,
+            'python.function.name': wrapped_function.__name__,
         })
 
-        # Add arguments only if they are serializable.
+        if wrapped_args:
+            self.add_json_field('python.function.args', wrapped_args)
+            self.resource['metadata']['python.function.args_length'] = len(wrapped_args)
+
+        if wrapped_kwargs:
+            self.add_json_field('python.function.kwargs', wrapped_kwargs)
+            self.resource['metadata']['python.function.kwargs_length'] = len(wrapped_kwargs)
+
+    def add_json_field(self, name, data):
+        """
+        Add a field to metadata with value `data` and name `name`,
+            only if it is JSON serializable
+        """
+        if epsagon.trace.trace_factory.get_trace().metadata_only:
+            return
+
         try:
-            json.dumps(wrapped_args)
-            add_data_if_needed(
-                self.resource['metadata'],
-                'Arguments',
-                wrapped_args
-            )
+            json.dumps(data, cls=TraceEncoder, encoding='latin1')
+            self.resource['metadata'][name] = data
         except TypeError:
             pass
