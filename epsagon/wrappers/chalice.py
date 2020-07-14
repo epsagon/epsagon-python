@@ -18,6 +18,13 @@ class ChaliceWrapper(object):
     def __getattr__(self, item):
         return getattr(self._app, item)
 
+    def __setattr__(self, name, value):
+        if name == '__class__' and value.__name__ == 'LocalChalice':
+            # In local runs, the class is being changed to `LocalChalice`,
+            # So we do that to preserve the same behaviour
+            value.__getattr__ = self.__getattr__
+        super(ChaliceWrapper, self).__setattr__(name, value)
+
     def __call__(self, *args, **kwargs):
         return lambda_wrapper(self._app)(*args, **kwargs)
 
