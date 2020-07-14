@@ -12,7 +12,7 @@ from epsagon.utils import collect_container_metadata
 from epsagon import constants
 
 
-def wrap_python_function(func, args, kwargs):
+def wrap_python_function(func, args, kwargs, name=None):
     """
     Wrap a python function call with a simple python wrapper. Used as default
     when wrapping with other wrappers is impossible.
@@ -20,6 +20,7 @@ def wrap_python_function(func, args, kwargs):
     :param func: The function to wrap.
     :param args: The arguments to the function.
     :param kwargs: The keyword arguments to the function.
+    :param name: Resource name for the runner
     :return: The function's result.
     """
     try:
@@ -27,7 +28,8 @@ def wrap_python_function(func, args, kwargs):
             time.time(),
             func,
             args,
-            kwargs
+            kwargs,
+            name=name
         )
         epsagon.trace.trace_factory.set_runner(runner)
 
@@ -52,8 +54,7 @@ def wrap_python_function(func, args, kwargs):
         raise
     finally:
         try:
-            if not epsagon.trace.trace_factory.get_trace().metadata_only:
-                runner.resource['metadata']['return_value'] = result
+            runner.add_json_field('python.function.return_value', result)
         # pylint: disable=W0703
         except Exception as exception:
             epsagon.trace.trace_factory.add_exception(
@@ -67,12 +68,41 @@ def wrap_python_function(func, args, kwargs):
             pass
 
 
-def python_wrapper(func):
-    """Epsagon's general python wrapper."""
+def python_wrapper(*args, **kwargs):
+    """
+    Epsagon's general Python wrapper.
 
-    @functools.wraps(func)
-    def _python_wrapper(*args, **kwargs):
-        epsagon.trace.trace_factory.get_or_create_trace().prepare()
-        return wrap_python_function(func, args, kwargs)
+    Receives optional keyword arg 'name': used to identify this resource in
+        the application (defaults to function name).
 
-    return _python_wrapper
+    Options for using:
+    -   @python_wrapper(name='my-resource')
+        def my_function(params):
+            ...
+
+    -   @python_wrapper()
+        def my_function(params):
+            ...
+
+    -   @python_wrapper
+        def my_function(params):
+            ...
+
+    NOTE: Should not be used for two functions in the same stack trace, or when
+          running under a traced context (e.g. AWS Lambda, HTTP frameworks, etc)
+    """
+    name = kwargs.get('name')
+
+    def _inner_wrapper(func):
+
+        @functools.wraps(func)
+        def _python_wrapper(*args, **kwargs):
+            epsagon.trace.trace_factory.get_or_create_trace().prepare()
+            return wrap_python_function(func, args, kwargs, name=name)
+
+        return _python_wrapper
+
+    if len(args) == 1 and callable(args[0]):
+        return _inner_wrapper(args[0])
+
+    return _inner_wrapper

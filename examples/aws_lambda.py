@@ -6,7 +6,7 @@ import epsagon
 epsagon.init(
     token='my-secret-token',
     app_name='my-app-name',
-    metadata_only=False
+    metadata_only=False  # Optional
 )
 
 
