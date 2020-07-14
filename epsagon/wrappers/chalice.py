@@ -19,7 +19,7 @@ class ChaliceWrapper(object):
         return getattr(self._app, item)
 
     def __setattr__(self, name, value):
-        if name == '__class__':
+        if name == '__class__' and value.__name__ == 'LocalChalice':
             # In local runs, the class is being changed to `LocalChalice`,
             # So we do that to preserve the same behaviour
             value.__getattr__ = self.__getattr__
