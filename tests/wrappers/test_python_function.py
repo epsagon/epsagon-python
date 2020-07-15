@@ -26,7 +26,7 @@ def setup_function(func):
 def test_function_wrapper_sanity(_, ):
     retval = 'success'
 
-    @epsagon.wrappers.python_function.python_wrapper
+    @epsagon.wrappers.python_function.python_wrapper(name='test-func')
     def wrapped_function(event, context):
         return retval
 
@@ -39,8 +39,9 @@ def test_function_wrapper_sanity(_, ):
     trace_mock.send_traces.assert_called_once()
     trace_mock.add_exception.assert_not_called()
 
+    assert event.resource['name'] == 'test-func'
     assert not epsagon.constants.COLD_START
-    assert event.resource['metadata']['return_value'] == retval
+    assert event.resource['metadata']['python.function.return_value'] == retval
 
 
 @mock.patch.object(
@@ -51,7 +52,7 @@ def test_function_wrapper_sanity(_, ):
     'epsagon.trace.trace_factory.get_or_create_trace',
     side_effect=lambda: trace_mock)
 def test_function_wrapper_function_exception(_, set_exception_mock):
-    @epsagon.wrappers.python_function.python_wrapper
+    @epsagon.wrappers.python_function.python_wrapper()
     def wrapped_function(event, context):
         raise TypeError('test')
 
@@ -71,7 +72,7 @@ def test_function_wrapper_function_exception(_, set_exception_mock):
     trace_mock.add_exception.assert_not_called()
 
     assert not epsagon.constants.COLD_START
-    assert event.resource['metadata']['return_value'] is None
+    assert event.resource['metadata']['python.function.return_value'] is None
 
 
 @mock.patch(
