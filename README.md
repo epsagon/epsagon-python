@@ -11,7 +11,7 @@
 
 # Epsagon Tracing for Python
 
-This package provides tracing to Python applications for the collection of distributed tracing and performance metrics in [Epsagon](https://dashboard.epsagon.com/?utm_source=github).
+This package provides tracing to Python applications for the collection of distributed tracing and performance metrics in [Epsagon](https://app.epsagon.com/?utm_source=github).
 
 
 ## Contents
