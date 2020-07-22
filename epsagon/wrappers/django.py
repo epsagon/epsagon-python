@@ -26,34 +26,58 @@ class DjangoMiddleware(object):
 
     def __init__(self, get_response):
         self.get_response = get_response
-        self.runner = None
-        self.request = None
-        self.response = None
-        self.ignored_request = False
+
         epsagon.trace.trace_factory.switch_to_multiple_traces()
 
-    def process_exception(self, _, process_exception):
-        if process_exception:
-            traceback_data = get_traceback_data_from_exception(
-                process_exception
-            )
-            self.runner.set_exception(process_exception, traceback_data, False)
+    # pylint: disable=no-self-use
+    def process_exception(self, request, process_exception):
+        """
+        Processes and appends a given exception to the current trace
+        """
+        if not process_exception:
+            return
+
+        if (
+                not hasattr(request, 'epsagon_trace') or
+                not request.epsagon_trace.runner
+        ):
+            return
+
+        traceback_data = get_traceback_data_from_exception(process_exception)
+
+        request.epsagon_trace.runner.set_exception(
+            process_exception,
+            traceback_data,
+            False
+        )
 
     def __call__(self, request):
-        self.request = request
-        is_ignored_endpoint = epsagon.http_filters.is_ignored_endpoint(
-            self.request.path
-        )
-        if not is_ignored_endpoint:
-            # Link epsagon to the request object for easy-access to epsagon lib
-            self.request.epsagon = epsagon
-            self._before_request()
-        self.response = self.get_response(request)
-        if not is_ignored_endpoint:
-            self._after_request()
-        return self.response
+        # Link epsagon to the request object for easy-access to epsagon lib
+        request.epsagon = epsagon
 
-    def _before_request(self):
+        if epsagon.http_filters.is_ignored_endpoint(request.path):
+            return self.get_response(request)
+
+        request_middleware = DjangoRequestMiddleware(request)
+        request_middleware.before_request()
+
+        response = self.get_response(request)
+
+        request_middleware.after_request(response)
+        return response
+
+
+class DjangoRequestMiddleware(object):
+    """
+    Django middleware for a single request
+    """
+
+    def __init__(self, request):
+        self.request = request
+        self.runner = None
+        self.ignored_request = False
+
+    def before_request(self):
         """
         Runs before process of response.
         """
@@ -101,7 +125,7 @@ class DjangoMiddleware(object):
                 traceback.format_exc(),
             )
 
-    def _after_request(self):
+    def after_request(self, response):
         """
         Runs after process of response.
         """
@@ -109,7 +133,7 @@ class DjangoMiddleware(object):
             return
 
         # Ignoring non relevant content types.
-        if ignore_request(self.response.get('Content-Type', '').lower(), ''):
+        if ignore_request(response.get('Content-Type', '').lower(), ''):
             self.ignored_request = True
             return
 
@@ -117,5 +141,5 @@ class DjangoMiddleware(object):
         if not self.runner:
             return
 
-        self.runner.update_response(self.response)
+        self.runner.update_response(response)
         epsagon.trace.trace_factory.send_traces()
