@@ -13,11 +13,11 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 import os
 import epsagon
 
-"""epsagon.init(
-    token='99355685-e472-4513-a81f-2586b07d02d4',
+epsagon.init(
+    token='test-token',
     app_name='django-test',
     metadata_only=False,
-)"""
+)
 
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -54,8 +54,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    #'epsagon.wrappers.django.DjangoMiddleware'
+    'django.middleware.clickjacking.XFrameOptionsMiddleware'
 ]
 
 ROOT_URLCONF = 'django_test.urls'

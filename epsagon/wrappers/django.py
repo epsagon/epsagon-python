@@ -29,11 +29,15 @@ class DjangoMiddleware(object):
 
         epsagon.trace.trace_factory.switch_to_multiple_traces()
 
-    def process_exception(self, request, process_exception):
+    @staticmethod
+    def process_exception(request, process_exception):
         if not process_exception:
             return
 
-        if not hasattr(request, "epsagon_trace") or not request.epsagon_trace.runner:
+        if (
+                not hasattr(request, 'epsagon_trace') or
+                not request.epsagon_trace.runner
+        ):
             return
 
         traceback_data = get_traceback_data_from_exception(process_exception)
@@ -61,6 +65,9 @@ class DjangoMiddleware(object):
 
 
 class DjangoRequestMiddleware(object):
+    """
+    Django middleware for a single request
+    """
 
     def __init__(self, request):
         self.request = request
