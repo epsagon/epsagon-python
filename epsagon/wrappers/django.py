@@ -51,8 +51,6 @@ class DjangoMiddleware(object):
         if epsagon.http_filters.is_ignored_endpoint(request.path):
             return self.get_response(request)
 
-        request.epsagon_trace = epsagon.trace.trace_factory.get_or_create_trace()
-
         request_middleware = DjangoRequestMiddleware(request)
         request_middleware.before_request()
 
