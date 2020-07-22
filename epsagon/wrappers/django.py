@@ -31,6 +31,9 @@ class DjangoMiddleware(object):
 
     @staticmethod
     def process_exception(request, process_exception):
+        """
+        Processes and appends a given exception to the current trace
+        """
         if not process_exception:
             return
 
