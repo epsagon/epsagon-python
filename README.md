@@ -47,15 +47,19 @@ The simplest way to get started is to run your python command with the following
 ```sh
 export EPSAGON_TOKEN=<epsagon-token>
 export EPSAGON_APP_NAME=<app-name-stage>
-AUTOWRAPT_BOOTSTRAP=epsagon <command>
+export AUTOWRAPT_BOOTSTRAP=epsagon
+<python command>
 ```
 
 For example:
 ```sh
 export EPSAGON_TOKEN=<your-token>
 export EPSAGON_APP_NAME=django-prod
-AUTOWRAPT_BOOTSTRAP=epsagon python app.py
+export AUTOWRAPT_BOOTSTRAP=epsagon
+python app.py
 ```
+
+When using inside a `Dockerfile`, you can use `ENV` instead of `export`.
 
 You can see the list of auto-tracing [supported frameworks](#frameworks)
 
