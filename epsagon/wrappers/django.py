@@ -67,7 +67,6 @@ class DjangoRequestMiddleware(object):
     def __init__(self, request):
         self.request = request
         self.runner = None
-        self.response = None
         self.ignored_request = False
 
     def before_request(self):
@@ -134,5 +133,5 @@ class DjangoRequestMiddleware(object):
         if not self.runner:
             return
 
-        self.runner.update_response(self.response)
+        self.runner.update_response(response)
         epsagon.trace.trace_factory.send_traces()
