@@ -29,8 +29,8 @@ class DjangoMiddleware(object):
 
         epsagon.trace.trace_factory.switch_to_multiple_traces()
 
-    @staticmethod
-    def process_exception(request, process_exception):
+    # pylint: disable=no-self-use
+    def process_exception(self, request, process_exception):
         """
         Processes and appends a given exception to the current trace
         """
