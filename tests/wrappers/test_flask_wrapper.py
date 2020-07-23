@@ -1,12 +1,10 @@
 import pytest
 import mock
 from flask import Flask, request
-import epsagon
 from epsagon import trace_factory
 from epsagon.wrappers.flask import FlaskWrapper
 
 # Setting demo Flask app
-epsagon.init(token='test', app_name='FlaskApp')
 RETURN_VALUE = 'a'
 app_test = Flask('test')
 FlaskWrapper(app_test)

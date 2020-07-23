@@ -1328,9 +1328,9 @@ def test_send_on_error_only_with_error(wrapped_post):
 
 
 @mock.patch('requests.Session.post')
-def test_send_with_split_on_big_trace(wrapped_post):
+def test_send_with_split_on_big_trace(wrapped_post, monkeypatch):
     # Should be low enough to force trace split.
-    os.environ['EPSAGON_MAX_TRACE_SIZE'] = '500'
+    monkeypatch.setenv('EPSAGON_MAX_TRACE_SIZE', '500')
     trace = trace_factory.get_or_create_trace()
     trace.runner = RunnerEventMock()
     trace.add_event(trace.runner)
@@ -1341,13 +1341,12 @@ def test_send_with_split_on_big_trace(wrapped_post):
         trace.add_event(event)
     trace_factory.send_traces()
     assert wrapped_post.call_count == 2
-    os.environ.pop('EPSAGON_MAX_TRACE_SIZE')
 
 
 @mock.patch('requests.Session.post')
-def test_send_with_split_on_small_trace(wrapped_post):
+def test_send_with_split_on_small_trace(wrapped_post, monkeypatch):
     # Should be low enough to force trace split.
-    os.environ['EPSAGON_MAX_TRACE_SIZE'] = '500'
+    monkeypatch.setenv('EPSAGON_MAX_TRACE_SIZE', '500')
     trace = trace_factory.get_or_create_trace()
     trace.runner = RunnerEventMock()
     trace.add_event(trace.runner)
@@ -1357,13 +1356,12 @@ def test_send_with_split_on_small_trace(wrapped_post):
     trace.add_event(event)
     trace_factory.send_traces()
     wrapped_post.assert_called_once()
-    os.environ.pop('EPSAGON_MAX_TRACE_SIZE')
 
 
 @mock.patch('requests.Session.post')
-def test_send_with_split_off(wrapped_post):
+def test_send_with_split_off(wrapped_post, monkeypatch):
     # Should be low enough to force trace split.
-    os.environ['EPSAGON_MAX_TRACE_SIZE'] = '500'
+    monkeypatch.setenv('EPSAGON_MAX_TRACE_SIZE', '500')
     trace = trace_factory.get_or_create_trace()
     trace.runner = RunnerEventMock()
     trace.add_event(trace.runner)
@@ -1378,8 +1376,8 @@ def test_send_with_split_off(wrapped_post):
 
 @mock.patch('epsagon.utils.create_transport', side_effect=lambda x, y: default_http)
 @mock.patch('epsagon.trace.TraceFactory.initialize')
-def test_init_propagate_lambda_identifier_env(wrapped_init, _create):
-    os.environ['EPSAGON_PROPAGATE_LAMBDA_ID'] = 'TRUE'
+def test_init_propagate_lambda_identifier_env(wrapped_init, _create, monkeypatch):
+    monkeypatch.setenv('EPSAGON_PROPAGATE_LAMBDA_ID', 'TRUE')
     epsagon.utils.init(
         token='token',
         app_name='app-name',
@@ -1403,7 +1401,6 @@ def test_init_propagate_lambda_identifier_env(wrapped_init, _create):
         logging_tracing_enabled=True,
         step_dict_output_path=None,
     )
-    os.environ.pop('EPSAGON_PROPAGATE_LAMBDA_ID')
 
 
 @mock.patch('epsagon.utils.create_transport', side_effect=lambda x, y: default_http)
