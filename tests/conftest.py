@@ -39,6 +39,7 @@ def trace_transport(clean_traces):
     Fixture for overriding the trace transport class with a `TestTransport` instance
     :return: New `TestTransport` object
     """
+    print("Adding test transport")
     epsagon.trace_factory.transport = TestTransport()
     return epsagon.trace_factory.transport
 
@@ -55,6 +56,8 @@ def init_epsagon(**kwargs):
         'collector_url': TEST_COLLECTOR,
     }
     default_kwargs.update(kwargs)
+
+    print("Calling epsagon.init")
 
     epsagon.init(**default_kwargs)
 
@@ -73,5 +76,6 @@ def clean_traces():
     """
     Remove current traces from previous test (so that they will not effect the current test)
     """
+    print("Cleaning traces")
     epsagon.trace_factory.singleton_trace = None
     epsagon.trace_factory.traces = {}
