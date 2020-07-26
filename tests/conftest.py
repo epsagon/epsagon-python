@@ -44,6 +44,10 @@ def trace_transport(clean_traces):
 
 
 def init_epsagon(**kwargs):
+    """
+    Call `epsagon.init` with default test args
+    :param kwargs: Optional args to pass
+    """
     default_kwargs = {
         'token': TEST_TOKEN,
         'app_name': TEST_APP,
