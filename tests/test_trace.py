@@ -6,9 +6,9 @@ import uuid
 import json
 import time
 from datetime import datetime
-import warnings
 import requests
 import mock
+import pytest
 import epsagon.trace
 import epsagon.constants
 from epsagon.constants import (
@@ -21,10 +21,10 @@ from epsagon.trace import (
     FAILED_TO_SERIALIZE_MESSAGE,
     MAX_METADATA_FIELD_SIZE_LIMIT
 )
-from epsagon.event import BaseEvent
 from epsagon.utils import get_tc_url
 from epsagon.common import ErrorCode, EpsagonException
 from epsagon.trace_transports import HTTPTransport
+from .conftest import init_epsagon
 
 class ContextMock:
     def __init__(self, timeout):
@@ -130,7 +130,14 @@ class EventMockWithCounter(EventMock):
 
 
 def setup_function(func):
+    trace_factory.use_single_trace = True
     trace_factory.get_or_create_trace().__init__()
+
+
+@pytest.fixture(scope='function', autouse=True)
+def init_epsagon_function():
+    init_epsagon()
+
 
 def test_add_exception():
     stack_trace_format = 'stack trace %d'
@@ -185,33 +192,6 @@ def test_add_exception_with_additional_data():
         assert current_exception['traceback'] == stack_trace_format % i
         assert type(current_exception['time']) == float
         assert current_exception['additional_data'] == additional_data
-
-
-def test_prepare():
-    trace = trace_factory.get_or_create_trace()
-    with warnings.catch_warnings(record=True) as w:
-        warnings.simplefilter('always')
-        trace.prepare()
-        assert not trace.events
-        assert trace.exceptions == []
-        assert len(w) == 1
-    trace.clear_events()
-    trace.add_event(EventMock())
-    with warnings.catch_warnings(record=True) as w:
-        warnings.simplefilter('always')
-        trace.prepare()
-        assert not trace.events
-        assert trace.exceptions == []
-        assert len(w) == 1
-
-    trace.clear_events()
-    trace.add_event(EventMock())
-    with warnings.catch_warnings(record=True) as w:
-        trace.prepare()
-        trace.prepare()  # this call should NOT trigger a warning
-        assert not trace.events
-        assert trace.exceptions == []
-        assert len(w) == 1
 
 
 def test_initialize():
@@ -523,10 +503,9 @@ def test_timeout_happyflow_handler_call(wrapped_post):
 @mock.patch('requests.Session.post')
 def test_send_traces_sanity(wrapped_post):
     trace = trace_factory.get_or_create_trace()
-    trace.token = 'a'
     trace_factory.send_traces()
     wrapped_post.assert_called_with(
-        '',
+        'collector',
         data=json.dumps(trace.to_dict()),
         timeout=epsagon.constants.SEND_TIMEOUT,
         headers={'Authorization': 'Bearer {}'.format(trace.token)}
@@ -535,6 +514,7 @@ def test_send_traces_sanity(wrapped_post):
 
 @mock.patch('requests.Session.post')
 def test_send_traces_no_token(wrapped_post):
+    epsagon.init(token='', app_name='test_app')
     trace = trace_factory.get_or_create_trace()
     trace_factory.send_traces()
     wrapped_post.assert_not_called()
@@ -546,7 +526,6 @@ def test_send_big_trace(wrapped_post):
     runner = RunnerEventMock()
 
     trace.set_runner(runner)
-    trace.token = 'a'
 
     for _ in range(2):
         trace.add_event(BigEventMock())
@@ -558,18 +537,18 @@ def test_send_big_trace(wrapped_post):
             assert event['resource']['metadata']['is_trimmed']
 
     wrapped_post.assert_called_with(
-        '',
+        'collector',
         data=json.dumps(trace.to_dict()),
         timeout=epsagon.constants.SEND_TIMEOUT,
         headers={'Authorization': 'Bearer {}'.format(trace.token)}
     )
+
 
 @mock.patch('requests.Session.post')
 def test_send_invalid_return_value(wrapped_post):
     trace = trace_factory.get_or_create_trace()
     runner = InvalidReturnValueEventMock()
     trace.set_runner(runner)
-    trace.token = 'a'
     trace_factory.send_traces()
 
     assert len(trace.to_dict()['events']) == 1
@@ -579,7 +558,7 @@ def test_send_invalid_return_value(wrapped_post):
     assert actual_return_value == FAILED_TO_SERIALIZE_MESSAGE
 
     wrapped_post.assert_called_with(
-        '',
+        'collector',
         data=json.dumps(trace.to_dict()),
         timeout=epsagon.constants.SEND_TIMEOUT,
         headers={'Authorization': 'Bearer {}'.format(trace.token)}
@@ -623,7 +602,6 @@ def test_return_value_key_to_ignore(wrapped_post):
     copied_return_value = return_value.copy()
     runner = ReturnValueEventMock(return_value)
     trace.set_runner(runner)
-    trace.token = 'a'
     trace_factory.send_traces()
 
     assert len(trace.to_dict()['events']) == 1
@@ -634,12 +612,6 @@ def test_return_value_key_to_ignore(wrapped_post):
     # check that original return value hasn't been changed
     assert copied_return_value == return_value
 
-    wrapped_post.assert_called_with(
-        'collector',
-        data=json.dumps(trace.to_dict()),
-        timeout=epsagon.constants.SEND_TIMEOUT,
-        headers={'Authorization': 'Bearer {}'.format(trace.token)}
-    )
     os.environ.pop('EPSAGON_IGNORED_KEYS')
 
 def test_whitelist_unit_tests():
@@ -777,7 +749,6 @@ def test_whitelist_full_flow(wrapped_post):
     copied_input_dict = input_dict.copy()
     runner = ReturnValueEventMock(input_dict)
     trace.set_runner(runner)
-    trace.token = 'a'
     trace_factory.send_traces()
 
     assert len(trace.to_dict()['events']) == 1
@@ -794,6 +765,7 @@ def test_whitelist_full_flow(wrapped_post):
         timeout=epsagon.constants.SEND_TIMEOUT,
         headers={'Authorization': 'Bearer {}'.format(trace.token)}
     )
+
     os.environ.pop('EPSAGON_ALLOWED_KEYS')
 
 
@@ -804,7 +776,6 @@ def test_metadata_field_too_big(wrapped_post):
     return_value = {'1': 'a' * (max_size + 1)}
     runner = ReturnValueEventMock(return_value)
     trace.set_runner(runner)
-    trace.token = 'a'
     trace_factory.send_traces()
 
     assert len(trace.to_dict()['events']) == 1
@@ -814,20 +785,20 @@ def test_metadata_field_too_big(wrapped_post):
     assert actual_return_value == json.dumps(return_value)[:max_size]
 
     wrapped_post.assert_called_with(
-        '',
+        'collector',
         data=json.dumps(trace.to_dict()),
         timeout=epsagon.constants.SEND_TIMEOUT,
         headers={'Authorization': 'Bearer {}'.format(trace.token)}
     )
 
+
 @mock.patch('requests.Session.post', side_effect=requests.ReadTimeout)
 def test_send_traces_timeout(wrapped_post):
     trace = trace_factory.get_or_create_trace()
 
-    trace.token = 'a'
     trace_factory.send_traces()
     wrapped_post.assert_called_with(
-        '',
+        'collector',
         data=json.dumps(trace.to_dict()),
         timeout=epsagon.constants.SEND_TIMEOUT,
         headers={'Authorization': 'Bearer {}'.format(trace.token)}
@@ -838,10 +809,9 @@ def test_send_traces_timeout(wrapped_post):
 def test_send_traces_post_error(wrapped_post):
     trace = trace_factory.get_or_create_trace()
 
-    trace.token = 'a'
     trace_factory.send_traces()
     wrapped_post.assert_called_with(
-        '',
+        'collector',
         data=json.dumps(trace.to_dict()),
         timeout=epsagon.constants.SEND_TIMEOUT,
         headers={'Authorization': 'Bearer {}'.format(trace.token)}
@@ -1258,15 +1228,15 @@ def test_init_step_dict_output_env(wrapped_init, _create):
 
 @mock.patch('requests.Session.post', side_effect=requests.ReadTimeout)
 def test_event_with_datetime(wrapped_post):
+    epsagon.utils.init(token='token', app_name='app-name', collector_url='collector')
     trace = trace_factory.get_or_create_trace()
 
-    trace.token = 'a'
     event = EventMock()
     event.resource['metadata'] = datetime.fromtimestamp(1000)
     trace.add_event(event)
     trace_factory.send_traces()
     wrapped_post.assert_called_with(
-        '',
+        'collector',
         data=json.dumps(trace.to_dict(), cls=TraceEncoder),
         timeout=epsagon.constants.SEND_TIMEOUT,
         headers={'Authorization': 'Bearer {}'.format(trace.token)}
