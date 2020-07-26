@@ -43,17 +43,24 @@ def trace_transport(clean_traces):
     return epsagon.trace_factory.transport
 
 
+def init_epsagon(**kwargs):
+    default_kwargs = {
+        'token': TEST_TOKEN,
+        'app_name': TEST_APP,
+        'metadata_only': False,
+        'collector_url': TEST_COLLECTOR,
+    }
+    default_kwargs.update(kwargs)
+
+    epsagon.init(**default_kwargs)
+
+
 @pytest.fixture(scope='module', autouse=True)
-def init_epsagon():
+def call_init_epsagon():
     """
     Init epsagon with default test values
     """
-    epsagon.init(
-        token=TEST_TOKEN,
-        app_name=TEST_APP,
-        metadata_only=False,
-        collector_url=TEST_COLLECTOR
-    )
+    init_epsagon()
     return epsagon
 
 
