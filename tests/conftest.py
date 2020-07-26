@@ -2,7 +2,7 @@
 Common and builtin fixtures
 """
 import pytest
-from unittest.mock import MagicMock
+from mock import MagicMock
 
 import epsagon
 
