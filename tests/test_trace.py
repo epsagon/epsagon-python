@@ -131,7 +131,6 @@ class EventMockWithCounter(EventMock):
 
 def setup_function(func):
     trace_factory.use_single_trace = True
-    trace_factory.get_or_create_trace().__init__()
 
 
 @pytest.fixture(scope='function', autouse=True)
@@ -574,9 +573,6 @@ def _assert_key_not_exist(data, ignored_key):
 def test_return_value_key_to_ignore(wrapped_post):
     key_to_ignore = 'key_to_ignore_in_return_value'
     os.environ['EPSAGON_IGNORED_KEYS'] = key_to_ignore
-    keys_to_ignore = [key_to_ignore]
-    # reset traces created at setup function
-    trace_factory.traces = {}
     epsagon.utils.init(
         token='token',
         app_name='app-name',
@@ -617,9 +613,6 @@ def test_return_value_key_to_ignore(wrapped_post):
 def test_whitelist_unit_tests():
     key_to_allow = 'key_to_allow_in_return_value'
     os.environ['EPSAGON_ALLOWED_KEYS'] = key_to_allow
-    keys_to_allow = [key_to_allow]
-    # reset traces created at setup function
-    trace_factory.traces = {}
     epsagon.utils.init(
         token='token',
         app_name='app-name',
@@ -690,9 +683,6 @@ def test_whitelist_unit_tests():
 def test_whitelist_full_flow(wrapped_post):
     key_to_allow = 'key_to_allow_in_return_value'
     os.environ['EPSAGON_ALLOWED_KEYS'] = key_to_allow
-    keys_to_allow = [key_to_allow]
-    # reset traces created at setup function
-    trace_factory.traces = {}
     epsagon.utils.init(
         token='token',
         app_name='app-name',
