@@ -211,11 +211,12 @@ class TraceFactory(object):
             url_patterns_to_ignore=self.url_patterns_to_ignore,
             keys_to_ignore=self.keys_to_ignore,
             keys_to_allow=self.keys_to_allow,
-            unique_id=unique_id,
+            transport=self.transport,
             split_on_send=self.split_on_send,
             propagate_lambda_id=self.propagate_lambda_id,
             logging_tracing_enabled=self.logging_tracing_enabled,
             step_dict_output_path=self.step_dict_output_path,
+            unique_id=unique_id,
         )
 
     def get_or_create_trace(self, unique_id=None):
@@ -1034,6 +1035,7 @@ class Trace(object):
         ):
             return
         trace = ''
+
 
         self.transport = (
             self.transport

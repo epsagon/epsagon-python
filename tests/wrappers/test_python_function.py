@@ -1,78 +1,47 @@
-import json
-import threading
 import mock
 import pytest
-import epsagon.wrappers.python_function
-from epsagon.trace import trace_factory
-from epsagon.trace import FAILED_TO_SERIALIZE_MESSAGE
-import epsagon.runners.python_function
+from epsagon import trace_factory
 import epsagon.constants
-from .common import get_tracer_patch_kwargs
 
 trace_mock = mock.MagicMock()
 
 
 def setup_function(func):
-    trace_mock.configure_mock(**get_tracer_patch_kwargs())
-    trace_factory.singleton_trace = trace_mock
     trace_factory.use_single_trace = True
-    epsagon.constants.COLD_START = True
 
 
-@mock.patch(
-    'epsagon.trace.trace_factory.get_or_create_trace',
-    side_effect=lambda: trace_mock
-)
-def test_function_wrapper_sanity(_, ):
+def test_function_wrapper_sanity(trace_transport, ):
     retval = 'success'
 
-    @epsagon.wrappers.python_function.python_wrapper(name='test-func')
+    @epsagon.python_wrapper(name='test-func')
     def wrapped_function(event, context):
         return retval
 
     assert wrapped_function('a', 'b') == 'success'
-    trace_mock.prepare.assert_called_once()
-    trace_mock.set_runner.assert_called_once()
-    (event,), _ = trace_mock.set_runner.call_args
-    assert isinstance(event, epsagon.runners.python_function.PythonRunner)
 
-    trace_mock.send_traces.assert_called_once()
-    trace_mock.add_exception.assert_not_called()
+    assert len(trace_transport.last_trace.events) == 1
 
+    event = trace_transport.last_trace.events[0]
+    assert event.resource['type'] == 'python_function'
     assert event.resource['name'] == 'test-func'
-    assert not epsagon.constants.COLD_START
     assert event.resource['metadata']['python.function.return_value'] == retval
+    assert event.error_code == 0
 
 
-@mock.patch.object(
-    epsagon.runners.python_function.PythonRunner,
-    'set_exception'
-)
-@mock.patch(
-    'epsagon.trace.trace_factory.get_or_create_trace',
-    side_effect=lambda: trace_mock)
-def test_function_wrapper_function_exception(_, set_exception_mock):
-    @epsagon.wrappers.python_function.python_wrapper()
+def test_function_wrapper_function_exception(trace_transport):
+    @epsagon.python_wrapper()
     def wrapped_function(event, context):
         raise TypeError('test')
 
     with pytest.raises(TypeError):
         wrapped_function('a', 'b')
 
-    # function_runner_mock.set_exception.assert_called()
-    set_exception_mock.assert_called_once()
+    assert len(trace_transport.last_trace.events) == 1
 
-    trace_mock.prepare.assert_called_once()
-    trace_mock.set_runner.assert_called_once()
-
-    (event,), _ = trace_mock.set_runner.call_args
-    assert isinstance(event, epsagon.runners.python_function.PythonRunner)
-
-    trace_mock.send_traces.assert_called_once()
-    trace_mock.add_exception.assert_not_called()
-
-    assert not epsagon.constants.COLD_START
+    event = trace_transport.last_trace.events[0]
+    assert event.exception['type'] == 'TypeError'
     assert event.resource['metadata']['python.function.return_value'] is None
+    assert not trace_transport.last_trace.exceptions
 
 
 @mock.patch(
@@ -80,7 +49,7 @@ def test_function_wrapper_function_exception(_, set_exception_mock):
     side_effect=lambda: trace_mock
 )
 def test_python_wrapper_python_runner_factory_failed(_):
-    @epsagon.wrappers.python_function.python_wrapper
+    @epsagon.python_wrapper
     def wrapped_function(event, context):
         return 'success'
 
@@ -93,18 +62,3 @@ def test_python_wrapper_python_runner_factory_failed(_):
     trace_mock.prepare.assert_called_once()
     trace_mock.send_traces.assert_not_called()
     trace_mock.set_runner.assert_not_called()
-
-
-@mock.patch(
-    'epsagon.trace.trace_factory.get_or_create_trace',
-    side_effect=lambda: trace_mock
-)
-def test_python_wrapper_single_thread(_):
-    retval = 'success'
-
-    @epsagon.wrappers.python_function.python_wrapper
-    def wrapped_function(event, context):
-        return retval
-
-    assert wrapped_function('a', 'b') == retval
-    assert trace_factory.use_single_trace
