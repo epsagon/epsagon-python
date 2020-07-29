@@ -1,8 +1,10 @@
+import threading
 import pytest
 import mock
 from flask import Flask, request
 from epsagon import trace_factory
 from epsagon.wrappers.flask import FlaskWrapper
+from time import sleep
 
 # Setting demo Flask app
 RETURN_VALUE = 'a'
@@ -17,6 +19,17 @@ def setup_function(func):
 @app_test.route('/')
 def test():
     return RETURN_VALUE
+
+
+@app_test.route('/a')
+def a_route():
+    sleep(0.1)
+    return "a"
+
+
+@app_test.route('/b')
+def b_route():
+    return "b"
 
 
 @app_test.route('/error')
@@ -83,3 +96,34 @@ def test_flask_wrapper_teardown_exception(exception_mock, _, client):
 )
 def test_lambda_wrapper_multi_thread(_):
     assert not trace_factory.use_single_trace
+
+
+def thread_a(trace_transport, client):
+    """Gets a string from A endpoint"""
+    result = client.get('/a')
+    assert trace_transport.last_trace.events[0].resource[
+        'metadata']['Response Data'].decode('ascii') == 'a'
+    assert result.data.decode('ascii') == 'a'
+
+
+def thread_b(trace_transport, client):
+    """Gets a string from B endpoint"""
+    result = client.get('/b')
+    assert trace_transport.last_trace.events[0].resource[
+        'metadata']['Response Data'].decode('ascii') == 'b'
+    assert result.data.decode('ascii') == 'b'
+
+
+def test_flask_wrapper_multiple_requests(trace_transport):
+    """
+    Make 2 simulatanous requests.
+    Make sure none of the responses or generated traces mix up.
+    """
+    a = threading.Thread(target=thread_a, args=(trace_transport, client))
+    b = threading.Thread(target=thread_b, args=(trace_transport, client))
+
+    for thread in [a, b]:
+        thread.start()
+
+    for thread in [a, b]:
+        thread.join()
