@@ -169,7 +169,7 @@ def init(
         logging_tracing_enabled = False
 
     if os.getenv('EPSAGON_SAMPLE_RATE'):
-        sample_rate = os.getenv('EPSAGON_SAMPLE_RATE')
+        sample_rate = float(os.getenv('EPSAGON_SAMPLE_RATE'))
 
     trace_factory.initialize(
         token=os.getenv('EPSAGON_TOKEN') or token,
