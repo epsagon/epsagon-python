@@ -168,6 +168,9 @@ def init(
     if is_lambda_env():
         logging_tracing_enabled = False
 
+    if os.getenv('EPSAGON_SAMPLE_RATE'):
+        sample_rate = os.getenv('EPSAGON_SAMPLE_RATE')
+
     trace_factory.initialize(
         token=os.getenv('EPSAGON_TOKEN') or token,
         app_name=os.getenv('EPSAGON_APP_NAME') or app_name,
@@ -202,7 +205,7 @@ def init(
         step_dict_output_path=(
             step_dict_output_path_env or step_dict_output_path
         ),
-        sample_rate=os.getenv('EPSAGON_SAMPLE_RATE', sample_rate),
+        sample_rate=sample_rate
     )
 
     # Append to ignored endpoints
