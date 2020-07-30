@@ -1055,6 +1055,9 @@ class Trace(object):
                 (self.send_trace_only_on_error or self.sample_rate < rand_num) and
                 self.runner and self.runner.error_code == ErrorCode.OK
         ):
+            if self.debug:
+                print('Trace was omitted. sample rate is: {},'
+                      'random value: {}'.format(self.sample_rate, rand_num))
             return
 
         trace = ''
