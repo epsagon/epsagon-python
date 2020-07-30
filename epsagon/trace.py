@@ -953,6 +953,15 @@ class Trace(object):
                 value = input_dict[key]
                 if isinstance(value, dict):
                     copied_dict[key] = self.remove_ignored_keys(value)
+                else:
+                    try:
+                        json_value = json.loads(value)
+                        if isinstance(json_value, dict):
+                            copied_dict[key] = (json.dumps(
+                                self.remove_ignored_keys(json_value)
+                            ))
+                    except (TypeError, json.errors.JSONDecodeError):
+                        pass
         return copied_dict
 
     def get_dict_with_allow_keys(self, input_dict):
