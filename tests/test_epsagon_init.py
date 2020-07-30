@@ -4,7 +4,7 @@ Test epsagon init
 import mock
 import epsagon
 import os
-from importlib import reload
+from imp import reload
 from epsagon.trace_transports import HTTPTransport
 
 
