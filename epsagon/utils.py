@@ -98,6 +98,7 @@ def init(
     propagate_lambda_id=False,
     logging_tracing_enabled=True,
     step_dict_output_path=None,
+    sample_rate=1,
 ):
     """
     Initializes trace with user's data.
@@ -122,9 +123,11 @@ def init(
     :param logging_tracing_enabled: Add an epsagon log id to logging calls
     :param step_dict_output_path:
         Path in the result dict to append the Epsagon steps data
+    :param sample_rate:
+        When enabled, sampling will be performed according to the given value.
     :return: None
     """
-
+    print(sample_rate)
     if not collector_url:
         collector_url = get_tc_url(
             ((os.getenv('EPSAGON_SSL') or '').upper() == 'TRUE') | use_ssl
@@ -199,7 +202,8 @@ def init(
         logging_tracing_enabled=logging_tracing_enabled,
         step_dict_output_path=(
             step_dict_output_path_env or step_dict_output_path
-        )
+        ),
+        sample_rate=os.getenv('EPSAGON_SAMPLE_RATE', sample_rate)
     )
 
     # Append to ignored endpoints
