@@ -12,8 +12,8 @@ import traceback
 import warnings
 import signal
 import threading
-import simplejson as json
 import random
+import simplejson as json
 
 import requests
 import requests.exceptions
@@ -143,7 +143,8 @@ class TraceFactory(object):
         :param step_dict_output_path:
             Path in the result dict to append the Epsagon steps data
         :param sample_rate:
-            When enabled, sampling will be performed according to the given value.
+            When enabled, sampling will performed performed according to the
+            given value.
         :return: None
         """
         self.app_name = app_name
