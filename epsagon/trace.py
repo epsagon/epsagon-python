@@ -1050,10 +1050,12 @@ class Trace(object):
         if self.token == '' or self.trace_sent:
             return
 
-        if self.runner and self.runner.error_code == ErrorCode.OK:
-            rand_num = random.uniform(0, 1)
-            if self.send_trace_only_on_error or self.sample_rate < rand_num:
-                return
+        rand_num = random.uniform(0, 1)
+        if (
+                (self.send_trace_only_on_error or self.sample_rate < rand_num) and
+                self.runner and self.runner.error_code == ErrorCode.OK
+        ):
+            return
 
         trace = ''
         self.transport = (

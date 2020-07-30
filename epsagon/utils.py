@@ -127,7 +127,6 @@ def init(
         When enabled, sampling will be performed according to the given value.
     :return: None
     """
-    print(sample_rate)
     if not collector_url:
         collector_url = get_tc_url(
             ((os.getenv('EPSAGON_SSL') or '').upper() == 'TRUE') | use_ssl
@@ -203,7 +202,7 @@ def init(
         step_dict_output_path=(
             step_dict_output_path_env or step_dict_output_path
         ),
-        sample_rate=os.getenv('EPSAGON_SAMPLE_RATE', sample_rate)
+        sample_rate=os.getenv('EPSAGON_SAMPLE_RATE', sample_rate),
     )
 
     # Append to ignored endpoints
