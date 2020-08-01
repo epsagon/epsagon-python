@@ -17,6 +17,10 @@ def _wrapper(wrapped, instance, args, kwargs):
     :param kwargs: wrapt's kwargs
     :return: None
     """
+    # Marking connection pool so requests won't be captured in urllib3 as well
+    for adapter in instance.adapters.values():
+        connection_pool = adapter.poolmanager.connection_from_url(args[0].url)
+        setattr(connection_pool, '__EPSAGON', True)
     return wrapper(RequestsEventFactory, wrapped, instance, args, kwargs)
 
 

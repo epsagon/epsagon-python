@@ -136,7 +136,7 @@ class Urllib3EventFactory(object):
                 'python-requests'
             )
         )
-        if is_requests:
+        if is_requests or getattr(instance, '__EPSAGON', False):
             return
 
         path = args[1] if len(args) > 1 else kwargs.get('url', '')
