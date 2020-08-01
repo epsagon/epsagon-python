@@ -28,6 +28,8 @@ HTTP_ERR_CODE = int(os.getenv('EPSAGON_HTTP_ERR_CODE', '500'))
 # List of ignored endpoints for web frameworks.
 IGNORED_ENDPOINTS = []
 
+EPSAGON_MARKER = '__EPSAGON'
+
 STRONG_KEYS = [
     'key',
     'request_id',

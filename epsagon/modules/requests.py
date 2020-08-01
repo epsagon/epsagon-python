@@ -6,6 +6,7 @@ from __future__ import absolute_import
 import wrapt
 from epsagon.modules.general_wrapper import wrapper
 from ..events.requests import RequestsEventFactory
+from ..constants import EPSAGON_MARKER
 
 
 def _wrapper(wrapped, instance, args, kwargs):
@@ -20,7 +21,7 @@ def _wrapper(wrapped, instance, args, kwargs):
     # Marking connection pool so requests won't be captured in urllib3 as well
     for adapter in instance.adapters.values():
         connection_pool = adapter.poolmanager.connection_from_url(args[0].url)
-        setattr(connection_pool, '__EPSAGON', True)
+        setattr(connection_pool, EPSAGON_MARKER, True)
     return wrapper(RequestsEventFactory, wrapped, instance, args, kwargs)
 
 
