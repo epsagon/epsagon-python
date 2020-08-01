@@ -100,7 +100,7 @@ class TraceFactory(object):
         self.propagate_lambda_id = False
         self.logging_tracing_enabled = False
         self.step_dict_output_path = None
-        self.sample_rate = 1
+        self.sample_rate = DEFAULT_SAMPLE_RATE
 
     def initialize(
         self,
