@@ -22,6 +22,8 @@ SEND_TIMEOUT = TIMEOUT_ENV if TIMEOUT_ENV else TIMEOUT_GRACE_TIME_MS / 1000.0
 
 MAX_LABEL_SIZE = 10 * 1024
 
+DEFAULT_SAMPLE_RATE = 1
+
 # User-defined HTTP minimum status code to be treated as an error.
 HTTP_ERR_CODE = int(os.getenv('EPSAGON_HTTP_ERR_CODE', '500'))
 

@@ -20,7 +20,7 @@ except ImportError:
 from epsagon import http_filters
 from epsagon.constants import TRACE_COLLECTOR_URL, REGION
 from .trace import trace_factory, create_transport
-from .constants import EPSAGON_HANDLER, DEBUG_MODE
+from .constants import EPSAGON_HANDLER, DEBUG_MODE, DEFAULT_SAMPLE_RATE
 
 
 METADATA_CACHE = {
@@ -98,7 +98,7 @@ def init(
     propagate_lambda_id=False,
     logging_tracing_enabled=True,
     step_dict_output_path=None,
-    sample_rate=1,
+    sample_rate=DEFAULT_SAMPLE_RATE,
 ):
     """
     Initializes trace with user's data.
@@ -123,8 +123,10 @@ def init(
     :param logging_tracing_enabled: Add an epsagon log id to logging calls
     :param step_dict_output_path:
         Path in the result dict to append the Epsagon steps data
-    :param sample_rate:
-        When enabled, sampling will be performed according to the given value.
+    :param sample_rate: A number between 0 and 1, represents the probability
+        of a trace to be sent.
+        When enabled (value < 1), sampling will be performed according to
+        the given value.
     :return: None
     """
     if not collector_url:

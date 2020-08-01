@@ -24,6 +24,7 @@ from epsagon.trace_transports import NoneTransport, HTTPTransport, LogTransport
 from .constants import (
     TIMEOUT_GRACE_TIME_MS,
     MAX_LABEL_SIZE,
+    DEFAULT_SAMPLE_RATE,
     is_strong_key,
     __version__
 )
@@ -142,9 +143,10 @@ class TraceFactory(object):
             Add an epsagon log id to all loggings and prints
         :param step_dict_output_path:
             Path in the result dict to append the Epsagon steps data
-        :param sample_rate:
-            When enabled, sampling will performed performed according to the
-            given value.
+        :param sample_rate: A number between 0 and 1, represents the
+            probability of a trace to be sent.
+            When enabled (value < 1), sampling will be performed
+            according to the given value.
         :return: None
         """
         self.app_name = app_name
@@ -492,7 +494,7 @@ class Trace(object):
         propagate_lambda_id=False,
         logging_tracing_enabled=False,
         step_dict_output_path=None,
-        sample_rate=1,
+        sample_rate=DEFAULT_SAMPLE_RATE,
     ):
         """
         initialize.
