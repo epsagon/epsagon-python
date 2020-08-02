@@ -144,6 +144,7 @@ default_http = HTTPTransport("epsagon", "1234")
     'EPSAGON_LOGGING_TRACING_ENABLED': 'TRUE',
     'AWS_LAMBDA_FUNCTION_NAME': None,
     'EPSAGON_STEPS_OUTPUT_PATH': '',
+    'EPSAGON_SAMPLE_RATE': 0.5
 }[x]))
 def test_epsagon_wrapper_env_init(_wrapped_get, wrapped_init, _create):
     reload(epsagon)
@@ -164,6 +165,7 @@ def test_epsagon_wrapper_env_init(_wrapped_get, wrapped_init, _create):
         propagate_lambda_id=False,
         logging_tracing_enabled=True,
         step_dict_output_path=None,
+        sample_rate=0.5,
     )
 
 
@@ -190,6 +192,7 @@ def test_epsagon_wrapper_env_init(_wrapped_get, wrapped_init, _create):
     'EPSAGON_PROPAGATE_LAMBDA_ID': 'FALSE',
     'EPSAGON_LOGGING_TRACING_ENABLED': 'TRUE',
     'AWS_LAMBDA_FUNCTION_NAME': None,
+    'EPSAGON_SAMPLE_RATE': 0.5
 }[x]))
 def test_epsagon_wrapper_env_endpoints(_wrapped_get, wrapped_http):
     reload(epsagon)

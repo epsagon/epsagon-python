@@ -12,6 +12,7 @@ import traceback
 import warnings
 import signal
 import threading
+import random
 import simplejson as json
 
 import requests
@@ -23,6 +24,7 @@ from epsagon.trace_transports import NoneTransport, HTTPTransport, LogTransport
 from .constants import (
     TIMEOUT_GRACE_TIME_MS,
     MAX_LABEL_SIZE,
+    DEFAULT_SAMPLE_RATE,
     is_strong_key,
     __version__
 )
@@ -98,6 +100,7 @@ class TraceFactory(object):
         self.propagate_lambda_id = False
         self.logging_tracing_enabled = False
         self.step_dict_output_path = None
+        self.sample_rate = DEFAULT_SAMPLE_RATE
 
     def initialize(
         self,
@@ -116,6 +119,7 @@ class TraceFactory(object):
         propagate_lambda_id,
         logging_tracing_enabled,
         step_dict_output_path,
+        sample_rate,
     ):
         """
         Initializes The factory with user's data.
@@ -139,6 +143,10 @@ class TraceFactory(object):
             Add an epsagon log id to all loggings and prints
         :param step_dict_output_path:
             Path in the result dict to append the Epsagon steps data
+        :param sample_rate: A number between 0 and 1, represents the
+            probability of a trace to be sent.
+            When enabled (value < 1), sampling will be performed
+            according to the given value.
         :return: None
         """
         self.app_name = app_name
@@ -158,6 +166,7 @@ class TraceFactory(object):
         self.propagate_lambda_id = propagate_lambda_id
         self.logging_tracing_enabled = logging_tracing_enabled
         self.step_dict_output_path = step_dict_output_path
+        self.sample_rate = sample_rate
         self.update_tracers()
 
     def update_tracers(self):
@@ -186,6 +195,7 @@ class TraceFactory(object):
             tracer.propagate_lambda_id = self.propagate_lambda_id
             tracer.logging_tracing_enabled = self.logging_tracing_enabled
             tracer.step_dict_output_path = self.step_dict_output_path
+            tracer.sample_rate = self.sample_rate
 
     def switch_to_multiple_traces(self):
         """
@@ -216,6 +226,7 @@ class TraceFactory(object):
             propagate_lambda_id=self.propagate_lambda_id,
             logging_tracing_enabled=self.logging_tracing_enabled,
             step_dict_output_path=self.step_dict_output_path,
+            sample_rate=self.sample_rate,
             unique_id=unique_id,
         )
 
@@ -483,6 +494,7 @@ class Trace(object):
         propagate_lambda_id=False,
         logging_tracing_enabled=False,
         step_dict_output_path=None,
+        sample_rate=DEFAULT_SAMPLE_RATE,
     ):
         """
         initialize.
@@ -507,6 +519,7 @@ class Trace(object):
         self.propagate_lambda_id = propagate_lambda_id
         self.logging_tracing_enabled = logging_tracing_enabled
         self.step_dict_output_path = step_dict_output_path
+        self.sample_rate = sample_rate
 
         if keys_to_ignore:
             self.keys_to_ignore = [self._strip_key(key) for key in
@@ -1038,15 +1051,19 @@ class Trace(object):
         """
         if self.token == '' or self.trace_sent:
             return
+
+        rand_num = random.uniform(0, 1)
         if (
-                self.send_trace_only_on_error and
-                self.runner and
-                self.runner.error_code == ErrorCode.OK
+                (self.send_trace_only_on_error or self.sample_rate < rand_num)
+                and self.runner
+                and self.runner.error_code == ErrorCode.OK
         ):
+            if self.debug:
+                print('Trace was omitted. sample rate is: {},'
+                      'random value: {}'.format(self.sample_rate, rand_num))
             return
+
         trace = ''
-
-
         self.transport = (
             self.transport
             if not isinstance(self.transport, NoneTransport)
