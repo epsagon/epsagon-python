@@ -7,6 +7,7 @@ import wrapt
 from epsagon.modules.general_wrapper import wrapper
 from ..events.requests import RequestsEventFactory
 from ..constants import EPSAGON_MARKER
+from ..utils import print_debug
 
 
 def _wrapper(wrapped, instance, args, kwargs):
@@ -26,7 +27,7 @@ def _wrapper(wrapped, instance, args, kwargs):
             )
             setattr(connection_pool, EPSAGON_MARKER, True)
     except Exception:  # pylint: disable=broad-except
-        pass
+        print_debug('Could not add marker to requests adapter')
     return wrapper(RequestsEventFactory, wrapped, instance, args, kwargs)
 
 
