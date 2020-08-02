@@ -26,8 +26,10 @@ def _wrapper(wrapped, instance, args, kwargs):
                 args[0].url
             )
             setattr(connection_pool, EPSAGON_MARKER, True)
-    except Exception:  # pylint: disable=broad-except
-        print_debug('Could not add marker to requests adapter')
+    except Exception as exception:  # pylint: disable=broad-except
+        print_debug('Could not add marker to requests adapter: {}'.format(
+            exception
+        ))
     return wrapper(RequestsEventFactory, wrapped, instance, args, kwargs)
 
 
