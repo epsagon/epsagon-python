@@ -98,29 +98,34 @@ def test_lambda_wrapper_multi_thread(_):
     assert not trace_factory.use_single_trace
 
 
-def thread_a(trace_transport, client):
-    """Gets a string from A endpoint"""
-    result = client.get('/a')
+def validate_response(role, result, trace_transport):
+    """
+    Validate Epsagon trace was generated the right way,
+    and that the response matches what we expect
+    """
     assert trace_transport.last_trace.events[0].resource[
-        'metadata']['Response Data'].decode('ascii') == 'a'
-    assert result.data.decode('ascii') == 'a'
+        'metadata']['Response Data'].decode('ascii') == role
+    assert result.data.decode('ascii') == role
 
 
-def thread_b(trace_transport, client):
-    """Gets a string from B endpoint"""
-    result = client.get('/b')
-    assert trace_transport.last_trace.events[0].resource[
-        'metadata']['Response Data'].decode('ascii') == 'b'
-    assert result.data.decode('ascii') == 'b'
+def thread_client(role, trace_transport, client):
+    """
+    Get a string from an endpoint, and validate Epsagon
+    trace and response
+    """
+    result = client.get('/{0}'.format(role))
+    validate_response(role, result, trace_transport)
 
 
-def test_flask_wrapper_multiple_requests(trace_transport):
+def test_flask_wrapper_multiple_requests(trace_transport, client):
     """
     Make 2 simulatanous requests.
     Make sure none of the responses or generated traces mix up.
     """
-    a = threading.Thread(target=thread_a, args=(trace_transport, client))
-    b = threading.Thread(target=thread_b, args=(trace_transport, client))
+    a = threading.Thread(target=thread_client, args=(
+        'a', trace_transport, client))
+    b = threading.Thread(target=thread_client, args=(
+        'b', trace_transport, client))
 
     for thread in [a, b]:
         thread.start()
