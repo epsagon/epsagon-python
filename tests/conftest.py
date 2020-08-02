@@ -15,7 +15,6 @@ class TestTransport(MagicMock):
     """
     Mock trace transport for tests
     """
-
     @property
     def last_trace(self):
         """

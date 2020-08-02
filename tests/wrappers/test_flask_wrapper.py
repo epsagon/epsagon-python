@@ -1,8 +1,10 @@
+import threading
 import pytest
 import mock
 from flask import Flask, request
 from epsagon import trace_factory
 from epsagon.wrappers.flask import FlaskWrapper
+from time import sleep
 
 # Setting demo Flask app
 RETURN_VALUE = 'a'
@@ -17,6 +19,17 @@ def setup_function(func):
 @app_test.route('/')
 def test():
     return RETURN_VALUE
+
+
+@app_test.route('/a')
+def a_route():
+    sleep(0.1)
+    return "a"
+
+
+@app_test.route('/b')
+def b_route():
+    return "b"
 
 
 @app_test.route('/error')
@@ -83,3 +96,39 @@ def test_flask_wrapper_teardown_exception(exception_mock, _, client):
 )
 def test_lambda_wrapper_multi_thread(_):
     assert not trace_factory.use_single_trace
+
+
+def validate_response(role, result, trace_transport):
+    """
+    Validate Epsagon trace was generated the right way,
+    and that the response matches what we expect
+    """
+    assert trace_transport.last_trace.events[0].resource[
+        'metadata']['Response Data'].decode('ascii') == role
+    assert result.data.decode('ascii') == role
+
+
+def thread_client(role, trace_transport, client):
+    """
+    Get a string from an endpoint, and validate Epsagon
+    trace and response
+    """
+    result = client.get('/{0}'.format(role))
+    validate_response(role, result, trace_transport)
+
+
+def test_flask_wrapper_multiple_requests(trace_transport, client):
+    """
+    Make 2 simulatanous requests.
+    Make sure none of the responses or generated traces mix up.
+    """
+    a = threading.Thread(target=thread_client, args=(
+        'a', trace_transport, client))
+    b = threading.Thread(target=thread_client, args=(
+        'b', trace_transport, client))
+
+    for thread in [a, b]:
+        thread.start()
+
+    for thread in [a, b]:
+        thread.join()

@@ -43,8 +43,6 @@ class FlaskWrapper(object):
         self.app.after_request(self._after_request)
         self.app.teardown_request(self._teardown_request)
 
-        self.runner = None
-
         # Whether we ignore this request or not.
         self.ignored_request = False
         epsagon.trace.trace_factory.switch_to_multiple_traces()
@@ -65,15 +63,15 @@ class FlaskWrapper(object):
 
         # Create flask runner with current request.
         try:
-            self.runner = epsagon.runners.flask.FlaskRunner(
+            runner = epsagon.runners.flask.FlaskRunner(
                 time.time(),
                 self.app,
                 request
             )
-            trace.set_runner(self.runner)
+            trace.set_runner(runner)
 
             # Collect metadata in case this is a container.
-            collect_container_metadata(self.runner.resource['metadata'])
+            collect_container_metadata(runner.resource['metadata'])
 
         # pylint: disable=W0703
         except Exception as exception:
@@ -105,7 +103,6 @@ class FlaskWrapper(object):
         :param response: The current Response object.
         :return: Response.
         """
-
         if self.ignored_request:
             return response
 
@@ -114,7 +111,8 @@ class FlaskWrapper(object):
             self.ignored_request = True
             return response
 
-        self.runner.update_response(response)
+        trace = epsagon.trace.trace_factory.get_or_create_trace()
+        trace.runner.update_response(response)
         return response
 
     def _teardown_request(self, exception):
@@ -131,7 +129,8 @@ class FlaskWrapper(object):
 
         if exception:
             traceback_data = get_traceback_data_from_exception(exception)
-            self.runner.set_exception(exception, traceback_data)
+            trace = epsagon.trace.trace_factory.get_or_create_trace()
+            trace.runner.set_exception(exception, traceback_data)
         # Ignoring endpoint, only if no error happened.
         if (not exception and
             request.url_rule and

@@ -19,7 +19,7 @@ from ..http_filters import (
     is_payload_collection_blacklisted
 )
 from ..utils import update_http_headers, normalize_http_url
-from ..constants import HTTP_ERR_CODE
+from ..constants import HTTP_ERR_CODE, EPSAGON_MARKER
 
 
 class Urllib3Event(BaseEvent):
@@ -136,7 +136,7 @@ class Urllib3EventFactory(object):
                 'python-requests'
             )
         )
-        if is_requests:
+        if is_requests or getattr(instance, EPSAGON_MARKER, False):
             return
 
         path = args[1] if len(args) > 1 else kwargs.get('url', '')
