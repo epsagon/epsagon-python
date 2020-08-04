@@ -429,7 +429,7 @@ Advanced options can be configured as a parameter to the init() method or as env
 |-                       |EPSAGON_DISABLE_LOGGING_ERRORS |Boolean|`False`      |Disable the automatic capture of error messages into `logging`                     |
 |-                       |DISABLE_EPSAGON                |Boolean|`False`      |A flag to completely disable Epsagon (can be used for tests or locally)            |
 |-                       |DISABLE_EPSAGON_PATCH          |Boolean|`False`      |Disable the library patching (instrumentation)                                     |
-
+|-                       |EPSAGON_LAMBDA_TIMEOUT_THRESHOLD_MS          |Integer|`200`      |The threshold in millieseconds to send the trace before a Lambda timeout occurs                                     |
 
 
 ## Getting Help
