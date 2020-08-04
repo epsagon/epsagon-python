@@ -15,7 +15,7 @@ DEBUG_MODE = ((os.getenv('EPSAGON_DEBUG') or '').upper() == 'TRUE')
 # Customer original handler.
 EPSAGON_HANDLER = 'EPSAGON_HANDLER'
 
-TIMEOUT_GRACE_TIME_MS = 200
+TIMEOUT_GRACE_TIME_MS = float(os.getenv('EPSAGON_LAMBDA_TIMEOUT_THRESHOLD_MS', '200'))
 # How long we try to send traces in seconds.
 TIMEOUT_ENV = float(os.getenv('EPSAGON_SEND_TIMEOUT_SEC', '0'))
 SEND_TIMEOUT = TIMEOUT_ENV if TIMEOUT_ENV else TIMEOUT_GRACE_TIME_MS / 1000.0
