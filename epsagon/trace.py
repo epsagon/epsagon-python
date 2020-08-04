@@ -1116,10 +1116,11 @@ class Trace(object):
                 ))
 
             if self.runner.resource['type'] == 'lambda':
-                print('Visit Epsagon app for trace overview: {}'.format(
+                runner_resource = self.runner.resource
+                print('Visit Epsagon dashboard for trace overview: {}'.format(
                     TRACE_URL_PREFIX.format(
-                        aws_account=self.runner.resource['metadata']['aws_account'],
-                        region=self.runner.resource['metadata']['region'],
+                        aws_account=runner_resource['metadata']['aws_account'],
+                        region=runner_resource['metadata']['region'],
                         function_name=self.runner.resource['name'],
                         request_id=self.runner.event_id,
                         request_time=int(self.runner.start_time)
