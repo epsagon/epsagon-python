@@ -25,6 +25,7 @@ from .constants import (
     TIMEOUT_GRACE_TIME_MS,
     MAX_LABEL_SIZE,
     DEFAULT_SAMPLE_RATE,
+    TRACE_URL_PREFIX,
     is_strong_key,
     __version__
 )
@@ -1113,6 +1114,17 @@ class Trace(object):
                 print('Trace sent (size: {})'.format(
                     len(trace)
                 ))
+
+            if self.runner.resource['type'] == 'lambda':
+                print('Visit Epsagon app for trace overview: {}'.format(
+                    TRACE_URL_PREFIX.format(
+                        aws_account=self.runner.resource['metadata']['aws_account'],
+                        region=self.runner.resource['metadata']['region'],
+                        function_name=self.runner.resource['name'],
+                        request_id=self.runner.event_id,
+                        request_time=int(self.runner.start_time)
+                    )
+            ))
         except requests.exceptions.ReadTimeout:
             print('Failed to send trace (size: {}) (timeout)'.format(
                 len(trace)
