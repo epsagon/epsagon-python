@@ -1117,7 +1117,7 @@ class Trace(object):
 
             if self.runner.resource['type'] == 'lambda':
                 runner_resource = self.runner.resource
-                print('Visit Epsagon dashboard for trace overview: {}'.format(
+                print('Visit Epsagon app for trace overview: {}'.format(
                     TRACE_URL_PREFIX.format(
                         aws_account=runner_resource['metadata']['aws_account'],
                         region=runner_resource['metadata']['region'],
