@@ -9,15 +9,15 @@ def threadA():
     time.sleep(2)
     response = requests.get("http://127.0.0.1:8000/polls/a")
     if response.content != ANSWER_A:
-    	print("Bad answer in A!")
-    	print(response.content)
+        print("Bad answer in A!")
+        print(response.content)
 
 def threadB():
     time.sleep(2)
     response = requests.get("http://127.0.0.1:8000/polls/b")
     if response.content != ANSWER_B:
-    	print("Bad answer in B!")
-    	print(response.content)
+        print("Bad answer in B!")
+        print(response.content)
 
 def main():
     a_threads = [threading.Thread(target=threadA) for _ in range(20)]
@@ -27,4 +27,4 @@ def main():
         b.start()
 
 if __name__ == "__main__":
-	main()
+    main()
