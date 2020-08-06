@@ -49,6 +49,8 @@ STRONG_KEYS = [
     'activation_id',
     'hostname',
     'virtual_host',
+    'region',
+    'aws_account'
 ]
 
 
