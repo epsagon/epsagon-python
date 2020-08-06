@@ -15,7 +15,9 @@ DEBUG_MODE = ((os.getenv('EPSAGON_DEBUG') or '').upper() == 'TRUE')
 # Customer original handler.
 EPSAGON_HANDLER = 'EPSAGON_HANDLER'
 
-TIMEOUT_GRACE_TIME_MS = 200
+TIMEOUT_GRACE_TIME_MS = int(
+    os.getenv('EPSAGON_LAMBDA_TIMEOUT_THRESHOLD_MS', '200')
+)
 # How long we try to send traces in seconds.
 TIMEOUT_ENV = float(os.getenv('EPSAGON_SEND_TIMEOUT_SEC', '0'))
 SEND_TIMEOUT = TIMEOUT_ENV if TIMEOUT_ENV else TIMEOUT_GRACE_TIME_MS / 1000.0
@@ -47,6 +49,8 @@ STRONG_KEYS = [
     'activation_id',
     'hostname',
     'virtual_host',
+    'region',
+    'aws_account'
 ]
 
 
@@ -65,3 +69,7 @@ def is_strong_key(key):
 
 STEP_DICT_NAME = 'Epsagon'
 EPSAGON_EVENT_ID_KEY = '_epsagon_event_id'
+TRACE_URL_PREFIX = (
+    'https://app.epsagon.com/functions/{aws_account}/{region}/{function_name}'
+    '?requestId={request_id}&requestTime={request_time}'
+)
