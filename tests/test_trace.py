@@ -78,6 +78,18 @@ class BigEventMock(EventMock):
         return self.id
 
 
+class StrongKeysEventMock(BigEventMock):
+    def __init__(self):
+        super(StrongKeysEventMock, self).__init__()
+        self.resource = {
+            'metadata': {
+                'big': 'big' * 32 * (2 ** 10),
+                'region': 'my_region',
+                'aws_account': 'my_aws_account'
+            }
+        }
+
+
 class RunnerEventMock(EventMock):
     def __init__(self):
         super(RunnerEventMock, self).__init__(start_time=time.time())
@@ -541,6 +553,34 @@ def test_send_big_trace(wrapped_post):
         timeout=epsagon.constants.SEND_TIMEOUT,
         headers={'Authorization': 'Bearer {}'.format(trace.token)}
     )
+
+
+@mock.patch('requests.Session.post')
+def test_strong_keys_not_trimmed(wrapped_post):
+    trace = trace_factory.get_or_create_trace()
+    runner = RunnerEventMock()
+
+    trace.set_runner(runner)
+
+    for _ in range(2):
+        trace.add_event(StrongKeysEventMock())
+    trace_factory.send_traces()
+
+    assert len(trace.to_dict()['events']) == 3
+    for event in trace.to_dict()['events']:
+        if event['origin'] == 'runner':
+            assert event['resource']['metadata']['is_trimmed']
+        else:
+            assert 'region' in event['resource']['metadata']
+            assert 'aws_account' in event['resource']['metadata']
+
+    wrapped_post.assert_called_with(
+        'collector',
+        data=json.dumps(trace.to_dict()),
+        timeout=epsagon.constants.SEND_TIMEOUT,
+        headers={'Authorization': 'Bearer {}'.format(trace.token)}
+    )
+
 
 
 @mock.patch('requests.Session.post')
