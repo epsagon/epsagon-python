@@ -262,7 +262,9 @@ def collect_container_metadata(metadata):
         return
 
     session = urllib3.PoolManager()
-    container_metadata = json.loads(session.request('GET', metadata_uri).data.decode('utf-8'))
+    container_metadata = json.loads(
+        session.request('GET', metadata_uri).data.decode('utf-8')
+    )
 
     new_metadata = container_metadata['Labels'].copy()
     new_metadata['Limits'] = container_metadata['Limits']

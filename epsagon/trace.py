@@ -13,7 +13,7 @@ import warnings
 import signal
 import threading
 import random
-from urllib3.exceptions import TimeoutError, MaxRetryError
+import urllib3.exceptions
 import simplejson as json
 
 from epsagon.event import BaseEvent
@@ -1125,7 +1125,10 @@ class Trace(object):
                         request_time=int(self.runner.start_time)
                     )
             ))
-        except (TimeoutError, MaxRetryError):
+        except (
+            urllib3.exceptions.TimeoutError,
+            urllib3.exceptions.MaxRetryError
+        ):
             print('Failed to send trace (size: {}) (timeout)'.format(
                 len(trace)
             ))
