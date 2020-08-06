@@ -516,10 +516,10 @@ def test_send_traces_sanity(wrapped_post):
     trace = trace_factory.get_or_create_trace()
     trace_factory.send_traces()
     wrapped_post.assert_called_with(
+        'POST'
         'collector',
-        data=json.dumps(trace.to_dict()),
+        body=json.dumps(trace.to_dict()),
         timeout=epsagon.constants.SEND_TIMEOUT,
-        headers={'Authorization': 'Bearer {}'.format(trace.token)}
     )
 
 
@@ -548,10 +548,10 @@ def test_send_big_trace(wrapped_post):
             assert event['resource']['metadata']['is_trimmed']
 
     wrapped_post.assert_called_with(
+        'POST'
         'collector',
-        data=json.dumps(trace.to_dict()),
+        body=json.dumps(trace.to_dict()),
         timeout=epsagon.constants.SEND_TIMEOUT,
-        headers={'Authorization': 'Bearer {}'.format(trace.token)}
     )
 
 
@@ -575,10 +575,10 @@ def test_strong_keys_not_trimmed(wrapped_post):
             assert 'aws_account' in event['resource']['metadata']
 
     wrapped_post.assert_called_with(
+        'POST'
         'collector',
-        data=json.dumps(trace.to_dict()),
+        body=json.dumps(trace.to_dict()),
         timeout=epsagon.constants.SEND_TIMEOUT,
-        headers={'Authorization': 'Bearer {}'.format(trace.token)}
     )
 
 
@@ -597,10 +597,10 @@ def test_send_invalid_return_value(wrapped_post):
     assert actual_return_value == FAILED_TO_SERIALIZE_MESSAGE
 
     wrapped_post.assert_called_with(
+        'POST'
         'collector',
-        data=json.dumps(trace.to_dict()),
+        body=json.dumps(trace.to_dict()),
         timeout=epsagon.constants.SEND_TIMEOUT,
-        headers={'Authorization': 'Bearer {}'.format(trace.token)}
     )
 
 def _assert_key_not_exist(data, ignored_key):
@@ -790,10 +790,10 @@ def test_whitelist_full_flow(wrapped_post):
     assert copied_input_dict == input_dict
 
     wrapped_post.assert_called_with(
+        'POST'
         'collector',
-        data=json.dumps(trace.to_dict()),
+        body=json.dumps(trace.to_dict()),
         timeout=epsagon.constants.SEND_TIMEOUT,
-        headers={'Authorization': 'Bearer {}'.format(trace.token)}
     )
 
     os.environ.pop('EPSAGON_ALLOWED_KEYS')
@@ -815,10 +815,10 @@ def test_metadata_field_too_big(wrapped_post):
     assert actual_return_value == json.dumps(return_value)[:max_size]
 
     wrapped_post.assert_called_with(
+        'POST'
         'collector',
-        data=json.dumps(trace.to_dict()),
+        body=json.dumps(trace.to_dict()),
         timeout=epsagon.constants.SEND_TIMEOUT,
-        headers={'Authorization': 'Bearer {}'.format(trace.token)}
     )
 
 
@@ -828,10 +828,10 @@ def test_send_traces_timeout(wrapped_post):
 
     trace_factory.send_traces()
     wrapped_post.assert_called_with(
+        'POST'
         'collector',
-        data=json.dumps(trace.to_dict()),
+        body=json.dumps(trace.to_dict()),
         timeout=epsagon.constants.SEND_TIMEOUT,
-        headers={'Authorization': 'Bearer {}'.format(trace.token)}
     )
 
 
@@ -841,10 +841,10 @@ def test_send_traces_post_error(wrapped_post):
 
     trace_factory.send_traces()
     wrapped_post.assert_called_with(
+        'POST'
         'collector',
-        data=json.dumps(trace.to_dict()),
+        body=json.dumps(trace.to_dict()),
         timeout=epsagon.constants.SEND_TIMEOUT,
-        headers={'Authorization': 'Bearer {}'.format(trace.token)}
     )
 
 
@@ -1280,10 +1280,10 @@ def test_event_with_datetime(wrapped_post):
     trace.add_event(event)
     trace_factory.send_traces()
     wrapped_post.assert_called_with(
+        'POST'
         'collector',
-        data=json.dumps(trace.to_dict(), cls=TraceEncoder),
+        body=json.dumps(trace.to_dict(), cls=TraceEncoder),
         timeout=epsagon.constants.SEND_TIMEOUT,
-        headers={'Authorization': 'Bearer {}'.format(trace.token)}
     )
 
 
