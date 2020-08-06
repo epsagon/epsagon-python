@@ -1,8 +1,9 @@
 """trace transport layers"""
 
+import os
 import base64
 import logging
-import requests
+import urllib3
 import simplejson as json
 from epsagon.constants import SEND_TIMEOUT
 from epsagon.trace_encoder import TraceEncoder
@@ -39,11 +40,20 @@ class HTTPTransport(object):
         self.dest = dest
         self.token = token
         self.timeout = SEND_TIMEOUT
-        self.session = requests.Session()
+        self.session = urllib3.PoolManager(
+            cert_reqs='CERT_REQUIRED',
+            ca_certs=os.path.join(os.path.dirname(__file__), 'cacert.pem'),
+            headers={
+                'Authorization': 'Bearer {}'.format(self.token),
+                'Content-Type': 'application/json'
+            }
+        )
+        urllib3.disable_warnings()
 
     def send(self, trace):
-        headers = {'Authorization': 'Bearer {}'.format(self.token)}
-        self.session.post(self.dest,
-                          data=to_json(trace.to_dict()),
-                          headers=headers,
-                          timeout=self.timeout)
+        self.session.request(
+            'POST',
+            self.dest,
+            body=to_json(trace.to_dict()),
+            timeout=self.timeout
+        )
