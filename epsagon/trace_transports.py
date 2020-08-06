@@ -48,7 +48,6 @@ class HTTPTransport(object):
                 'Content-Type': 'application/json'
             }
         )
-        urllib3.disable_warnings()
 
     def send(self, trace):
         self.session.request(
