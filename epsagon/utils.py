@@ -10,7 +10,7 @@ import sys
 import traceback
 import re
 import six
-import requests
+import urllib3
 import simplejson as json
 try:
     from urllib.parse import urlparse
@@ -260,7 +260,11 @@ def collect_container_metadata(metadata):
     metadata_uri = os.environ.get('ECS_CONTAINER_METADATA_URI')
     if not metadata_uri:
         return
-    container_metadata = json.loads(requests.get(metadata_uri).content)
+
+    session = urllib3.PoolManager()
+    container_metadata = json.loads(
+        session.request('GET', metadata_uri).data.decode('utf-8')
+    )
 
     new_metadata = container_metadata['Labels'].copy()
     new_metadata['Limits'] = container_metadata['Limits']

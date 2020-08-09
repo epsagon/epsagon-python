@@ -6,9 +6,9 @@ import uuid
 import json
 import time
 from datetime import datetime
-import requests
 import mock
 import pytest
+import urllib3.exceptions
 import epsagon.trace
 import epsagon.constants
 from epsagon.constants import (
@@ -439,7 +439,7 @@ def test_set_timeout_handler_emtpy_context():
     trace_factory.get_or_create_trace().set_timeout_handler({})
 
 
-@mock.patch('requests.Session.post')
+@mock.patch('urllib3.PoolManager.request')
 def test_runner_duration(_wrapped_post):
     runner = RunnerEventMock()
     runner.terminated = False
@@ -452,7 +452,7 @@ def test_runner_duration(_wrapped_post):
     assert 0.2 < runner.duration < 0.3
 
 
-@mock.patch('requests.Session.post')
+@mock.patch('urllib3.PoolManager.request')
 def test_timeout_handler_called(wrapped_post):
     """
     Sanity
@@ -470,7 +470,7 @@ def test_timeout_handler_called(wrapped_post):
     assert wrapped_post.called
 
 
-@mock.patch('requests.Session.post')
+@mock.patch('urllib3.PoolManager.request')
 def test_timeout_send_not_called_twice(wrapped_post):
     """
     In case of a timeout send trace, validate no trace
@@ -489,7 +489,7 @@ def test_timeout_send_not_called_twice(wrapped_post):
     assert wrapped_post.call_count == 1
 
 
-@mock.patch('requests.Session.post')
+@mock.patch('urllib3.PoolManager.request')
 def test_timeout_happyflow_handler_call(wrapped_post):
     """
     Test in case we already sent the traces on happy flow,
@@ -511,19 +511,19 @@ def test_timeout_happyflow_handler_call(wrapped_post):
     assert wrapped_post.call_count == 1
 
 
-@mock.patch('requests.Session.post')
+@mock.patch('urllib3.PoolManager.request')
 def test_send_traces_sanity(wrapped_post):
     trace = trace_factory.get_or_create_trace()
     trace_factory.send_traces()
     wrapped_post.assert_called_with(
+        'POST',
         'collector',
-        data=json.dumps(trace.to_dict()),
+        body=json.dumps(trace.to_dict()),
         timeout=epsagon.constants.SEND_TIMEOUT,
-        headers={'Authorization': 'Bearer {}'.format(trace.token)}
     )
 
 
-@mock.patch('requests.Session.post')
+@mock.patch('urllib3.PoolManager.request')
 def test_send_traces_no_token(wrapped_post):
     epsagon.init(token='', app_name='test_app')
     trace = trace_factory.get_or_create_trace()
@@ -531,7 +531,7 @@ def test_send_traces_no_token(wrapped_post):
     wrapped_post.assert_not_called()
 
 
-@mock.patch('requests.Session.post')
+@mock.patch('urllib3.PoolManager.request')
 def test_send_big_trace(wrapped_post):
     trace = trace_factory.get_or_create_trace()
     runner = RunnerEventMock()
@@ -548,14 +548,14 @@ def test_send_big_trace(wrapped_post):
             assert event['resource']['metadata']['is_trimmed']
 
     wrapped_post.assert_called_with(
+        'POST',
         'collector',
-        data=json.dumps(trace.to_dict()),
+        body=json.dumps(trace.to_dict()),
         timeout=epsagon.constants.SEND_TIMEOUT,
-        headers={'Authorization': 'Bearer {}'.format(trace.token)}
     )
 
 
-@mock.patch('requests.Session.post')
+@mock.patch('urllib3.PoolManager.request')
 def test_strong_keys_not_trimmed(wrapped_post):
     trace = trace_factory.get_or_create_trace()
     runner = RunnerEventMock()
@@ -575,15 +575,15 @@ def test_strong_keys_not_trimmed(wrapped_post):
             assert 'aws_account' in event['resource']['metadata']
 
     wrapped_post.assert_called_with(
+        'POST',
         'collector',
-        data=json.dumps(trace.to_dict()),
+        body=json.dumps(trace.to_dict()),
         timeout=epsagon.constants.SEND_TIMEOUT,
-        headers={'Authorization': 'Bearer {}'.format(trace.token)}
     )
 
 
 
-@mock.patch('requests.Session.post')
+@mock.patch('urllib3.PoolManager.request')
 def test_send_invalid_return_value(wrapped_post):
     trace = trace_factory.get_or_create_trace()
     runner = InvalidReturnValueEventMock()
@@ -597,10 +597,10 @@ def test_send_invalid_return_value(wrapped_post):
     assert actual_return_value == FAILED_TO_SERIALIZE_MESSAGE
 
     wrapped_post.assert_called_with(
+        'POST',
         'collector',
-        data=json.dumps(trace.to_dict()),
+        body=json.dumps(trace.to_dict()),
         timeout=epsagon.constants.SEND_TIMEOUT,
-        headers={'Authorization': 'Bearer {}'.format(trace.token)}
     )
 
 def _assert_key_not_exist(data, ignored_key):
@@ -609,7 +609,7 @@ def _assert_key_not_exist(data, ignored_key):
         if isinstance(value, dict):
             _assert_key_not_exist(value, ignored_key)
 
-@mock.patch('requests.Session.post')
+@mock.patch('urllib3.PoolManager.request')
 def test_return_value_key_to_ignore(wrapped_post):
     key_to_ignore = 'key_to_ignore_in_return_value'
     os.environ['EPSAGON_IGNORED_KEYS'] = key_to_ignore
@@ -719,7 +719,7 @@ def test_whitelist_unit_tests():
         assert result == expected_result
     os.environ.pop('EPSAGON_ALLOWED_KEYS')
 
-@mock.patch('requests.Session.post')
+@mock.patch('urllib3.PoolManager.request')
 def test_whitelist_full_flow(wrapped_post):
     key_to_allow = 'key_to_allow_in_return_value'
     os.environ['EPSAGON_ALLOWED_KEYS'] = key_to_allow
@@ -790,16 +790,16 @@ def test_whitelist_full_flow(wrapped_post):
     assert copied_input_dict == input_dict
 
     wrapped_post.assert_called_with(
+        'POST',
         'collector',
-        data=json.dumps(trace.to_dict()),
+        body=json.dumps(trace.to_dict()),
         timeout=epsagon.constants.SEND_TIMEOUT,
-        headers={'Authorization': 'Bearer {}'.format(trace.token)}
     )
 
     os.environ.pop('EPSAGON_ALLOWED_KEYS')
 
 
-@mock.patch('requests.Session.post')
+@mock.patch('urllib3.PoolManager.request')
 def test_metadata_field_too_big(wrapped_post):
     trace = trace_factory.get_or_create_trace()
     max_size = MAX_METADATA_FIELD_SIZE_LIMIT
@@ -815,36 +815,36 @@ def test_metadata_field_too_big(wrapped_post):
     assert actual_return_value == json.dumps(return_value)[:max_size]
 
     wrapped_post.assert_called_with(
+        'POST',
         'collector',
-        data=json.dumps(trace.to_dict()),
+        body=json.dumps(trace.to_dict()),
         timeout=epsagon.constants.SEND_TIMEOUT,
-        headers={'Authorization': 'Bearer {}'.format(trace.token)}
     )
 
 
-@mock.patch('requests.Session.post', side_effect=requests.ReadTimeout)
+@mock.patch('urllib3.PoolManager.request', side_effect=urllib3.exceptions.TimeoutError)
 def test_send_traces_timeout(wrapped_post):
     trace = trace_factory.get_or_create_trace()
 
     trace_factory.send_traces()
     wrapped_post.assert_called_with(
+        'POST',
         'collector',
-        data=json.dumps(trace.to_dict()),
+        body=json.dumps(trace.to_dict()),
         timeout=epsagon.constants.SEND_TIMEOUT,
-        headers={'Authorization': 'Bearer {}'.format(trace.token)}
     )
 
 
-@mock.patch('requests.Session.post', side_effect=Exception)
+@mock.patch('urllib3.PoolManager.request', side_effect=Exception)
 def test_send_traces_post_error(wrapped_post):
     trace = trace_factory.get_or_create_trace()
 
     trace_factory.send_traces()
     wrapped_post.assert_called_with(
+        'POST',
         'collector',
-        data=json.dumps(trace.to_dict()),
+        body=json.dumps(trace.to_dict()),
         timeout=epsagon.constants.SEND_TIMEOUT,
-        headers={'Authorization': 'Bearer {}'.format(trace.token)}
     )
 
 
@@ -1270,7 +1270,7 @@ def test_init_step_dict_output_env(wrapped_init, _create):
     os.environ.pop('EPSAGON_STEPS_OUTPUT_PATH')
 
 
-@mock.patch('requests.Session.post', side_effect=requests.ReadTimeout)
+@mock.patch('urllib3.PoolManager.request', side_effect=urllib3.exceptions.TimeoutError)
 def test_event_with_datetime(wrapped_post):
     epsagon.utils.init(token='token', app_name='app-name', collector_url='collector')
     trace = trace_factory.get_or_create_trace()
@@ -1280,14 +1280,14 @@ def test_event_with_datetime(wrapped_post):
     trace.add_event(event)
     trace_factory.send_traces()
     wrapped_post.assert_called_with(
+        'POST',
         'collector',
-        data=json.dumps(trace.to_dict(), cls=TraceEncoder),
+        body=json.dumps(trace.to_dict(), cls=TraceEncoder),
         timeout=epsagon.constants.SEND_TIMEOUT,
-        headers={'Authorization': 'Bearer {}'.format(trace.token)}
     )
 
 
-@mock.patch('requests.Session.post')
+@mock.patch('urllib3.PoolManager.request')
 def test_send_on_error_only_off_with_error(wrapped_post):
     trace = trace_factory.get_or_create_trace()
     trace.token = 'a'
@@ -1300,7 +1300,7 @@ def test_send_on_error_only_off_with_error(wrapped_post):
     wrapped_post.assert_called_once()
 
 
-@mock.patch('requests.Session.post')
+@mock.patch('urllib3.PoolManager.request')
 def test_send_on_error_only_off_no_error(wrapped_post):
     trace = trace_factory.get_or_create_trace()
     trace.token = 'a'
@@ -1313,7 +1313,7 @@ def test_send_on_error_only_off_no_error(wrapped_post):
     wrapped_post.assert_called_once()
 
 
-@mock.patch('requests.Session.post')
+@mock.patch('urllib3.PoolManager.request')
 def test_send_on_error_only_no_error(wrapped_post):
     trace = trace_factory.get_or_create_trace()
     trace.send_trace_only_on_error = True
@@ -1327,7 +1327,7 @@ def test_send_on_error_only_no_error(wrapped_post):
     wrapped_post.assert_not_called()
 
 
-@mock.patch('requests.Session.post')
+@mock.patch('urllib3.PoolManager.request')
 def test_send_on_error_only_with_error(wrapped_post):
     trace = trace_factory.get_or_create_trace()
     trace.send_trace_only_on_error = True
@@ -1341,7 +1341,7 @@ def test_send_on_error_only_with_error(wrapped_post):
     wrapped_post.assert_called_once()
 
 
-@mock.patch('requests.Session.post')
+@mock.patch('urllib3.PoolManager.request')
 def test_send_with_split_on_big_trace(wrapped_post, monkeypatch):
     # Should be low enough to force trace split.
     monkeypatch.setenv('EPSAGON_MAX_TRACE_SIZE', '500')
@@ -1357,7 +1357,7 @@ def test_send_with_split_on_big_trace(wrapped_post, monkeypatch):
     assert wrapped_post.call_count == 2
 
 
-@mock.patch('requests.Session.post')
+@mock.patch('urllib3.PoolManager.request')
 def test_send_with_split_on_small_trace(wrapped_post, monkeypatch):
     # Should be low enough to force trace split.
     monkeypatch.setenv('EPSAGON_MAX_TRACE_SIZE', '500')
@@ -1372,7 +1372,7 @@ def test_send_with_split_on_small_trace(wrapped_post, monkeypatch):
     wrapped_post.assert_called_once()
 
 
-@mock.patch('requests.Session.post')
+@mock.patch('urllib3.PoolManager.request')
 def test_send_with_split_off(wrapped_post, monkeypatch):
     # Should be low enough to force trace split.
     monkeypatch.setenv('EPSAGON_MAX_TRACE_SIZE', '500')
@@ -1388,7 +1388,7 @@ def test_send_with_split_off(wrapped_post, monkeypatch):
     wrapped_post.assert_called_once()
 
 @mock.patch('random.uniform', side_effect=lambda x, y: 0.5)
-@mock.patch('requests.Session.post')
+@mock.patch('urllib3.PoolManager.request')
 def test_send_with_sample_rate_no_error(wrapped_post, _):
     trace = trace_factory.get_or_create_trace()
     trace.runner = RunnerEventMock()
@@ -1402,7 +1402,7 @@ def test_send_with_sample_rate_no_error(wrapped_post, _):
 
 
 @mock.patch('random.uniform', side_effect=lambda x, y: 0.4)
-@mock.patch('requests.Session.post')
+@mock.patch('urllib3.PoolManager.request')
 def test_no_send_with_sample_rate_no_error(wrapped_post, _):
     trace = trace_factory.get_or_create_trace()
     trace.runner = RunnerEventMock()
@@ -1416,7 +1416,7 @@ def test_no_send_with_sample_rate_no_error(wrapped_post, _):
 
 
 @mock.patch('random.uniform', side_effect=lambda x, y: 0.4)
-@mock.patch('requests.Session.post')
+@mock.patch('urllib3.PoolManager.request')
 def test_send_with_sample_rate_bad_with_error(wrapped_post, _):
     trace = trace_factory.get_or_create_trace()
     trace.runner = RunnerEventMock()
@@ -1430,7 +1430,7 @@ def test_send_with_sample_rate_bad_with_error(wrapped_post, _):
 
 
 @mock.patch('random.uniform', side_effect=lambda x, y: 0.5)
-@mock.patch('requests.Session.post')
+@mock.patch('urllib3.PoolManager.request')
 def test_send_with_sample_good_rate_with_error(wrapped_post, _):
     trace = trace_factory.get_or_create_trace()
     trace.runner = RunnerEventMock()
