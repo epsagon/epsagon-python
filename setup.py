@@ -20,6 +20,7 @@ setup(
     author_email='support@epsagon.com',
     url='https://github.com/epsagon/epsagon-python',
     packages=find_packages(exclude=('tests', 'examples')),
+    package_data={'epsagon': ['*.pem']},
     install_requires=reqs,
     license='MIT',
     setup_requires=['pytest-runner'],
