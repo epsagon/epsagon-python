@@ -463,7 +463,7 @@ def test_timeout_handler_called(wrapped_post):
     trace.token = 'a'
     trace.set_timeout_handler(context)
     trace.set_runner(runner)
-    time.sleep(0.5)
+    time.sleep(1.5)
     trace.reset_timeout_handler()
 
     assert trace.trace_sent
@@ -482,7 +482,7 @@ def test_timeout_send_not_called_twice(wrapped_post):
     trace.token = 'a'
     trace.set_timeout_handler(context)
     trace.set_runner(runner)
-    time.sleep(0.5)
+    time.sleep(1.5)
     trace.reset_timeout_handler()
 
     assert trace.trace_sent
