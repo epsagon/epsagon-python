@@ -13,7 +13,8 @@ import epsagon.trace
 import epsagon.constants
 from epsagon.constants import (
     TRACE_COLLECTOR_URL,
-    DEFAULT_REGION
+    DEFAULT_REGION,
+    DEFAULT_SEND_TIMEOUT_MS
 )
 from epsagon.trace import (
     trace_factory,
@@ -457,13 +458,13 @@ def test_timeout_handler_called(wrapped_post):
     """
     Sanity
     """
-    context = ContextMock(300)
+    context = ContextMock(DEFAULT_SEND_TIMEOUT_MS * 1.1)
     runner = RunnerEventMock()
     trace = trace_factory.get_or_create_trace()
     trace.token = 'a'
     trace.set_timeout_handler(context)
     trace.set_runner(runner)
-    time.sleep(0.5)
+    time.sleep((DEFAULT_SEND_TIMEOUT_MS / 1000) * 1.5)
     trace.reset_timeout_handler()
 
     assert trace.trace_sent
@@ -476,13 +477,13 @@ def test_timeout_send_not_called_twice(wrapped_post):
     In case of a timeout send trace, validate no trace
     is sent afterwards (if the flow continues)
     """
-    context = ContextMock(300)
+    context = ContextMock(DEFAULT_SEND_TIMEOUT_MS * 1.1)
     runner = RunnerEventMock()
     trace = trace_factory.get_or_create_trace()
     trace.token = 'a'
     trace.set_timeout_handler(context)
     trace.set_runner(runner)
-    time.sleep(0.5)
+    time.sleep((DEFAULT_SEND_TIMEOUT_MS / 1000) * 1.5)
     trace.reset_timeout_handler()
 
     assert trace.trace_sent
