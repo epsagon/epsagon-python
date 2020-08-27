@@ -396,3 +396,16 @@ def is_lambda_env():
 def print_debug(log):
     if DEBUG_MODE:
         print('[EPSAGON_DEBUG]: {}'.format(log))
+
+
+def database_connection_type(hostname, default_type):
+    """
+    returns known DB types based on the hostname
+    :param hostname: hostname from the URL
+    :return: string type, or default type
+    """
+    if 'rds.amazonaws' in hostname:
+        return 'rds'
+    elif 'redshift.amazonaws' in hostname:
+        return 'redshift'
+    return default_type
