@@ -4,7 +4,7 @@ PynamoDB events module.
 
 from __future__ import absolute_import
 from uuid import uuid4
-import simplejson as json
+import json
 from ..trace import trace_factory
 from .botocore import BotocoreDynamoDBEvent
 

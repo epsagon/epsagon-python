@@ -1,6 +1,5 @@
 wrapt>=1.11.0
 autowrapt==1.0
 urllib3
-simplejson
 six
 future

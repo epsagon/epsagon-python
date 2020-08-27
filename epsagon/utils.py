@@ -11,7 +11,7 @@ import traceback
 import re
 import six
 import urllib3
-import simplejson as json
+import json
 try:
     from urllib.parse import urlparse
 except ImportError:

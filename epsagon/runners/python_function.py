@@ -68,7 +68,7 @@ class PythonRunner(BaseEvent):
             return
 
         try:
-            json.dumps(data, cls=TraceEncoder, encoding='latin1')
+            json.dumps(data, cls=TraceEncoder, ensure_ascii=False)
             self.resource['metadata'][name] = data
         except TypeError:
             pass

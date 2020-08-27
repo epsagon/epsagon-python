@@ -127,6 +127,14 @@ class ReturnValueEventMock(RunnerEventMock):
             'metadata': {'return_value': data }
         }
 
+class UnicodeReturnValueEventMock(RunnerEventMock):
+    def __init__(self):
+        super(UnicodeReturnValueEventMock, self).__init__()
+        self.resource = {
+            'metadata': {'return_value': 'בדיקה' }
+        }
+
+
 class InvalidReturnValueEventMock(ReturnValueEventMock):
     def __init__(self):
         super(InvalidReturnValueEventMock, self).__init__({1: mock})
@@ -520,6 +528,20 @@ def test_send_traces_sanity(wrapped_post):
         'POST',
         'collector',
         body=json.dumps(trace.to_dict()),
+        timeout=epsagon.constants.SEND_TIMEOUT,
+    )
+
+
+@mock.patch('urllib3.PoolManager.request')
+def test_send_traces_unicode(wrapped_post):
+    trace = trace_factory.get_or_create_trace()
+    runner = UnicodeReturnValueEventMock()
+    trace.set_runner(runner)
+    trace_factory.send_traces()
+    wrapped_post.assert_called_with(
+        'POST',
+        'collector',
+        body=json.dumps(trace.to_dict(), ensure_ascii=False),
         timeout=epsagon.constants.SEND_TIMEOUT,
     )
 
