@@ -3,7 +3,7 @@ boto3
 tox
 mock
 Flask
-pylint==1.9.5
+pylint>=1.9.5,<=2.5.3
 pylint-quotes
 django
 pytest
