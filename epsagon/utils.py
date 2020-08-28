@@ -406,6 +406,6 @@ def database_connection_type(hostname, default_type):
     """
     if 'rds.amazonaws' in hostname:
         return 'rds'
-    elif 'redshift.amazonaws' in hostname:
+    if 'redshift.amazonaws' in hostname:
         return 'redshift'
     return default_type
