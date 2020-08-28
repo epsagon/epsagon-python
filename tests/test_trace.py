@@ -1,4 +1,5 @@
 # pylint: disable=too-many-lines
+# -*- coding: utf-8 -*-
 """ Tests for trace.py """
 import os
 import sys

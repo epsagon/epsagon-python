@@ -70,7 +70,7 @@ class Httplib2Event(BaseEvent):
                         'request_body',
                         json.loads(body)
                     )
-            except (TypeError, json.JSONDecodeError):
+            except (TypeError, ValueError):
                 # Skip if it is not a JSON body
                 pass
 
@@ -112,7 +112,7 @@ class Httplib2Event(BaseEvent):
                         'response_body',
                         json.loads(response_body)
                     )
-            except (TypeError, json.JSONDecodeError):
+            except (TypeError, ValueError):
                 # Skip if it is not a JSON body
                 pass
 

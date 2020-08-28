@@ -13,8 +13,8 @@ import warnings
 import signal
 import threading
 import random
-import urllib3.exceptions
 import json
+import urllib3.exceptions
 
 from epsagon.event import BaseEvent
 from epsagon.common import EpsagonWarning, ErrorCode, EpsagonException
@@ -974,7 +974,7 @@ class Trace(object):
                                 copied_dict[key] = (json.dumps(
                                     self.remove_ignored_keys(json_value)
                                 ))
-                        except (TypeError, json.errors.JSONDecodeError):
+                        except (TypeError, ValueError):
                             pass
         return copied_dict
 

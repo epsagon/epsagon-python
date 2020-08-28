@@ -3,8 +3,8 @@
 import os
 import base64
 import logging
-import urllib3
 import json
+import urllib3
 from epsagon.constants import SEND_TIMEOUT
 from epsagon.trace_encoder import TraceEncoder
 
