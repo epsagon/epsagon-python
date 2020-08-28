@@ -10,3 +10,4 @@ django
 pytest
 requests
 sqlalchemy
+psycopg2
