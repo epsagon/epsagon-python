@@ -3,6 +3,7 @@ boto3
 tox
 mock
 Flask
+# Choose 1.9.5 in py2, and 2.5.3 in py3
 pylint>=1.9.5,<=2.5.3
 pylint-quotes
 django
