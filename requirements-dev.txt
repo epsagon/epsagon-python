@@ -9,3 +9,4 @@ pylint-quotes
 django
 pytest
 requests
+sqlalchemy
