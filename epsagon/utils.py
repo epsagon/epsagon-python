@@ -37,7 +37,7 @@ def patch_once(patch_module, patch_name, wrapper):
     :param wrapper: new wrapper to set
     :return: None
     """
-    (_, _, original) = wrapt.resolve_path(patch_module, patch_name)
+    _, _, original = wrapt.resolve_path(patch_module, patch_name)
     if not getattr(original, EPSAGON_MARKER, None):
         wrapt.wrap_function_wrapper(patch_module, patch_name, wrapper)
         setattr(original, EPSAGON_MARKER, True)
