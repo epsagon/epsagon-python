@@ -97,6 +97,7 @@ class DjangoRequestMiddleware(object):
                 self.request
             )
             trace.set_runner(self.runner)
+            self.request.epsagon_trace = trace
 
             # Collect metadata in case this is a container.
             collect_container_metadata(self.runner.resource['metadata'])
