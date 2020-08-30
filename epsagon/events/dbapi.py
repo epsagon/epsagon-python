@@ -23,6 +23,7 @@ except ImportError:
 
 from ..trace import trace_factory
 from ..event import BaseEvent
+from ..utils import database_connection_type
 
 MAX_QUERY_SIZE = 2048
 
@@ -89,10 +90,10 @@ class DBAPIEvent(BaseEvent):
         self.resource['operation'] = operation
 
         # override event type with the specific DB type
-        if 'rds.amazonaws' in host:
-            self.resource['type'] = 'rds'
-        elif 'redshift.amazonaws' in host:
-            self.resource['type'] = 'redshift'
+        self.resource['type'] = database_connection_type(
+            host,
+            self.RESOURCE_TYPE
+        )
 
         self.resource['metadata'] = {
             'Host': host,
