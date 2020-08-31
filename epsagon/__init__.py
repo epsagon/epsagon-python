@@ -8,6 +8,7 @@ from .utils import init, print_debug
 from .patcher import patch_all
 from .constants import __version__, EPSAGON_HANDLER
 from .trace import trace_factory
+from .wrappers.custom import measure
 
 if os.getenv(EPSAGON_HANDLER):
     from .handler import wrapper
@@ -75,6 +76,7 @@ __all__ = [
     'gcp_wrapper',
     'chalice_wrapper',
     'auto_load',
+    'measure',
 ]
 
 
