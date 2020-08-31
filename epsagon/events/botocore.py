@@ -8,7 +8,7 @@ from __future__ import absolute_import
 import hashlib
 import traceback
 from importlib import import_module
-import simplejson as json
+import json
 from epsagon.constants import STEP_DICT_NAME
 from ..trace import trace_factory
 from ..event import BaseEvent

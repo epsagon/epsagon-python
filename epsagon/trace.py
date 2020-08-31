@@ -13,8 +13,8 @@ import warnings
 import signal
 import threading
 import random
+import json
 import urllib3.exceptions
-import simplejson as json
 
 from epsagon.event import BaseEvent
 from epsagon.common import EpsagonWarning, ErrorCode, EpsagonException
@@ -912,7 +912,7 @@ class Trace(object):
         json_trace = json.dumps(
             self.to_dict(),
             cls=TraceEncoder,
-            encoding='latin1'
+            ensure_ascii=False
         )
         return len(json_trace)
 
@@ -925,7 +925,7 @@ class Trace(object):
                 len(json.dumps(
                     event.resource.get('metadata', {}),
                     cls=TraceEncoder,
-                    encoding='latin1',
+                    ensure_ascii=False
                 ))
             )
             Trace.trim_metadata(event.resource['metadata'])
@@ -974,7 +974,7 @@ class Trace(object):
                                 copied_dict[key] = (json.dumps(
                                     self.remove_ignored_keys(json_value)
                                 ))
-                        except (TypeError, json.errors.JSONDecodeError):
+                        except (TypeError, ValueError):
                             pass
         return copied_dict
 
@@ -1091,7 +1091,7 @@ class Trace(object):
             trace = json.dumps(
                 self.to_dict(),
                 cls=TraceEncoder,
-                encoding='latin1'
+                ensure_ascii=False
             )
 
             trace_length = len(trace)
@@ -1103,7 +1103,7 @@ class Trace(object):
                 trace = json.dumps(
                     self.to_dict(),
                     cls=TraceEncoder,
-                    encoding='latin1'
+                    ensure_ascii=False
                 )
 
             self.transport.send(self)

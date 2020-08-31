@@ -1,7 +1,7 @@
 """ JSONEncoder for trace objects """
 
 from datetime import datetime, date
-import simplejson as json
+import json
 
 
 class TraceEncoder(json.JSONEncoder):

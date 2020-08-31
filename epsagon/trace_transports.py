@@ -3,14 +3,14 @@
 import os
 import base64
 import logging
+import json
 import urllib3
-import simplejson as json
 from epsagon.constants import SEND_TIMEOUT
 from epsagon.trace_encoder import TraceEncoder
 
 
 def to_json(obj):
-    return json.dumps(obj, cls=TraceEncoder, encoding='latin1')
+    return json.dumps(obj, cls=TraceEncoder, ensure_ascii=False)
 
 
 class NoneTransport(object):

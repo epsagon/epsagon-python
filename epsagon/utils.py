@@ -9,9 +9,9 @@ import socket
 import sys
 import traceback
 import re
+import json
 import six
 import urllib3
-import simplejson as json
 try:
     from urllib.parse import urlparse
 except ImportError:

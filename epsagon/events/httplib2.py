@@ -9,7 +9,7 @@ except ImportError:
     from urlparse import urlparse
 import traceback
 from uuid import uuid4
-import simplejson as json
+import json
 
 from epsagon.utils import add_data_if_needed
 from ..trace import trace_factory
@@ -70,7 +70,7 @@ class Httplib2Event(BaseEvent):
                         'request_body',
                         json.loads(body)
                     )
-            except (TypeError, json.errors.JSONDecodeError):
+            except (TypeError, ValueError):
                 # Skip if it is not a JSON body
                 pass
 
@@ -112,7 +112,7 @@ class Httplib2Event(BaseEvent):
                         'response_body',
                         json.loads(response_body)
                     )
-            except (TypeError, json.errors.JSONDecodeError):
+            except (TypeError, ValueError):
                 # Skip if it is not a JSON body
                 pass
 

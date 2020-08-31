@@ -6,7 +6,7 @@ from __future__ import absolute_import
 from uuid import uuid4
 from importlib import import_module
 import hashlib
-import simplejson as json
+import json
 from epsagon.utils import add_data_if_needed, parse_json
 from ..event import BaseEvent
 
