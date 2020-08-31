@@ -16,9 +16,9 @@ try:
     from urllib.parse import urlparse
 except ImportError:
     from urlparse import urlparse
-
+import wrapt
 from epsagon import http_filters
-from epsagon.constants import TRACE_COLLECTOR_URL, REGION
+from epsagon.constants import TRACE_COLLECTOR_URL, REGION, EPSAGON_MARKER
 from .trace import trace_factory, create_transport
 from .constants import EPSAGON_HANDLER, DEBUG_MODE, DEFAULT_SAMPLE_RATE
 
@@ -27,6 +27,20 @@ METADATA_CACHE = {
     'queried': False,
     'data': {},
 }
+
+
+def patch_once(patch_module, patch_name, wrapper):
+    """
+    Patches a module once by setting `EPSAGON_MARKER` on the wrapped object
+    :param patch_module: module to patch
+    :param patch_name: attribute name to path
+    :param wrapper: new wrapper to set
+    :return: None
+    """
+    _, _, original = wrapt.resolve_path(patch_module, patch_name)
+    if not getattr(original, EPSAGON_MARKER, None):
+        wrapt.wrap_function_wrapper(patch_module, patch_name, wrapper)
+        setattr(original, EPSAGON_MARKER, True)
 
 
 def normalize_http_url(url):
@@ -396,3 +410,16 @@ def is_lambda_env():
 def print_debug(log):
     if DEBUG_MODE:
         print('[EPSAGON_DEBUG]: {}'.format(log))
+
+
+def database_connection_type(hostname, default_type):
+    """
+    returns known DB types based on the hostname
+    :param hostname: hostname from the URL
+    :return: string type, or default type
+    """
+    if 'rds.amazonaws' in hostname:
+        return 'rds'
+    if 'redshift.amazonaws' in hostname:
+        return 'redshift'
+    return default_type
