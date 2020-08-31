@@ -1,11 +1,12 @@
 import mock
 import json
+import itertools
 import epsagon.constants
 
 
 @mock.patch(
     'time.time',
-    return_value=1
+    side_effect=itertools.count(start=1)
 )
 def test_function_wrapper_sanity(_, trace_transport):
     retval = 'success'
@@ -21,4 +22,4 @@ def test_function_wrapper_sanity(_, trace_transport):
 
     assert wrapped_function() == retval
     labels = json.loads(trace_transport.last_trace.events[0].resource['metadata']['labels'])
-    assert labels['measured_function_duration'] == 0
+    assert labels['measured_function_duration'] == 1
