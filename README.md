@@ -21,6 +21,7 @@ This package provides tracing to Python applications for the collection of distr
   - [Auto-tracing](#auto-tracing)
   - [Calling the SDK](#calling-the-sdk)
   - [Tagging Traces](#tagging-traces)
+  - [Measuring Function Duration](#measuring-function-duration)
   - [Custom Errors](#custom-errors)
   - [Filter Sensitive Data](#filter-sensitive-data)
   - [Ignore Endpoints](#ignore-endpoints)
@@ -96,6 +97,18 @@ epsagon.label('items_in_cart', items_in_cart)
 
 Valid types are `string`, `bool`, `int` and `float`.
 In some [frameworks](#frameworks) tagging can be done in different ways.
+
+### Measuring Function Duration
+
+You can measure internal functions duration by using the `@epsagon.measure` decorator. For example:
+```python
+@epsagon.measure
+def heavy_calculation():
+    # Code...
+```
+
+This will ship another metric label to epsagon where the `key=heavy_calculation_duration` and the value will be the actual duration, in seconds.
+You'll be able to see this label in the trace search, visualize it over time, and generate alerts based on this metric.
 
 ### Custom Errors
 
