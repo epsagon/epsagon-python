@@ -14,7 +14,7 @@ def measure(func):
     @functools.wraps(func)
     def _measure(*args, **kwargs):
         """
-        Creating a label based on the function name, with the duration.
+        Creating a label based on the function name, with the duration in seconds.
         """
         start_time = time.time()
         result = func(*args, **kwargs)
