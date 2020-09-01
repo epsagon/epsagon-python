@@ -112,7 +112,9 @@ class FlaskWrapper(object):
             return response
 
         trace = epsagon.trace.trace_factory.get_or_create_trace()
-        trace.runner.update_response(response)
+
+        if trace.runner:
+            trace.runner.update_response(response)
         return response
 
     def _teardown_request(self, exception):
@@ -127,9 +129,9 @@ class FlaskWrapper(object):
         if self.ignored_request:
             return
 
-        if exception:
+        trace = epsagon.trace.trace_factory.get_or_create_trace()
+        if exception and trace.runner:
             traceback_data = get_traceback_data_from_exception(exception)
-            trace = epsagon.trace.trace_factory.get_or_create_trace()
             trace.runner.set_exception(exception, traceback_data)
         # Ignoring endpoint, only if no error happened.
         if (not exception and

@@ -45,6 +45,23 @@ def client():
     return app
 
 
+CLIENT = app_test.test_client()
+
+
+@app_test.route('/self_call', methods=["POST"])
+def self_call():
+    json_data = request.get_json()
+    inner_call = None
+    if json_data:
+        inner_call = json_data['inner_call']
+
+    if not inner_call:
+        return CLIENT.post('/self_call', json={
+            'inner_call': 'True'
+        })
+
+    return RETURN_VALUE
+
 ###
 
 
@@ -132,3 +149,12 @@ def test_flask_wrapper_multiple_requests(trace_transport, client):
 
     for thread in [a, b]:
         thread.join()
+
+
+def test_call_to_self(trace_transport, client):
+    """
+    And API that calls itself. Make sure instrumentation doesn't throw
+    and exception that gets to the user.
+    """
+    result = CLIENT.post('/self_call')
+    assert result.data.decode('ascii') == RETURN_VALUE
