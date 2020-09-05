@@ -73,6 +73,10 @@ def is_strong_key(key):
 STEP_DICT_NAME = 'Epsagon'
 EPSAGON_EVENT_ID_KEY = '_epsagon_event_id'
 TRACE_URL_PREFIX = (
+    'https://app.epsagon.com/spans/{id}?'
+    'start_time={start_time}&ref=trace'
+)
+LAMBDA_TRACE_URL_PREFIX = (
     'https://app.epsagon.com/functions/{aws_account}/{region}/{function_name}'
     '?requestId={request_id}&requestTime={request_time}'
 )

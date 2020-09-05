@@ -25,6 +25,7 @@ This package provides tracing to Python applications for the collection of distr
   - [Custom Errors](#custom-errors)
   - [Filter Sensitive Data](#filter-sensitive-data)
   - [Ignore Endpoints](#ignore-endpoints)
+  - [Trace URL](#trace-url)
 - [Frameworks](#frameworks)
 - [Integrations](#integrations)
 - [Configuration](#configuration)
@@ -167,6 +168,18 @@ epsagon.init(
     ignored_endpoints=['/healthcheck'],
 )
 ```
+
+### Trace URL
+
+You can get the Epsagon dashboard URL for the current trace, using the following:
+```python
+import epsagon
+
+# Inside some endpoint or function
+print('Epsagon trace URL:', epsagon.get_trace_url())
+```
+
+This can be useful to have an easy access the trace from different platforms.
 
 ## Frameworks
 
