@@ -5,7 +5,7 @@ echo $ret
 excludes=''
 if [ $ret -eq 0 ]; then
     echo $excludes
-    excludes='*aio*'
+    excludes='aio'
 fi
 echo $excludes
-pytest --ignore-glob='$excludes'
+pylint --msg-template='{path}:{line}: [{msg_id}({symbol}) {obj}] {msg}' --ignore-patterns='$excludes' epsagon/
