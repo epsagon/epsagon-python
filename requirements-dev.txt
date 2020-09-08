@@ -11,3 +11,6 @@ pytest
 requests
 sqlalchemy
 psycopg2
+aiohttp
+pytest-asyncio
+pytest-aiohttp
