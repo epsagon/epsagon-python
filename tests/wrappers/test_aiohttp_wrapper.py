@@ -7,13 +7,7 @@ from epsagon.wrappers.aiohttp import AiohttpMiddleware
 from epsagon.runners.aiohttp import AiohttpRunner
 
 
-
-
-if sys.version_info < (3, 5, 3):
-    pytest.skip('skipping aiohttp tests', allow_module_level=True)
-
-
-# Setting demo aiohttp app
+# Setting demo aiohttp handlers
 RETURN_VALUE = 'a'
 async def handle(request):
     return web.Response(body=RETURN_VALUE)
