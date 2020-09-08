@@ -5,6 +5,7 @@ Middleware for Python aiohttp.
 from __future__ import absolute_import
 import time
 import warnings
+from aiohttp.web import middleware
 
 import epsagon.trace
 import epsagon.triggers.http
@@ -15,7 +16,6 @@ from epsagon.utils import (
     get_traceback_data_from_exception
 )
 from ..http_filters import ignore_request
-from aiohttp.web import middleware
 
 
 @middleware

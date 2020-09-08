@@ -11,6 +11,6 @@ pytest
 requests
 sqlalchemy
 psycopg2
-aiohttp
-pytest-asyncio
-pytest-aiohttp
+aiohttp; python_version >= '3.5'
+pytest-asyncio; python_version >= '3.5'
+pytest-aiohttp; python_version >= '3.5'
