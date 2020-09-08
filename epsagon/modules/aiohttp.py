@@ -8,11 +8,11 @@ from ..wrappers.aiohttp import AiohttpMiddleware
 from ..utils import print_debug, is_lambda_env
 
 
-def _wrapper(wrapped, instance, args, kwargs):
+def _wrapper(wrapped, _instance, args, kwargs):
     """
     Adds `AiohttpMiddleware` into aiohttp app.
     :param wrapped: wrapt's wrapped
-    :param instance: wrapt's instance
+    :param _instance: wrapt's instance
     :param args: wrapt's args
     :param kwargs: wrapt's kwargs
     """

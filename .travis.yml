@@ -12,7 +12,7 @@ install:
   - pip install -r requirements-dev.txt
 
 script:
-  - "pylint --msg-template='{path}:{line}: [{msg_id}({symbol}) {obj}] {msg}' epsagon/"
+  - ./scripts/run_tests.sh
   - pytest
   - npm install && export PATH=$(pwd)/node_modules/.bin:$PATH
   - ./acceptance/run.sh $TRAVIS_BUILD_NUMBER $TRAVIS_PYTHON_VERSION

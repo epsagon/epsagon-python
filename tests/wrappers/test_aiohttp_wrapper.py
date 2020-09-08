@@ -1,13 +1,16 @@
-import mock
+import sys
+import pytest
 from aiohttp import web
 from epsagon import trace_factory
 from epsagon.common import ErrorCode
 from epsagon.wrappers.aiohttp import AiohttpMiddleware
 from epsagon.runners.aiohttp import AiohttpRunner
 
-class AsyncMock(mock.MagicMock):
-    async def __call__(self, *args, **kwargs):
-        return super(AsyncMock, self).__call__(*args, **kwargs)
+
+
+
+if sys.version_info < (3, 5, 3):
+    pytest.skip('skipping aiohttp tests', allow_module_level=True)
 
 
 # Setting demo aiohttp app
