@@ -101,6 +101,7 @@ class RunnerEventMock(EventMock):
         super(RunnerEventMock, self).__init__(start_time=time.time())
         self.terminated = True
         self.origin = 'runner'
+        self.resource['metadata']['trace_id'] = '123'
 
     def terminate(self):
         # This should be a copy of `BaseEvent.terminate()`
@@ -374,7 +375,7 @@ def test_trace_url_sanity():
     trace.set_runner(event)
     trace_url = trace.get_trace_url()
     assert trace_url == TRACE_URL_PREFIX.format(
-        id=event.event_id,
+        id=event.resource['metadata']['trace_id'],
         start_time=int(event.start_time)
     )
 

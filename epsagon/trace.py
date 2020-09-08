@@ -1147,7 +1147,7 @@ class Trace(object):
         :return: string of the trace URL.
         """
         trace_url = TRACE_URL_PREFIX.format(
-            id=self.runner.event_id,
+            id=self.runner.resource['metadata'].get('trace_id', ''),
             start_time=int(self.runner.start_time)
         )
         if self.runner.resource['type'] == 'lambda':
