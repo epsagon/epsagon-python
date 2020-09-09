@@ -14,7 +14,7 @@ class AiohttpRunner(BaseEvent):
     """
 
     ORIGIN = 'runner'
-    RESOURCE_TYPE = 'python_aiohttp'
+    RESOURCE_TYPE = 'aiohttp'
     OPERATION = 'request'
 
     def __init__(self, start_time, request, body, handler):
