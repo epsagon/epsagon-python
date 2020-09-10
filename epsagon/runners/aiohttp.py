@@ -50,11 +50,17 @@ class AiohttpRunner(BaseEvent):
                 body
             )
 
-        add_data_if_needed(
-            self.resource['metadata'],
-            'Request Headers',
-            dict(request.headers)
-        )
+        request_headers = dict(request.headers)
+        if request_headers.get('epsagon-trace-id'):
+            self.resource['metadata']['http_trace_id'] = request_headers.get(
+                'epsagon-trace-id'
+            )
+        if request_headers:
+            add_data_if_needed(
+                self.resource['metadata'],
+                'Request Headers',
+                request_headers
+            )
 
     def update_response(self, response):
         """
@@ -79,7 +85,7 @@ class AiohttpRunner(BaseEvent):
                 dict(response.headers)
             )
 
-        self.resource['metadata']['Status'] = response.status
+        self.resource['metadata']['status_code'] = response.status
 
         if response.status >= 500:
             self.set_error()

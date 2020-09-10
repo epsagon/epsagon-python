@@ -5,6 +5,7 @@ aiohttp patcher module.
 from __future__ import absolute_import
 import wrapt
 from ..wrappers.aiohttp import AiohttpMiddleware
+from ..trace import trace_factory
 from ..utils import print_debug, is_lambda_env
 
 
@@ -24,6 +25,7 @@ def _wrapper(wrapped, _instance, args, kwargs):
         if 'middlewares' not in kwargs:
             kwargs['middlewares'] = []
         kwargs['middlewares'].insert(0, AiohttpMiddleware)
+        trace_factory.switch_to_multiple_traces()
     except Exception:  # pylint: disable=broad-except
         print_debug('Could not add aiohttp wrapper')
 
