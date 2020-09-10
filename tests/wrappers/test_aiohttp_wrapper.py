@@ -1,7 +1,5 @@
-import sys
-import pytest
+import asynctest
 from aiohttp import web
-from epsagon import trace_factory
 from epsagon.common import ErrorCode
 from epsagon.wrappers.aiohttp import AiohttpMiddleware
 from epsagon.runners.aiohttp import AiohttpRunner
@@ -23,7 +21,8 @@ def create_app(loop):
     return app
 
 
-async def test_aiohttp_sanity(trace_transport, aiohttp_client):
+@asynctest.patch('epsagon.trace.trace_factory.use_async_tracer')
+async def test_aiohttp_sanity(_, trace_transport, aiohttp_client):
     """Sanity test."""
     client = await aiohttp_client(create_app)
     response = await client.get('/')
@@ -36,7 +35,8 @@ async def test_aiohttp_sanity(trace_transport, aiohttp_client):
     assert text == RETURN_VALUE
 
 
-async def test_aiohttp_exception(trace_transport, aiohttp_client):
+@asynctest.patch('epsagon.trace.trace_factory.use_async_tracer')
+async def test_aiohttp_exception(_, trace_transport, aiohttp_client):
     """Test when the handler got an exception."""
     client = await aiohttp_client(create_app)
 

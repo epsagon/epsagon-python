@@ -26,7 +26,7 @@ async def AiohttpMiddleware(request, handler):
     :param handler: original handler
     :return: response data from the handler
     """
-    # epsagon.trace.trace_factory.switch_to_async_tracer()
+    epsagon.trace.trace_factory.switch_to_async_tracer()
 
     if ignore_request('', request.path.lower()):
         return await handler(request)
