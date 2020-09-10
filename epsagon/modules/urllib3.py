@@ -8,6 +8,7 @@ import wrapt
 from epsagon.modules.general_wrapper import wrapper
 from ..events.urllib3 import Urllib3EventFactory
 from ..http_filters import is_blacklisted_url
+from ..constants import EPSAGON_HEADER
 
 
 def _get_headers_from_args(
@@ -63,7 +64,7 @@ def _wrapper(wrapped, instance, args, kwargs):
                 # either kwargs['headers'] == None or it doesn't exist
                 headers = kwargs['headers'] = {}
 
-        headers['epsagon-trace-id'] = (
+        headers[EPSAGON_HEADER] = (
             '{trace_id}:{span_id}:{parent_span_id}:1'.format(
                 trace_id=trace_id,
                 span_id=span_id,

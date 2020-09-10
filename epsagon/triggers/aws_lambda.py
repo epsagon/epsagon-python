@@ -9,6 +9,7 @@ import hashlib
 import json
 from epsagon.utils import add_data_if_needed, parse_json
 from ..event import BaseEvent
+from ..constants import EPSAGON_HEADER
 
 # Conditionally importing boto3
 TypeDeserializer = None  # pylint: disable=invalid-name
@@ -395,7 +396,7 @@ class ElasticLoadBalancerLambdaTrigger(BaseLambdaTrigger):
         self.resource['name'] = event['headers']['host']
         self.resource['operation'] = event['httpMethod']
 
-        epsagon_trace_id = event['headers'].get('epsagon-trace-id')
+        epsagon_trace_id = event['headers'].get(EPSAGON_HEADER)
         self.resource['metadata'] = {
             'http_trace_id': epsagon_trace_id,
             'query_string_parameters': event['queryStringParameters'],
@@ -404,7 +405,7 @@ class ElasticLoadBalancerLambdaTrigger(BaseLambdaTrigger):
             ),
             'path': event['path']
         }
-        epsagon_trace_id = event['headers'].get('epsagon-trace-id')
+
         if epsagon_trace_id:
             self.resource['metadata']['http_trace_id'] = epsagon_trace_id
 
