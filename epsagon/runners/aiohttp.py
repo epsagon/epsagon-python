@@ -6,6 +6,7 @@ from __future__ import absolute_import
 import uuid
 from ..event import BaseEvent
 from ..utils import add_data_if_needed, normalize_http_url
+from ..constants import EPSAGON_HEADER
 
 
 class AiohttpRunner(BaseEvent):
@@ -51,9 +52,9 @@ class AiohttpRunner(BaseEvent):
             )
 
         request_headers = dict(request.headers)
-        if request_headers.get('epsagon-trace-id'):
+        if request_headers.get(EPSAGON_HEADER):
             self.resource['metadata']['http_trace_id'] = request_headers.get(
-                'epsagon-trace-id'
+                EPSAGON_HEADER
             )
         if request_headers:
             add_data_if_needed(
