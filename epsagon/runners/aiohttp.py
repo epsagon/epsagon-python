@@ -72,11 +72,12 @@ class AiohttpRunner(BaseEvent):
             body.decode('utf-8')
         )
 
-        add_data_if_needed(
-            self.resource['metadata'],
-            'Response Headers',
-            dict(response.headers)
-        )
+        if dict(response.headers):
+            add_data_if_needed(
+                self.resource['metadata'],
+                'Response Headers',
+                dict(response.headers)
+            )
 
         self.resource['metadata']['Status'] = response.status
 
