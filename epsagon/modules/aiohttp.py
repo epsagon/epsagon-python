@@ -25,7 +25,6 @@ def _wrapper(wrapped, _instance, args, kwargs):
         if 'middlewares' not in kwargs:
             kwargs['middlewares'] = []
         kwargs['middlewares'].insert(0, AiohttpMiddleware)
-        trace_factory.switch_to_async_tracer()
     except Exception:  # pylint: disable=broad-except
         print_debug('Could not add aiohttp wrapper')
 
