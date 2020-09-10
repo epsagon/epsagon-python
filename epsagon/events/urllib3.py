@@ -19,7 +19,7 @@ from ..http_filters import (
     is_payload_collection_blacklisted
 )
 from ..utils import update_http_headers, normalize_http_url
-from ..constants import HTTP_ERR_CODE, EPSAGON_MARKER
+from ..constants import HTTP_ERR_CODE, EPSAGON_MARKER, EPSAGON_HEADER
 
 
 class Urllib3Event(BaseEvent):
@@ -52,7 +52,7 @@ class Urllib3Event(BaseEvent):
         headers = kwargs.get('headers')
         if headers:
             # Make sure trace ID is present in case headers will be removed.
-            epsagon_trace_id = headers.get('epsagon-trace-id')
+            epsagon_trace_id = headers.get(EPSAGON_HEADER)
             if epsagon_trace_id:
                 self.resource['metadata']['http_trace_id'] = epsagon_trace_id
 

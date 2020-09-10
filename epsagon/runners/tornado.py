@@ -7,6 +7,7 @@ from __future__ import absolute_import
 import uuid
 from ..event import BaseEvent
 from ..utils import add_data_if_needed
+from ..constants import EPSAGON_HEADER_TITLE
 
 MAX_PAYLOAD_BYTES = 2000
 
@@ -36,18 +37,36 @@ class TornadoRunner(BaseEvent):
 
         self.resource['metadata'].update({
             'Host': request.host,
-            'Protocol': request.protocol,
+            'url': '{}://{}{}'.format(
+                request.protocol,
+                request.host,
+                request.path
+            ),
             'Path': request.path,
             'Version': request.version,
             'Remote IP': request.remote_ip,
             'User Agent': request.headers.get('User-Agent', 'N/A'),
         })
 
+        request_headers = dict(request.headers)
+
+        if request_headers.get(EPSAGON_HEADER_TITLE):
+            self.resource['metadata']['http_trace_id'] = (
+                request_headers.get(EPSAGON_HEADER_TITLE)
+            )
+
         if request.query:
             add_data_if_needed(
                 self.resource['metadata'],
                 'Query',
                 request.query
+            )
+
+        if request_headers:
+            add_data_if_needed(
+                self.resource['metadata'],
+                'Request Headers',
+                request_headers
             )
 
     def update_response(self, response, response_body=None):
@@ -70,7 +89,7 @@ class TornadoRunner(BaseEvent):
                 str(response_body)[:MAX_PAYLOAD_BYTES]
             )
 
-        self.resource['metadata']['Status'] = response._status_code
+        self.resource['metadata']['status_code'] = response._status_code
         self.resource['metadata']['etag'] = headers.get('Etag')
 
         if not self.error_code and response._status_code >= 500:
