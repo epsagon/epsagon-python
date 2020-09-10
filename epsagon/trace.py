@@ -260,8 +260,7 @@ class TraceFactory(object):
         if self.use_async_tracer:
             # Dynamic import since this is only valid in Python3+
             import asyncio
-            loop = asyncio.get_event_loop()
-            task = asyncio.Task.current_task(loop=loop)
+            task = asyncio.Task.current_task()
             trace = getattr(task, EPSAGON_MARKER, None)
             if not trace:
                 trace = self._create_new_trace()
