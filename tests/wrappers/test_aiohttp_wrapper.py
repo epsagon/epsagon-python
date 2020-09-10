@@ -15,9 +15,6 @@ async def handle(request):
 async def handle_error(request):
     raise Exception('test')
 
-def setup_function(func):
-    trace_factory.use_async_tracer = True
-
 
 def create_app(loop):
     app = web.Application(loop=loop, middlewares=[AiohttpMiddleware])
