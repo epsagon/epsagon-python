@@ -39,16 +39,16 @@ async def test_aiohttp_sanity(trace_transport, aiohttp_client):
     assert text == RETURN_VALUE
 
 
-async def test_aiohttp_exception(trace_transport, aiohttp_client):
-    """Test when the handler got an exception."""
-    client = await aiohttp_client(create_app)
-
-    try:
-        await client.get('/err')
-    except:
-        pass
-
-    runner = trace_transport.last_trace.events[0]
-    assert runner.error_code == ErrorCode.EXCEPTION
-    assert runner.exception['type'] == 'Exception'
-    assert runner.exception['message'] == 'test'
+# async def test_aiohttp_exception(trace_transport, aiohttp_client):
+#     """Test when the handler got an exception."""
+#     client = await aiohttp_client(create_app)
+#
+#     try:
+#         await client.get('/err')
+#     except:
+#         pass
+#
+#     runner = trace_transport.last_trace.events[0]
+#     assert runner.error_code == ErrorCode.EXCEPTION
+#     assert runner.exception['type'] == 'Exception'
+#     assert runner.exception['message'] == 'test'
