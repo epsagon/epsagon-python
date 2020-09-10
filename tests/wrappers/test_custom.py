@@ -2,6 +2,11 @@ import mock
 import json
 import itertools
 import epsagon.constants
+from epsagon import trace_factory
+
+
+def setup_function(func):
+    trace_factory.use_async_tracer = False
 
 
 @mock.patch(
