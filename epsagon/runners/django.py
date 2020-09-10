@@ -42,8 +42,8 @@ class DjangoRunner(BaseEvent):
         # request.headers introduced since django==2.2
         if hasattr(request, 'headers'):
             if request.headers.get(EPSAGON_HEADER_TITLE):
-                self.resource['metadata']['http_trace_id'] = request.headers.get(
-                    EPSAGON_HEADER_TITLE
+                self.resource['metadata']['http_trace_id'] = (
+                    request.headers.get(EPSAGON_HEADER_TITLE)
                 )
 
             if request.headers:

@@ -37,7 +37,8 @@ IGNORED_ENDPOINTS = []
 
 EPSAGON_MARKER = '__EPSAGON'
 EPSAGON_HEADER = 'epsagon-trace-id'
-# In some web frameworks, there is an automated capitalization for request headers
+# In some web frameworks, there is an automated capitalization
+# for request headers
 EPSAGON_HEADER_TITLE = 'Epsagon-Trace-Id'
 
 STRONG_KEYS = [

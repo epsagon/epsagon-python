@@ -37,7 +37,11 @@ class TornadoRunner(BaseEvent):
 
         self.resource['metadata'].update({
             'Host': request.host,
-            'url': '{}://{}{}'.format(request.protocol, request.host, request.path),
+            'url': '{}://{}{}'.format(
+                request.protocol,
+                request.host,
+                request.path
+            ),
             'Path': request.path,
             'Version': request.version,
             'Remote IP': request.remote_ip,
@@ -47,8 +51,8 @@ class TornadoRunner(BaseEvent):
         request_headers = dict(request.headers)
 
         if request_headers.get(EPSAGON_HEADER_TITLE):
-            self.resource['metadata']['http_trace_id'] = request_headers.get(
-                EPSAGON_HEADER_TITLE
+            self.resource['metadata']['http_trace_id'] = (
+                request_headers.get(EPSAGON_HEADER_TITLE)
             )
 
         if request.query:
