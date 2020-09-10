@@ -6,6 +6,7 @@ from __future__ import absolute_import
 import uuid
 from ..event import BaseEvent
 from ..utils import add_data_if_needed
+from ..constants import EPSAGON_HEADER_TITLE
 
 
 class DjangoRunner(BaseEvent):
@@ -40,11 +41,17 @@ class DjangoRunner(BaseEvent):
 
         # request.headers introduced since django==2.2
         if hasattr(request, 'headers'):
-            add_data_if_needed(
-                self.resource['metadata'],
-                'Request Headers',
-                dict(request.headers)
-            )
+            if request.headers.get(EPSAGON_HEADER_TITLE):
+                self.resource['metadata']['http_trace_id'] = request.headers.get(
+                    EPSAGON_HEADER_TITLE
+                )
+
+            if request.headers:
+                add_data_if_needed(
+                    self.resource['metadata'],
+                    'Request Headers',
+                    request.headers
+                )
 
     def update_response(self, response):
         """
@@ -63,6 +70,8 @@ class DjangoRunner(BaseEvent):
             'Response Headers',
             dict(response.items())
         )
+
+        self.resource['metadata']['status_code'] = response.status_code
 
         if response.status_code >= 500:
             self.set_error()

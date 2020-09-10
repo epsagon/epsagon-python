@@ -6,6 +6,7 @@ from __future__ import absolute_import
 import uuid
 from ..event import BaseEvent
 from ..utils import add_data_if_needed, normalize_http_url
+from ..constants import EPSAGON_HEADER_TITLE
 
 
 class FlaskRunner(BaseEvent):
@@ -54,11 +55,18 @@ class FlaskRunner(BaseEvent):
                 request.data
             )
 
-        add_data_if_needed(
-            self.resource['metadata'],
-            'Request Headers',
-            dict(request.headers)
-        )
+        request_headers = dict(request.headers)
+        if request_headers.get(EPSAGON_HEADER_TITLE):
+            self.resource['metadata']['http_trace_id'] = request_headers.get(
+                EPSAGON_HEADER_TITLE
+            )
+
+        if request_headers:
+            add_data_if_needed(
+                self.resource['metadata'],
+                'Request Headers',
+                request_headers
+            )
 
         if request.values:
             add_data_if_needed(
@@ -86,7 +94,7 @@ class FlaskRunner(BaseEvent):
             dict(response.headers)
         )
 
-        self.resource['metadata']['Status'] = response.status
+        self.resource['metadata']['status_code'] = response.status
 
         if response.status_code >= 500:
             self.set_error()
