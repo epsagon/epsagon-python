@@ -15,3 +15,4 @@ psycopg2
 aiohttp; python_version >= '3.5'
 pytest-asyncio; python_version >= '3.5'
 pytest-aiohttp; python_version >= '3.5'
+asynctest; python_version >= '3.5'
