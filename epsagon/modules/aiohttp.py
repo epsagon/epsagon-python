@@ -5,7 +5,6 @@ aiohttp patcher module.
 from __future__ import absolute_import
 import wrapt
 from ..wrappers.aiohttp import AiohttpMiddleware
-from ..trace import trace_factory
 from ..utils import print_debug, is_lambda_env
 
 
