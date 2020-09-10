@@ -4,6 +4,7 @@ Runner for a aiohttp Python function
 
 from __future__ import absolute_import
 import uuid
+from aiohttp.payload import StringPayload
 from ..event import BaseEvent
 from ..utils import add_data_if_needed, normalize_http_url
 from ..constants import EPSAGON_HEADER
@@ -70,7 +71,7 @@ class AiohttpRunner(BaseEvent):
         :return: None
         """
         body = response.body
-        if  response.body.__class__.__name__ == 'StringPayload':
+        if isinstance(response.body, StringPayload):
             body = getattr(response.body, '_value')
 
         add_data_if_needed(
