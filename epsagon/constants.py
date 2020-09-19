@@ -78,7 +78,7 @@ STEP_DICT_NAME = 'Epsagon'
 EPSAGON_EVENT_ID_KEY = '_epsagon_event_id'
 TRACE_URL_PREFIX = (
     'https://app.epsagon.com/trace/{id}?'
-    'timestamp={start_time}&ref=tracer'
+    'timestamp={start_time}'
 )
 LAMBDA_TRACE_URL_PREFIX = (
     'https://app.epsagon.com/functions/{aws_account}/{region}/{function_name}'
