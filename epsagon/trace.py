@@ -22,6 +22,7 @@ from epsagon.trace_encoder import TraceEncoder
 from epsagon.trace_transports import NoneTransport, HTTPTransport, LogTransport
 from .constants import (
     TIMEOUT_GRACE_TIME_MS,
+    EPSAGON_MARKER,
     MAX_LABEL_SIZE,
     DEFAULT_SAMPLE_RATE,
     TRACE_URL_PREFIX,
@@ -93,6 +94,7 @@ class TraceFactory(object):
         self.keys_to_ignore = None
         self.keys_to_allow = None
         self.use_single_trace = True
+        self.use_async_tracer = False
         self.singleton_trace = None
         self.local_thread_to_unique_id = {}
         self.transport = NoneTransport()
@@ -205,6 +207,13 @@ class TraceFactory(object):
         """
         self.use_single_trace = False
 
+    def switch_to_async_tracer(self):
+        """
+        Set the use_async_tracer flag to True.
+        :return: None
+        """
+        self.use_async_tracer = True
+
     def _create_new_trace(self, unique_id=None):
         """
         Creating new trace instance
@@ -242,11 +251,23 @@ class TraceFactory(object):
 
     def _get_or_create_trace(self, unique_id=None):
         """
-        Get or create trace based on the use_single_trace flag.
+        Get or create trace based on the use_single_trace/use_async_tracer.
         if use_single_trace is set to False, each thread will have
         it's own trace.
+        if use_async_tracer is set to True, each asyncio.Task will be
+        assigned with the trace.
         :return: The trace.
         """
+        if self.use_async_tracer:
+            # Dynamic import since this is only valid in Python3+
+            asyncio = __import__('asyncio')
+            task = asyncio.Task.current_task()
+            trace = getattr(task, EPSAGON_MARKER, None)
+            if not trace:
+                trace = self._create_new_trace()
+                setattr(task, EPSAGON_MARKER, trace)
+            return trace
+
         unique_id = self.get_thread_local_unique_id(unique_id)
         if unique_id:
             trace = (

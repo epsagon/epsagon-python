@@ -14,7 +14,7 @@ from ..trace import trace_factory
 from ..event import BaseEvent
 from ..http_filters import is_blacklisted_url
 from ..utils import update_http_headers, normalize_http_url
-from ..constants import HTTP_ERR_CODE
+from ..constants import HTTP_ERR_CODE, EPSAGON_HEADER
 
 
 class RequestsEvent(BaseEvent):
@@ -53,7 +53,7 @@ class RequestsEvent(BaseEvent):
             dict(prepared_request.headers)
         )
 
-        epsagon_trace_id = prepared_request.headers.get('epsagon-trace-id')
+        epsagon_trace_id = prepared_request.headers.get(EPSAGON_HEADER)
         # Make sure trace ID is present in case headers will be removed.
         if epsagon_trace_id:
             self.resource['metadata']['http_trace_id'] = epsagon_trace_id

@@ -7,7 +7,12 @@ Flask
 pylint>=1.9.5,<=2.5.3
 pylint-quotes
 django
-pytest
+pytest==6.0.0; python_version >= '3.5'
+pytest==4.6.0; python_version < '3.5'
 requests
 sqlalchemy
 psycopg2
+aiohttp; python_version >= '3.5'
+pytest-asyncio; python_version >= '3.5'
+pytest-aiohttp; python_version >= '3.5'
+asynctest; python_version >= '3.5'
