@@ -39,7 +39,6 @@ class BaseEvent(object):
 
         if self.origin == 'runner':
             self.resource['metadata']['trace_id'] = str(uuid.uuid4())
-            print(self.resource['metadata']['trace_id'])
 
     @staticmethod
     def load_from_dict(event_data):
