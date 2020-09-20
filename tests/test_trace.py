@@ -24,7 +24,7 @@ from epsagon.trace import (
     MAX_METADATA_FIELD_SIZE_LIMIT
 )
 from epsagon.utils import get_tc_url
-from epsagon.common import ErrorCode, EpsagonException
+from epsagon.common import ErrorCode
 from epsagon.trace_transports import HTTPTransport
 from .conftest import init_epsagon
 
@@ -108,7 +108,7 @@ class RunnerEventMock(EventMock):
     def set_timeout(self):
         pass
 
-    def set_exception(self, exception, traceback_data):
+    def set_exception(self, exception, traceback_data, handled=True, from_logs=False):
         self.error_code = ErrorCode.EXCEPTION
         self.exception['type'] = type(exception).__name__
         self.exception['message'] = str(exception)
@@ -411,7 +411,7 @@ def test_set_error_string():
 
     assert trace.to_dict()['events'][0]['exception']['message'] == msg
     assert trace.to_dict()['events'][0]['exception']['type'] == (
-        EpsagonException.__name__
+        Exception.__name__
     )
 
 

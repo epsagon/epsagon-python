@@ -443,14 +443,19 @@ class TraceFactory(object):
             return self.get_trace().get_log_id()
         return None
 
-    def set_error(self, exception, traceback_data=None):
+    def set_error(self, exception, traceback_data=None, from_logs=False):
         """
         Set an error for the current thread's trace.
         :param exception: The exception
         :param traceback_data: The traceback data.
+        :param from_logs: True if the exception was captured from logging
         """
         if self.get_trace():
-            self.get_trace().set_error(exception, traceback_data)
+            self.get_trace().set_error(
+                exception,
+                traceback_data,
+                from_logs=from_logs
+            )
 
     def send_traces(self, trace=None):
         """
@@ -811,11 +816,12 @@ class Trace(object):
 
         return None
 
-    def set_error(self, exception, traceback_data=None):
+    def set_error(self, exception, traceback_data=None, from_logs=False):
         """
         Sets the error value of the runner
         :param exception: Exception object or String to set.
         :param traceback_data: traceback string
+        :param from_logs: True if the exception was captured from logging
         """
         if not self.runner:
             return
@@ -834,7 +840,12 @@ class Trace(object):
         # Convert exception string to Exception type
         if isinstance(exception, str):
             exception = Exception(exception)
-        self.runner.set_exception(exception, traceback_data)
+
+        self.runner.set_exception(
+            exception,
+            traceback_data,
+            from_logs=from_logs
+        )
 
     def update_runner_with_labels(self):
         """
