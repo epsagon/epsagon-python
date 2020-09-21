@@ -1167,6 +1167,13 @@ class Trace(object):
         Handling special case for Lambda functions.
         :return: string of the trace URL.
         """
+        if not self.runner:
+            warnings.warn(
+                'Epsagon Warning: Could not share'
+                'trace URL since runner is empty.'
+            )
+            return ''
+
         trace_url = TRACE_URL_PREFIX.format(
             id=self.runner.resource['metadata'].get('trace_id', ''),
             start_time=int(self.runner.start_time)

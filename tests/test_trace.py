@@ -394,6 +394,13 @@ def test_lambda_trace_url_sanity():
         request_time=int(event.start_time)
     )
 
+@mock.patch('warnings.warn')
+def test_trace_url_no_runner(warnings_mock):
+    trace = trace_factory.get_or_create_trace()
+    result = trace.get_trace_url()
+    warnings_mock.assert_called_once()
+    assert result == ''
+
 
 def test_multi_value_labels_sanity():
     event = RunnerEventMock()
