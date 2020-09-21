@@ -35,7 +35,7 @@ def _wrapper(wrapped, _instance, args, kwargs):
     if not os.getenv('EPSAGON_DISABLE_LOGGING_ERRORS', '').upper() == 'TRUE':
         try:
             message = args[0] % args[1:]
-            trace_factory.set_error(message)
+            trace_factory.set_error(message, from_logs=True)
         except Exception:  # pylint: disable=broad-except
             print_debug('Could not capture exception from log: {}'.format(
                 args
