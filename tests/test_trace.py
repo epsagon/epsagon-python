@@ -15,7 +15,9 @@ import epsagon.constants
 from epsagon.constants import (
     TRACE_COLLECTOR_URL,
     DEFAULT_REGION,
-    DEFAULT_SEND_TIMEOUT_MS
+    DEFAULT_SEND_TIMEOUT_MS,
+    TRACE_URL_PREFIX,
+    LAMBDA_TRACE_URL_PREFIX,
 )
 from epsagon.trace import (
     trace_factory,
@@ -42,12 +44,14 @@ class EventMock(object):
 
     def __init__(self, start_time=None):
         self.start_time = start_time
+        self.event_id = '123'
         self.duration = 0.0
         self.terminated = False
         self.exception = {}
         self.origin = 'not_runner'
         self.resource = {
-            'metadata': {}
+            'metadata': {},
+            'type': ''
         }
 
     def terminate(self):
@@ -97,6 +101,7 @@ class RunnerEventMock(EventMock):
         super(RunnerEventMock, self).__init__(start_time=time.time())
         self.terminated = True
         self.origin = 'runner'
+        self.resource['metadata']['trace_id'] = '123'
 
     def terminate(self):
         # This should be a copy of `BaseEvent.terminate()`
@@ -126,6 +131,18 @@ class ReturnValueEventMock(RunnerEventMock):
         super(ReturnValueEventMock, self).__init__()
         self.resource = {
             'metadata': {'return_value': data }
+        }
+
+class LambdaRunnerEventMock(RunnerEventMock):
+    def __init__(self):
+        super(LambdaRunnerEventMock, self).__init__()
+        self.resource = {
+            'metadata': {
+                'aws_account': 'aws_account',
+                'region': 'region',
+            },
+            'type': 'lambda',
+            'name': 'func',
         }
 
 class UnicodeReturnValueEventMock(RunnerEventMock):
@@ -349,6 +366,40 @@ def test_custom_labels_sanity():
         'test_label_3': 42.2,
         'test_label_4': True,
     }
+
+
+def test_trace_url_sanity():
+    event = RunnerEventMock()
+    trace = trace_factory.get_or_create_trace()
+    trace.clear_events()
+    trace.set_runner(event)
+    trace_url = trace.get_trace_url()
+    assert trace_url == TRACE_URL_PREFIX.format(
+        id=event.resource['metadata']['trace_id'],
+        start_time=int(event.start_time)
+    )
+
+
+def test_lambda_trace_url_sanity():
+    event = LambdaRunnerEventMock()
+    trace = trace_factory.get_or_create_trace()
+    trace.clear_events()
+    trace.set_runner(event)
+    trace_url = trace.get_trace_url()
+    assert trace_url == LAMBDA_TRACE_URL_PREFIX.format(
+        aws_account=event.resource['metadata']['aws_account'],
+        region=event.resource['metadata']['region'],
+        function_name=event.resource['name'],
+        request_id=event.event_id,
+        request_time=int(event.start_time)
+    )
+
+@mock.patch('warnings.warn')
+def test_trace_url_no_runner(warnings_mock):
+    trace = trace_factory.get_or_create_trace()
+    result = trace.get_trace_url()
+    warnings_mock.assert_called_once()
+    assert result == ''
 
 
 def test_multi_value_labels_sanity():
@@ -1378,7 +1429,7 @@ def test_send_with_split_on_big_trace(wrapped_post, monkeypatch):
         event = EventMock()
         trace.add_event(event)
     trace_factory.send_traces()
-    assert wrapped_post.call_count == 2
+    assert wrapped_post.call_count == 3
 
 
 @mock.patch('urllib3.PoolManager.request')

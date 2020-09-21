@@ -26,6 +26,7 @@ from .constants import (
     MAX_LABEL_SIZE,
     DEFAULT_SAMPLE_RATE,
     TRACE_URL_PREFIX,
+    LAMBDA_TRACE_URL_PREFIX,
     is_strong_key,
     __version__
 )
@@ -456,6 +457,16 @@ class TraceFactory(object):
                 traceback_data,
                 from_logs=from_logs
             )
+
+    def get_trace_url(self):
+        """
+        Return the trace URL based on the runner ID.
+        :return: string of the trace URL if exists, otherwise None
+        """
+        url = None
+        if self.get_trace():
+            url = self.get_trace().get_trace_url()
+        return url
 
     def send_traces(self, trace=None):
         """
@@ -1145,18 +1156,6 @@ class Trace(object):
                 print('Trace sent (size: {})'.format(
                     len(trace)
                 ))
-
-            if self.runner.resource['type'] == 'lambda':
-                runner_resource = self.runner.resource
-                print('Visit Epsagon app for trace overview: {}'.format(
-                    TRACE_URL_PREFIX.format(
-                        aws_account=runner_resource['metadata']['aws_account'],
-                        region=runner_resource['metadata']['region'],
-                        function_name=self.runner.resource['name'],
-                        request_id=self.runner.event_id,
-                        request_time=int(self.runner.start_time)
-                    )
-            ))
         except (
             urllib3.exceptions.TimeoutError,
             urllib3.exceptions.MaxRetryError
@@ -1173,6 +1172,33 @@ class Trace(object):
             if self.debug:
                 print('trace:', trace)
 
+    def get_trace_url(self):
+        """
+        Return the trace URL based on the runner ID.
+        Handling special case for Lambda functions.
+        :return: string of the trace URL.
+        """
+        if not self.runner:
+            warnings.warn(
+                'Epsagon Warning: Could not share'
+                'trace URL since runner is empty.'
+            )
+            return ''
+
+        trace_url = TRACE_URL_PREFIX.format(
+            id=self.runner.resource['metadata'].get('trace_id', ''),
+            start_time=int(self.runner.start_time)
+        )
+        if self.runner.resource['type'] == 'lambda':
+            runner_resource = self.runner.resource
+            trace_url = LAMBDA_TRACE_URL_PREFIX.format(
+                aws_account=runner_resource['metadata']['aws_account'],
+                region=runner_resource['metadata']['region'],
+                function_name=self.runner.resource['name'],
+                request_id=self.runner.event_id,
+                request_time=int(self.runner.start_time)
+            )
+        return trace_url
 
 # pylint: disable=C0103
 trace_factory = TraceFactory()
