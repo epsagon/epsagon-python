@@ -21,7 +21,8 @@ def test_logging_exception_capture(trace_transport):
     assert wrapped_function('a', 'b') == retval
 
     exception = trace_transport.last_trace.events[0].exception
-    assert exception['type'] == 'EpsagonException'
+    assert exception['type'] == 'Exception'
+    assert exception['additional_data']['from_logs'] is True
     assert exception['message'] == 'test'
 
 
@@ -36,5 +37,6 @@ def test_logging_exception_capture_with_args(trace_transport):
     assert wrapped_function('a', 'b') == retval
 
     exception = trace_transport.last_trace.events[0].exception
-    assert exception['type'] == 'EpsagonException'
+    assert exception['type'] == 'Exception'
+    assert exception['additional_data']['from_logs'] is True
     assert exception['message'] == 'test test test'

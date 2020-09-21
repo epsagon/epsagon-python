@@ -80,14 +80,21 @@ class AzureEvent(BaseEvent):
         """
         self.RESPONSE_TO_FUNC.get(self.resource['operation'], empty_func)()
 
-    def set_exception(self, exception, traceback_data, handled=True):
+    def set_exception(
+            self,
+            exception,
+            traceback_data,
+            handled=True,
+            from_logs=False
+    ):
         """
         see {Event.set_exception}
         """
         super(AzureEvent, self).set_exception(
             exception,
             traceback_data,
-            handled=handled
+            handled=handled,
+            from_logs=from_logs
         )
 
         # Specific handling for azure errors

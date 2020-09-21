@@ -79,14 +79,21 @@ class BotocoreEvent(BaseEvent):
         if exception is not None:
             self.set_exception(exception, traceback.format_exc())
 
-    def set_exception(self, exception, traceback_data, handled=True):
+    def set_exception(
+            self,
+            exception,
+            traceback_data,
+            handled=True,
+            from_logs=False
+    ):
         """
         see {Event.set_exception}
         """
         super(BotocoreEvent, self).set_exception(
             exception,
             traceback_data,
-            handled=handled
+            handled=handled,
+            from_logs=from_logs
         )
 
         # Specific handling for botocore errors
