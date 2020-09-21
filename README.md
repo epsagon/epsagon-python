@@ -453,8 +453,8 @@ Advanced options can be configured as a parameter to the init() method or as env
 |disable_timeout_send    |EPSAGON_DISABLE_ON_TIMEOUT     |Boolean|`False`      |Disable timeout detection in Lambda functions                                      |
 |split_on_send           |EPSAGON_SPLIT_ON_SEND          |Boolean|`False`      |Split the trace into multiple chunks to support large traces                       |
 |propagate_lambda_id     |EPSAGON_PROPAGATE_LAMBDA_ID    |Boolean|`False`      |Insert Lambda request ID into the response payload                                 |
-|logging_tracing_enabled |EPSAGON_LOGGING_TRACING_ENABLED|Boolean|`True`      |Add Epsagon Log Id to all `logging` messages                            |
-|step_dict_output_path |EPSAGON_STEPS_OUTPUT_PATH|List|`None`      |Path in the result dict to append the Epsagon steps data  |
+|step_dict_output_path   |EPSAGON_STEPS_OUTPUT_PATH|List|`None`      |Path in the result dict to append the Epsagon steps data                                     |
+|-                       |EPSAGON_LOGGING_TRACING_ENABLED|Boolean|`True`      |Add Epsagon Log Id to all `logging` messages                                        |
 |-                       |EPSAGON_HTTP_ERR_CODE          |Integer|`500`        |The minimum number of an HTTP response status code to treat as an error            |
 |-                       |EPSAGON_SEND_TIMEOUT_SEC       |Float  |`1.0`        |The timeout duration in seconds to send the traces to the trace collector          |
 |-                       |EPSAGON_DISABLE_LOGGING_ERRORS |Boolean|`False`      |Disable the automatic capture of error messages into `logging`                     |

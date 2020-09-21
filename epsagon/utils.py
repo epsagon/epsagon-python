@@ -110,7 +110,6 @@ def init(
     ignored_endpoints=None,
     split_on_send=False,
     propagate_lambda_id=False,
-    logging_tracing_enabled=True,
     step_dict_output_path=None,
     sample_rate=DEFAULT_SAMPLE_RATE,
 ):
@@ -134,7 +133,6 @@ def init(
     :param ignored_endpoints: List of ignored endpoints for web frameworks.
     :param split_on_send: Split the trace on send flag
     :param propagate_lambda_id: Inject identifiers via return value flag
-    :param logging_tracing_enabled: Add an epsagon log id to logging calls
     :param step_dict_output_path:
         Path in the result dict to append the Epsagon steps data
     :param sample_rate: A number between 0 and 1, represents the probability
@@ -175,6 +173,7 @@ def init(
         metadata_only = (os.getenv('EPSAGON_METADATA') or '').upper() == 'TRUE'
 
     # If EPSAGON_LOGGING_TRACING_ENABLED exists as an env var - use it
+    logging_tracing_enabled = False
     if os.getenv('EPSAGON_LOGGING_TRACING_ENABLED'):
         logging_tracing_enabled = (
             os.getenv('EPSAGON_LOGGING_TRACING_ENABLED') or ''

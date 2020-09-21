@@ -100,7 +100,7 @@ class TraceFactory(object):
         self.split_on_send = False
         self.disabled = False
         self.propagate_lambda_id = False
-        self.logging_tracing_enabled = False
+        self.logging_tracing_enabled = True
         self.step_dict_output_path = None
         self.sample_rate = DEFAULT_SAMPLE_RATE
 
@@ -433,7 +433,12 @@ class TraceFactory(object):
         """
         Get the value of the logging_tracing_enabled flag
         """
-        return self.logging_tracing_enabled
+        if os.getenv('EPSAGON_LOGGING_TRACING_ENABLED'):
+            return (
+                os.getenv('EPSAGON_LOGGING_TRACING_ENABLED') or ''
+            ).upper() == 'TRUE'
+
+        return False
 
     def get_log_id(self):
         """
