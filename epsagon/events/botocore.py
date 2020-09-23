@@ -466,6 +466,7 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
         })
 
         self.OPERATION_TO_FUNC.update({
+            'TransactWriteItems': self.process_transact_write_op,
             'PutItem': self.process_put_item_op,
             'UpdateItem': self.process_update_item_op,
             'GetItem': self.process_get_item_op,
@@ -539,6 +540,16 @@ class BotocoreDynamoDBEvent(BotocoreEvent):
         Process the describe tables operation.
         """
         self.resource['name'] = self.request_data['TableName']
+
+    def process_transact_write_op(self):
+        """
+        Process the TransactWriteItems operation.
+        """
+        add_data_if_needed(
+            self.resource['metadata'],
+            'Items',
+            self.request_data.get('TransactItems')
+        )
 
     def process_update_item_op(self):
         """
