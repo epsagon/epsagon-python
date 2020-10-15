@@ -113,6 +113,13 @@ class Urllib3Event(BaseEvent):
                 'response_headers',
                 headers
             )
+            response_body = response.peek()
+            if isinstance(response_body, bytes):
+                response_body = response_body.decode('utf-8')
+            add_data_if_needed(
+                self.resource['metadata'],
+                'response_body',
+                response_body)
 
         # Detect errors based on status code
         if response.status >= HTTP_ERR_CODE:
