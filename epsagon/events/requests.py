@@ -89,16 +89,19 @@ class RequestsEvent(BaseEvent):
             dict(response.headers)
         )
 
-        # Extract only json responses
         self.resource['metadata']['response_body'] = None
+        response_body = None
         try:
-            add_data_if_needed(
-                self.resource['metadata'],
-                'response_body',
-                json.loads(response.content)
-            )
+            response_body = json.loads(response.content)
         except ValueError:
-            pass
+            response_body = response.content
+            if isinstance(response_body, bytes):
+                response_body = response_body.decode('utf-8')
+        add_data_if_needed(
+            self.resource['metadata'],
+            'response_body',
+            response_body
+        )
 
         # Detect errors based on status code
         if response.status_code >= HTTP_ERR_CODE:
