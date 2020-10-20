@@ -96,7 +96,10 @@ class RequestsEvent(BaseEvent):
         except ValueError:
             response_body = response.content
             if isinstance(response_body, bytes):
-                response_body = response_body.decode('utf-8')
+                try:
+                    response_body = response_body.decode('utf-8')
+                except UnicodeDecodeError:
+                    response_body = str(response_body)
         add_data_if_needed(
             self.resource['metadata'],
             'response_body',
