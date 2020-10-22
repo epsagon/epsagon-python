@@ -64,13 +64,15 @@ def _wrapper(wrapped, instance, args, kwargs):
                 # either kwargs['headers'] == None or it doesn't exist
                 headers = kwargs['headers'] = {}
 
-        headers[EPSAGON_HEADER] = (
-            '{trace_id}:{span_id}:{parent_span_id}:1'.format(
-                trace_id=trace_id,
-                span_id=span_id,
-                parent_span_id=parent_span_id
-            )
-        )
+        #
+        headers[EPSAGON_HEADER] = '799ded9159cce7e2%3A2915c31dde411%3A9c6e11f3417dc7fe%3A1'
+        # headers[EPSAGON_HEADER] = (
+        #     '{trace_id}:{span_id}:{parent_span_id}:1'.format(
+        #         trace_id=trace_id,
+        #         span_id=span_id,
+        #         parent_span_id=parent_span_id
+        #     )
+        # )
 
     return wrapper(Urllib3EventFactory, wrapped, instance, args, kwargs)
 
