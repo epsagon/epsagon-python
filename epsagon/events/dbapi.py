@@ -98,8 +98,7 @@ class DBAPIEvent(BaseEvent):
         self.resource['metadata'] = {
             'Host': host,
             'Driver': connection.__class__.__module__.split('.')[0],
-            'Table Name': self._extract_table_name(query, operation),
-            'sql.engine': 'PostgreSQL 12.3 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 4.8.3 20140911 (Red Hat 4.8.3-9), 64-bit'
+            'Table Name': self._extract_table_name(query, operation)
         }
 
         # for select we always want to save the query

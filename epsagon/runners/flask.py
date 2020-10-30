@@ -94,7 +94,7 @@ class FlaskRunner(BaseEvent):
             dict(response.headers)
         )
 
-        self.resource['metadata']['status_code'] = response.status_code
+        self.resource['metadata']['status_code'] = response.status
 
         if response.status_code >= 500:
             self.set_error()

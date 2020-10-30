@@ -12,7 +12,6 @@ import re
 import json
 import six
 import urllib3
-
 try:
     from urllib.parse import urlparse
 except ImportError:
@@ -21,24 +20,13 @@ import wrapt
 from epsagon import http_filters
 from epsagon.constants import TRACE_COLLECTOR_URL, REGION, EPSAGON_MARKER
 from .trace import trace_factory, create_transport
-from .constants import (
-    EPSAGON_HANDLER,
-    DEBUG_MODE,
-    DEFAULT_SAMPLE_RATE,
-    EC2_METADATA_URL,
-)
+from .constants import EPSAGON_HANDLER, DEBUG_MODE, DEFAULT_SAMPLE_RATE
+
 
 METADATA_CACHE = {
-    'ecs': {
-        'queried': False,
-        'data': {},
-    },
-    'ec2': {
-        'queried': False,
-        'data': {},
-    },
+    'queried': False,
+    'data': {},
 }
-METADATA_REQUEST_TIMEOUT = 0.2
 
 
 def patch_once(patch_module, patch_name, wrapper):
@@ -108,23 +96,23 @@ def get_tc_url(use_ssl):
 
 
 def init(
-        token='',
-        app_name='Application',
-        collector_url=None,
-        metadata_only=True,
-        disable_timeout_send=False,
-        use_ssl=True,
-        debug=False,
-        send_trace_only_on_error=False,
-        url_patterns_to_ignore=None,
-        keys_to_ignore=None,
-        keys_to_allow=None,
-        ignored_endpoints=None,
-        split_on_send=False,
-        propagate_lambda_id=False,
-        logging_tracing_enabled=True,
-        step_dict_output_path=None,
-        sample_rate=DEFAULT_SAMPLE_RATE,
+    token='',
+    app_name='Application',
+    collector_url=None,
+    metadata_only=True,
+    disable_timeout_send=False,
+    use_ssl=True,
+    debug=False,
+    send_trace_only_on_error=False,
+    url_patterns_to_ignore=None,
+    keys_to_ignore=None,
+    keys_to_allow=None,
+    ignored_endpoints=None,
+    split_on_send=False,
+    propagate_lambda_id=False,
+    logging_tracing_enabled=True,
+    step_dict_output_path=None,
+    sample_rate=DEFAULT_SAMPLE_RATE,
 ):
     """
     Initializes trace with user's data.
@@ -189,8 +177,8 @@ def init(
     # If EPSAGON_LOGGING_TRACING_ENABLED exists as an env var - use it
     if os.getenv('EPSAGON_LOGGING_TRACING_ENABLED'):
         logging_tracing_enabled = (
-                                          os.getenv('EPSAGON_LOGGING_TRACING_ENABLED') or ''
-                                  ).upper() == 'TRUE'
+            os.getenv('EPSAGON_LOGGING_TRACING_ENABLED') or ''
+        ).upper() == 'TRUE'
 
     # In case we're running on AWS Lambda, logging correlation is disabled
     if is_lambda_env():
@@ -205,16 +193,16 @@ def init(
         collector_url=os.getenv('EPSAGON_COLLECTOR_URL') or collector_url,
         metadata_only=metadata_only,
         disable_timeout_send=(
-                ((os.getenv('EPSAGON_DISABLE_ON_TIMEOUT') or '')
-                 .upper() == 'TRUE')
-                | disable_timeout_send
+            ((os.getenv('EPSAGON_DISABLE_ON_TIMEOUT') or '')
+                .upper() == 'TRUE')
+            | disable_timeout_send
         ),
         debug=((os.getenv('EPSAGON_DEBUG') or '')
                .upper() == 'TRUE') | debug,
         send_trace_only_on_error=(
-                ((os.getenv('EPSAGON_SEND_TRACE_ON_ERROR') or '')
-                 .upper() == 'TRUE')
-                | send_trace_only_on_error
+            ((os.getenv('EPSAGON_SEND_TRACE_ON_ERROR') or '')
+                .upper() == 'TRUE')
+            | send_trace_only_on_error
         ),
         url_patterns_to_ignore=ignored_urls or url_patterns_to_ignore,
         keys_to_ignore=ignored_keys or keys_to_ignore,
@@ -231,7 +219,7 @@ def init(
         ),
         logging_tracing_enabled=logging_tracing_enabled,
         step_dict_output_path=(
-                step_dict_output_path_env or step_dict_output_path
+            step_dict_output_path_env or step_dict_output_path
         ),
         sample_rate=sample_rate
     )
@@ -269,41 +257,6 @@ def collect_container_metadata(metadata):
     Collects container metadata if exists.
     :return: dict.
     """
-
-    # Collect hostname
-    metadata['net.peer.name'] = socket.gethostname()
-
-    # Collect EC2 instance data
-    session = urllib3.PoolManager()
-    if METADATA_CACHE['ec2']['queried'] and METADATA_CACHE['ec2']['data']:
-        metadata['env.aws.ec2.instance_id'] = METADATA_CACHE['ec2']['data']
-    elif not METADATA_CACHE['ec2']['queried']:
-        METADATA_CACHE['ec2']['queried'] = True
-        try:
-            METADATA_CACHE['ec2']['data'] = {
-                'instance_id': session.request(
-                    'GET',
-                    EC2_METADATA_URL.format('instance-id'),
-                    timeout=METADATA_REQUEST_TIMEOUT
-                ).data.decode('utf-8'),
-                'public_hostname': session.request(
-                    'GET',
-                    EC2_METADATA_URL.format('public-hostname'),
-                    timeout=METADATA_REQUEST_TIMEOUT
-                ).data.decode('utf-8'),
-                'instance_type': session.request(
-                    'GET',
-                    EC2_METADATA_URL.format('instance-type'),
-                    timeout=METADATA_REQUEST_TIMEOUT
-                ).data.decode('utf-8'),
-            }
-            metadata['env.aws.ec2.instance_id'] = METADATA_CACHE['ec2']['data']['instance_id']
-            metadata['env.aws.ec2.public_hostname'] = METADATA_CACHE['ec2']['data']['public_hostname']
-            metadata['env.aws.ec2.instance_type'] = METADATA_CACHE['ec2']['data']['instance_type']
-        except:  # pylint: disable=bare-except
-            pass
-
-    # Collect K8s data
     is_k8s = os.environ.get('KUBERNETES_SERVICE_HOST')
     if is_k8s:
         metadata['is_k8s'] = True
@@ -313,25 +266,25 @@ def collect_container_metadata(metadata):
                 proc_file.readline().split('/')[-1].rstrip('\n')
             )
 
-    # Collect ECS data
-    if METADATA_CACHE['ecs']['queried'] and METADATA_CACHE['ecs']['data']:
-        metadata['ECS'] = METADATA_CACHE['ecs']['data']
+    if METADATA_CACHE['queried'] and METADATA_CACHE['data']:
+        metadata['ECS'] = METADATA_CACHE['data']
         return
 
-    METADATA_CACHE['ecs']['queried'] = True
+    METADATA_CACHE['queried'] = True
     metadata_uri = os.environ.get('ECS_CONTAINER_METADATA_URI')
     if not metadata_uri:
         return
 
+    session = urllib3.PoolManager()
     container_metadata = json.loads(
         session.request('GET', metadata_uri).data.decode('utf-8')
     )
 
     new_metadata = container_metadata['Labels'].copy()
     new_metadata['Limits'] = container_metadata['Limits']
-    METADATA_CACHE['ecs']['data'] = new_metadata
-    if METADATA_CACHE['ecs']['data']:
-        metadata['ECS'] = METADATA_CACHE['ecs']['data']
+    METADATA_CACHE['data'] = new_metadata
+    if METADATA_CACHE['data']:
+        metadata['ECS'] = METADATA_CACHE['data']
 
 
 def find_in_object(obj, key, path=None):
@@ -352,8 +305,8 @@ def find_in_object(obj, key, path=None):
             return obj[key], path
 
     if (
-            isinstance(obj, collections.Iterable)
-            and not isinstance(obj, six.string_types)
+        isinstance(obj, collections.Iterable)
+        and not isinstance(obj, six.string_types)
     ):
         for k in obj:
             # Handle lists as well
@@ -364,7 +317,6 @@ def find_in_object(obj, key, path=None):
                 return result
 
     return None
-
 
 def collect_exception_python3(exception):
     """
@@ -427,7 +379,7 @@ def camel_case_to_title_case(camel_case_string):
     """
     if not isinstance(camel_case_string, str):
         return None
-    title_case = re.sub('([^-])([A-Z][a-z-]+)', r'\1 \2', camel_case_string) \
+    title_case = re.sub('([^-])([A-Z][a-z-]+)', r'\1 \2', camel_case_string)\
         .title()
     return title_case
 

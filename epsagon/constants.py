@@ -83,5 +83,3 @@ LAMBDA_TRACE_URL_PREFIX = (
     'https://app.epsagon.com/functions/{aws_account}/{region}/{function_name}'
     '?requestId={request_id}&requestTime={request_time}'
 )
-
-EC2_METADATA_URL = 'http://169.254.169.254/latest/meta-data/{}'
