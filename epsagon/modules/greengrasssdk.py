@@ -30,4 +30,3 @@ def patch():
         'Client.publish',
         _wrapper
     )
-
