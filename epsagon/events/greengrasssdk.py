@@ -34,7 +34,7 @@ class GreengrassEvent(BaseEvent):
         """
         super(GreengrassEvent, self).__init__(start_time)
 
-        self.event_id = 'requests-{}'.format(str(uuid4()))
+        self.event_id = 'greengrass-{}'.format(str(uuid4()))
 
         self.resource['name'] = kwargs.get('topic', 'N/A')
         self.resource['operation'] = 'publish'
