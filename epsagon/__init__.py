@@ -33,8 +33,8 @@ def dummy_wrapper(func):
 
 def dummy_python_wrapper(*args, **_kwargs):
     """
-    A dummy wrapper for when Epsagon is disabled - used for general python functions
-    :param func: The function to wrap
+    A dummy wrapper for when Epsagon is disabled.
+    Used for general python functions
     :return: The same function, unchanged
     """
     def _inner_wrapper(func):
