@@ -443,6 +443,7 @@ Epsagon provides out-of-the-box instrumentation (tracing) for many popular frame
 |azure.cosmos        |`>=4.0.0`                  |
 |celery              |`>=4.0.0`                  |
 |grpc                |`>=0.3-10`                 |
+|greengrasssdk       |`>=1.4.0`                 |
 |SQLAlchemy                |`>=1.2.0`                 |
 
 
