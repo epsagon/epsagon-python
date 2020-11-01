@@ -11,9 +11,9 @@ from ..trace import trace_factory
 from ..event import BaseEvent
 
 
-class GreengrassEvent(BaseEvent):
+class GreengrassPublishEvent(BaseEvent):
     """
-    Represents Greengrass event.
+    Represents Greengrass publish event.
     """
 
     ORIGIN = 'greengrasssdk'
@@ -32,7 +32,7 @@ class GreengrassEvent(BaseEvent):
         :param response: response data
         :param exception: Exception (if happened)
         """
-        super(GreengrassEvent, self).__init__(start_time)
+        super(GreengrassPublishEvent, self).__init__(start_time)
 
         self.event_id = 'greengrass-{}'.format(str(uuid4()))
 
@@ -64,7 +64,7 @@ class GreengrassEventFactory(object):
         """
         Create an event according to the given api_name.
         """
-        event = GreengrassEvent(
+        event = GreengrassPublishEvent(
             wrapped,
             instance,
             args,
