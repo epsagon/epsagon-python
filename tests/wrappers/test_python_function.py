@@ -1,3 +1,4 @@
+import sys
 import mock
 import pytest
 from collections import namedtuple
@@ -91,7 +92,8 @@ def test_function_wrapper_function_exception_frames(_, trace_transport):
 
     assert len(trace_transport.last_trace.events) == 1
     event = trace_transport.last_trace.events[0]
-    assert event.exception['frames'] ==  {
-        'filename/function/1': {'param': 'value'}
-    }
+    if sys.version_info.major == 3:
+        assert event.exception['frames'] ==  {
+            'filename/function/1': {'param': 'value'}
+        }
 
