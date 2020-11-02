@@ -1,10 +1,13 @@
 import mock
 import pytest
+from inspect import FrameInfo
+from collections import namedtuple
 from epsagon import trace_factory
 import epsagon.constants
 
 trace_mock = mock.MagicMock()
 
+Frame = namedtuple('Frame', 'f_locals')
 
 def setup_function(func):
     trace_factory.use_single_trace = True
@@ -62,3 +65,30 @@ def test_python_wrapper_python_runner_factory_failed(_):
     trace_mock.prepare.assert_called_once()
     trace_mock.send_traces.assert_not_called()
     trace_mock.set_runner.assert_not_called()
+
+
+@mock.patch(
+    'inspect.trace',
+    return_value=[FrameInfo(
+        frame=Frame(f_locals={'param': 'value'}),
+        filename='filename',
+        lineno=1,
+        function='function',
+        code_context=['code_context'],
+        index=0,
+    )]
+)
+def test_function_wrapper_function_exception_frames(_, trace_transport):
+    @epsagon.python_wrapper()
+    def wrapped_function():
+        raise TypeError('test')
+
+    with pytest.raises(TypeError):
+        wrapped_function()
+
+    assert len(trace_transport.last_trace.events) == 1
+    event = trace_transport.last_trace.events[0]
+    assert event.exception['frames'] ==  {
+        'filename/function/1': {'param': 'value'}
+    }
+
