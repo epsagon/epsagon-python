@@ -117,6 +117,9 @@ class BaseEvent(object):
         self.exception['message'] = str(exception)
         self.exception['traceback'] = traceback_data
         self.exception['time'] = time.time()
+
+        # Adding python frames (input data of functions in stack).
+        # Ignoring filenames with /epsagon since they are ours.
         self.exception['frames'] = {
             '/'.join([
                 frame.filename,
