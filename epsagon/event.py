@@ -3,7 +3,9 @@ Base Event class
 """
 
 from __future__ import absolute_import
+import sys
 import time
+import inspect
 import uuid
 from .common import ErrorCode
 
@@ -111,12 +113,24 @@ class BaseEvent(object):
             function
         :param from_logs: True if the exception was captured from logging
         """
-
         self.error_code = ErrorCode.EXCEPTION
         self.exception['type'] = type(exception).__name__
         self.exception['message'] = str(exception)
         self.exception['traceback'] = traceback_data
         self.exception['time'] = time.time()
+
+        # Adding python frames (input data of functions in stack) in python 3.
+        # Ignoring filenames with /epsagon since they are ours.
+        if sys.version_info.major == 3:
+            self.exception['frames'] = {
+                '/'.join([
+                    frame.filename,
+                    frame.function,
+                    str(frame.lineno)
+                ]): frame.frame.f_locals
+                for frame in inspect.trace()
+                if '/epsagon' not in frame.filename and frame.frame.f_locals
+            }
         self.exception.setdefault('additional_data', {})['handled'] = handled
         if from_logs:
             self.exception['additional_data']['from_logs'] = True
