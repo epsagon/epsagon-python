@@ -1,6 +1,5 @@
 import mock
 import pytest
-from inspect import FrameInfo
 from collections import namedtuple
 from epsagon import trace_factory
 import epsagon.constants
@@ -8,6 +7,10 @@ import epsagon.constants
 trace_mock = mock.MagicMock()
 
 Frame = namedtuple('Frame', 'f_locals')
+FrameInfo = namedtuple(
+    'FrameInfo',
+    'frame, filename, lineno, function, code_context, index'
+)
 
 def setup_function(func):
     trace_factory.use_single_trace = True

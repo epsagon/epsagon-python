@@ -3,6 +3,7 @@ Base Event class
 """
 
 from __future__ import absolute_import
+import sys
 import time
 import inspect
 import uuid
@@ -118,17 +119,18 @@ class BaseEvent(object):
         self.exception['traceback'] = traceback_data
         self.exception['time'] = time.time()
 
-        # Adding python frames (input data of functions in stack).
+        # Adding python frames (input data of functions in stack) in python 3.
         # Ignoring filenames with /epsagon since they are ours.
-        self.exception['frames'] = {
-            '/'.join([
-                frame.filename,
-                frame.function,
-                str(frame.lineno)
-            ]): frame.frame.f_locals
-            for frame in inspect.trace()
-            if '/epsagon' not in frame.filename and frame.frame.f_locals
-        }
+        if sys.version_info.major == 3:
+            self.exception['frames'] = {
+                '/'.join([
+                    frame.filename,
+                    frame.function,
+                    str(frame.lineno)
+                ]): frame.frame.f_locals
+                for frame in inspect.trace()
+                if '/epsagon' not in frame.filename and frame.frame.f_locals
+            }
         self.exception.setdefault('additional_data', {})['handled'] = handled
         if from_logs:
             self.exception['additional_data']['from_logs'] = True
