@@ -31,13 +31,28 @@ def dummy_wrapper(func):
     return func
 
 
+def dummy_python_wrapper(*args, **_kwargs):
+    """
+    A dummy wrapper for when Epsagon is disabled.
+    Used for general python functions
+    :return: The same function, unchanged
+    """
+    def _inner_wrapper(func):
+        return func
+
+    if len(args) == 1 and callable(args[0]):
+        return _inner_wrapper(args[0])
+
+    return _inner_wrapper
+
+
 if os.getenv('DISABLE_EPSAGON') == 'TRUE':
     os.environ['DISABLE_EPSAGON_PATCH'] = 'TRUE'
     lambda_wrapper = dummy_wrapper  # pylint: disable=C0103
     step_lambda_wrapper = dummy_wrapper  # pylint: disable=C0103
     chalice_wrapper = dummy_wrapper  # pylint: disable=C0103
     azure_wrapper = dummy_wrapper  # pylint: disable=C0103
-    python_wrapper = dummy_wrapper  # pylint: disable=C0103
+    python_wrapper = dummy_python_wrapper  # pylint: disable=C0103
     flask_wrapper = dummy_wrapper  # pylint: disable=C0103
     gcp_wrapper = dummy_wrapper  # pylint: disable=C0103
 else:
