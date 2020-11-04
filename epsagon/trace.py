@@ -955,7 +955,7 @@ class Trace(object):
         json_trace = json.dumps(
             self.to_dict(),
             cls=TraceEncoder,
-            ensure_ascii=False
+            ensure_ascii=True
         )
         return len(json_trace)
 
@@ -968,7 +968,7 @@ class Trace(object):
                 len(json.dumps(
                     event.resource.get('metadata', {}),
                     cls=TraceEncoder,
-                    ensure_ascii=False
+                    ensure_ascii=True
                 ))
             )
             Trace.trim_metadata(event.resource['metadata'])
@@ -1134,7 +1134,7 @@ class Trace(object):
             trace = json.dumps(
                 self.to_dict(),
                 cls=TraceEncoder,
-                ensure_ascii=False
+                ensure_ascii=True
             )
 
             trace_length = len(trace)
@@ -1146,7 +1146,7 @@ class Trace(object):
                 trace = json.dumps(
                     self.to_dict(),
                     cls=TraceEncoder,
-                    ensure_ascii=False
+                    ensure_ascii=True
                 )
 
             self.transport.send(self)

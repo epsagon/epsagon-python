@@ -10,3 +10,5 @@ build
 epsagon.egg-info
 .tox
 venv/
+.vscode
+.env
