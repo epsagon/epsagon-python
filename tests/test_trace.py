@@ -593,7 +593,7 @@ def test_send_traces_unicode(wrapped_post):
     wrapped_post.assert_called_with(
         'POST',
         'collector',
-        body=json.dumps(trace.to_dict(), ensure_ascii=False),
+        body=json.dumps(trace.to_dict(), ensure_ascii=True),
         timeout=epsagon.constants.SEND_TIMEOUT,
     )
 

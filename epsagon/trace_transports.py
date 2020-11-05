@@ -10,7 +10,7 @@ from epsagon.trace_encoder import TraceEncoder
 
 
 def to_json(obj):
-    return json.dumps(obj, cls=TraceEncoder, ensure_ascii=False)
+    return json.dumps(obj, cls=TraceEncoder, ensure_ascii=True)
 
 
 class NoneTransport(object):
