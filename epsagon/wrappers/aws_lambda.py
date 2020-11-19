@@ -47,6 +47,7 @@ def lambda_wrapper(func):
         """
         Generic Lambda function wrapper
         """
+        cold_start_duration = time.time() - constants.COLD_START_TIME
         trace = epsagon.trace.trace_factory.get_or_create_trace()
         trace.prepare()
 
@@ -80,6 +81,10 @@ def lambda_wrapper(func):
                 kwargs
             )
 
+        if constants.COLD_START:
+            runner.resource['metadata'][
+                'aws.lambda.cold_start_duration'
+            ] = cold_start_duration
         constants.COLD_START = False
 
         try:
@@ -152,6 +157,7 @@ def step_lambda_wrapper(func):
         """
         Generic Step Function wrapper
         """
+        cold_start_duration = time.time() - constants.COLD_START_TIME
         trace = epsagon.trace.trace_factory.get_or_create_trace()
         trace.prepare()
 
@@ -185,6 +191,10 @@ def step_lambda_wrapper(func):
                 kwargs
             )
 
+        if constants.COLD_START:
+            runner.resource['metadata'][
+                'aws.lambda.cold_start_duration'
+            ] = cold_start_duration
         constants.COLD_START = False
 
         try:
