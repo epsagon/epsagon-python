@@ -1,6 +1,7 @@
 """General constants"""
 
 import os
+import time
 
 __version__ = '0.0.0'
 
@@ -9,6 +10,7 @@ REGION = os.getenv('AWS_REGION', DEFAULT_REGION)
 
 TRACE_COLLECTOR_URL = '{protocol}{region}.tc.epsagon.com'
 COLD_START = True
+COLD_START_TIME = time.time()
 
 DEBUG_MODE = ((os.getenv('EPSAGON_DEBUG') or '').upper() == 'TRUE')
 
