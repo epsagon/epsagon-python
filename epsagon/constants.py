@@ -59,7 +59,8 @@ STRONG_KEYS = [
     'hostname',
     'virtual_host',
     'region',
-    'aws_account'
+    'aws_account',
+    'fragment_seq',
 ]
 
 
