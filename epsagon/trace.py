@@ -1051,7 +1051,7 @@ class Trace(object):
         then split the trace into multiple traces.
         :return: None
         """
-        if self.split_on_send and self.length > self._max_trace_size:
+        if self.split_on_send and len(self.events) > 1 and self.length > self._max_trace_size:
             self._send_trace_split()
         else:
             self._send_traces()
