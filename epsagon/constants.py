@@ -61,6 +61,7 @@ STRONG_KEYS = [
     'region',
     'aws_account',
     'fragment_seq',
+    'labels',
 ]
 
 
