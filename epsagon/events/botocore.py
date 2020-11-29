@@ -152,12 +152,9 @@ class BotocoreCloudWatchEvent(BotocoreEvent):
             wrapped, instance, args, kwargs, start_time, response, exception
         )
         _, request_data = args
-        entries = request_data.get('Entries', [{}])[0]
-        self.resource['name'] = (
-            entries['EventBusName']
-            if entries.get('EventBusName')
-            else 'CloudWatch Events'
-        )
+        entries = request_data.get('Entries')[0] if request_data.get('Entries')\
+            else {}
+        self.resource['name'] = entries.get('EventBusName', 'CloudWatch Events')
         if self.resource['operation'] == 'PutEvents':
             if 'DetailType' in entries:
                 self.resource['metadata']['aws.cloudwatch.detail_type'] = \
@@ -189,7 +186,8 @@ class BotocoreCloudWatchEvent(BotocoreEvent):
         :return: None
         """
         super(BotocoreCloudWatchEvent, self).update_response(response)
-        if self.resource['operation'] == 'PutEvents' and 'Entries' in response:
+        if self.resource['operation'] == 'PutEvents' and 'Entries' in response \
+                and response['Entries']:
             self.resource['metadata']['aws.cloudwatch.event_id'] = \
                 response['Entries'][0]['EventId']
 
