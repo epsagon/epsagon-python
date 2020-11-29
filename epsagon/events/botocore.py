@@ -117,7 +117,9 @@ class BotocoreEvent(BaseEvent):
         :param response: Response from botocore
         :return: None
         """
-        self.event_id = response['ResponseMetadata']['RequestId']
+        event_id = response['ResponseMetadata'].get('RequestId')
+        if event_id:
+            self.event_id = event_id
         self.resource['metadata']['Retry Attempts'] = \
             response['ResponseMetadata']['RetryAttempts']
         self.resource['metadata']['Status Code'] = \
@@ -150,27 +152,34 @@ class BotocoreCloudWatchEvent(BotocoreEvent):
             wrapped, instance, args, kwargs, start_time, response, exception
         )
         _, request_data = args
+        entries = request_data.get('Entries', [{}])[0]
         self.resource['name'] = (
-            request_data['EventBusName']
-            if request_data.get('EventBusName')
+            entries['EventBusName']
+            if entries.get('EventBusName')
             else 'CloudWatch Events'
         )
         if self.resource['operation'] == 'PutEvents':
-            entries = request_data.get('Entries', [{}])[0]
-            if entries.get('DetailType'):
+            if 'DetailType' in entries:
                 self.resource['metadata']['aws.cloudwatch.detail_type'] = \
                     entries[
                         'DetailType'
                     ]
-            if entries.get('Resources'):
+            if 'Resources' in entries:
                 self.resource['metadata']['aws.cloudwatch.resources'] = \
                     entries[
                         'Resources'
                     ]
-            if entries.get('Source'):
+            if 'Source' in entries:
                 self.resource['metadata']['aws.cloudwatch.source'] = entries[
                     'Source'
                 ]
+            if 'Detail' in entries:
+                add_data_if_needed(
+                    self.resource['metadata'],
+                    'aws.cloudwatch.detail',
+                    entries['Detail']
+                )
+
         self.resource['type'] = self.RESOURCE_TYPE_UPDATE
 
     def update_response(self, response):
@@ -180,7 +189,7 @@ class BotocoreCloudWatchEvent(BotocoreEvent):
         :return: None
         """
         super(BotocoreCloudWatchEvent, self).update_response(response)
-        if self.resource['operation'] == 'PutEvents':
+        if self.resource['operation'] == 'PutEvents' and 'Entries' in response:
             self.resource['metadata']['aws.cloudwatch.event_id'] = \
                 response['Entries'][0]['EventId']
 
