@@ -32,7 +32,7 @@ def _put_event(client, event):
 
 @mock_events
 def test_event_resources():
-    client = boto3.client('events')
+    client = boto3.client('events', region_name='us-west-1')
     _put_event(client, fake_event)
     trace = _get_active_trace()
     assert trace.events[0].resource["operation"] == 'PutEvents'
@@ -42,7 +42,7 @@ def test_event_resources():
 
 @mock_events
 def test_event_resources_without_bus_name():
-    client = boto3.client('events')
+    client = boto3.client('events', region_name='us-west-1')
     _put_event(client, fake_event_bus_name_missing)
     trace = _get_active_trace()
     assert trace.events[0].RESOURCE_TYPE == 'eventbridge'
@@ -51,7 +51,7 @@ def test_event_resources_without_bus_name():
 
 @mock_events
 def test_event_metadata():
-    client = boto3.client('events')
+    client = boto3.client('events', region_name='us-west-1')
     _put_event(client, fake_event)
     trace = _get_active_trace()
     assert trace.events[0].resource["metadata"]['aws.cloudwatch.detail_type'] == fake_event["DetailType"]
