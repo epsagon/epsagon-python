@@ -440,7 +440,7 @@ class EventsLambdaTrigger(BaseLambdaTrigger):
 
         self.event_id = str(event['id'])
         name = 'CloudWatch Events'
-        if len(event['resources']) > 0 and isinstance(event['resources'][0], str):
+        if event['resources'] and isinstance(event['resources'][0], str):
             name = str(event['resources'][0].split('/')[-1])
         self.resource['name'] = name
         self.resource['operation'] = str(event['detail-type'])
