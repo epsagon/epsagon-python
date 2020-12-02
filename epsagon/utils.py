@@ -187,8 +187,10 @@ def init(
     if os.getenv('EPSAGON_SAMPLE_RATE'):
         sample_rate = float(os.getenv('EPSAGON_SAMPLE_RATE'))
 
+    token = os.getenv('EPSAGON_TOKEN') or token
+
     trace_factory.initialize(
-        token=os.getenv('EPSAGON_TOKEN') or token,
+        token=token,
         app_name=os.getenv('EPSAGON_APP_NAME') or app_name,
         collector_url=os.getenv('EPSAGON_COLLECTOR_URL') or collector_url,
         metadata_only=metadata_only,
