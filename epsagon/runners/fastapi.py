@@ -1,5 +1,5 @@
 """
-Runner for a aiohttp Python function
+Runner for a fastapi Python function
 """
 
 from __future__ import absolute_import
@@ -80,7 +80,6 @@ class FastapiRunner(BaseEvent):
         """
         Adds response data to event.
         """
-        print(type(response))
         for response_type in SUPPORTED_RESPONSE_TYPES:
             if isinstance(response, response_type):
                 body = response.body

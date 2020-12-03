@@ -35,7 +35,7 @@ class TracingRoute(APIRoute):
             try:
                 body = await request.json()
             except json.decoder.JSONDecodeError:
-                body = None
+                body = ""
             try:
                 runner = FastapiRunner(time.time(), request, json.dumps(body))
                 trace.set_runner(runner)
