@@ -196,6 +196,7 @@ The following frameworks are supported by Epsagon:
 |[Flask](#flask)                         |`>=0.5`                    |<ul><li>- [x] </li></ul>                             |
 |[Tornado](#tornado)                     |`>=4.0`                    |<ul><li>- [x] </li></ul>                             |
 |[aiohttp](#aiohttp)                     |`>=3.0.0`                  |<ul><li>- [x] </li></ul>                             |
+|[fastapi](#fastapi)                     |`>=0.62.0`                  |<ul><li>- [x] </li></ul>                             |
 |[Celery](#celery)                       |`>=4.0.0`                  |<ul><li>- [x] </li></ul>                             |
 |[Azure Functions](#azure-functions)     |`>=2.0.0`                  |<ul><li>- [ ] </li></ul>                             |
 |[Chalice](#chalice)                     |`>=1.0.0`                  |<ul><li>- [ ] </li></ul>                             |
@@ -297,6 +298,22 @@ epsagon.init(
 ### aiohttp
 
 Tracing aiohttp application can be done in two methods:
+1. [Auto-tracing](#auto-tracing) using the environment variable.
+2. Calling the SDK.
+
+Calling the SDK is simple, and should be done in your main `py` file where the application is being initialized:
+```python
+import epsagon
+epsagon.init(
+    token='<epsagon-token>',
+    app_name='<app-name-stage>',
+    metadata_only=False,
+)
+```
+
+### fastapi
+
+Tracing fastapi application can be done in two methods:
 1. [Auto-tracing](#auto-tracing) using the environment variable.
 2. Calling the SDK.
 

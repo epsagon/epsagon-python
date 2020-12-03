@@ -12,7 +12,8 @@ pytest==4.6.0; python_version < '3.5'
 requests
 sqlalchemy
 psycopg2
-aiohttp; python_version >= '3.5'
+aiohttp; python_version >= '3.6'
+fastapi; python_version >= '3.6'
 pytest-asyncio; python_version >= '3.5'
 pytest-aiohttp; python_version >= '3.5'
 asynctest; python_version >= '3.5'

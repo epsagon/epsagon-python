@@ -42,6 +42,8 @@ async def AiohttpMiddleware(request, handler):
         trace.set_runner(runner)
         collect_container_metadata(runner.resource['metadata'])
     except Exception as exception: # pylint: disable=W0703
+        from traceback import print_exc
+        print_exc()
         warnings.warn('Could not extract request', EpsagonWarning)
 
     try:
