@@ -37,16 +37,8 @@ def patch_once(patch_module, patch_name, wrapper):
     :param wrapper: new wrapper to set
     :return: None
     """
-
     _, _, original = wrapt.resolve_path(patch_module, patch_name)
-    if "fastapi" in patch_module:
-        print(original)
-
     if not getattr(original, EPSAGON_MARKER, None):
-        import ipdb
-        ipdb.set_trace()
-        if "fastapi" in patch_module:
-            print("patching")
         wrapt.wrap_function_wrapper(patch_module, patch_name, wrapper)
         setattr(original, EPSAGON_MARKER, True)
 
