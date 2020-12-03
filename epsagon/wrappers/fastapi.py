@@ -1,5 +1,5 @@
 """
-Middleware for Python fastapi.
+Tracing route for Python fastapi.
 """
 import time
 import json
@@ -20,10 +20,21 @@ from epsagon.utils import (
 from ..http_filters import ignore_request
 
 
-class TracingRoute(APIRoute):
+class TracingAPIRoute(APIRoute):
+    """
+    Custom tracing route - traces each route request & response
+    """
     def get_route_handler(self) -> Callable:
+        """
+        Gets a tracing route handler - create a runner with event details,
+        including request & response data.
+        """
         original_route_handler = super().get_route_handler()
         async def custom_route_handler(request: Request) -> Response:
+            """
+            Traces given request and its response.
+            :param request: to trace
+            """
             epsagon.trace.trace_factory.switch_to_async_tracer()
 
             if ignore_request('', request.url.path.lower()):
