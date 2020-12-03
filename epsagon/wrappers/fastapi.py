@@ -8,7 +8,7 @@ from typing import Callable
 
 import warnings
 from fastapi.routing import APIRoute
-from fastapi import APIRouter, Request, Response
+from fastapi import Request, Response
 
 import epsagon.trace
 from epsagon.runners.fastapi import FastapiRunner
@@ -46,7 +46,7 @@ class TracingAPIRoute(APIRoute):
             try:
                 body = await request.json()
             except json.decoder.JSONDecodeError:
-                body = ""
+                body = ''
             try:
                 runner = FastapiRunner(time.time(), request, json.dumps(body))
                 trace.set_runner(runner)
@@ -61,7 +61,10 @@ class TracingAPIRoute(APIRoute):
                 trace.runner.set_exception(exception, traceback_data)
 
             if response is not None and runner:
-                if ignore_request(response.headers.get('Content-Type', '').lower(), ''):
+                if ignore_request(
+                        response.headers.get('Content-Type', '').lower(),
+                        ''
+                ):
                     return response
 
                 runner.update_response(response)

@@ -4,9 +4,6 @@ Runner for a fastapi Python function
 
 from __future__ import absolute_import
 import uuid
-from ..event import BaseEvent
-from ..utils import add_data_if_needed, normalize_http_url
-from ..constants import EPSAGON_HEADER
 from fastapi.responses import (
     JSONResponse,
     HTMLResponse,
@@ -14,6 +11,9 @@ from fastapi.responses import (
     UJSONResponse,
     RedirectResponse,
 )
+from ..event import BaseEvent
+from ..utils import add_data_if_needed, normalize_http_url
+from ..constants import EPSAGON_HEADER
 
 SUPPORTED_RESPONSE_TYPES = (
     JSONResponse,
