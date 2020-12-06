@@ -47,7 +47,7 @@ async def test_fastapi_sanity(trace_transport, fastapi_app):
 
 @pytest.mark.asyncio
 async def test_fastapi_custom_router(trace_transport, fastapi_app):
-    """Sanity test."""
+    """Custom router sanity test."""
     full_route_path= f'{TEST_ROUTER_PREFIX}{TEST_ROUTER_PATH}'
     async with AsyncClient(app=fastapi_app, base_url="http://test") as ac:
         response = await ac.get(full_route_path)
