@@ -1,19 +1,15 @@
-#import asynctest
 import pytest
 from httpx import AsyncClient
 from fastapi import FastAPI, APIRouter
-#from fastapi.testclient import TestClient
 from epsagon.common import ErrorCode
-#from epsagon.wrappers.fastapi import TracingAPIRoute
 from epsagon.runners.fastapi import FastapiRunner
 
-# Setting demo fastapi handlers
 RETURN_VALUE = 'testresponsedata'
 ROUTER_RETURN_VALUE = 'router-endpoint-return-data'
 TEST_ROUTER_PREFIX = '/test-router-path'
 TEST_ROUTER_PATH = '/test-router'
 
-
+# Setting demo fastapi handlers
 async def handle():
     return RETURN_VALUE
 
