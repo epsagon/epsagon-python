@@ -10,7 +10,7 @@ ROUTER_RETURN_VALUE = 'router-endpoint-return-data'
 TEST_ROUTER_PREFIX = '/test-router-path'
 TEST_ROUTER_PATH = '/test-router'
 
-# Setting demo fastapi handlers
+# test fastapi app handlers
 async def handle():
     return RETURN_VALUE
 
