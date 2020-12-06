@@ -22,6 +22,7 @@ def _wrapper(wrapped, _instance, args, kwargs):
         return wrapped(*args, **kwargs)
     route_class = kwargs.get('route_class', APIRoute)
     if route_class != APIRoute:
+        # custom routes are not supported
         return wrapped(*args, **kwargs)
     kwargs['route_class'] = TracingAPIRoute
     return wrapped(*args, **kwargs)
