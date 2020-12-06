@@ -3,7 +3,9 @@ Runner for a fastapi Python function
 """
 
 from __future__ import absolute_import
+import json
 import uuid
+import warnings
 from fastapi.responses import (
     JSONResponse,
     HTMLResponse,
@@ -14,6 +16,7 @@ from fastapi.responses import (
 from ..event import BaseEvent
 from ..utils import add_data_if_needed, normalize_http_url
 from ..constants import EPSAGON_HEADER
+from epsagon.common import EpsagonWarning
 
 SUPPORTED_RESPONSE_TYPES = (
     JSONResponse,
@@ -83,10 +86,18 @@ class FastapiRunner(BaseEvent):
         for response_type in SUPPORTED_RESPONSE_TYPES:
             if isinstance(response, response_type):
                 body = response.body
+                if response_type == JSONResponse:
+                    try:
+                        body = json.loads(body)
+                    except Exception as exception: # pylint: disable=W0703
+                        warnings.warn('Could not load response json', EpsagonWarning)
+                        body = body.decode('utf-8')
+                else:
+                    body = body.decode('utf-8')
                 add_data_if_needed(
                     self.resource['metadata'],
                     'Response Data',
-                    body.decode('utf-8')
+                    body
                 )
 
         response_headers = dict(response.headers.items())

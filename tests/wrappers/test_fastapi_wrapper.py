@@ -1,19 +1,24 @@
-import asynctest
+#import asynctest
 import pytest
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
+from httpx import AsyncClient
+from fastapi import FastAPI, APIRouter
+#from fastapi.testclient import TestClient
 from epsagon.common import ErrorCode
 #from epsagon.wrappers.fastapi import TracingAPIRoute
 from epsagon.runners.fastapi import FastapiRunner
 
-
 # Setting demo fastapi handlers
-RETURN_VALUE = {
-    'a': 'test',
-    'b': 'test2',
-}
+RETURN_VALUE = 'testresponsedata'
+ROUTER_RETURN_VALUE = 'router-endpoint-return-data'
+TEST_ROUTER_PREFIX = '/test-router-path'
+TEST_ROUTER_PATH = '/test-router'
+
+
 async def handle():
     return RETURN_VALUE
+
+async def handle_router_endpoint():
+    return ROUTER_RETURN_VALUE
 
 async def handle_error():
     raise Exception('test')
@@ -24,34 +29,47 @@ def fastapi_app():
     app = FastAPI()
     app.add_api_route("/", handle, methods=["GET"])
     app.add_api_route("/err", handle_error, methods=["GET"])
+    router = APIRouter()
+    router.add_api_route(TEST_ROUTER_PATH, handle_router_endpoint)
+    app.include_router(router, prefix=TEST_ROUTER_PREFIX)
     return app
 
 
-@pytest.fixture(scope='function', autouse=True)
-def fastapi_client(fastapi_app):
-    return TestClient(fastapi_app)
-
-@asynctest.patch('epsagon.trace.trace_factory.use_async_tracer')
-#@pytest.mark.asyncio
-async def test_fastapi_sanity(trace_transport, fastapi_client):
+@pytest.mark.asyncio
+async def test_fastapi_sanity(trace_transport, fastapi_app):
     """Sanity test."""
-    response = await fastapi_client.get('/')
-    response_data = await response.json()
+    async with AsyncClient(app=fastapi_app, base_url="http://test") as ac:
+        response = await ac.get("/")
+    response_data = response.json()
     runner = trace_transport.last_trace.events[0]
     assert isinstance(runner, FastapiRunner)
     assert runner.resource['name'].startswith('127.0.0.1')
     assert runner.resource['metadata']['Path'] == '/'
     assert runner.resource['metadata']['Response Data'] == RETURN_VALUE
     assert response_data == RETURN_VALUE
-    assert False
 
 
-@asynctest.patch('epsagon.trace.trace_factory.use_async_tracer')
-#@pytest.mark.asyncio
-async def test_fastapi_exception(trace_transport, fastapi_client):
+@pytest.mark.asyncio
+async def test_fastapi_custom_router(trace_transport, fastapi_app):
+    """Sanity test."""
+    full_route_path= f'{TEST_ROUTER_PREFIX}{TEST_ROUTER_PATH}'
+    async with AsyncClient(app=fastapi_app, base_url="http://test") as ac:
+        response = await ac.get(full_route_path)
+    response_data = response.json()
+    runner = trace_transport.last_trace.events[0]
+    assert isinstance(runner, FastapiRunner)
+    assert runner.resource['name'].startswith('127.0.0.1')
+    assert runner.resource['metadata']['Path'] == full_route_path
+    assert runner.resource['metadata']['Response Data'] == ROUTER_RETURN_VALUE
+    assert response_data == ROUTER_RETURN_VALUE
+
+
+@pytest.mark.asyncio
+async def test_fastapi_exception(trace_transport, fastapi_app):
     """Test when the handler got an exception."""
     try:
-        client.get('/err')
+        async with AsyncClient(app=fastapi_app, base_url="http://test") as ac:
+            _ = await ac.get("/err")
     except:
         pass
 
