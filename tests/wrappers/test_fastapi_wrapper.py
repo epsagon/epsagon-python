@@ -1,4 +1,5 @@
 import pytest
+import asynctest
 from httpx import AsyncClient
 from fastapi import FastAPI, APIRouter
 from epsagon.common import ErrorCode
@@ -32,7 +33,8 @@ def fastapi_app():
 
 
 @pytest.mark.asyncio
-async def test_fastapi_sanity(trace_transport, fastapi_app):
+@asynctest.patch('epsagon.trace.trace_factory.use_async_tracer')
+async def test_fastapi_sanity(_, trace_transport, fastapi_app):
     """Sanity test."""
     async with AsyncClient(app=fastapi_app, base_url="http://test") as ac:
         response = await ac.get("/")
@@ -46,7 +48,8 @@ async def test_fastapi_sanity(trace_transport, fastapi_app):
 
 
 @pytest.mark.asyncio
-async def test_fastapi_custom_router(trace_transport, fastapi_app):
+@asynctest.patch('epsagon.trace.trace_factory.use_async_tracer')
+async def test_fastapi_custom_router(_, trace_transport, fastapi_app):
     """Custom router sanity test."""
     full_route_path= f'{TEST_ROUTER_PREFIX}{TEST_ROUTER_PATH}'
     async with AsyncClient(app=fastapi_app, base_url="http://test") as ac:
@@ -61,7 +64,8 @@ async def test_fastapi_custom_router(trace_transport, fastapi_app):
 
 
 @pytest.mark.asyncio
-async def test_fastapi_exception(trace_transport, fastapi_app):
+@asynctest.patch('epsagon.trace.trace_factory.use_async_tracer')
+async def test_fastapi_exception(_, trace_transport, fastapi_app):
     """Test when the handler got an exception."""
     try:
         async with AsyncClient(app=fastapi_app, base_url="http://test") as ac:
