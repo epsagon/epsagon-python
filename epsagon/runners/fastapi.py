@@ -13,10 +13,10 @@ from fastapi.responses import (
     UJSONResponse,
     RedirectResponse,
 )
+from epsagon.common import EpsagonWarning
 from ..event import BaseEvent
 from ..utils import add_data_if_needed, normalize_http_url
 from ..constants import EPSAGON_HEADER
-from epsagon.common import EpsagonWarning
 
 SUPPORTED_RESPONSE_TYPES = (
     JSONResponse,
@@ -89,8 +89,11 @@ class FastapiRunner(BaseEvent):
                 if response_type == JSONResponse:
                     try:
                         body = json.loads(body)
-                    except Exception as exception: # pylint: disable=W0703
-                        warnings.warn('Could not load response json', EpsagonWarning)
+                    except Exception: # pylint: disable=W0703
+                        warnings.warn(
+                            'Could not load response json',
+                            EpsagonWarning
+                        )
                         body = body.decode('utf-8')
                 else:
                     body = body.decode('utf-8')
