@@ -90,7 +90,6 @@ async def test_fastapi_exception(_, trace_transport, fastapi_app):
 
 
 @pytest.mark.asyncio
-#@asynctest.patch('epsagon.trace.trace_factory.use_async_tracer')
 async def _send_request(app, path, trace_transport):
     """ Send request and validates its response & trace """
     request_path = f'/{path}'
