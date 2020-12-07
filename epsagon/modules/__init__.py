@@ -11,7 +11,8 @@ MODULES = {}
 IGNORE_MODULES = ('__init__',)
 PYTHON_EXTENSIONS = ('.py', '.pyc')
 VERSION_DEPENDENCIES = {
-    'aiohttp': (3, 5, 3)
+    'aiohttp': (3, 5, 3),
+    'fastapi': (3, 5, 3),
 }
 
 for module_name in os.listdir(os.path.dirname(__file__)):
