@@ -58,7 +58,9 @@ class FastapiRunner(BaseEvent):
 
         query_params = request.query_params
         if query_params:
-            self.resource['metadata']['Query Params'] = dict(query_params.items())
+            self.resource['metadata']['Query Params'] = dict(
+                query_params.items()
+            )
 
         if body:
             add_data_if_needed(
