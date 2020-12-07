@@ -6,7 +6,7 @@ from __future__ import absolute_import
 import wrapt
 from fastapi.routing import APIRoute
 from ..wrappers.fastapi import TracingAPIRoute
-from ..utils import is_lambda_env
+from ..utils import is_lambda_env, print_debug
 
 def _wrapper(wrapped, _instance, args, kwargs):
     """
@@ -23,6 +23,7 @@ def _wrapper(wrapped, _instance, args, kwargs):
     route_class = kwargs.get('route_class', APIRoute)
     if route_class != APIRoute:
         # custom routes are not supported
+        print_debug('Custom FastAPI routes are not supported')
         return wrapped(*args, **kwargs)
     kwargs['route_class'] = TracingAPIRoute
     return wrapped(*args, **kwargs)
