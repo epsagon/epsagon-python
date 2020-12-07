@@ -47,13 +47,14 @@ def fastapi_app():
 async def test_fastapi_sanity(_, trace_transport, fastapi_app):
     """Sanity test."""
     async with AsyncClient(app=fastapi_app, base_url="http://test") as ac:
-        response = await ac.get("/")
+        response = await ac.get("/?x=testval")
     response_data = response.json()
     runner = trace_transport.last_trace.events[0]
     assert isinstance(runner, FastapiRunner)
     assert runner.resource['name'].startswith('127.0.0.1')
     assert runner.resource['metadata']['Path'] == '/'
     assert runner.resource['metadata']['Response Data'] == RETURN_VALUE
+    assert runner.resource['metadata']['Query Params'] == { 'x': 'testval'}
     assert response_data == RETURN_VALUE
 
 
