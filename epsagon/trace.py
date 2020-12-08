@@ -249,6 +249,19 @@ class TraceFactory(object):
         with TraceFactory.LOCK:
             return self._get_or_create_trace(unique_id)
 
+    def _get_or_create_thread_trace(self):
+        """
+        Get or create trace assuming multi-threaded tracer.
+        :return: The trace.
+        """
+        # If multiple threads are used, then create a new trace for each thread
+        thread_id = self.get_trace_identifier()
+        if thread_id not in self.traces:
+            new_trace = self._create_new_trace()
+            self.traces[thread_id] = new_trace
+        return self.traces[thread_id]
+
+
     def _get_or_create_trace(self, unique_id=None):
         """
         Get or create trace based on the use_single_trace/use_async_tracer.
@@ -261,7 +274,10 @@ class TraceFactory(object):
         if self.use_async_tracer:
             # Dynamic import since this is only valid in Python3+
             asyncio = __import__('asyncio')
-            task = asyncio.Task.current_task()
+            try:
+                task = asyncio.Task.current_task()
+            except RuntimeError:
+                return self._get_or_create_thread_trace()
             trace = getattr(task, EPSAGON_MARKER, None)
             if not trace:
                 trace = self._create_new_trace()
@@ -291,11 +307,7 @@ class TraceFactory(object):
             return self.singleton_trace
 
         # If multiple threads are used, then create a new trace for each thread
-        thread_id = self.get_trace_identifier()
-        if thread_id not in self.traces:
-            new_trace = self._create_new_trace()
-            self.traces[thread_id] = new_trace
-        return self.traces[thread_id]
+        return self._get_or_create_thread_trace()
 
     @property
     def active_trace(self):
