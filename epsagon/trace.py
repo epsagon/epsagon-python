@@ -1186,6 +1186,7 @@ class Trace(object):
             ))
         finally:
             if self.debug:
+                print('collector url:', self.collector_url)
                 print('trace:', trace)
 
     def get_trace_url(self):
