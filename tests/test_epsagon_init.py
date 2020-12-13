@@ -60,7 +60,7 @@ def test_epsagon_disable_epsagon_and_disable_patch(wrapped_get, wrapped_patch):
     assert epsagon.azure_wrapper(dummy) is dummy
     assert epsagon.python_wrapper(dummy) is dummy
     assert epsagon.gcp_wrapper(dummy) is dummy
-    
+
 
 default_http = HTTPTransport("epsagon", "1234")
 
@@ -91,7 +91,7 @@ default_http = HTTPTransport("epsagon", "1234")
     'EPSAGON_STEPS_OUTPUT_PATH': '',
     'EPSAGON_SAMPLE_RATE': 0.5
 }[x]))
-def test_epsagon_wrapper_env_init(_wrapped_get, wrapped_init, _create):
+def test_epsagon_wrapper_env_init(_wrapped_get, wrapped_init, wrapped_create):
     reload(epsagon)
     epsagon.init()
     wrapped_init.assert_called_with(
@@ -112,6 +112,7 @@ def test_epsagon_wrapper_env_init(_wrapped_get, wrapped_init, _create):
         step_dict_output_path=None,
         sample_rate=0.5,
     )
+    wrapped_create.assert_called_with("epsagon", "1234")
 
 
 @mock.patch('epsagon.http_filters.add_ignored_endpoints')
