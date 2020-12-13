@@ -60,62 +60,7 @@ def test_epsagon_disable_epsagon_and_disable_patch(wrapped_get, wrapped_patch):
     assert epsagon.azure_wrapper(dummy) is dummy
     assert epsagon.python_wrapper(dummy) is dummy
     assert epsagon.gcp_wrapper(dummy) is dummy
-
-
-@mock.patch('os.getenv', side_effect=(lambda x: {
-    'EPSAGON_HANDLER': 'epsagon.lambda_wrapper',
-    'DISABLE_EPSAGON': 'FALSE',
-    'DISABLE_EPSAGON_PATCH': 'FALSE',
-    'EPSAGON_SSL': 'FALSE',
-    'EPSAGON_TOKEN': 'FALSE',
-    'EPSAGON_APP_NAME': 'FALSE',
-    'EPSAGON_COLLECTOR_URL': 'FALSE',
-    'EPSAGON_METADATA': 'FALSE',
-    'EPSAGON_DISABLE_ON_TIMEOUT': 'FALSE',
-    'EPSAGON_DEBUG': 'FALSE',
-    'EPSAGON_SEND_TRACE_ON_ERROR': 'FALSE',
-    'EPSAGON_URLS_TO_IGNORE': '',
-    'EPSAGON_ENDPOINTS_TO_IGNORE': '',
-    'EPSAGON_IGNORED_KEYS': '',
-    'EPSAGON_ALLOWED_KEYS': '',
-    'EPSAGON_STEPS_OUTPUT_PATH': '',
-}[x]))
-def test_epsagon_wrapper_env_init(wrapped_get):
-    reload(epsagon)
-    epsagon.init()
-    wrapped_get.assert_has_calls([
-        mock.call('EPSAGON_HANDLER'),
-        mock.call('EPSAGON_SSL'),
-        mock.call('EPSAGON_URLS_TO_IGNORE'),
-        mock.call('EPSAGON_ENDPOINTS_TO_IGNORE'),
-        mock.call('EPSAGON_IGNORED_KEYS'),
-        mock.call('EPSAGON_ALLOWED_KEYS'),
-        mock.call('EPSAGON_TOKEN'),
-        mock.call('EPSAGON_APP_NAME'),
-        mock.call('EPSAGON_COLLECTOR_URL'),
-        mock.call('EPSAGON_METADATA'),
-        mock.call('EPSAGON_DISABLE_ON_TIMEOUT'),
-        mock.call('EPSAGON_DEBUG'),
-        mock.call('EPSAGON_SEND_TRACE_ON_ERROR'),
-        mock.call('EPSAGON_HANDLER'),
-        mock.call('DISABLE_EPSAGON'),
-        mock.call('DISABLE_EPSAGON_PATCH'),
-        mock.call('EPSAGON_SSL'),
-        mock.call('EPSAGON_URLS_TO_IGNORE'),
-        mock.call('EPSAGON_ENDPOINTS_TO_IGNORE'),
-        mock.call('EPSAGON_IGNORED_KEYS'),
-        mock.call('EPSAGON_ALLOWED_KEYS'),
-        mock.call('EPSAGON_STEPS_OUTPUT_PATH'),
-        mock.call('EPSAGON_TOKEN'),
-        mock.call('EPSAGON_APP_NAME'),
-        mock.call('EPSAGON_COLLECTOR_URL'),
-        mock.call('EPSAGON_METADATA'),
-        mock.call('EPSAGON_DISABLE_ON_TIMEOUT'),
-        mock.call('EPSAGON_DEBUG'),
-        mock.call('EPSAGON_SEND_TRACE_ON_ERROR'),
-        mock.call('EPSAGON_PROPAGATE_LAMBDA_ID')
-    ])
-
+    
 
 default_http = HTTPTransport("epsagon", "1234")
 
