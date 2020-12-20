@@ -61,17 +61,20 @@ class TracingAPIRoute(APIRoute):
                 traceback_data = get_traceback_data_from_exception(exception)
                 trace.runner.set_exception(exception, traceback_data)
 
-            if not raised_err and response is not None and runner:
-                if ignore_request(
-                        response.headers.get('Content-Type', '').lower(),
-                        ''
-                ):
-                    return response
+            try:
+                if not raised_err and response is not None and runner:
+                    if ignore_request(
+                            response.headers.get('Content-Type', '').lower(),
+                            ''
+                    ):
+                        return response
 
-                runner.update_response(response)
+                    runner.update_response(response)
 
-            if runner:
-                epsagon.trace.trace_factory.send_traces()
+                if runner:
+                    epsagon.trace.trace_factory.send_traces()
+            except Exception as exception:  # pylint: disable=W0703
+                pass
 
             if raised_err:
                 raise raised_err
