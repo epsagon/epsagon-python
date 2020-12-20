@@ -247,9 +247,9 @@ class TraceFactory(object):
         :return: trace
         """
         with TraceFactory.LOCK:
-            return self._get_or_create_trace(unique_id)
+            return self._get_trace(unique_id=unique_id, should_create=True)
 
-    def _get_or_create_thread_trace(self):
+    def _get_thread_trace(self, should_create):
         """
         Get or create trace assuming multi-threaded tracer.
         :return: The trace.
@@ -257,14 +257,17 @@ class TraceFactory(object):
         # If multiple threads are used, then create a new trace for each thread
         thread_id = self.get_trace_identifier()
         if thread_id not in self.traces:
+            if not should_create:
+                return None
             new_trace = self._create_new_trace()
             self.traces[thread_id] = new_trace
         return self.traces[thread_id]
 
 
-    def _get_or_create_trace(self, unique_id=None):
+    def _get_trace(self, unique_id=None, should_create=False):
         """
-        Get or create trace based on the use_single_trace/use_async_tracer.
+        Get trace based on the use_single_trace/use_async_tracer.
+        If should_create then creating a new trace if trace does not exist
         if use_single_trace is set to False, each thread will have
         it's own trace.
         if use_async_tracer is set to True, each asyncio.Task will be
@@ -279,7 +282,7 @@ class TraceFactory(object):
                 if not task:
                     return self._get_or_create_thread_trace()
             except RuntimeError:
-                return self._get_or_create_thread_trace()
+                return self._get_thread_trace(should_create)
             trace = getattr(task, EPSAGON_MARKER, None)
             if not trace:
                 trace = self._create_new_trace()
@@ -296,6 +299,8 @@ class TraceFactory(object):
                 )
             )
             if not trace:
+                if not should_create:
+                    return None
                 trace = self._create_new_trace(unique_id)
             # Making sure singleton trace contains the latest trace
             trace.unique_id = unique_id
@@ -304,12 +309,12 @@ class TraceFactory(object):
             return trace
 
         if self.use_single_trace:
-            if self.singleton_trace is None:
+            if self.singleton_trace is None and should_create:
                 self.singleton_trace = self._create_new_trace()
             return self.singleton_trace
 
         # If multiple threads are used, then create a new trace for each thread
-        return self._get_or_create_thread_trace()
+        return self._get_thread_trace(should_create)
 
     @property
     def active_trace(self):
@@ -398,7 +403,8 @@ class TraceFactory(object):
         Get the relevant trace (may be thread-based or a singleton trace)
         :return:
         """
-        return self.get_or_create_trace()
+        with TraceFactory.LOCK:
+            return self._get_trace(unique_id=unique_id, should_create=False)
 
     def add_event(self, event):
         """
@@ -494,8 +500,15 @@ class TraceFactory(object):
         trace = trace if trace else self.get_trace()
 
         if trace:
-            trace.send_traces()
-            self.pop_trace(trace)
+            trace_sent = False
+            try:
+                trace.send_traces()
+                trace_sent = True
+                self.pop_trace(trace=trace)
+            except Exception as exception:  # pylint: disable=W0703
+                if not trace_sent:
+                    self.pop_trace(trace=trace)
+
 
     def prepare(self):
         """
