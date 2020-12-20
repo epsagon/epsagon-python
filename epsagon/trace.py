@@ -276,6 +276,8 @@ class TraceFactory(object):
             asyncio = __import__('asyncio')
             try:
                 task = asyncio.Task.current_task()
+                if not task:
+                    return self._get_or_create_thread_trace()
             except RuntimeError:
                 return self._get_or_create_thread_trace()
             trace = getattr(task, EPSAGON_MARKER, None)
