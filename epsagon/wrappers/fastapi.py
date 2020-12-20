@@ -18,7 +18,7 @@ from epsagon.utils import (
     get_traceback_data_from_exception
 )
 from ..http_filters import ignore_request
-
+from ..utils import print_debug
 
 class TracingAPIRoute(APIRoute):
     """
@@ -82,7 +82,7 @@ class TracingAPIRoute(APIRoute):
                 if runner:
                     epsagon.trace.trace_factory.send_traces()
             except Exception as exception:  # pylint: disable=W0703
-                pass
+                print_debug('Failed to send traces: {}'.format(exception))
 
             if raised_err:
                 raise raised_err
