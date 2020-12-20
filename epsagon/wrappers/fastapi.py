@@ -35,12 +35,20 @@ class TracingAPIRoute(APIRoute):
             Traces given request and its response.
             :param request: to trace
             """
-            epsagon.trace.trace_factory.switch_to_async_tracer()
+            should_ignore_request = True
+            try:
+                epsagon.trace.trace_factory.switch_to_async_tracer()
+                if not ignore_request('', request.url.path.lower()):
+                    should_ignore_request = False
+                    trace = epsagon.trace.trace_factory.get_or_create_trace()
+                    trace.prepare()
 
-            if ignore_request('', request.url.path.lower()):
+            except Exception as exception: # pylint: disable=W0703
                 return await original_route_handler(request)
-            trace = epsagon.trace.trace_factory.get_or_create_trace()
-            trace.prepare()
+
+            if should_ignore_request:
+                return await original_route_handler(request)
+
             runner = None
             response = None
             try:
