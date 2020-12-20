@@ -53,14 +53,15 @@ class TracingAPIRoute(APIRoute):
                 collect_container_metadata(runner.resource['metadata'])
             except Exception as exception: # pylint: disable=W0703
                 warnings.warn('Could not extract request', EpsagonWarning)
-
+            raised_err = None
             try:
                 response: Response = await original_route_handler(request)
             except Exception as exception:  # pylint: disable=W0703
+                raised_err = exception
                 traceback_data = get_traceback_data_from_exception(exception)
                 trace.runner.set_exception(exception, traceback_data)
 
-            if response is not None and runner:
+            if not raised_err and response is not None and runner:
                 if ignore_request(
                         response.headers.get('Content-Type', '').lower(),
                         ''
@@ -71,6 +72,9 @@ class TracingAPIRoute(APIRoute):
 
             if runner:
                 epsagon.trace.trace_factory.send_traces()
+
+            if raised_err:
+                raise raised_err
 
             return response
 

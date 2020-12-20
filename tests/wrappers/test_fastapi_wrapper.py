@@ -25,8 +25,11 @@ async def handle_b():
 async def handle_router_endpoint():
     return ROUTER_RETURN_VALUE
 
+class CustomFastAPIException(Exception):
+    pass
+
 async def handle_error():
-    raise Exception('test')
+    raise CustomFastAPIException('test')
 
 
 @pytest.fixture(scope='function', autouse=True)
@@ -81,12 +84,12 @@ async def test_fastapi_exception(_, trace_transport, fastapi_app):
     try:
         async with AsyncClient(app=fastapi_app, base_url="http://test") as ac:
             _ = await ac.get("/err")
-    except:
+    except CustomFastAPIException:
         pass
 
     runner = trace_transport.last_trace.events[0]
     assert runner.error_code == ErrorCode.EXCEPTION
-    assert runner.exception['type'] == 'Exception'
+    assert runner.exception['type'] == 'CustomFastAPIException'
     assert runner.exception['message'] == 'test'
 
 
