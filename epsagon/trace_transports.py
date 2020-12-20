@@ -46,7 +46,9 @@ class HTTPTransport(object):
             headers={
                 'Authorization': 'Bearer {}'.format(self.token),
                 'Content-Type': 'application/json'
-            }
+            },
+            # max size of reusable connections
+            maxsize=5
         )
 
     def send(self, trace):

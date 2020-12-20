@@ -187,8 +187,10 @@ def init(
     if os.getenv('EPSAGON_SAMPLE_RATE'):
         sample_rate = float(os.getenv('EPSAGON_SAMPLE_RATE'))
 
+    token = os.getenv('EPSAGON_TOKEN') or token
+
     trace_factory.initialize(
-        token=os.getenv('EPSAGON_TOKEN') or token,
+        token=token,
         app_name=os.getenv('EPSAGON_APP_NAME') or app_name,
         collector_url=os.getenv('EPSAGON_COLLECTOR_URL') or collector_url,
         metadata_only=metadata_only,
@@ -207,7 +209,9 @@ def init(
         url_patterns_to_ignore=ignored_urls or url_patterns_to_ignore,
         keys_to_ignore=ignored_keys or keys_to_ignore,
         keys_to_allow=allowed_keys or keys_to_allow,
-        transport=create_transport(collector_url, token),
+        transport=create_transport(
+            os.getenv('EPSAGON_COLLECTOR_URL') or collector_url, token
+        ),
         split_on_send=(
                 ((os.getenv('EPSAGON_SPLIT_ON_SEND') or '').upper() == 'TRUE')
                 | split_on_send

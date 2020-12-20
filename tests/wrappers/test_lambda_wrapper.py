@@ -682,3 +682,24 @@ def test_skip_propagate_lambda_id_to_non_dict_sanity(
     trace_mock.add_exception.assert_not_called()
     assert not epsagon.constants.COLD_START
     assert runner.resource['metadata']['return_value'] == retval
+
+
+@mock.patch(
+    'epsagon.trace.trace_factory.get_or_create_trace',
+    side_effect=lambda: trace_mock
+)
+@mock.patch(
+    'time.time',
+    return_value=1.5
+)
+def test_cold_start_duration(_, __):
+    @epsagon.wrappers.aws_lambda.lambda_wrapper
+    def wrapped_lambda(_event, _context):
+        return ''
+
+    epsagon.constants.COLD_START_TIME = 0
+    assert epsagon.constants.COLD_START
+    wrapped_lambda('a', CONTEXT_STUB)
+    assert not epsagon.constants.COLD_START
+    runner = _get_runner_event(trace_mock)
+    assert runner.resource['metadata']['aws.lambda.cold_start_duration'] == 1.5

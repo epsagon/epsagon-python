@@ -117,12 +117,79 @@ class BotocoreEvent(BaseEvent):
         :param response: Response from botocore
         :return: None
         """
-        self.event_id = response['ResponseMetadata']['RequestId']
+        event_id = response['ResponseMetadata'].get('RequestId')
+        if event_id:
+            self.event_id = event_id
         self.resource['metadata']['Retry Attempts'] = \
             response['ResponseMetadata']['RetryAttempts']
         self.resource['metadata']['Status Code'] = \
             response['ResponseMetadata']['HTTPStatusCode']
 
+
+class BotocoreCloudWatchEvent(BotocoreEvent):
+    """
+    Represents cloudwatch events (eventbridge) botocore event.
+    """
+
+    RESOURCE_TYPE = 'eventbridge'
+    RESOURCE_TYPE_UPDATE = 'events'
+
+    def __init__(
+        self, wrapped, instance, args, kwargs, start_time, response, exception
+    ):
+        """
+        Initialize.
+        :param wrapped: wrapt's wrapped
+        :param instance: wrapt's instance
+        :param args: wrapt's args
+        :param kwargs: wrapt's kwargs
+        :param start_time: Start timestamp (epoch)
+        :param response: response data
+        :param exception: Exception (if happened)
+        """
+
+        super(BotocoreCloudWatchEvent, self).__init__(
+            wrapped, instance, args, kwargs, start_time, response, exception
+        )
+        _, request_data = args
+        entries = request_data.get('Entries')[0] if request_data.get('Entries')\
+            else {}
+        self.resource['name'] = entries.get('EventBusName', 'CloudWatch Events')
+        if self.resource['operation'] == 'PutEvents':
+            if 'DetailType' in entries:
+                self.resource['metadata']['aws.cloudwatch.detail_type'] = \
+                    entries[
+                        'DetailType'
+                    ]
+            if 'Resources' in entries:
+                self.resource['metadata']['aws.cloudwatch.resources'] = \
+                    entries[
+                        'Resources'
+                    ]
+            if 'Source' in entries:
+                self.resource['metadata']['aws.cloudwatch.source'] = entries[
+                    'Source'
+                ]
+            if 'Detail' in entries:
+                add_data_if_needed(
+                    self.resource['metadata'],
+                    'aws.cloudwatch.detail',
+                    entries['Detail']
+                )
+
+        self.resource['type'] = self.RESOURCE_TYPE_UPDATE
+
+    def update_response(self, response):
+        """
+        Adds response data to event.
+        :param response: Response from botocore
+        :return: None
+        """
+        super(BotocoreCloudWatchEvent, self).update_response(response)
+        if self.resource['operation'] == 'PutEvents' and 'Entries' in response \
+                and response['Entries']:
+            self.resource['metadata']['aws.cloudwatch.event_id'] = \
+                response['Entries'][0]['EventId']
 
 class BotocoreS3Event(BotocoreEvent):
     """
@@ -1488,7 +1555,6 @@ class BotocoreLambdaEvent(BotocoreEvent):
         :param response: response data
         :param exception: Exception (if happened)
         """
-
         super(BotocoreLambdaEvent, self).__init__(
             wrapped,
             instance,

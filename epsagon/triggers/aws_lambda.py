@@ -439,7 +439,10 @@ class EventsLambdaTrigger(BaseLambdaTrigger):
         super(EventsLambdaTrigger, self).__init__(start_time)
 
         self.event_id = str(event['id'])
-        self.resource['name'] = str(event['resources'][0].split('/')[-1])
+        name = 'CloudWatch Events'
+        if event['resources'] and isinstance(event['resources'][0], str):
+            name = str(event['resources'][0].split('/')[-1])
+        self.resource['name'] = name
         self.resource['operation'] = str(event['detail-type'])
 
         self.resource['metadata'] = {
@@ -479,6 +482,8 @@ class LambdaTriggerFactory(object):
             trigger_service = ProxyAPIGatewayLambdaTrigger.RESOURCE_TYPE
         elif 'context' in event and 'http-method' in event['context']:
             trigger_service = NoProxyAPIGatewayLambdaTrigger.RESOURCE_TYPE
+        elif 'source' in event and 'detail-type' in event and 'detail' in event:
+            trigger_service = EventsLambdaTrigger.RESOURCE_TYPE
         elif 'source' in event:
             trigger_service = str(event['source'].split('.')[-1])
         return LambdaTriggerFactory.FACTORY.get(trigger_service)(
