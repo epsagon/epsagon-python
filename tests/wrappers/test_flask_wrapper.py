@@ -90,11 +90,12 @@ def test_flask_wrapper_after_request(runner_mock, _, client):
 
 @mock.patch('warnings.warn')
 @mock.patch('epsagon.trace.trace_factory.get_or_create_trace')
-def test_flask_wrapper_teardown_request(trace_mock, _, client):
+@mock.patch('epsagon.trace.trace_factory.get_trace')
+def test_flask_wrapper_teardown_request(get_trace_mock, create_trace_mock, _, client):
     """Test tracer gets new event and send it on new request."""
     client.get('/')
-    trace_mock().set_runner.assert_called_once()
-    trace_mock().send_traces.assert_called_once()
+    create_trace_mock().set_runner.assert_called_once()
+    get_trace_mock().send_traces.assert_called_once()
 
 
 @mock.patch('warnings.warn')

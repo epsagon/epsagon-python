@@ -125,10 +125,8 @@ class FlaskWrapper(object):
         :param exception: Exception (or None).
         :return: None.
         """
-
         if self.ignored_request:
             return
-
         trace = epsagon.trace.trace_factory.get_or_create_trace()
         if exception and trace.runner:
             traceback_data = get_traceback_data_from_exception(exception)

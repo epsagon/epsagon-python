@@ -295,7 +295,7 @@ class TraceFactory(object):
         :return: The trace.
         """
         if self.use_async_tracer:
-            return self._get_tracer_async_mode(should_create)
+            return self._get_tracer_async_mode(should_create=should_create)
 
         unique_id = self.get_thread_local_unique_id(unique_id)
         if unique_id:
