@@ -264,6 +264,26 @@ class TraceFactory(object):
         return self.traces[thread_id]
 
 
+    def _get_tracer_async_mode(self, should_create):
+        """
+        Get or create trace assuming async tracer.
+        :return: The trace.
+        """
+        # Dynamic import since this is only valid in Python3+
+        asyncio = __import__('asyncio')
+        try:
+            task = asyncio.Task.current_task()
+            if not task:
+                return self._get_thread_trace()
+        except RuntimeError:
+            return self._get_thread_trace(should_create)
+
+        trace = getattr(task, EPSAGON_MARKER, None)
+        if not trace and should_create:
+            trace = self._create_new_trace()
+            setattr(task, EPSAGON_MARKER, trace)
+        return trace
+
     def _get_trace(self, unique_id=None, should_create=False):
         """
         Get trace based on the use_single_trace/use_async_tracer.
@@ -275,19 +295,7 @@ class TraceFactory(object):
         :return: The trace.
         """
         if self.use_async_tracer:
-            # Dynamic import since this is only valid in Python3+
-            asyncio = __import__('asyncio')
-            try:
-                task = asyncio.Task.current_task()
-                if not task:
-                    return self._get_or_create_thread_trace()
-            except RuntimeError:
-                return self._get_thread_trace(should_create)
-            trace = getattr(task, EPSAGON_MARKER, None)
-            if not trace:
-                trace = self._create_new_trace()
-                setattr(task, EPSAGON_MARKER, trace)
-            return trace
+            return self._get_tracer_async_mode(should_create)
 
         unique_id = self.get_thread_local_unique_id(unique_id)
         if unique_id:
@@ -404,7 +412,7 @@ class TraceFactory(object):
         :return:
         """
         with TraceFactory.LOCK:
-            return self._get_trace(unique_id=unique_id, should_create=False)
+            return self._get_trace(should_create=False)
 
     def add_event(self, event):
         """
@@ -505,7 +513,7 @@ class TraceFactory(object):
                 trace.send_traces()
                 trace_sent = True
                 self.pop_trace(trace=trace)
-            except Exception as exception:  # pylint: disable=W0703
+            except Exception:  # pylint: disable=W0703
                 if not trace_sent:
                     self.pop_trace(trace=trace)
 
