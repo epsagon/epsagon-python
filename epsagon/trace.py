@@ -284,6 +284,24 @@ class TraceFactory(object):
             setattr(task, EPSAGON_MARKER, trace)
         return trace
 
+    def _pop_trace_async_mode(self):
+        """
+        Pops the trace from the current task, assuming async tracer
+        :return: The trace.
+        """
+        asyncio = __import__('asyncio')
+        try:
+            task = asyncio.Task.current_task()
+            if not task:
+                return None
+        except RuntimeError:
+            return None
+
+        trace = getattr(task, EPSAGON_MARKER, None)
+        if trace:
+            delattr(task, EPSAGON_MARKER)
+        return trace
+
     def _get_trace(self, unique_id=None, should_create=False):
         """
         Get trace based on the use_single_trace/use_async_tracer.
@@ -350,6 +368,9 @@ class TraceFactory(object):
         :return: unique id
         """
         with self.LOCK:
+            if self.use_async_tracer:
+                if self._pop_trace_async_mode():
+                    return
             if self.traces:
                 trace = self.traces.pop(self.get_trace_identifier(trace), None)
                 if not self.traces:
