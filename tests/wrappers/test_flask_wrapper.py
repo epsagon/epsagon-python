@@ -5,6 +5,7 @@ from flask import Flask, request
 from epsagon import trace_factory
 from epsagon.wrappers.flask import FlaskWrapper
 from time import sleep
+from .common import multiple_threads_handler
 
 # Setting demo Flask app
 RETURN_VALUE = 'a'
@@ -35,6 +36,12 @@ def b_route():
 @app_test.route('/error')
 def error():
     raise Exception('test')
+
+
+@app_test.route('/multiple_threads')
+def multiple_threads_route():
+    multiple_threads_handler()
+    return "multiple_threads"
 
 
 @pytest.fixture
@@ -159,3 +166,15 @@ def test_call_to_self(trace_transport, client):
     """
     result = CLIENT.post('/self_call')
     assert result.data.decode('ascii') == RETURN_VALUE
+
+
+def test_flask_wrapper_route_multiple_threads(trace_transport, client):
+    """
+    Makes a request to a route which invokes multiple threads
+    perfoming http requests.
+    Make sure no trace is created for those threads.
+    """
+    role = 'multiple_threads'
+    result = client.get('/{}'.format(role))
+    validate_response(role, result, trace_transport)
+    assert not trace_factory.traces

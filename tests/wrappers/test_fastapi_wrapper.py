@@ -3,13 +3,18 @@ import asynctest
 import asyncio
 from httpx import AsyncClient
 from fastapi import FastAPI, APIRouter
+from epsagon import trace_factory
 from epsagon.common import ErrorCode
 from epsagon.runners.fastapi import FastapiRunner
+from .common import multiple_threads_handler
 
 RETURN_VALUE = 'testresponsedata'
 ROUTER_RETURN_VALUE = 'router-endpoint-return-data'
 TEST_ROUTER_PREFIX = '/test-router-path'
 TEST_ROUTER_PATH = '/test-router'
+MULTIPLE_THREADS_KEY = "multiple_threads"
+MULTIPLE_THREADS_ROUTE = f'/{MULTIPLE_THREADS_KEY}'
+MULTIPLE_THREADS_RETURN_VALUE = MULTIPLE_THREADS_KEY
 
 # test fastapi app handlers
 async def handle():
@@ -25,6 +30,11 @@ async def handle_b():
 async def handle_router_endpoint():
     return ROUTER_RETURN_VALUE
 
+def multiple_threads_route():
+    multiple_threads_handler()
+    return MULTIPLE_THREADS_RETURN_VALUE
+
+
 class CustomFastAPIException(Exception):
     pass
 
@@ -39,6 +49,7 @@ def fastapi_app():
     app.add_api_route("/a", handle_a, methods=["GET"])
     app.add_api_route("/b", handle_b, methods=["GET"])
     app.add_api_route("/err", handle_error, methods=["GET"])
+    app.add_api_route(MULTIPLE_THREADS_ROUTE, multiple_threads_route, methods=["GET"])
     router = APIRouter()
     router.add_api_route(TEST_ROUTER_PATH, handle_router_endpoint)
     app.include_router(router, prefix=TEST_ROUTER_PREFIX)
@@ -117,3 +128,20 @@ async def test_fastapi_multiple_requests(_, trace_transport, fastapi_app):
             _send_request(fastapi_app, "a", trace_transport),
             _send_request(fastapi_app, "b", trace_transport)
         )
+
+
+@pytest.mark.asyncio
+@asynctest.patch('epsagon.trace.trace_factory.use_async_tracer')
+async def test_fastapi_multiple_threads_route(_, trace_transport, fastapi_app):
+    """Sanity test."""
+    async with AsyncClient(app=fastapi_app, base_url="http://test") as ac:
+        response = await ac.get(f"{MULTIPLE_THREADS_ROUTE}?x=testval")
+    response_data = response.json()
+    runner = trace_transport.last_trace.events[0]
+    assert isinstance(runner, FastapiRunner)
+    assert runner.resource['name'].startswith('127.0.0.1')
+    assert runner.resource['metadata']['Path'] == MULTIPLE_THREADS_ROUTE
+    assert runner.resource['metadata']['Response Data'] == MULTIPLE_THREADS_RETURN_VALUE
+    assert runner.resource['metadata']['Query Params'] == { 'x': 'testval'}
+    assert response_data == MULTIPLE_THREADS_RETURN_VALUE
+    assert not trace_factory.traces
