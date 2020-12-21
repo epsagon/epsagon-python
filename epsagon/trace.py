@@ -263,20 +263,27 @@ class TraceFactory(object):
             self.traces[thread_id] = new_trace
         return self.traces[thread_id]
 
+    @staticmethod
+    def _get_current_task():
+        """
+        Gets the current asyncio task safely
+        :return: The task.
+        """
+        # Dynamic import since this is only valid in Python3+
+        asyncio = __import__('asyncio')
+        try:
+            return asyncio.Task.current_task()
+        except RuntimeError:
+            return None
 
     def _get_tracer_async_mode(self, should_create):
         """
         Get or create trace assuming async tracer.
         :return: The trace.
         """
-        # Dynamic import since this is only valid in Python3+
-        asyncio = __import__('asyncio')
-        try:
-            task = asyncio.Task.current_task()
-            if not task:
-                return self._get_thread_trace(should_create=should_create)
-        except RuntimeError:
-            return self._get_thread_trace(should_create=should_create)
+        task = type(self)._get_current_task()
+        if not task:
+            return None
 
         trace = getattr(task, EPSAGON_MARKER, None)
         if not trace and should_create:
@@ -289,16 +296,12 @@ class TraceFactory(object):
         Pops the trace from the current task, assuming async tracer
         :return: The trace.
         """
-        asyncio = __import__('asyncio')
-        try:
-            task = asyncio.Task.current_task()
-            if not task:
-                return None
-        except RuntimeError:
+        task = type(self)._get_current_task()
+        if not task:
             return None
 
         trace = getattr(task, EPSAGON_MARKER, None)
-        if trace:
+        if trace: # can safely remove tracer from async task
             delattr(task, EPSAGON_MARKER)
         return trace
 
@@ -369,8 +372,10 @@ class TraceFactory(object):
         """
         with self.LOCK:
             if self.use_async_tracer:
-                if self._pop_trace_async_mode():
-                    return
+                trace = self._pop_trace_async_mode()
+                if trace:
+                    # async tracer found
+                    return trace
             if self.traces:
                 trace = self.traces.pop(self.get_trace_identifier(trace), None)
                 if not self.traces:
