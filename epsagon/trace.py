@@ -276,7 +276,7 @@ class TraceFactory(object):
             if not task:
                 return self._get_thread_trace()
         except RuntimeError:
-            return self._get_thread_trace(should_create)
+            return self._get_thread_trace(should_create=should_create)
 
         trace = getattr(task, EPSAGON_MARKER, None)
         if not trace and should_create:
