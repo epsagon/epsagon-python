@@ -278,7 +278,7 @@ class TraceFactory(object):
 
     def _get_tracer_async_mode(self, should_create):
         """
-        Get or create trace assuming async tracer.
+        Get trace assuming async tracer.
         :return: The trace.
         """
         task = type(self)._get_current_task()
