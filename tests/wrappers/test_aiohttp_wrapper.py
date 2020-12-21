@@ -10,12 +10,17 @@ RETURN_VALUE = 'a'
 async def handle(request):
     return web.Response(body=RETURN_VALUE)
 
+
+class CustomAioHttpException(Exception):
+    pass
+
+
 async def handle_error(request):
-    raise Exception('test')
+    raise CustomAioHttpException('test')
 
 
 def create_app(loop):
-    app = web.Application(loop=loop, middlewares=[AiohttpMiddleware])
+    app = web.Application(loop=loop, middlewares=[])
     app.router.add_route('GET', '/', handle)
     app.router.add_route('GET', '/err', handle_error)
     return app
@@ -39,13 +44,12 @@ async def test_aiohttp_sanity(_, trace_transport, aiohttp_client):
 async def test_aiohttp_exception(_, trace_transport, aiohttp_client):
     """Test when the handler got an exception."""
     client = await aiohttp_client(create_app)
-
     try:
         await client.get('/err')
-    except:
+    except CustomAioHttpException:
         pass
 
     runner = trace_transport.last_trace.events[0]
     assert runner.error_code == ErrorCode.EXCEPTION
-    assert runner.exception['type'] == 'Exception'
+    assert runner.exception['type'] == 'CustomAioHttpException'
     assert runner.exception['message'] == 'test'
