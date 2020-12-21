@@ -274,7 +274,7 @@ class TraceFactory(object):
         try:
             task = asyncio.Task.current_task()
             if not task:
-                return self._get_thread_trace()
+                return self._get_thread_trace(should_create=should_create)
         except RuntimeError:
             return self._get_thread_trace(should_create=should_create)
 
