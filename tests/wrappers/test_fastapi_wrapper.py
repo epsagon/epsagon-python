@@ -133,10 +133,15 @@ async def test_fastapi_multiple_requests(_, trace_transport, fastapi_app):
 @pytest.mark.asyncio
 @asynctest.patch('epsagon.trace.trace_factory.use_async_tracer')
 async def test_fastapi_multiple_threads_route(_, trace_transport, fastapi_app):
-    """Sanity test."""
+    """
+    Tests request to a route, which invokes multiple threads.
+    Validating no `zombie` traces exist (fromn the callback invoked threads)
+    """
     async with AsyncClient(app=fastapi_app, base_url="http://test") as ac:
         response = await ac.get(f"{MULTIPLE_THREADS_ROUTE}?x=testval")
     response_data = response.json()
+    # expects only 1 event. The new threads events shouldn't belong this trace
+    assert len(trace_transport.last_trace.events) == 1
     runner = trace_transport.last_trace.events[0]
     assert isinstance(runner, FastapiRunner)
     assert runner.resource['name'].startswith('127.0.0.1')
@@ -144,4 +149,5 @@ async def test_fastapi_multiple_threads_route(_, trace_transport, fastapi_app):
     assert runner.resource['metadata']['Response Data'] == MULTIPLE_THREADS_RETURN_VALUE
     assert runner.resource['metadata']['Query Params'] == { 'x': 'testval'}
     assert response_data == MULTIPLE_THREADS_RETURN_VALUE
+    # validating no `zombie` traces exist
     assert not trace_factory.traces

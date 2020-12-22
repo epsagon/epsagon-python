@@ -28,10 +28,14 @@ def _send_get_request(target_url, results):
     results.append(target_url)
 
 
-def multiple_threads_handler():
+def multiple_threads_handler(threads_count=3):
+    """
+    Invokes `threads_count` new threads, each performs an HTTP get request.
+    Waits for all threads and validates a result has been returned from each
+    thread.
+    """
     threads = []
     results = []
-    threads_count = 3
     for i in range(threads_count):
         thread = Thread(target = _send_get_request, args = ("http://google.com", results))
         thread.start()

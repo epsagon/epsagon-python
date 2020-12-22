@@ -177,4 +177,5 @@ def test_flask_wrapper_route_multiple_threads(trace_transport, client):
     role = 'multiple_threads'
     result = client.get('/{}'.format(role))
     validate_response(role, result, trace_transport)
+    # validating no `zombie` traces exist
     assert not trace_factory.traces

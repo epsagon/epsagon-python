@@ -346,7 +346,8 @@ class TraceFactory(object):
                     self.singleton_trace = self._create_new_trace()
                 return self.singleton_trace
 
-            # If multiple threads are used, then create a new trace for each thread
+            # If multiple threads are used, then create a
+            # new trace for each thread
             return self._get_thread_trace(should_create=should_create)
 
     @property
