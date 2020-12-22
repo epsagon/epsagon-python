@@ -93,7 +93,7 @@ class DBAPIEvent(BaseEvent):
             self.RESOURCE_TYPE
         )
         print_debug(
-            "{}: resource name - {}, operation - {}".format(
+            '{}: resource name - {}, operation - {}'.format(
                 self.event_id, self.resource['name'], self.resource['operation']
             )
         )
@@ -110,7 +110,7 @@ class DBAPIEvent(BaseEvent):
         ):
             self.resource['metadata']['Query'] = query[:MAX_QUERY_SIZE]
             print_debug(
-                "{}: collected query {}".format(
+                '{}: collected query {}'.format(
                     self.event_id, self.resource['metadata']['Query']
                     )
             )
@@ -162,7 +162,7 @@ class DBAPIEventFactory(object):
         :param exception:
         :return:
         """
-        print_debug("Creating DBAPI event")
+        print_debug('Creating DBAPI event')
         event = DBAPIEvent(
             cursor_wrapper.connection_wrapper,
             cursor_wrapper,
@@ -171,5 +171,5 @@ class DBAPIEventFactory(object):
             start_time,
             exception,
         )
-        print_debug("Adding DBAPI event to trace")
+        print_debug('Adding DBAPI event to trace')
         trace_factory.add_event(event)
