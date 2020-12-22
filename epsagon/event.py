@@ -8,7 +8,6 @@ import time
 import inspect
 import uuid
 from .common import ErrorCode
-from .utils import print_debug
 
 
 class BaseEvent(object):
@@ -43,10 +42,6 @@ class BaseEvent(object):
         if self.origin == 'runner':
             self.resource['metadata']['trace_id'] = str(uuid.uuid4())
 
-        print_debug(
-            'Initializing {} resource type event'.format(
-                self.RESOURCE_TYPE
-        ))
 
     @staticmethod
     def load_from_dict(event_data):
