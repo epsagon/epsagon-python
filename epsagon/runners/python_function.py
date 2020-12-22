@@ -64,7 +64,8 @@ class PythonRunner(BaseEvent):
         Add a field to metadata with value `data` and name `name`,
             only if it is JSON serializable
         """
-        if epsagon.trace.trace_factory.get_or_create_trace().metadata_only:
+        trace = epsagon.trace.trace_factory.get_trace()
+        if not trace or trace.metadata_only:
             return
 
         try:

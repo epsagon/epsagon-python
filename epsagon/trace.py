@@ -246,10 +246,9 @@ class TraceFactory(object):
         :param unique_id: unique id
         :return: trace
         """
-        with TraceFactory.LOCK:
-            return self._get_trace(unique_id=unique_id, should_create=True)
+        return self._get_trace(unique_id=unique_id, should_create=True)
 
-    def _get_thread_trace(self, should_create):
+    def _get_thread_trace(self, should_create=False):
         """
         Get or create trace assuming multi-threaded tracer.
         :return: The trace.
@@ -307,43 +306,48 @@ class TraceFactory(object):
 
     def _get_trace(self, unique_id=None, should_create=False):
         """
-        Get trace based on the use_single_trace/use_async_tracer.
+        Get trace based on the tracing mode:
+        single trace (use_single_trace=True) or
+        multiple threads (use_single_trace=False) or
+        async tasks (use_async_tracer=True)
+
         If should_create then creating a new trace if trace does not exist
         if use_single_trace is set to False, each thread will have
-        it's own trace.
+        it's own trace..
         if use_async_tracer is set to True, each asyncio.Task will be
         assigned with the trace.
         :return: The trace.
         """
-        if self.use_async_tracer:
-            return self._get_tracer_async_mode(should_create=should_create)
+        with TraceFactory.LOCK:
+            if self.use_async_tracer:
+                return self._get_tracer_async_mode(should_create=should_create)
 
-        unique_id = self.get_thread_local_unique_id(unique_id)
-        if unique_id:
-            trace = (
-                self.singleton_trace
-                if self.singleton_trace and not self.traces
-                else self.traces.get(
-                    unique_id, None
+            unique_id = self.get_thread_local_unique_id(unique_id)
+            if unique_id:
+                trace = (
+                    self.singleton_trace
+                    if self.singleton_trace and not self.traces
+                    else self.traces.get(
+                            unique_id, None
+                    )
                 )
-            )
-            if not trace:
-                if not should_create:
-                    return None
-                trace = self._create_new_trace(unique_id)
-            # Making sure singleton trace contains the latest trace
-            trace.unique_id = unique_id
-            self.singleton_trace = trace
-            self.traces[unique_id] = trace
-            return trace
+                if not trace:
+                    if not should_create:
+                        return None
+                    trace = self._create_new_trace(unique_id)
+                # Making sure singleton trace contains the latest trace
+                trace.unique_id = unique_id
+                self.singleton_trace = trace
+                self.traces[unique_id] = trace
+                return trace
 
-        if self.use_single_trace:
-            if self.singleton_trace is None and should_create:
-                self.singleton_trace = self._create_new_trace()
-            return self.singleton_trace
+            if self.use_single_trace:
+                if self.singleton_trace is None and should_create:
+                    self.singleton_trace = self._create_new_trace()
+                return self.singleton_trace
 
-        # If multiple threads are used, then create a new trace for each thread
-        return self._get_thread_trace(should_create)
+            # If multiple threads are used, then create a new trace for each thread
+            return self._get_thread_trace(should_create=should_create)
 
     @property
     def active_trace(self):
@@ -435,10 +439,9 @@ class TraceFactory(object):
     def get_trace(self):
         """
         Get the relevant trace (may be thread-based or a singleton trace)
-        :return:
+        :return: The trace, None if trace does not exist
         """
-        with TraceFactory.LOCK:
-            return self._get_trace(should_create=False)
+        return self._get_trace(should_create=False)
 
     def add_event(self, event):
         """
