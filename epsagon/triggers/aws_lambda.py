@@ -220,7 +220,7 @@ class SNSLambdaTrigger(BaseLambdaTrigger):
             'Notification Message',
             message
         )
-        print_debug("Initialized SNS Lambda trigger")
+        print_debug('Initialized SNS Lambda trigger')
 
 
 class SQSLambdaTrigger(BaseLambdaTrigger):
