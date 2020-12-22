@@ -7,7 +7,7 @@ from uuid import uuid4
 from importlib import import_module
 import hashlib
 import json
-from epsagon.utils import add_data_if_needed, parse_json
+from epsagon.utils import add_data_if_needed, parse_json, print_debug
 from ..event import BaseEvent
 from ..constants import EPSAGON_HEADER
 
@@ -26,6 +26,19 @@ class BaseLambdaTrigger(BaseEvent):
     Represents base Lambda trigger
     """
     ORIGIN = 'trigger'
+
+    def __init__(self, start_time):
+        """
+        Initialize.
+        :param start_time: event's start time (epoch)
+        """
+
+        super(BaseLambdaTrigger, self).__init__(start_time)
+        print_debug(
+            'Initializing Lambda trigger from {} resource type'.format(
+                self.RESOURCE_TYPE
+            )
+        )
 
 
 class JSONLambdaTrigger(BaseLambdaTrigger):
