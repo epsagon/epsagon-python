@@ -1182,19 +1182,29 @@ class Trace(object):
             else create_transport(self.collector_url, self.token)
         )
 
-        # Update events resource metadata.
-        for event in self.events:
-            # Remove ignored keys.
-            event.resource['metadata'] = self.remove_ignored_keys(
-                event.resource['metadata'])
-            # Keep allowed keys.
-            if self.keys_to_allow:
-                event.resource['metadata'] = self.get_dict_with_allow_keys(
+        try:
+            # Update events resource metadata.
+            for event in self.events:
+                # Remove ignored keys.
+                event.resource['metadata'] = self.remove_ignored_keys(
                     event.resource['metadata'])
-            type(self)._trim_dict_values(
-                event.resource['metadata'],
-                MAX_METADATA_FIELD_SIZE_LIMIT
-            )
+                # Keep allowed keys.
+                if self.keys_to_allow:
+                    event.resource['metadata'] = self.get_dict_with_allow_keys(
+                        event.resource['metadata'])
+                type(self)._trim_dict_values(
+                    event.resource['metadata'],
+                    MAX_METADATA_FIELD_SIZE_LIMIT
+                )
+        except Exception as exception:
+            if self.debug:
+                print(
+                    'Failed to send trace: '
+                    'updating events resource metadata failed: {}'.format(
+                        exception
+                    )
+                )
+            return
 
         try:
             if self.runner:
