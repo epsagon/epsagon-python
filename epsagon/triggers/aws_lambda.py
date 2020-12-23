@@ -7,7 +7,7 @@ from uuid import uuid4
 from importlib import import_module
 import hashlib
 import json
-from epsagon.utils import add_data_if_needed, parse_json
+from epsagon.utils import add_data_if_needed, parse_json, print_debug
 from ..event import BaseEvent
 from ..constants import EPSAGON_HEADER
 
@@ -220,6 +220,7 @@ class SNSLambdaTrigger(BaseLambdaTrigger):
             'Notification Message',
             message
         )
+        print_debug('Initialized SNS Lambda trigger')
 
 
 class SQSLambdaTrigger(BaseLambdaTrigger):

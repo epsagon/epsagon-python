@@ -23,7 +23,7 @@ except ImportError:
 
 from ..trace import trace_factory
 from ..event import BaseEvent
-from ..utils import database_connection_type
+from ..utils import database_connection_type, print_debug
 
 MAX_QUERY_SIZE = 2048
 
@@ -68,33 +68,47 @@ class DBAPIEvent(BaseEvent):
         """
 
         super(DBAPIEvent, self).__init__(start_time)
-
         self.event_id = 'dbapi-{}'.format(str(uuid4()))
 
         # in case of pg instrumentation we extract data from the dsn property
         if hasattr(connection, 'dsn'):
+            print_debug('Parsing using dsn')
             dsn = parse_dsn(connection.dsn)
-            db_name = dsn['dbname']
+            print_debug('Parsed dsn: {}'.format(dsn))
+            db_name = dsn.get('dbname', '')
             host = dsn.get('host', 'local')
             query = cursor.query
         else:
             query = _args[0]
             host = connection.extract_hostname
             db_name = connection.extract_dbname
+        print_debug(
+            'Extracted db name - {}, host - {}, query - {}'.format(
+                db_name, host, query
+            )
+        )
 
         self.resource['name'] = db_name if db_name else host
 
         # NOTE: The operation might not be identified properly when
         # using 'WITH' clause
-        operation = query.split()[0].lower()
+        splitted_query = query.split()
+        if not splitted_query:
+            print_debug('Cannot extract operation from query {}'.format(query))
+            operation = ''
+        else:
+            operation = splitted_query[0].lower()
         self.resource['operation'] = operation
-
         # override event type with the specific DB type
         self.resource['type'] = database_connection_type(
             host,
             self.RESOURCE_TYPE
         )
-
+        print_debug(
+            '{}: resource name - {}, operation - {}'.format(
+                self.event_id, self.resource['name'], self.resource['operation']
+            )
+        )
         self.resource['metadata'] = {
             'Host': host,
             'Driver': connection.__class__.__module__.split('.')[0],
@@ -107,6 +121,11 @@ class DBAPIEvent(BaseEvent):
                 (not trace_factory.metadata_only)
         ):
             self.resource['metadata']['Query'] = query[:MAX_QUERY_SIZE]
+            print_debug(
+                '{}: collected query {}'.format(
+                    self.event_id, self.resource['metadata']['Query']
+                    )
+            )
 
         if exception is None:
             # Update response data
@@ -155,6 +174,7 @@ class DBAPIEventFactory(object):
         :param exception:
         :return:
         """
+        print_debug('Creating DBAPI event')
         event = DBAPIEvent(
             cursor_wrapper.connection_wrapper,
             cursor_wrapper,
@@ -163,4 +183,5 @@ class DBAPIEventFactory(object):
             start_time,
             exception,
         )
+        print_debug('Adding DBAPI event to trace')
         trace_factory.add_event(event)
