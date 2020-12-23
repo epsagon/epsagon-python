@@ -1196,6 +1196,7 @@ class Trace(object):
                     event.resource['metadata'],
                     MAX_METADATA_FIELD_SIZE_LIMIT
                 )
+
         except Exception as exception:
             if self.debug:
                 print(
@@ -1204,6 +1205,7 @@ class Trace(object):
                         exception
                     )
                 )
+                traceback.print_exc()
             return
 
         try:
