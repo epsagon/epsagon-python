@@ -72,20 +72,32 @@ class DBAPIEvent(BaseEvent):
 
         # in case of pg instrumentation we extract data from the dsn property
         if hasattr(connection, 'dsn'):
+            print_debug('Parsing using dsn')
             dsn = parse_dsn(connection.dsn)
-            db_name = dsn['dbname']
+            print_debug('Parsed dsn: {}'.format(dsn))
+            db_name = dsn.get('dbname', '')
             host = dsn.get('host', 'local')
             query = cursor.query
         else:
             query = _args[0]
             host = connection.extract_hostname
             db_name = connection.extract_dbname
+        print_debug(
+            'Extracted db name - {}, host - {}, query - {}'.format(
+                db_name, host, query
+            )
+        )
 
         self.resource['name'] = db_name if db_name else host
 
         # NOTE: The operation might not be identified properly when
         # using 'WITH' clause
-        operation = query.split()[0].lower()
+        splitted_query = query.split()
+        if not splitted_query:
+            print_debug('Cannot extract operation from query {}'.format(query))
+            operation = ''
+        else:
+            operation = splitted_query[0].lower()
         self.resource['operation'] = operation
         # override event type with the specific DB type
         self.resource['type'] = database_connection_type(

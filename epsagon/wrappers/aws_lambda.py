@@ -142,7 +142,7 @@ def lambda_wrapper(func):
                 epsagon.trace.trace_factory.send_traces()
             # pylint: disable=W0703
             except Exception:
-                epsagon.utils.print_debug('Failed to sent Lambda trace')
+                epsagon.utils.print_debug('Failed to send Lambda trace')
 
     _lambda_wrapper.__instrumented__ = True
     return _lambda_wrapper
