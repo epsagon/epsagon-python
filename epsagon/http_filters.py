@@ -76,7 +76,10 @@ def is_payload_collection_blacklisted(url):
     :return:  True if URL is blacklisted, else False
     """
     url = urllib.parse.urlparse(url).netloc
-    trace_blacklist_urls = trace_factory.get_trace().url_patterns_to_ignore
+    if trace_factory.get_trace():
+        trace_blacklist_urls = trace_factory.get_trace().url_patterns_to_ignore
+    else:
+        trace_blacklist_urls = tuple()
     return any(blacklist_url in url for blacklist_url in trace_blacklist_urls)
 
 

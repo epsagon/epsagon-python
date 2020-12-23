@@ -19,7 +19,11 @@ fake_event_bus_name_missing = {
 
 def setup_function(func):
     trace_factory.use_single_trace = True
+    trace_factory.get_or_create_trace()
 
+
+def teardown_function(func):
+    trace_factory.singleton_trace = None
 
 def _get_active_trace():
     return trace_factory.active_trace
