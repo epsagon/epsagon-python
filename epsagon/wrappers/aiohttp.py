@@ -44,9 +44,11 @@ async def AiohttpMiddleware(request, handler):
     except Exception as exception: # pylint: disable=W0703
         warnings.warn('Could not extract request', EpsagonWarning)
 
+    raised_err = None
     try:
         response = await handler(request)
     except Exception as exception:  # pylint: disable=W0703
+        raised_err = exception
         traceback_data = get_traceback_data_from_exception(exception)
         trace.runner.set_exception(exception, traceback_data)
 
@@ -58,5 +60,6 @@ async def AiohttpMiddleware(request, handler):
 
     if runner:
         epsagon.trace.trace_factory.send_traces()
-
+    if raised_err:
+        raise raised_err
     return response
