@@ -1048,7 +1048,9 @@ class Trace(object):
         :param key: The key to strip.
         :return: Stripped key.
         """
-        return str(key).lower().replace('-', '').replace('_', '').replace(' ', '')
+        return (
+            str(key).lower().replace('-', '').replace('_', '').replace(' ', '')
+        )
 
     def remove_ignored_keys(self, input_dict):
         """
