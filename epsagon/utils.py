@@ -96,6 +96,7 @@ def get_tc_url(use_ssl):
 
 
 def get_trace_log_config():
+    """Returns the trace log correlation configuration"""
     # Default is True
     logging_tracing_enabled = True
 
