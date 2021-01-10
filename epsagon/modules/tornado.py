@@ -11,7 +11,7 @@ import wrapt
 import epsagon.trace
 from epsagon.runners.tornado import TornadoRunner
 from epsagon.http_filters import ignore_request, is_ignored_endpoint
-from epsagon.utils import collect_container_metadata
+from epsagon.utils import collect_container_metadata, print_debug
 
 TORNADO_TRACE_ID = 'epsagon_tornado_trace_key'
 
@@ -31,6 +31,7 @@ class TornadoWrapper(object):
         :param args: wrapt's args
         :param kwargs: wrapt's kwargs
         """
+        print_debug('before_request Tornado request')
         try:
             ignored = ignore_request('', instance.request.path)
             if not ignored and not is_ignored_endpoint(instance.request.path):
@@ -48,6 +49,7 @@ class TornadoWrapper(object):
                 )
 
                 trace.set_runner(cls.RUNNERS[unique_id])
+                print_debug('Created Tornado Runner')
 
                 # Collect metadata in case this is a container.
                 collect_container_metadata(
@@ -69,9 +71,18 @@ class TornadoWrapper(object):
         :param args: wrapt's args
         :param kwargs: wrapt's kwargs
         """
-        response_body = getattr(instance, '_write_buffer', None)
-        if response_body and isinstance(response_body, list):
-            response_body = b''.join(response_body)
+        print_debug('after_request Tornado request')
+        response_body = None
+        try:
+            response_body = getattr(instance, '_write_buffer', None)
+            if response_body and isinstance(response_body, list):
+                response_body = b''.join(response_body)
+        except Exception as instrumentation_exception:  # pylint: disable=W0703
+            epsagon.trace.trace_factory.add_exception(
+                instrumentation_exception,
+                traceback.format_exc()
+            )
+
         res = wrapped(*args, **kwargs)
         try:
             unique_id = getattr(instance, TORNADO_TRACE_ID, None)
@@ -79,6 +90,11 @@ class TornadoWrapper(object):
                 return res
 
             tornado_runner = cls.RUNNERS.pop(unique_id)
+
+            # Ignoring 404s
+            if getattr(instance, '_status_code', None) == 404:
+                print_debug('Ignoring 404 Tornado request')
+                return res
 
             trace = epsagon.trace.trace_factory.switch_active_trace(
                 unique_id
@@ -111,6 +127,7 @@ class TornadoWrapper(object):
         :param args: wrapt's args
         :param kwargs: wrapt's kwargs
         """
+        print_debug('collect_exception Tornado request')
         try:
             unique_id = getattr(instance, TORNADO_TRACE_ID, None)
 

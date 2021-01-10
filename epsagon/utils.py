@@ -95,6 +95,19 @@ def get_tc_url(use_ssl):
     return TRACE_COLLECTOR_URL.format(protocol=protocol, region=REGION)
 
 
+def get_trace_log_config():
+    """Returns the trace log correlation configuration"""
+    # In case we're running on AWS Lambda, logging correlation is disabled
+    if is_lambda_env():
+        return False
+
+    # If EPSAGON_LOGGING_TRACING_ENABLED exists as an env var - use it
+    if os.getenv('EPSAGON_LOGGING_TRACING_ENABLED'):
+        return os.getenv('EPSAGON_LOGGING_TRACING_ENABLED').upper() == 'TRUE'
+
+    return True
+
+
 def init(
     token='',
     app_name='Application',
@@ -174,15 +187,7 @@ def init(
     if os.getenv('EPSAGON_METADATA'):
         metadata_only = (os.getenv('EPSAGON_METADATA') or '').upper() == 'TRUE'
 
-    # If EPSAGON_LOGGING_TRACING_ENABLED exists as an env var - use it
-    if os.getenv('EPSAGON_LOGGING_TRACING_ENABLED'):
-        logging_tracing_enabled = (
-            os.getenv('EPSAGON_LOGGING_TRACING_ENABLED') or ''
-        ).upper() == 'TRUE'
-
-    # In case we're running on AWS Lambda, logging correlation is disabled
-    if is_lambda_env():
-        logging_tracing_enabled = False
+    logging_tracing_enabled = get_trace_log_config()
 
     if os.getenv('EPSAGON_SAMPLE_RATE'):
         sample_rate = float(os.getenv('EPSAGON_SAMPLE_RATE'))
