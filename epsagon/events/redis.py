@@ -113,7 +113,6 @@ class RedisSingleExecutionEvent(BaseRedisEvent):
         self.resource['metadata']['Redis Key'] = key
 
         if response:
-            print('***'*100)
             add_data_if_needed(
                 self.resource['metadata'],
                 'redis.response',

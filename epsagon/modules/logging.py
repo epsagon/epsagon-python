@@ -71,7 +71,6 @@ def _epsagon_trace_id_wrapper(msg_index, wrapped, _instance, args, kwargs):
     :param kwargs: wrapt's kwargs
     :return: None
     """
-    # import ipdb;ipdb.set_trace()
     trace_log_id = trace_factory.get_log_id()
 
     if not trace_log_id:
