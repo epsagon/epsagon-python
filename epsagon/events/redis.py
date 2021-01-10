@@ -8,6 +8,8 @@ import traceback
 
 from ..event import BaseEvent
 from ..trace import trace_factory
+from ..utils import add_data_if_needed
+
 
 MAX_VALUE_SIZE = 1024
 MAX_CMD_PIPELINE = 10
@@ -109,6 +111,14 @@ class RedisSingleExecutionEvent(BaseRedisEvent):
         operation, key = _parse_redis_cmd(args)
         self.resource['operation'] = operation
         self.resource['metadata']['Redis Key'] = key
+
+        if response:
+            print('***'*100)
+            add_data_if_needed(
+                self.resource['metadata'],
+                'redis.response',
+                response
+            )
 
 
 class RedisMultiExecutionEvent(BaseRedisEvent):

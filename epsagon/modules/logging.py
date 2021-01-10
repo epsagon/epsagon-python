@@ -11,7 +11,7 @@ from functools import partial
 import wrapt
 
 from ..trace import trace_factory
-from ..utils import print_debug
+from ..utils import print_debug, get_trace_log_config
 
 LOGGING_FUNCTIONS = (
     'info',
@@ -71,6 +71,7 @@ def _epsagon_trace_id_wrapper(msg_index, wrapped, _instance, args, kwargs):
     :param kwargs: wrapt's kwargs
     :return: None
     """
+    # import ipdb;ipdb.set_trace()
     trace_log_id = trace_factory.get_log_id()
 
     if not trace_log_id:
@@ -99,7 +100,7 @@ def patch():
     wrapt.wrap_function_wrapper('logging', 'Logger.exception', _wrapper)
 
     # Instrument logging with Epsagon trace ID
-    if trace_factory.is_logging_tracing_enabled():
+    if get_trace_log_config():
         wrapt.wrap_function_wrapper(
             'logging',
             'Logger.log',
