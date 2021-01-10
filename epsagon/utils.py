@@ -97,20 +97,15 @@ def get_tc_url(use_ssl):
 
 def get_trace_log_config():
     """Returns the trace log correlation configuration"""
-    # Default is True
-    logging_tracing_enabled = True
+    # In case we're running on AWS Lambda, logging correlation is disabled
+    if is_lambda_env():
+        return False
 
     # If EPSAGON_LOGGING_TRACING_ENABLED exists as an env var - use it
     if os.getenv('EPSAGON_LOGGING_TRACING_ENABLED'):
-        logging_tracing_enabled = (
-            os.getenv('EPSAGON_LOGGING_TRACING_ENABLED') or ''
-        ).upper() == 'TRUE'
+        return os.getenv('EPSAGON_LOGGING_TRACING_ENABLED').upper() == 'TRUE'
 
-    # In case we're running on AWS Lambda, logging correlation is disabled
-    if is_lambda_env():
-        logging_tracing_enabled = False
-
-    return logging_tracing_enabled
+    return True
 
 
 def init(
