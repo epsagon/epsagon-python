@@ -96,7 +96,7 @@ class TornadoRunner(BaseEvent):
         )
 
         if response_body:
-            if isinstance(response_body, list) and len(response_body) > 0:
+            if isinstance(response_body, list):
                 response_body = response_body[0]
             if isinstance(response_body, bytes):
                 response_body = response_body.decode('utf-8')
