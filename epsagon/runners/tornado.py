@@ -6,7 +6,7 @@ Runner for a Tornado Python framework
 from __future__ import absolute_import
 import uuid
 from ..event import BaseEvent
-from ..utils import add_data_if_needed, print_debug
+from ..utils import add_data_if_needed
 from ..constants import EPSAGON_HEADER_TITLE
 
 MAX_PAYLOAD_BYTES = 2000
@@ -68,19 +68,6 @@ class TornadoRunner(BaseEvent):
                 'Request Headers',
                 request_headers
             )
-
-        try:
-            if request.body:
-                body = request.body
-                if isinstance(body, bytes):
-                    body = body.decode('utf-8')
-                add_data_if_needed(
-                    self.resource['metadata'],
-                    'Request Data',
-                    body
-                )
-        except Exception as exception:  # pylint: disable=broad-except
-            print_debug('Could not extract body: {}'.format(exception))
 
     def update_response(self, response, response_body=None):
         """

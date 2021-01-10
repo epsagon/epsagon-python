@@ -113,20 +113,16 @@ class Urllib3Event(BaseEvent):
                 'response_headers',
                 headers
             )
-            response_body = getattr(response, 'data', None)
-            if not response_body and getattr(response, 'peek', None):
-                response_body = response.peek()
+            response_body = response.peek()
             if isinstance(response_body, bytes):
                 try:
                     response_body = response_body.decode('utf-8')
                 except UnicodeDecodeError:
                     response_body = str(response_body)
-            if response_body:
-                add_data_if_needed(
-                    self.resource['metadata'],
-                    'response_body',
-                    response_body
-                )
+            add_data_if_needed(
+                self.resource['metadata'],
+                'response_body',
+                response_body)
 
         # Detect errors based on status code
         if response.status >= HTTP_ERR_CODE:
