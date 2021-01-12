@@ -53,3 +53,15 @@ async def test_aiohttp_exception(_, trace_transport, aiohttp_client):
     assert runner.error_code == ErrorCode.EXCEPTION
     assert runner.exception['type'] == 'CustomAioHttpException'
     assert runner.exception['message'] == 'test'
+
+
+@asynctest.patch('epsagon.trace.trace_factory.use_async_tracer')
+async def test_aiohttp_no_endpoint(_, trace_transport, aiohttp_client):
+    """Test when no route exists (404)."""
+    client = await aiohttp_client(create_app)
+    response = await client.get('/not/exists')
+    assert response.status == 404
+    # Trace not sent
+    trace_transport.send.assert_not_called()
+    # Trace removed
+    assert trace_transport.last_trace is None

@@ -39,7 +39,7 @@ class AiohttpRunner(BaseEvent):
             'Base URL': request.url.host,
             'Path': request.url.path,
             'User Agent': request.headers.get('User-Agent', 'N/A'),
-            'Endpoint': handler.__name__,
+            'Endpoint': getattr(handler, '__name__', ''),
         })
 
         if request.query_string:
