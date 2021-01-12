@@ -122,8 +122,7 @@ class Urllib3Event(BaseEvent):
             add_data_if_needed(
                 self.resource['metadata'],
                 'response_body',
-                response_body
-            )
+                response_body)
 
         # Detect errors based on status code
         if response.status >= HTTP_ERR_CODE:
