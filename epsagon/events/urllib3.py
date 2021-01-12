@@ -113,9 +113,7 @@ class Urllib3Event(BaseEvent):
                 'response_headers',
                 headers
             )
-            response_body = getattr(response, 'data', None)
-            if not response_body and getattr(response, 'peek', None):
-                response_body = response.peek()
+            response_body = response.peek()
             if isinstance(response_body, bytes):
                 try:
                     response_body = response_body.decode('utf-8')

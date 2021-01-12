@@ -48,6 +48,11 @@ async def AiohttpMiddleware(request, handler):
     try:
         response = await handler(request)
     except Exception as exception:  # pylint: disable=W0703
+        # Ignoring 404s
+        if type(exception).__name__ == 'HTTPNotFound':
+            epsagon.trace.trace_factory.pop_trace(trace)
+            raise
+
         raised_err = exception
         traceback_data = get_traceback_data_from_exception(exception)
         trace.runner.set_exception(exception, traceback_data)

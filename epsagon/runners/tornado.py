@@ -96,10 +96,16 @@ class TornadoRunner(BaseEvent):
         )
 
         if response_body:
+            body = response_body
+            if isinstance(body, list):
+                body = body[0]
+            if isinstance(body, bytes):
+                body = body.decode('utf-8')
+
             add_data_if_needed(
                 self.resource['metadata'],
                 'Response Body',
-                str(response_body)[:MAX_PAYLOAD_BYTES]
+                str(body)[:MAX_PAYLOAD_BYTES]
             )
 
         self.resource['metadata']['status_code'] = response._status_code
