@@ -6,6 +6,7 @@ from __future__ import absolute_import
 import time
 import warnings
 from aiohttp.web import middleware
+from aiohttp.web_exceptions import HTTPNotFound
 
 import epsagon.trace
 import epsagon.triggers.http
@@ -53,12 +54,11 @@ async def AiohttpMiddleware(request, handler):
     try:
         response = await handler(request)
         print_debug('[aiohttp] got response')
-    except Exception as exception:  # pylint: disable=W0703
+    except HTTPNotFound:
         # Ignoring 404s
-        if type(exception).__name__ == 'HTTPNotFound':
-            epsagon.trace.trace_factory.pop_trace(trace)
-            raise
-
+        epsagon.trace.trace_factory.pop_trace(trace)
+        raise
+    except Exception as exception:  # pylint: disable=W0703
         raised_err = exception
         traceback_data = get_traceback_data_from_exception(exception)
         trace.runner.set_exception(exception, traceback_data)

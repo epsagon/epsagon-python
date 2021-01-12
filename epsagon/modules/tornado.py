@@ -91,14 +91,15 @@ class TornadoWrapper(object):
 
             tornado_runner = cls.RUNNERS.pop(unique_id)
 
-            # Ignoring 404s
-            if getattr(instance, '_status_code', None) == 404:
-                print_debug('Ignoring 404 Tornado request')
-                return res
-
             trace = epsagon.trace.trace_factory.switch_active_trace(
                 unique_id
             )
+
+            # Ignoring 404s
+            if getattr(instance, '_status_code', None) == 404:
+                epsagon.trace.trace_factory.pop_trace(trace=trace)
+                print_debug('Ignoring 404 Tornado request')
+                return res
 
             if trace:
                 content = (

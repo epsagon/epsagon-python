@@ -80,7 +80,7 @@ class TornadoRunner(BaseEvent):
                     body
                 )
         except Exception as exception:  # pylint: disable=broad-except
-            print_debug('Could not extract body: {}'.format(exception))
+            print_debug('Could not extract request body: {}'.format(exception))
 
     def update_response(self, response, response_body=None):
         """

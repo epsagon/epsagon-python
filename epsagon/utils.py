@@ -102,10 +102,7 @@ def get_trace_log_config():
         return False
 
     # If EPSAGON_LOGGING_TRACING_ENABLED exists as an env var - use it
-    if os.getenv('EPSAGON_LOGGING_TRACING_ENABLED'):
-        return os.getenv('EPSAGON_LOGGING_TRACING_ENABLED').upper() == 'TRUE'
-
-    return True
+    return os.getenv('EPSAGON_LOGGING_TRACING_ENABLED', 'TRUE').upper() == 'TRUE'
 
 
 def init(
