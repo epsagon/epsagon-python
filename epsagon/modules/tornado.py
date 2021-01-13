@@ -8,6 +8,8 @@ import traceback
 import uuid
 from functools import partial
 import wrapt
+from tornado.httpclient import HTTPRequest
+from tornado.httputil import HTTPHeaders
 import epsagon.trace
 from epsagon.modules.general_wrapper import wrapper
 from epsagon.runners.tornado import TornadoRunner
@@ -15,8 +17,6 @@ from epsagon.http_filters import ignore_request, is_ignored_endpoint
 from epsagon.utils import collect_container_metadata, print_debug
 from ..constants import EPSAGON_HEADER
 from ..events.tornado_client import TornadoClientEventFactory
-from tornado.httpclient import HTTPRequest
-from tornado.httputil import HTTPHeaders
 
 
 TORNADO_TRACE_ID = 'epsagon_tornado_trace_key'
@@ -258,7 +258,7 @@ def _wrapper(wrapped, instance, args, kwargs):
     """
     try:
         request, raise_error = _prepare_http_request(*args, **kwargs)
-    except:
+    except Exception:  # pylint: disable=W0703
         return wrapped(*args, **kwargs)
 
     # Inject header to support tracing over HTTP requests
