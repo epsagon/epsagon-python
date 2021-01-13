@@ -14,7 +14,11 @@ import epsagon.trace
 from epsagon.modules.general_wrapper import wrapper
 from epsagon.runners.tornado import TornadoRunner
 from epsagon.http_filters import ignore_request, is_ignored_endpoint
-from epsagon.utils import collect_container_metadata, print_debug, get_epsagon_http_trace_id
+from epsagon.utils import (
+    collect_container_metadata,
+    print_debug,
+    get_epsagon_http_trace_id
+)
 from ..constants import EPSAGON_HEADER
 from ..events.tornado_client import TornadoClientEventFactory
 
