@@ -8,10 +8,20 @@ import traceback
 import uuid
 from functools import partial
 import wrapt
+from tornado.httpclient import HTTPRequest
+from tornado.httputil import HTTPHeaders
 import epsagon.trace
+from epsagon.modules.general_wrapper import wrapper
 from epsagon.runners.tornado import TornadoRunner
 from epsagon.http_filters import ignore_request, is_ignored_endpoint
-from epsagon.utils import collect_container_metadata, print_debug
+from epsagon.utils import (
+    collect_container_metadata,
+    print_debug,
+    get_epsagon_http_trace_id
+)
+from ..constants import EPSAGON_HEADER
+from ..events.tornado_client import TornadoClientEventFactory
+
 
 TORNADO_TRACE_ID = 'epsagon_tornado_trace_key'
 
@@ -229,6 +239,50 @@ class TornadoWrapper(object):
         return res
 
 
+def _prepare_http_request(request, raise_error=True, **kwargs):
+    """
+    Copying parameters from original `AsyncHTTPClient.fetch` function
+    :return: HTTPRequest, raise_error bool
+    """
+    # request can be a URL string or a HTTPRequest object
+    if not isinstance(request, HTTPRequest):
+        request = HTTPRequest(request, **kwargs)
+
+    return request, raise_error
+
+
+def _wrapper(wrapped, instance, args, kwargs):
+    """
+    General wrapper for AsyncHTTPClient instrumentation.
+    :param wrapped: wrapt's wrapped
+    :param instance: wrapt's instance
+    :param args: wrapt's args
+    :param kwargs: wrapt's kwargs
+    :return: None
+    """
+    try:
+        request, raise_error = _prepare_http_request(*args, **kwargs)
+    except Exception:  # pylint: disable=W0703
+        return wrapped(*args, **kwargs)
+
+    trace_header = get_epsagon_http_trace_id()
+
+    if isinstance(request.headers, HTTPHeaders):
+        if not request.headers.get(EPSAGON_HEADER):
+            request.headers.add(EPSAGON_HEADER, trace_header)
+    elif isinstance(request.headers, dict):
+        if EPSAGON_HEADER not in request.headers:
+            request.headers[EPSAGON_HEADER] = trace_header
+
+    return wrapper(
+        TornadoClientEventFactory,
+        wrapped,
+        instance,
+        (request, ),  # new args
+        {'raise_error': raise_error}  # new kwargs
+    )
+
+
 def patch():
     """
     Patch module.
@@ -267,3 +321,9 @@ def patch():
     except Exception:  # pylint: disable=broad-except
         # Can happen in different Tornado versions.
         pass
+
+    wrapt.wrap_function_wrapper(
+        'tornado.httpclient',
+        'AsyncHTTPClient.fetch',
+        _wrapper
+    )

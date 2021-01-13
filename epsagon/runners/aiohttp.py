@@ -7,7 +7,7 @@ import uuid
 from aiohttp.payload import StringPayload
 from ..event import BaseEvent
 from ..utils import add_data_if_needed, normalize_http_url
-from ..constants import EPSAGON_HEADER
+from ..constants import EPSAGON_HEADER_TITLE
 
 
 class AiohttpRunner(BaseEvent):
@@ -53,9 +53,9 @@ class AiohttpRunner(BaseEvent):
             )
 
         request_headers = dict(request.headers)
-        if request_headers.get(EPSAGON_HEADER):
+        if request_headers.get(EPSAGON_HEADER_TITLE):
             self.resource['metadata']['http_trace_id'] = request_headers.get(
-                EPSAGON_HEADER
+                EPSAGON_HEADER_TITLE
             )
         if request_headers:
             add_data_if_needed(
