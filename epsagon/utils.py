@@ -5,6 +5,7 @@ Utilities for Epsagon module.
 from __future__ import absolute_import, print_function
 import os
 import collections
+import uuid
 import socket
 import sys
 import traceback
@@ -83,6 +84,18 @@ def update_http_headers(resource_data, response_headers):
             break
 
     return resource_data
+
+
+def get_epsagon_http_trace_id():
+    """Returns an Epsagon trace ID to inject over HTTP."""
+    trace_id = uuid.uuid4().hex
+    span_id = uuid.uuid4().hex[16:]
+    parent_span_id = uuid.uuid4().hex[16:]
+    return '{trace_id}:{span_id}:{parent_span_id}:1'.format(
+        trace_id=trace_id,
+        span_id=span_id,
+        parent_span_id=parent_span_id
+    )
 
 
 def get_tc_url(use_ssl):

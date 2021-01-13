@@ -14,7 +14,7 @@ import epsagon.trace
 from epsagon.modules.general_wrapper import wrapper
 from epsagon.runners.tornado import TornadoRunner
 from epsagon.http_filters import ignore_request, is_ignored_endpoint
-from epsagon.utils import collect_container_metadata, print_debug
+from epsagon.utils import collect_container_metadata, print_debug, get_epsagon_http_trace_id
 from ..constants import EPSAGON_HEADER
 from ..events.tornado_client import TornadoClientEventFactory
 
@@ -261,15 +261,7 @@ def _wrapper(wrapped, instance, args, kwargs):
     except Exception:  # pylint: disable=W0703
         return wrapped(*args, **kwargs)
 
-    # Inject header to support tracing over HTTP requests
-    trace_id = uuid.uuid4().hex
-    span_id = uuid.uuid4().hex[16:]
-    parent_span_id = uuid.uuid4().hex[16:]
-    trace_header = '{trace_id}:{span_id}:{parent_span_id}:1'.format(
-        trace_id=trace_id,
-        span_id=span_id,
-        parent_span_id=parent_span_id
-    )
+    trace_header = get_epsagon_http_trace_id()
 
     if isinstance(request.headers, HTTPHeaders):
         if not request.headers.get(EPSAGON_HEADER):
