@@ -16,7 +16,7 @@ from epsagon.utils import (
     collect_container_metadata,
     get_traceback_data_from_exception
 )
-from ..http_filters import ignore_request
+from ..http_filters import ignore_request, is_ignored_endpoint
 from ..utils import print_debug
 
 
@@ -31,7 +31,10 @@ async def AiohttpMiddleware(request, handler):
     print_debug('[aiohttp] started middleware')
     epsagon.trace.trace_factory.switch_to_async_tracer()
 
-    if ignore_request('', request.path.lower()):
+    if (
+        ignore_request('', request.path.lower()) or
+        is_ignored_endpoint(request.path.lower())
+    ):
         print_debug('[aiohttp] ignoring request')
         return await handler(request)
 
