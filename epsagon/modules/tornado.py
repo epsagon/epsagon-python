@@ -260,11 +260,13 @@ def _wrapper(wrapped, instance, args, kwargs):
     :param kwargs: wrapt's kwargs
     :return: None
     """
+    print_debug('AsyncHTTPClient init')
     try:
         request, raise_error = _prepare_http_request(*args, **kwargs)
     except Exception:  # pylint: disable=W0703
         return wrapped(*args, **kwargs)
 
+    print_debug('AsyncHTTPClient setting header')
     trace_header = get_epsagon_http_trace_id()
 
     if isinstance(request.headers, HTTPHeaders):
@@ -274,6 +276,7 @@ def _wrapper(wrapped, instance, args, kwargs):
         if EPSAGON_HEADER not in request.headers:
             request.headers[EPSAGON_HEADER] = trace_header
 
+    print_debug('AsyncHTTPClient running wrapper')
     return wrapper(
         TornadoClientEventFactory,
         wrapped,

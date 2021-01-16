@@ -472,6 +472,11 @@ class TraceFactory(object):
             additional data regarding the exception
         :return: None
         """
+        if self.debug:
+            print('[EPSAGON_DEBUG] Epsagon exception: {}\n{}-----'.format(
+                exception,
+                stack_trace
+            ))
         if self.get_trace():
             self.get_trace().add_exception(
                 exception,
