@@ -20,3 +20,4 @@ httpx; python_version >= '3.5'
 asynctest; python_version >= '3.5'
 moto
 tornado
+kafka-python

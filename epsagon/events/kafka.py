@@ -78,7 +78,7 @@ class KafkaEvent(BaseEvent):
             kwargs['value']
         )
 
-        if getattr(response, 'value') is not None:
+        if getattr(response, 'value', None) is not None:
             self.update_response(response.value)
 
         if exception is not None:
