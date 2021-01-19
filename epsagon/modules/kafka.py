@@ -35,7 +35,9 @@ def _wrapper(wrapped, instance, args, kwargs):
     # Adds epsagon header
     if not new_kwargs.get('headers'):
         new_kwargs['headers'] = []
-    new_kwargs['headers'].append((EPSAGON_HEADER, get_epsagon_http_trace_id().encode()))
+    new_kwargs['headers'].append(
+        (EPSAGON_HEADER, get_epsagon_http_trace_id().encode())
+    )
 
     return wrapper(KafkaEventFactory, wrapped, instance, new_args, new_kwargs)
 

@@ -90,7 +90,9 @@ class KafkaEvent(BaseEvent):
         :param response: Response from botocore
         :return: None
         """
-        self.resource['metadata']['messaging.kafka.partition'] = response.partition
+        self.resource['metadata']['messaging.kafka.partition'] = (
+            response.partition
+        )
 
 
 class KafkaEventFactory(object):
