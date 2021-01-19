@@ -53,6 +53,8 @@ def _decimal_serializer(o):
     """ Taken from `bootstrap.py` of AWS Lambda Python runtime """
     if isinstance(o, decimal.Decimal):
         return _number_str(o)
+    if isinstance(o, bytes):
+        return o.decode('utf-8')
     raise TypeError(repr(o) + ' is not JSON serializable')
 
 
@@ -551,7 +553,6 @@ class TraceFactory(object):
             except Exception:  # pylint: disable=W0703
                 if not trace_sent:
                     self.pop_trace(trace=trace)
-
 
     def prepare(self):
         """

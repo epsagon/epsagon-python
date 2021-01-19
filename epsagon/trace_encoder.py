@@ -14,6 +14,8 @@ class TraceEncoder(json.JSONEncoder):
             return list(o)
         if isinstance(o, (datetime, date)):
             return o.isoformat()
+        if isinstance(o, bytes):
+            return o.decode('utf-8')
 
         output = repr(o)
         try:
