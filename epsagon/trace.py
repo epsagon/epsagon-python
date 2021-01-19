@@ -38,24 +38,6 @@ MAX_METADATA_FIELD_SIZE_LIMIT = 1024 * 3
 FAILED_TO_SERIALIZE_MESSAGE = 'Failed to serialize returned object to JSON'
 
 
-# pylint: disable=invalid-name
-class _number_str(float):
-    """ Taken from `bootstrap.py` of AWS Lambda Python runtime """
-    # pylint: disable=super-init-not-called
-    def __init__(self, o):
-        self.o = o
-
-    def __repr__(self):
-        return str(self.o)
-
-
-def _decimal_serializer(o):
-    """ Taken from `bootstrap.py` of AWS Lambda Python runtime """
-    if isinstance(o, decimal.Decimal):
-        return _number_str(o)
-    raise TypeError(repr(o) + ' is not JSON serializable')
-
-
 def get_thread_id():
     """
     Return current thread id
@@ -552,7 +534,6 @@ class TraceFactory(object):
                 if not trace_sent:
                     self.pop_trace(trace=trace)
 
-
     def prepare(self):
         """
         Prepare the relevant trace.
@@ -990,7 +971,7 @@ class Trace(object):
             value = data[field_name]
             if isinstance(value, dict):
                 try:
-                    json_value = json.dumps(value, default=_decimal_serializer)
+                    json_value = json.dumps(value, cls=TraceEncoder)
                     if len(json_value) > max_size:
                         data[field_name] = json_value[:max_size]
                 # pylint: disable=W0703
