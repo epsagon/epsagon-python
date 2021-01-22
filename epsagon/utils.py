@@ -13,7 +13,6 @@ import re
 import json
 import six
 import urllib3
-from typing import Union
 try:
     from urllib.parse import urlparse
 except ImportError:
@@ -122,24 +121,24 @@ def get_trace_log_config():
 
 
 def init(
-        token='',
-        app_name='Application',
-        collector_url=None,
-        metadata_only=True,
-        disable_timeout_send=False,
-        use_ssl=True,
-        debug=False,
-        send_trace_only_on_error=False,
-        url_patterns_to_ignore=None,
-        keys_to_ignore=None,
-        keys_to_allow=None,
-        ignored_endpoints=None,
-        split_on_send=False,
-        propagate_lambda_id=False,
-        obfuscate_sql=False,
-        logging_tracing_enabled=True,
-        step_dict_output_path=None,
-        sample_rate=DEFAULT_SAMPLE_RATE,
+    token='',
+    app_name='Application',
+    collector_url=None,
+    metadata_only=True,
+    disable_timeout_send=False,
+    use_ssl=True,
+    debug=False,
+    send_trace_only_on_error=False,
+    url_patterns_to_ignore=None,
+    keys_to_ignore=None,
+    keys_to_allow=None,
+    ignored_endpoints=None,
+    split_on_send=False,
+    propagate_lambda_id=False,
+    obfuscate_sql=False,
+    logging_tracing_enabled=True,
+    step_dict_output_path=None,
+    sample_rate=DEFAULT_SAMPLE_RATE,
 ):
     """
     Initializes trace with user's data.
@@ -215,16 +214,16 @@ def init(
         collector_url=os.getenv('EPSAGON_COLLECTOR_URL') or collector_url,
         metadata_only=metadata_only,
         disable_timeout_send=(
-                ((os.getenv('EPSAGON_DISABLE_ON_TIMEOUT') or '')
-                 .upper() == 'TRUE')
-                | disable_timeout_send
+            ((os.getenv('EPSAGON_DISABLE_ON_TIMEOUT') or '')
+             .upper() == 'TRUE')
+            | disable_timeout_send
         ),
         debug=((os.getenv('EPSAGON_DEBUG') or '')
                .upper() == 'TRUE') | debug,
         send_trace_only_on_error=(
-                ((os.getenv('EPSAGON_SEND_TRACE_ON_ERROR') or '')
-                 .upper() == 'TRUE')
-                | send_trace_only_on_error
+            ((os.getenv('EPSAGON_SEND_TRACE_ON_ERROR') or '')
+             .upper() == 'TRUE')
+            | send_trace_only_on_error
         ),
         url_patterns_to_ignore=ignored_urls or url_patterns_to_ignore,
         keys_to_ignore=ignored_keys or keys_to_ignore,
@@ -233,17 +232,17 @@ def init(
             os.getenv('EPSAGON_COLLECTOR_URL') or collector_url, token
         ),
         split_on_send=(
-                ((os.getenv('EPSAGON_SPLIT_ON_SEND') or '').upper() == 'TRUE')
-                | split_on_send
+            ((os.getenv('EPSAGON_SPLIT_ON_SEND') or '').upper() == 'TRUE')
+            | split_on_send
         ),
         propagate_lambda_id=(
-                ((os.getenv('EPSAGON_PROPAGATE_LAMBDA_ID') or '').upper() ==
-                 'TRUE')
-                | propagate_lambda_id
+            ((os.getenv('EPSAGON_PROPAGATE_LAMBDA_ID') or '').upper() ==
+             'TRUE')
+            | propagate_lambda_id
         ),
         obfuscate_sql=(
-                ((os.getenv('EPSAGON_OBFUSCATE_SQL') or '').upper() == 'TRUE')
-                | obfuscate_sql
+            ((os.getenv('EPSAGON_OBFUSCATE_SQL') or '').upper() == 'TRUE')
+            | obfuscate_sql
         ),
         logging_tracing_enabled=logging_tracing_enabled,
         step_dict_output_path=(
@@ -454,7 +453,7 @@ def database_connection_type(hostname, default_type):
     return default_type
 
 
-def obfuscate_sql_query(query: Union[str, bytes], operation: Union[str, bytes]) -> str:
+def obfuscate_sql_query(query, operation):
     """
     Obfuscate SQL queries to protect sensitive uploads
     :param query: The SQL query string
