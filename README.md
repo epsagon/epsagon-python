@@ -157,6 +157,8 @@ epsagon.init(
 The `keys_to_ignore` and `keys_to_allow` properties can contain strings (will perform a loose match, so that `First Name` also matches `first_name`).
 Also, you can set `url_patterns_to_ignore` to ignore HTTP calls to specific domains.
 
+Set environment variable `EPSAGON_OBFUSCATE_SQL` to `TRUE` to mask sensitive
+SQL queries in the trace.
 
 ### Ignore Endpoints
 
@@ -486,6 +488,7 @@ Advanced options can be configured as a parameter to the init() method or as env
 |disable_timeout_send    |EPSAGON_DISABLE_ON_TIMEOUT     |Boolean|`False`      |Disable timeout detection in Lambda functions                                      |
 |split_on_send           |EPSAGON_SPLIT_ON_SEND          |Boolean|`False`      |Split the trace into multiple chunks to support large traces                       |
 |propagate_lambda_id     |EPSAGON_PROPAGATE_LAMBDA_ID    |Boolean|`False`      |Insert Lambda request ID into the response payload                                 |
+|obfuscate_sql           |EPSAGON_OBFUSCATE_SQL          |Boolean|`False`      |Protect sensitive SQL queries by masking values 
 |logging_tracing_enabled |EPSAGON_LOGGING_TRACING_ENABLED|Boolean|`True`      |Add Epsagon Log Id to all `logging` messages                            |
 |step_dict_output_path |EPSAGON_STEPS_OUTPUT_PATH|List|`None`      |Path in the result dict to append the Epsagon steps data  |
 |-                       |EPSAGON_HTTP_ERR_CODE          |Integer|`500`        |The minimum number of an HTTP response status code to treat as an error            |
