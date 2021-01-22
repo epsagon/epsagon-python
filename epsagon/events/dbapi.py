@@ -23,7 +23,7 @@ except ImportError:
 
 from ..trace import trace_factory
 from ..event import BaseEvent
-from ..utils import database_connection_type, print_debug
+from ..utils import print_debug, database_connection_type, obfuscate_sql_query
 
 MAX_QUERY_SIZE = 2048
 
@@ -120,7 +120,12 @@ class DBAPIEvent(BaseEvent):
                 (operation == 'select') or
                 (not trace_factory.metadata_only)
         ):
-            self.resource['metadata']['Query'] = query[:MAX_QUERY_SIZE]
+
+            query_max = query[:MAX_QUERY_SIZE]
+            if trace_factory.obfuscate_sql:
+                query_max = obfuscate_sql_query(query_max, operation)
+
+            self.resource['metadata']['Query'] = query_max
             print_debug(
                 '{}: collected query {}'.format(
                     self.event_id, self.resource['metadata']['Query']
