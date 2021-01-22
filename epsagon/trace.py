@@ -103,6 +103,7 @@ class TraceFactory(object):
         self.split_on_send = False
         self.disabled = False
         self.propagate_lambda_id = False
+        self.obfuscate_sql = False
         self.logging_tracing_enabled = False
         self.step_dict_output_path = None
         self.sample_rate = DEFAULT_SAMPLE_RATE
@@ -122,6 +123,7 @@ class TraceFactory(object):
         transport,
         split_on_send,
         propagate_lambda_id,
+        obfuscate_sql,
         logging_tracing_enabled,
         step_dict_output_path,
         sample_rate,
@@ -144,6 +146,7 @@ class TraceFactory(object):
         :param keys_to_allow: List of keys to allow while extracting metadata.
         :param split_on_send: Split trace into multiple traces in case it's size
          exceeds the maximum size.
+        :param obfuscate_sql: Obfuscate SQL queries to mask values
         :param logging_tracing_enabled:
             Add an epsagon log id to all loggings and prints
         :param step_dict_output_path:
@@ -169,6 +172,7 @@ class TraceFactory(object):
         self.transport = transport
         self.split_on_send = split_on_send
         self.propagate_lambda_id = propagate_lambda_id
+        self.obfuscate_sql = obfuscate_sql
         self.logging_tracing_enabled = logging_tracing_enabled
         self.step_dict_output_path = step_dict_output_path
         self.sample_rate = sample_rate
@@ -236,6 +240,7 @@ class TraceFactory(object):
             transport=self.transport,
             split_on_send=self.split_on_send,
             propagate_lambda_id=self.propagate_lambda_id,
+            obfuscate_sql=self.obfuscate_sql,
             logging_tracing_enabled=self.logging_tracing_enabled,
             step_dict_output_path=self.step_dict_output_path,
             sample_rate=self.sample_rate,
@@ -600,6 +605,7 @@ class Trace(object):
         split_on_send=False,
         transport=NoneTransport(),
         propagate_lambda_id=False,
+        obfuscate_sql=False,
         logging_tracing_enabled=False,
         step_dict_output_path=None,
         sample_rate=DEFAULT_SAMPLE_RATE,
@@ -625,6 +631,7 @@ class Trace(object):
         self.transport = transport
         self.split_on_send = split_on_send
         self.propagate_lambda_id = propagate_lambda_id
+        self.obfuscate_sql = obfuscate_sql
         self.logging_tracing_enabled = logging_tracing_enabled
         self.step_dict_output_path = step_dict_output_path
         self.sample_rate = sample_rate
