@@ -13,6 +13,7 @@ import re
 import json
 import six
 import urllib3
+from typing import Union
 try:
     from urllib.parse import urlparse
 except ImportError:
@@ -22,7 +23,6 @@ from epsagon import http_filters
 from epsagon.constants import TRACE_COLLECTOR_URL, REGION, EPSAGON_MARKER
 from .trace import trace_factory, create_transport
 from .constants import EPSAGON_HANDLER, DEBUG_MODE, DEFAULT_SAMPLE_RATE
-
 
 METADATA_CACHE = {
     'queried': False,
@@ -122,23 +122,24 @@ def get_trace_log_config():
 
 
 def init(
-    token='',
-    app_name='Application',
-    collector_url=None,
-    metadata_only=True,
-    disable_timeout_send=False,
-    use_ssl=True,
-    debug=False,
-    send_trace_only_on_error=False,
-    url_patterns_to_ignore=None,
-    keys_to_ignore=None,
-    keys_to_allow=None,
-    ignored_endpoints=None,
-    split_on_send=False,
-    propagate_lambda_id=False,
-    logging_tracing_enabled=True,
-    step_dict_output_path=None,
-    sample_rate=DEFAULT_SAMPLE_RATE,
+        token='',
+        app_name='Application',
+        collector_url=None,
+        metadata_only=True,
+        disable_timeout_send=False,
+        use_ssl=True,
+        debug=False,
+        send_trace_only_on_error=False,
+        url_patterns_to_ignore=None,
+        keys_to_ignore=None,
+        keys_to_allow=None,
+        ignored_endpoints=None,
+        split_on_send=False,
+        propagate_lambda_id=False,
+        obfuscate_sql=False,
+        logging_tracing_enabled=True,
+        step_dict_output_path=None,
+        sample_rate=DEFAULT_SAMPLE_RATE,
 ):
     """
     Initializes trace with user's data.
@@ -160,6 +161,7 @@ def init(
     :param ignored_endpoints: List of ignored endpoints for web frameworks.
     :param split_on_send: Split the trace on send flag
     :param propagate_lambda_id: Inject identifiers via return value flag
+    :param obfuscate_sql: Obfuscate SQL queries to mask values
     :param logging_tracing_enabled: Add an epsagon log id to logging calls
     :param step_dict_output_path:
         Path in the result dict to append the Epsagon steps data
@@ -213,16 +215,16 @@ def init(
         collector_url=os.getenv('EPSAGON_COLLECTOR_URL') or collector_url,
         metadata_only=metadata_only,
         disable_timeout_send=(
-            ((os.getenv('EPSAGON_DISABLE_ON_TIMEOUT') or '')
-                .upper() == 'TRUE')
-            | disable_timeout_send
+                ((os.getenv('EPSAGON_DISABLE_ON_TIMEOUT') or '')
+                 .upper() == 'TRUE')
+                | disable_timeout_send
         ),
         debug=((os.getenv('EPSAGON_DEBUG') or '')
                .upper() == 'TRUE') | debug,
         send_trace_only_on_error=(
-            ((os.getenv('EPSAGON_SEND_TRACE_ON_ERROR') or '')
-                .upper() == 'TRUE')
-            | send_trace_only_on_error
+                ((os.getenv('EPSAGON_SEND_TRACE_ON_ERROR') or '')
+                 .upper() == 'TRUE')
+                | send_trace_only_on_error
         ),
         url_patterns_to_ignore=ignored_urls or url_patterns_to_ignore,
         keys_to_ignore=ignored_keys or keys_to_ignore,
@@ -239,9 +241,13 @@ def init(
                  'TRUE')
                 | propagate_lambda_id
         ),
+        obfuscate_sql=(
+                ((os.getenv('EPSAGON_OBFUSCATE_SQL') or '').upper() == 'TRUE')
+                | obfuscate_sql
+        ),
         logging_tracing_enabled=logging_tracing_enabled,
         step_dict_output_path=(
-            step_dict_output_path_env or step_dict_output_path
+                step_dict_output_path_env or step_dict_output_path
         ),
         sample_rate=sample_rate
     )
@@ -327,8 +333,8 @@ def find_in_object(obj, key, path=None):
             return obj[key], path
 
     if (
-        isinstance(obj, collections.Iterable)
-        and not isinstance(obj, six.string_types)
+            isinstance(obj, collections.Iterable)
+            and not isinstance(obj, six.string_types)
     ):
         for k in obj:
             # Handle lists as well
@@ -339,6 +345,7 @@ def find_in_object(obj, key, path=None):
                 return result
 
     return None
+
 
 def collect_exception_python3(exception):
     """
@@ -401,7 +408,7 @@ def camel_case_to_title_case(camel_case_string):
     """
     if not isinstance(camel_case_string, str):
         return None
-    title_case = re.sub('([^-])([A-Z][a-z-]+)', r'\1 \2', camel_case_string)\
+    title_case = re.sub('([^-])([A-Z][a-z-]+)', r'\1 \2', camel_case_string) \
         .title()
     return title_case
 
@@ -445,3 +452,74 @@ def database_connection_type(hostname, default_type):
     if 'redshift.amazonaws' in hostname:
         return 'redshift'
     return default_type
+
+
+def obfuscate_sql_query(query: Union[str, bytes], operation: Union[str, bytes]) -> str:
+    """
+    Obfuscate SQL queries to protect sensitive uploads
+    :param query: The SQL query string
+    :param operation: Operation in DB
+    :return: the obfuscated query (string)
+    :var bounds: specifier for locating values based upon operation
+    :var bounds: start is leftmost bound, stop is rightmost bound
+    :var bounds: separator is the symbol between values, signal is a preceding identifier for each value
+    """
+    bounds = {
+        'select': {
+            'start': 'WHERE ',
+            'stop': ';',
+            'separator': ' AND ',
+            'signal': '=',
+        },
+        'insert': {
+            'start': 'VALUES (',
+            'stop': ');',
+            'separator': ', ',
+            'signal': None,
+        }
+
+    }
+
+    if type(query) is bytes:
+        query = query.decode('UTF-8')
+
+    if type(operation) is bytes:
+        operation = operation.decode('UTF-8')
+
+    if operation not in bounds.keys():
+        return query
+
+    # safely unpack values even if extra keys are added to bounds
+    start, stop, separator, signal, *_ = bounds[operation].values()
+    replacer = '????'
+
+    positions = (
+        query.upper().find(start) + len(start),
+        query.upper().find(stop)
+    )
+
+    if -1 in positions or positions[0] > positions[1]:
+        return query
+
+    values = query[positions[0]:positions[1]]
+    values = re.split(separator, values, flags=re.IGNORECASE)
+
+    # if there exists a preceding signal, obfuscate to the right
+    # else obfuscate all
+    if signal:
+        for i, value in enumerate(values[:]):
+            parts = list(value.partition(signal))
+            # if could not match signal correctly, leave it
+            if not parts[1]:
+                continue
+            parts[0] = parts[0].strip()
+            parts[2] = replacer
+            values[i] = ''.join(parts)
+    else:
+        values = [replacer for _ in values[:]]
+
+    values = separator.join(values)
+
+    return query[:positions[0]] \
+            + values \
+            + query[positions[1]:]
