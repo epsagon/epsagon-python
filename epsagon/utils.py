@@ -23,6 +23,7 @@ from epsagon.constants import TRACE_COLLECTOR_URL, REGION, EPSAGON_MARKER
 from .trace import trace_factory, create_transport
 from .constants import EPSAGON_HANDLER, DEBUG_MODE, DEFAULT_SAMPLE_RATE
 
+
 METADATA_CACHE = {
     'queried': False,
     'data': {},
