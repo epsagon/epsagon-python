@@ -32,12 +32,14 @@ def _wrapper(wrapped, instance, args, kwargs):
     """KafkaProducer.send wrapper"""
     new_args, new_kwargs = _parse_args(*args, **kwargs)
 
-    # Adds epsagon header
-    if not new_kwargs.get('headers'):
-        new_kwargs['headers'] = []
-    new_kwargs['headers'].append(
-        (EPSAGON_HEADER, get_epsagon_http_trace_id().encode())
-    )
+    # Adds epsagon header only on Kafka record V2. V0/V1 don't support it
+    # pylint: disable=protected-access
+    if instance._max_usable_produce_magic() == 2:
+        if not new_kwargs.get('headers'):
+            new_kwargs['headers'] = []
+        new_kwargs['headers'].append(
+            (EPSAGON_HEADER, get_epsagon_http_trace_id().encode())
+        )
 
     return wrapper(KafkaEventFactory, wrapped, instance, new_args, new_kwargs)
 
