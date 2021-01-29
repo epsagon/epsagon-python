@@ -489,8 +489,7 @@ def obfuscate_sql_query(query, operation):
     if operation not in bounds.keys():
         return query
 
-    # safely unpack values even if extra keys are added to bounds
-    start, stop, separator, signal, *_ = bounds[operation].values()
+    start, stop, separator, signal = bounds[operation].values()
     replacer = '????'
 
     positions = (
