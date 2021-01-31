@@ -480,10 +480,10 @@ def obfuscate_sql_query(query, operation):
 
     }
 
-    if type(query) is bytes:
+    if isinstance(query, bytes):
         query = query.decode('UTF-8')
 
-    if type(operation) is bytes:
+    if isinstance(operation, bytes):
         operation = operation.decode('UTF-8')
 
     if operation not in bounds.keys():
