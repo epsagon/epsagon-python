@@ -462,7 +462,8 @@ def obfuscate_sql_query(query, operation):
     :return: the obfuscated query (string)
     :var bounds: specifier for locating values based upon operation
     :var bounds: start is leftmost bound, stop is rightmost bound
-    :var bounds: separator is the symbol between values, signal is a preceding identifier for each value
+    :var bounds: separator is the symbol between values
+    :var bounds: signal is a preceding identifier for each value
     """
     bounds = {
         'select': {
@@ -522,3 +523,5 @@ def obfuscate_sql_query(query, operation):
     return query[:positions[0]] \
             + values \
             + query[positions[1]:]
+
+# pylint: disable=C0302
