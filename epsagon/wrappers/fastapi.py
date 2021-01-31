@@ -9,6 +9,7 @@ from typing import Callable
 import warnings
 from fastapi.routing import APIRoute
 from fastapi import Request, Response
+from starlette.requests import ClientDisconnect
 
 import epsagon.trace
 from epsagon.runners.fastapi import FastapiRunner
@@ -52,11 +53,7 @@ class TracingAPIRoute(APIRoute):
             runner = None
             response = None
             try:
-                body = await request.json()
-            except json.decoder.JSONDecodeError:
-                body = ''
-            try:
-                runner = FastapiRunner(time.time(), request, json.dumps(body))
+                runner = FastapiRunner(time.time(), request)
                 trace.set_runner(runner)
                 collect_container_metadata(runner.resource['metadata'])
             except Exception as exception: # pylint: disable=W0703
@@ -68,7 +65,20 @@ class TracingAPIRoute(APIRoute):
                 raised_err = exception
                 traceback_data = get_traceback_data_from_exception(exception)
                 trace.runner.set_exception(exception, traceback_data)
-
+            try:
+                trace.runner.update_request_body(
+                    json.dumps(await request.json())
+                )
+            except json.decoder.JSONDecodeError:
+                print_debug('Could not JSON-decode request body')
+            except ClientDisconnect:
+                print_debug(
+                    'Could not extract request body - client is disconnected'
+                )
+            except Exception as exception:
+                print_debug(
+                    'Could not extract request body: {}'.format(exception)
+                )
             try:
                 if not raised_err and response is not None and runner:
                     if ignore_request(
