@@ -75,7 +75,7 @@ class TracingAPIRoute(APIRoute):
                 print_debug(
                     'Could not extract request body - client is disconnected'
                 )
-            except Exception as exception:
+            except Exception as exception: # pylint: disable=W0703
                 print_debug(
                     'Could not extract request body: {}'.format(exception)
                 )
