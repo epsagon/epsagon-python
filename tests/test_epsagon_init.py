@@ -138,6 +138,7 @@ def test_epsagon_wrapper_env_init(_wrapped_get, wrapped_init, wrapped_create):
     'EPSAGON_LOG_TRANSPORT': 'FALSE',
     'EPSAGON_SPLIT_ON_SEND': 'FALSE',
     'EPSAGON_PROPAGATE_LAMBDA_ID': 'FALSE',
+    'EPSAGON_OBFUSCATE_SQL': 'FALSE',
     'EPSAGON_LOGGING_TRACING_ENABLED': 'TRUE',
     'AWS_LAMBDA_FUNCTION_NAME': None,
     'EPSAGON_SAMPLE_RATE': 0.5
