@@ -35,12 +35,11 @@ class FastapiRunner(BaseEvent):
     RESOURCE_TYPE = 'fastapi'
     OPERATION = 'request'
 
-    def __init__(self, start_time, request, body):
+    def __init__(self, start_time, request):
         """
         Initialize.
         :param start_time: event's start time (epoch).
         :param request: the incoming request.
-        :param body: the body of request.
         """
 
         super(FastapiRunner, self).__init__(start_time)
@@ -62,13 +61,6 @@ class FastapiRunner(BaseEvent):
                 query_params.items()
             )
 
-        if body:
-            add_data_if_needed(
-                self.resource['metadata'],
-                'Request Data',
-                body
-            )
-
         request_headers = dict(request.headers.items())
         if request_headers.get(EPSAGON_HEADER):
             self.resource['metadata']['http_trace_id'] = request_headers.get(
@@ -79,6 +71,17 @@ class FastapiRunner(BaseEvent):
                 self.resource['metadata'],
                 'Request Headers',
                 request_headers
+            )
+
+    def update_request_body(self, body):
+        """
+        Adds request body to event
+        """
+        if body:
+            add_data_if_needed(
+                self.resource['metadata'],
+                'Request Data',
+                body
             )
 
     def update_response(self, response):
