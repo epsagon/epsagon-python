@@ -2,6 +2,7 @@
 Utilities for Epsagon module.
 """
 
+# pylint: disable=C0302
 from __future__ import absolute_import, print_function
 import os
 import collections
@@ -523,5 +524,3 @@ def obfuscate_sql_query(query, operation):
     return query[:positions[0]] \
             + values \
             + query[positions[1]:]
-
-# pylint: disable=C0302
