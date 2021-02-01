@@ -216,6 +216,18 @@ class TraceFactory(object):
         """
         self.use_async_tracer = True
 
+    def is_async_tracer(self):
+        """
+        Returns whether using an async tracer
+        """
+        return self.use_async_tracer
+
+    def is_multi_threaded_tracer(self):
+        """
+        Returns whether using a tracer per thread
+        """
+        return not self.use_single_trace and not self.use_async_tracer
+
     def _create_new_trace(self, unique_id=None):
         """
         Creating new trace instance

@@ -4,6 +4,7 @@ Tracing route for Python fastapi.
 import time
 import json
 import json.decoder
+import asyncio
 from typing import Callable
 
 import warnings
@@ -21,6 +22,29 @@ from epsagon.utils import (
 from ..http_filters import ignore_request
 from ..utils import print_debug
 
+def _switch_tracer_mode(dependant_call):
+    """
+    Switches the tracer to async/multi threaded mode
+    :param dependant_call: the endpoint callback
+    :return: True if succeeded, False otherwise
+    Fails if dependant_call is None or if trying to switch from different
+    tracer modes (async <-> multi threaded)
+    """
+    if not dependant_call: # shouldn't happen
+        return False
+    is_coroutine = asyncio.iscoroutinefunction(dependant_call)
+    if (
+            is_coroutine and
+            not epsagon.trace.trace_factory.is_multi_threaded_tracer()
+    ):
+        epsagon.trace.trace_factory.switch_to_async_tracer()
+        return True
+    elif not epsagon.trace.trace_factory.is_async_tracer():
+        epsagon.trace.trace_factory.switch_to_multiple_traces()
+        return True
+    return False
+
+
 class TracingAPIRoute(APIRoute):
     """
     Custom tracing route - traces each route request & response
@@ -31,6 +55,14 @@ class TracingAPIRoute(APIRoute):
         including request & response data.
         """
         original_route_handler = super().get_route_handler()
+        should_trace = False
+        if self.dependant.call is not None:
+            should_trace = _switch_tracer_mode(self.dependant.call)
+            if not should_trace:
+                print_debug(
+                    "Cannot trace both FastAPI syncronous and async endpoints"
+                )
+
         async def custom_route_handler(request: Request) -> Response:
             """
             Traces given request and its response.
@@ -38,7 +70,8 @@ class TracingAPIRoute(APIRoute):
             """
             should_ignore_request = True
             try:
-                epsagon.trace.trace_factory.switch_to_async_tracer()
+                if not should_trace:
+                    return await original_route_handler(request)
                 if not ignore_request('', request.url.path.lower()):
                     should_ignore_request = False
                     trace = epsagon.trace.trace_factory.get_or_create_trace()

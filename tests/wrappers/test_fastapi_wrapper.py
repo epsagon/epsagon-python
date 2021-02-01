@@ -1,3 +1,7 @@
+"""
+FastAPI wrapper tests
+"""
+import time
 import pytest
 import asynctest
 import asyncio
@@ -20,17 +24,34 @@ MULTIPLE_THREADS_RETURN_VALUE = MULTIPLE_THREADS_KEY
 async def handle():
     return RETURN_VALUE
 
+def handle_sync():
+    return RETURN_VALUE
+
 async def handle_a():
     await asyncio.sleep(0.2)
+    return "a"
+
+def handle_a_sync():
+    time.sleep(0.2)
     return "a"
 
 async def handle_b():
     return "b"
 
+def handle_b_sync():
+    return "b"
+
 async def handle_router_endpoint():
     return ROUTER_RETURN_VALUE
 
-def multiple_threads_route():
+def handle_router_endpoint_sync():
+    return ROUTER_RETURN_VALUE
+
+async def multiple_threads_route():
+    multiple_threads_handler()
+    return MULTIPLE_THREADS_RETURN_VALUE
+
+def multiple_threads_route_sync():
     multiple_threads_handler()
     return MULTIPLE_THREADS_RETURN_VALUE
 
@@ -41,9 +62,12 @@ class CustomFastAPIException(Exception):
 async def handle_error():
     raise CustomFastAPIException('test')
 
+def handle_error_sync():
+    raise CustomFastAPIException('test')
 
-@pytest.fixture(scope='function', autouse=True)
-def fastapi_app():
+
+@pytest.fixture(scope='function', autouse=False)
+def async_fastapi_app():
     app = FastAPI()
     app.add_api_route("/", handle, methods=["GET"])
     app.add_api_route("/a", handle_a, methods=["GET"])
@@ -55,9 +79,28 @@ def fastapi_app():
     app.include_router(router, prefix=TEST_ROUTER_PREFIX)
     return app
 
+@pytest.fixture(scope='function', autouse=False)
+def sync_fastapi_app():
+    app = FastAPI()
+    app.add_api_route("/", handle_sync, methods=["GET"])
+    app.add_api_route("/a", handle_a_sync, methods=["GET"])
+    app.add_api_route("/b", handle_b_sync, methods=["GET"])
+    app.add_api_route("/err", handle_error_sync, methods=["GET"])
+    app.add_api_route(MULTIPLE_THREADS_ROUTE, multiple_threads_route_sync, methods=["GET"])
+    router = APIRouter()
+    router.add_api_route(TEST_ROUTER_PATH, handle_router_endpoint_sync)
+    app.include_router(router, prefix=TEST_ROUTER_PREFIX)
+    return app
 
 @pytest.mark.asyncio
 @asynctest.patch('epsagon.trace.trace_factory.use_async_tracer')
+@pytest.mark.parametrize(
+    "fastapi_app",
+    [
+        pytest.lazy_fixture("sync_fastapi_app"),
+        pytest.lazy_fixture("async_fastapi_app"),
+    ],
+)
 async def test_fastapi_sanity(_, trace_transport, fastapi_app):
     """Sanity test."""
     async with AsyncClient(app=fastapi_app, base_url="http://test") as ac:
@@ -74,6 +117,13 @@ async def test_fastapi_sanity(_, trace_transport, fastapi_app):
 
 @pytest.mark.asyncio
 @asynctest.patch('epsagon.trace.trace_factory.use_async_tracer')
+@pytest.mark.parametrize(
+    "fastapi_app",
+    [
+        pytest.lazy_fixture("sync_fastapi_app"),
+        pytest.lazy_fixture("async_fastapi_app"),
+    ],
+)
 async def test_fastapi_custom_router(_, trace_transport, fastapi_app):
     """Custom router sanity test."""
     full_route_path= f'{TEST_ROUTER_PREFIX}{TEST_ROUTER_PATH}'
@@ -90,6 +140,13 @@ async def test_fastapi_custom_router(_, trace_transport, fastapi_app):
 
 @pytest.mark.asyncio
 @asynctest.patch('epsagon.trace.trace_factory.use_async_tracer')
+@pytest.mark.parametrize(
+    "fastapi_app",
+    [
+        pytest.lazy_fixture("sync_fastapi_app"),
+        pytest.lazy_fixture("async_fastapi_app"),
+    ],
+)
 async def test_fastapi_exception(_, trace_transport, fastapi_app):
     """Test when the handler got an exception."""
     try:
@@ -121,6 +178,13 @@ async def _send_request(app, path, trace_transport):
 
 @pytest.mark.asyncio
 @asynctest.patch('epsagon.trace.trace_factory.use_async_tracer')
+@pytest.mark.parametrize(
+    "fastapi_app",
+    [
+        pytest.lazy_fixture("sync_fastapi_app"),
+        pytest.lazy_fixture("async_fastapi_app"),
+    ],
+)
 async def test_fastapi_multiple_requests(_, trace_transport, fastapi_app):
     """ Multiple requests test """
     for _ in range(3):
@@ -130,8 +194,16 @@ async def test_fastapi_multiple_requests(_, trace_transport, fastapi_app):
         )
 
 
+
 @pytest.mark.asyncio
 @asynctest.patch('epsagon.trace.trace_factory.use_async_tracer')
+@pytest.mark.parametrize(
+    "fastapi_app",
+    [
+        pytest.lazy_fixture("sync_fastapi_app"),
+        pytest.lazy_fixture("async_fastapi_app"),
+    ],
+)
 async def test_fastapi_multiple_threads_route(_, trace_transport, fastapi_app):
     """
     Tests request to a route, which invokes multiple threads.
