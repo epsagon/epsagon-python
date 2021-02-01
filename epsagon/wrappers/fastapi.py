@@ -5,7 +5,6 @@ import time
 import json
 import json.decoder
 import asyncio
-from typing import Callable
 
 import warnings
 from fastapi.routing import APIRoute
@@ -22,7 +21,7 @@ from epsagon.utils import (
 from ..http_filters import ignore_request
 from ..utils import print_debug
 
-EPSAGON_REQUEST_PARAM_NAME = "epsagon_request"
+EPSAGON_REQUEST_PARAM_NAME = 'epsagon_request'
 
 def _switch_tracer_mode(is_coroutine):
     """
@@ -38,13 +37,13 @@ def _switch_tracer_mode(is_coroutine):
     ):
         epsagon.trace.trace_factory.switch_to_async_tracer()
         return True
-    elif not epsagon.trace.trace_factory.is_async_tracer():
+    if not epsagon.trace.trace_factory.is_async_tracer():
         epsagon.trace.trace_factory.switch_to_multiple_traces()
         return True
     return False
 
 
-def _handle_wrapper_params(args, kwargs, original_request_param_name):
+def _handle_wrapper_params(_args, kwargs, original_request_param_name):
     """
     Handles the sync/async given parameters.
     Getting the request object injected by Epsagon. If the user set the
@@ -78,7 +77,8 @@ def _handle_response(response, trace, raised_err):
                 epsagon.trace.trace_factory.pop_trace(trace=trace)
                 return response
 
-        trace.runner.update_response(response)
+        if response is not None:
+            trace.runner.update_response(response)
         epsagon.trace.trace_factory.send_traces()
     except Exception as exception:  # pylint: disable=W0703
         print_debug('Failed to send traces: {}'.format(exception))
@@ -89,7 +89,7 @@ def _handle_response(response, trace, raised_err):
 
     return response
 
-
+# pylint: disable=too-many-statements
 def _wrap_handler(dependant):
     """
     Wraps the endppint handler.
@@ -102,7 +102,7 @@ def _wrap_handler(dependant):
         """
         Synchronous wrapper handler
         """
-        request = _handle_wrapper_params(
+        request: Request = _handle_wrapper_params(
             args, kwargs, original_request_param_name
         )
         if not request or not _switch_tracer_mode(is_async):
@@ -139,7 +139,7 @@ def _wrap_handler(dependant):
             )
         raised_err = None
         try:
-            response = original_handler(*args, **kwargs)
+            response: Response = original_handler(*args, **kwargs)
         except Exception as exception:  # pylint: disable=W0703
             raised_err = exception
             traceback_data = get_traceback_data_from_exception(exception)

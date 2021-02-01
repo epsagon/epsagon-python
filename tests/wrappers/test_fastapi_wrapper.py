@@ -7,6 +7,7 @@ import asynctest
 import asyncio
 from httpx import AsyncClient
 from fastapi import FastAPI, APIRouter
+from fastapi.responses import JSONResponse
 from epsagon import trace_factory
 from epsagon.common import ErrorCode
 from epsagon.runners.fastapi import FastapiRunner
@@ -20,40 +21,46 @@ MULTIPLE_THREADS_KEY = "multiple_threads"
 MULTIPLE_THREADS_ROUTE = f'/{MULTIPLE_THREADS_KEY}'
 MULTIPLE_THREADS_RETURN_VALUE = MULTIPLE_THREADS_KEY
 
+def _get_response_data(key):
+    return {key: key}
+
+def _get_response(key):
+    return JSONResponse(content=_get_response_data(key))
+
 # test fastapi app handlers
 async def handle():
-    return RETURN_VALUE
+    return _get_response(RETURN_VALUE)
 
 def handle_sync():
-    return RETURN_VALUE
+    return _get_response(RETURN_VALUE)
 
 async def handle_a():
     await asyncio.sleep(0.2)
-    return "a"
+    return _get_response('a')
 
 def handle_a_sync():
     time.sleep(0.2)
-    return "a"
+    return _get_response('a')
 
 async def handle_b():
-    return "b"
+    return _get_response('b')
 
 def handle_b_sync():
-    return "b"
+    return _get_response('b')
 
 async def handle_router_endpoint():
-    return ROUTER_RETURN_VALUE
+    return _get_response(ROUTER_RETURN_VALUE)
 
 def handle_router_endpoint_sync():
-    return ROUTER_RETURN_VALUE
+    return _get_response(ROUTER_RETURN_VALUE)
 
 async def multiple_threads_route():
     multiple_threads_handler()
-    return MULTIPLE_THREADS_RETURN_VALUE
+    return _get_response(MULTIPLE_THREADS_RETURN_VALUE)
 
 def multiple_threads_route_sync():
     multiple_threads_handler()
-    return MULTIPLE_THREADS_RETURN_VALUE
+    return _get_response(MULTIPLE_THREADS_RETURN_VALUE)
 
 
 class CustomFastAPIException(Exception):
@@ -93,7 +100,6 @@ def sync_fastapi_app():
     return app
 
 @pytest.mark.asyncio
-@asynctest.patch('epsagon.trace.trace_factory.use_async_tracer')
 @pytest.mark.parametrize(
     "fastapi_app",
     [
@@ -101,7 +107,7 @@ def sync_fastapi_app():
         pytest.lazy_fixture("async_fastapi_app"),
     ],
 )
-async def test_fastapi_sanity(_, trace_transport, fastapi_app):
+async def test_fastapi_sanity(trace_transport, fastapi_app):
     """Sanity test."""
     async with AsyncClient(app=fastapi_app, base_url="http://test") as ac:
         response = await ac.get("/?x=testval")
@@ -110,13 +116,15 @@ async def test_fastapi_sanity(_, trace_transport, fastapi_app):
     assert isinstance(runner, FastapiRunner)
     assert runner.resource['name'].startswith('127.0.0.1')
     assert runner.resource['metadata']['Path'] == '/'
-    assert runner.resource['metadata']['Response Data'] == RETURN_VALUE
+    expected_response_data = _get_response_data(RETURN_VALUE)
+    assert runner.resource['metadata']['Response Data'] == (
+        expected_response_data
+    )
     assert runner.resource['metadata']['Query Params'] == { 'x': 'testval'}
-    assert response_data == RETURN_VALUE
+    assert response_data == expected_response_data
 
 
 @pytest.mark.asyncio
-@asynctest.patch('epsagon.trace.trace_factory.use_async_tracer')
 @pytest.mark.parametrize(
     "fastapi_app",
     [
@@ -124,7 +132,7 @@ async def test_fastapi_sanity(_, trace_transport, fastapi_app):
         pytest.lazy_fixture("async_fastapi_app"),
     ],
 )
-async def test_fastapi_custom_router(_, trace_transport, fastapi_app):
+async def test_fastapi_custom_router(trace_transport, fastapi_app):
     """Custom router sanity test."""
     full_route_path= f'{TEST_ROUTER_PREFIX}{TEST_ROUTER_PATH}'
     async with AsyncClient(app=fastapi_app, base_url="http://test") as ac:
@@ -134,12 +142,14 @@ async def test_fastapi_custom_router(_, trace_transport, fastapi_app):
     assert isinstance(runner, FastapiRunner)
     assert runner.resource['name'].startswith('127.0.0.1')
     assert runner.resource['metadata']['Path'] == full_route_path
-    assert runner.resource['metadata']['Response Data'] == ROUTER_RETURN_VALUE
-    assert response_data == ROUTER_RETURN_VALUE
+    expected_response_data = _get_response_data(ROUTER_RETURN_VALUE)
+    assert runner.resource['metadata']['Response Data'] == (
+        expected_response_data
+    )
+    assert response_data == expected_response_data
 
 
 @pytest.mark.asyncio
-@asynctest.patch('epsagon.trace.trace_factory.use_async_tracer')
 @pytest.mark.parametrize(
     "fastapi_app",
     [
@@ -147,7 +157,7 @@ async def test_fastapi_custom_router(_, trace_transport, fastapi_app):
         pytest.lazy_fixture("async_fastapi_app"),
     ],
 )
-async def test_fastapi_exception(_, trace_transport, fastapi_app):
+async def test_fastapi_exception(trace_transport, fastapi_app):
     """Test when the handler got an exception."""
     try:
         async with AsyncClient(app=fastapi_app, base_url="http://test") as ac:
@@ -172,12 +182,14 @@ async def _send_request(app, path, trace_transport):
     assert isinstance(runner, FastapiRunner)
     assert runner.resource['name'].startswith('127.0.0.1')
     assert runner.resource['metadata']['Path'] == request_path
-    assert runner.resource['metadata']['Response Data'] == path
-    assert response_data == path
+    expected_response_data = _get_response_data(path)
+    assert runner.resource['metadata']['Response Data'] == (
+        expected_response_data
+    )
+    assert response_data == expected_response_data
 
 
 @pytest.mark.asyncio
-@asynctest.patch('epsagon.trace.trace_factory.use_async_tracer')
 @pytest.mark.parametrize(
     "fastapi_app",
     [
@@ -185,7 +197,9 @@ async def _send_request(app, path, trace_transport):
         pytest.lazy_fixture("async_fastapi_app"),
     ],
 )
-async def test_fastapi_multiple_requests(_, trace_transport, fastapi_app):
+async def test_fastapi_multiple_requests(trace_transport, fastapi_app):
+    # used to reset trace factory between fastapi apps
+    trace_factory.use_single_trace = True
     """ Multiple requests test """
     for _ in range(3):
         await asyncio.gather(
@@ -196,7 +210,6 @@ async def test_fastapi_multiple_requests(_, trace_transport, fastapi_app):
 
 
 @pytest.mark.asyncio
-@asynctest.patch('epsagon.trace.trace_factory.use_async_tracer')
 @pytest.mark.parametrize(
     "fastapi_app",
     [
@@ -204,7 +217,7 @@ async def test_fastapi_multiple_requests(_, trace_transport, fastapi_app):
         pytest.lazy_fixture("async_fastapi_app"),
     ],
 )
-async def test_fastapi_multiple_threads_route(_, trace_transport, fastapi_app):
+async def test_fastapi_multiple_threads_route(trace_transport, fastapi_app):
     """
     Tests request to a route, which invokes multiple threads.
     Validating no `zombie` traces exist (fromn the callback invoked threads)
@@ -218,8 +231,11 @@ async def test_fastapi_multiple_threads_route(_, trace_transport, fastapi_app):
     assert isinstance(runner, FastapiRunner)
     assert runner.resource['name'].startswith('127.0.0.1')
     assert runner.resource['metadata']['Path'] == MULTIPLE_THREADS_ROUTE
-    assert runner.resource['metadata']['Response Data'] == MULTIPLE_THREADS_RETURN_VALUE
+    expected_response_data = _get_response_data(MULTIPLE_THREADS_RETURN_VALUE)
+    assert runner.resource['metadata']['Response Data'] == (
+        expected_response_data
+    )
     assert runner.resource['metadata']['Query Params'] == { 'x': 'testval'}
-    assert response_data == MULTIPLE_THREADS_RETURN_VALUE
+    assert response_data == expected_response_data
     # validating no `zombie` traces exist
     assert not trace_factory.traces
