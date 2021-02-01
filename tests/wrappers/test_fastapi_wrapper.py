@@ -222,6 +222,8 @@ async def test_fastapi_multiple_threads_route(trace_transport, fastapi_app):
     Tests request to a route, which invokes multiple threads.
     Validating no `zombie` traces exist (fromn the callback invoked threads)
     """
+    # used to reset trace factory between fastapi apps
+    trace_factory.use_single_trace = True
     async with AsyncClient(app=fastapi_app, base_url="http://test") as ac:
         response = await ac.get(f"{MULTIPLE_THREADS_ROUTE}?x=testval")
     response_data = response.json()
