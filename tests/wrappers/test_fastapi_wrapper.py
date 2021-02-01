@@ -200,6 +200,7 @@ async def _send_request(app, path, trace_transport):
 async def test_fastapi_multiple_requests(trace_transport, fastapi_app):
     # used to reset trace factory between fastapi apps
     trace_factory.use_single_trace = True
+    trace_factory.use_async_tracer = False
     """ Multiple requests test """
     for _ in range(3):
         await asyncio.gather(
@@ -224,6 +225,7 @@ async def test_fastapi_multiple_threads_route(trace_transport, fastapi_app):
     """
     # used to reset trace factory between fastapi apps
     trace_factory.use_single_trace = True
+    trace_factory.use_async_tracer = False
     async with AsyncClient(app=fastapi_app, base_url="http://test") as ac:
         response = await ac.get(f"{MULTIPLE_THREADS_ROUTE}?x=testval")
     response_data = response.json()
