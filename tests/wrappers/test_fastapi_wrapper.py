@@ -171,7 +171,6 @@ async def test_fastapi_exception(trace_transport, fastapi_app):
     assert runner.exception['message'] == 'test'
 
 
-@pytest.mark.asyncio
 async def _send_request(app, path, trace_transport):
     """ Send request and validates its response & trace """
     request_path = f'/{path}'
@@ -210,7 +209,10 @@ async def test_fastapi_multiple_requests(trace_transport, fastapi_app):
 
 
 
-@pytest.mark.asyncio
+async def _send_async_request(app, path):
+    async with AsyncClient(app=app, base_url="http://test") as ac:
+        return await ac.get(path)
+
 @pytest.mark.parametrize(
     "fastapi_app",
     [
@@ -218,7 +220,7 @@ async def test_fastapi_multiple_requests(trace_transport, fastapi_app):
         pytest.lazy_fixture("async_fastapi_app"),
     ],
 )
-async def test_fastapi_multiple_threads_route(trace_transport, fastapi_app):
+def test_fastapi_multiple_threads_route(trace_transport, fastapi_app):
     """
     Tests request to a route, which invokes multiple threads.
     Validating no `zombie` traces exist (fromn the callback invoked threads)
@@ -226,8 +228,16 @@ async def test_fastapi_multiple_threads_route(trace_transport, fastapi_app):
     # used to reset trace factory between fastapi apps
     trace_factory.use_single_trace = True
     trace_factory.use_async_tracer = False
-    async with AsyncClient(app=fastapi_app, base_url="http://test") as ac:
-        response = await ac.get(f"{MULTIPLE_THREADS_ROUTE}?x=testval")
+    try:
+        loop = asyncio.new_event_loop()
+        response = loop.run_until_complete(
+            _send_async_request(
+                fastapi_app,
+                f"{MULTIPLE_THREADS_ROUTE}?x=testval"
+            )
+        )
+    finally:
+        loop.close()
     response_data = response.json()
     # expects only 1 event. The new threads events shouldn't belong this trace
     assert len(trace_transport.last_trace.events) == 1
@@ -243,3 +253,4 @@ async def test_fastapi_multiple_threads_route(trace_transport, fastapi_app):
     assert response_data == expected_response_data
     # validating no `zombie` traces exist
     assert not trace_factory.traces
+

@@ -69,7 +69,7 @@ def _handle_response(response, trace, raised_err):
     :return: the response, raising raised_err if its not None.
     """
     try:
-        if not raised_err and response is not None:
+        if not raised_err and isinstance(response, Response):
             if ignore_request(
                     response.headers.get('Content-Type', '').lower(),
                     ''
@@ -151,7 +151,7 @@ def _wrap_handler(dependant):
             )
 
         except json.decoder.JSONDecodeError:
-            print_debug('Could not JSON-decode request body')
+            pass
         except ClientDisconnect:
             print_debug(
                 'Could not extract request body - client is disconnected'
@@ -216,7 +216,7 @@ def _wrap_handler(dependant):
                 json.dumps(await request.json())
             )
         except json.decoder.JSONDecodeError:
-            print_debug('Could not JSON-decode request body')
+            pass
         except ClientDisconnect:
             print_debug(
                 'Could not extract request body - client is disconnected'
