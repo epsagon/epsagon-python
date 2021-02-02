@@ -253,4 +253,5 @@ def test_fastapi_multiple_threads_route(trace_transport, fastapi_app):
     assert response_data == expected_response_data
     # validating no `zombie` traces exist
     assert not trace_factory.traces
-
+    trace_factory.use_single_trace = True
+    trace_factory.use_async_tracer = False
