@@ -6,7 +6,7 @@ import pytest
 import asynctest
 import asyncio
 from httpx import AsyncClient
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, Request
 from fastapi.responses import JSONResponse
 from epsagon import trace_factory
 from epsagon.common import ErrorCode
@@ -15,11 +15,13 @@ from .common import multiple_threads_handler
 
 RETURN_VALUE = 'testresponsedata'
 ROUTER_RETURN_VALUE = 'router-endpoint-return-data'
+REQUEST_OBJ_PATH = '/given_request'
 TEST_ROUTER_PREFIX = '/test-router-path'
 TEST_ROUTER_PATH = '/test-router'
 MULTIPLE_THREADS_KEY = "multiple_threads"
 MULTIPLE_THREADS_ROUTE = f'/{MULTIPLE_THREADS_KEY}'
 MULTIPLE_THREADS_RETURN_VALUE = MULTIPLE_THREADS_KEY
+TEST_POST_DATA = {'post_test': '123'}
 
 def _get_response_data(key):
     return {key: key}
@@ -32,6 +34,20 @@ async def handle():
     return _get_response(RETURN_VALUE)
 
 def handle_sync():
+    return _get_response(RETURN_VALUE)
+
+async def handle_given_request(request: Request):
+    assert request.method == 'POST'
+    assert await request.json() == TEST_POST_DATA
+    return _get_response(RETURN_VALUE)
+
+def handle_given_request_sync(request: Request):
+    assert request.method == 'POST'
+    try:
+        loop = asyncio.new_event_loop()
+        assert loop.run_until_complete(request.json()) == TEST_POST_DATA
+    finally:
+        loop.close()
     return _get_response(RETURN_VALUE)
 
 async def handle_a():
@@ -77,6 +93,7 @@ def handle_error_sync():
 def async_fastapi_app():
     app = FastAPI()
     app.add_api_route("/", handle, methods=["GET"])
+    app.add_api_route(REQUEST_OBJ_PATH, handle_given_request, methods=["POST"])
     app.add_api_route("/a", handle_a, methods=["GET"])
     app.add_api_route("/b", handle_b, methods=["GET"])
     app.add_api_route("/err", handle_error, methods=["GET"])
@@ -90,6 +107,9 @@ def async_fastapi_app():
 def sync_fastapi_app():
     app = FastAPI()
     app.add_api_route("/", handle_sync, methods=["GET"])
+    app.add_api_route(
+        REQUEST_OBJ_PATH, handle_given_request_sync, methods=["POST"]
+    )
     app.add_api_route("/a", handle_a_sync, methods=["GET"])
     app.add_api_route("/b", handle_b_sync, methods=["GET"])
     app.add_api_route("/err", handle_error_sync, methods=["GET"])
@@ -116,6 +136,32 @@ async def test_fastapi_sanity(trace_transport, fastapi_app):
     assert isinstance(runner, FastapiRunner)
     assert runner.resource['name'].startswith('127.0.0.1')
     assert runner.resource['metadata']['Path'] == '/'
+    expected_response_data = _get_response_data(RETURN_VALUE)
+    assert runner.resource['metadata']['Response Data'] == (
+        expected_response_data
+    )
+    assert runner.resource['metadata']['Query Params'] == { 'x': 'testval'}
+    assert response_data == expected_response_data
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "fastapi_app",
+    [
+        pytest.lazy_fixture("sync_fastapi_app"),
+        pytest.lazy_fixture("async_fastapi_app"),
+    ],
+)
+async def test_fastapi_given_request(trace_transport, fastapi_app):
+    """Sanity test."""
+    request_path = f'{REQUEST_OBJ_PATH}?x=testval'
+    async with AsyncClient(app=fastapi_app, base_url="http://test") as ac:
+        response = await ac.post(request_path, json=TEST_POST_DATA)
+    response_data = response.json()
+    runner = trace_transport.last_trace.events[0]
+    assert isinstance(runner, FastapiRunner)
+    assert runner.resource['name'].startswith('127.0.0.1')
+    assert runner.resource['metadata']['Path'] == REQUEST_OBJ_PATH
     expected_response_data = _get_response_data(RETURN_VALUE)
     assert runner.resource['metadata']['Response Data'] == (
         expected_response_data
