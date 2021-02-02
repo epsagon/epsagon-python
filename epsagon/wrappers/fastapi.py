@@ -107,6 +107,7 @@ def _wrap_handler(dependant):
         )
         if not request or not _switch_tracer_mode(is_async):
             return original_handler(*args, **kwargs)
+        trace = None
         should_ignore_request = True
         try:
             if not ignore_request('', request.url.path.lower()):
@@ -115,6 +116,8 @@ def _wrap_handler(dependant):
                 trace.prepare()
 
         except Exception as exception: # pylint: disable=W0703
+            if trace:
+                epsagon.trace.trace_factory.pop_trace(trace=trace)
             return original_handler(*args, **kwargs)
 
         if should_ignore_request:
