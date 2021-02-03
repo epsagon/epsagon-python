@@ -45,18 +45,15 @@ def _switch_tracer_mode(is_coroutine):
 
 def _handle_wrapper_params(_args, kwargs, original_request_param_name):
     """
-    Handles the sync/async given parameters.
-    Getting the request object injected by Epsagon. If the user set the
-    If the original handler is set to get the Request object, then injecting
-    it back to kwargs with its original param name.
+    Handles the sync/async given parameters - gets the request object
+    If original handler is set to get the Request object, then getting the
+    request using this param. Otherwise, trying to get the Request object using
+    Epsagon injected param (and removing this injected param)
     :return: the request object, None if not exists
     """
-    if EPSAGON_REQUEST_PARAM_NAME not in kwargs:
-        return None
-    request = kwargs.pop(EPSAGON_REQUEST_PARAM_NAME)
-    if original_request_param_name:
-        kwargs[original_request_param_name] = request
-    return request
+    if original_request_param_name and original_request_param_name in kwargs:
+        return kwargs[original_request_param_name]
+    return kwargs.pop(EPSAGON_REQUEST_PARAM_NAME, None)
 
 
 def _handle_response(response, trace, raised_err):
@@ -97,7 +94,8 @@ def _wrap_handler(dependant):
     original_handler = dependant.call
     original_request_param_name = dependant.request_param_name
     is_async = asyncio.iscoroutinefunction(original_handler)
-    dependant.request_param_name = EPSAGON_REQUEST_PARAM_NAME
+    if not original_request_param_name:
+        dependant.request_param_name = EPSAGON_REQUEST_PARAM_NAME
     def sync_wrapped_handler(*args, **kwargs):
         """
         Synchronous wrapper handler
@@ -178,6 +176,7 @@ def _wrap_handler(dependant):
             return await original_handler(*args, **kwargs)
 
         should_ignore_request = True
+        trace = None
         try:
             if not ignore_request('', request.url.path.lower()):
                 should_ignore_request = False
@@ -185,6 +184,8 @@ def _wrap_handler(dependant):
                 trace.prepare()
 
         except Exception as exception: # pylint: disable=W0703
+            if trace:
+                epsagon.trace.trace_factory.pop_trace(trace=trace)
             return await original_handler(*args, **kwargs)
 
         if should_ignore_request:
