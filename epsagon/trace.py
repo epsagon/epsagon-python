@@ -517,6 +517,9 @@ class TraceFactory(object):
         """
         Get the log id of the current trace
         """
+        if self.use_async_tracer:
+            return None
+
         if self.get_trace():
             return self.get_trace().get_log_id()
         return None
