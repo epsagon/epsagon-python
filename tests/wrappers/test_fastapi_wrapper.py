@@ -246,7 +246,7 @@ async def _send_request(app, path, trace_transport):
         pytest.lazy_fixture("async_fastapi_app"),
     ],
 )
-async def test_fastapi_multiple_requests(trace_transport, fastapi_app):e
+async def test_fastapi_multiple_requests(trace_transport, fastapi_app):
     """ Multiple requests test """
     for _ in range(3):
         await asyncio.gather(
