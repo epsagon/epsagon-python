@@ -23,8 +23,8 @@ MULTIPLE_THREADS_ROUTE = f'/{MULTIPLE_THREADS_KEY}'
 MULTIPLE_THREADS_RETURN_VALUE = MULTIPLE_THREADS_KEY
 TEST_POST_DATA = {'post_test': '123'}
 
-def setup_function(func):
-    trace_factory.use_single_trace = False
+def teardown_function(func):
+    trace_factory.use_single_trace = True
     trace_factory.use_async_tracer = False
 
 def _get_response_data(key):
