@@ -23,6 +23,10 @@ MULTIPLE_THREADS_ROUTE = f'/{MULTIPLE_THREADS_KEY}'
 MULTIPLE_THREADS_RETURN_VALUE = MULTIPLE_THREADS_KEY
 TEST_POST_DATA = {'post_test': '123'}
 
+def setup_function(func):
+    trace_factory.use_single_trace = False
+    trace_factory.use_async_tracer = False
+
 def _get_response_data(key):
     return {key: key}
 
@@ -242,10 +246,7 @@ async def _send_request(app, path, trace_transport):
         pytest.lazy_fixture("async_fastapi_app"),
     ],
 )
-async def test_fastapi_multiple_requests(trace_transport, fastapi_app):
-    # used to reset trace factory between fastapi apps
-    trace_factory.use_single_trace = True
-    trace_factory.use_async_tracer = False
+async def test_fastapi_multiple_requests(trace_transport, fastapi_app):e
     """ Multiple requests test """
     for _ in range(3):
         await asyncio.gather(
@@ -271,9 +272,6 @@ def test_fastapi_multiple_threads_route(trace_transport, fastapi_app):
     Tests request to a route, which invokes multiple threads.
     Validating no `zombie` traces exist (fromn the callback invoked threads)
     """
-    # used to reset trace factory between fastapi apps
-    trace_factory.use_single_trace = True
-    trace_factory.use_async_tracer = False
     try:
         loop = asyncio.new_event_loop()
         response = loop.run_until_complete(
@@ -299,5 +297,3 @@ def test_fastapi_multiple_threads_route(trace_transport, fastapi_app):
     assert response_data == expected_response_data
     # validating no `zombie` traces exist
     assert not trace_factory.traces
-    trace_factory.use_single_trace = True
-    trace_factory.use_async_tracer = False
