@@ -285,11 +285,12 @@ class TraceFactory(object):
         # Dynamic import since this is only valid in Python3+
         asyncio = __import__('asyncio')
         try:
+            # pylint: disable=W0212
             if not asyncio.events._get_running_loop():
                 return None
 
             return asyncio.Task.current_task()
-        except Exception:
+        except Exception: # pylint: disable=broad-except
             return None
 
     def _get_tracer_async_mode(self, should_create):
