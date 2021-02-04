@@ -43,11 +43,13 @@ async def handle_given_request(request: Request):
 
 def handle_given_request_sync(request: Request):
     assert request.method == 'POST'
+    loop = None
     try:
         loop = asyncio.new_event_loop()
         assert loop.run_until_complete(request.json()) == TEST_POST_DATA
     finally:
-        loop.close()
+        if loop:
+            loop.close()
     return _get_response(RETURN_VALUE)
 
 async def handle_a():
@@ -268,6 +270,7 @@ def test_fastapi_multiple_threads_route(trace_transport, fastapi_app):
     Tests request to a route, which invokes multiple threads.
     Validating no `zombie` traces exist (fromn the callback invoked threads)
     """
+    loop = None
     try:
         loop = asyncio.new_event_loop()
         response = loop.run_until_complete(
@@ -277,7 +280,8 @@ def test_fastapi_multiple_threads_route(trace_transport, fastapi_app):
             )
         )
     finally:
-        loop.close()
+        if loop:
+            loop.close()
     response_data = response.json()
     # expects only 1 event. The new threads events shouldn't belong this trace
     assert len(trace_transport.last_trace.events) == 1
