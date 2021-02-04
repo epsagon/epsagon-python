@@ -207,12 +207,6 @@ class TraceFactory(object):
         """
         self.use_single_trace = False
 
-    def is_multi_threaded_tracer(self):
-        """
-        Returns whether using a tracer per thread
-        """
-        return not self.use_single_trace
-
     def _create_new_trace(self, unique_id=None):
         """
         Creating new trace instance
