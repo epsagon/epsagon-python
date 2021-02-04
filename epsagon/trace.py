@@ -22,7 +22,6 @@ from epsagon.trace_encoder import TraceEncoder
 from epsagon.trace_transports import NoneTransport, HTTPTransport, LogTransport
 from .constants import (
     TIMEOUT_GRACE_TIME_MS,
-    EPSAGON_MARKER,
     MAX_LABEL_SIZE,
     DEFAULT_SAMPLE_RATE,
     TRACE_URL_PREFIX,
