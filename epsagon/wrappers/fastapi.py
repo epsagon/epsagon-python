@@ -23,25 +23,6 @@ from ..utils import print_debug
 
 EPSAGON_REQUEST_PARAM_NAME = 'epsagon_request'
 
-def _switch_tracer_mode(is_coroutine):
-    """
-    Switches the tracer to async/multi threaded mode
-    :param is_coroutine: indicates whether the endpoint is a coroutine
-    :return: True if succeeded, False otherwise
-    Fails if handler is None or if trying to switch from different
-    tracer modes (async <-> multi threaded)
-    """
-    if (
-            is_coroutine and
-            not epsagon.trace.trace_factory.is_multi_threaded_tracer()
-    ):
-        epsagon.trace.trace_factory.switch_to_async_tracer()
-        return True
-    if not epsagon.trace.trace_factory.is_async_tracer():
-        epsagon.trace.trace_factory.switch_to_multiple_traces()
-        return True
-    return False
-
 
 def _handle_wrapper_params(_args, kwargs, original_request_param_name):
     """
@@ -92,19 +73,25 @@ def _wrap_handler(dependant):
     Wraps the endppint handler.
     """
     original_handler = dependant.call
-    original_request_param_name = dependant.request_param_name
     is_async = asyncio.iscoroutinefunction(original_handler)
+    if is_async:
+        # async endpoints are not supported
+        return
+
+    original_request_param_name = dependant.request_param_name
     if not original_request_param_name:
         dependant.request_param_name = EPSAGON_REQUEST_PARAM_NAME
-    def sync_wrapped_handler(*args, **kwargs):
+
+    def wrapped_handler(*args, **kwargs):
         """
         Synchronous wrapper handler
         """
         request: Request = _handle_wrapper_params(
             args, kwargs, original_request_param_name
         )
-        if not request or not _switch_tracer_mode(is_async):
+        if not request:
             return original_handler(*args, **kwargs)
+        epsagon.trace.trace_factory.switch_to_multiple_traces()
         trace = None
         should_ignore_request = True
         try:
@@ -165,76 +152,7 @@ def _wrap_handler(dependant):
             loop.close()
         return _handle_response(response, trace, raised_err)
 
-    async def async_wrapped_handler(*args, **kwargs):
-        """
-        Asynchronous wrapper handler
-        """
-        request = _handle_wrapper_params(
-            args, kwargs, original_request_param_name
-        )
-        if not request or not _switch_tracer_mode(is_async):
-            return await original_handler(*args, **kwargs)
-
-        should_ignore_request = True
-        trace = None
-        try:
-            if not ignore_request('', request.url.path.lower()):
-                should_ignore_request = False
-                trace = epsagon.trace.trace_factory.get_or_create_trace()
-                trace.prepare()
-
-        except Exception as exception: # pylint: disable=W0703
-            if trace:
-                epsagon.trace.trace_factory.pop_trace(trace=trace)
-            return await original_handler(*args, **kwargs)
-
-        if should_ignore_request:
-            return await original_handler(*args, **kwargs)
-
-        runner = None
-        response = None
-        try:
-            runner = FastapiRunner(time.time(), request)
-            trace.set_runner(runner)
-        except Exception as exception: # pylint: disable=W0703
-            print_debug('Failed to add FastAPI runner event, skipping trace')
-            # failed to add runner event, skipping trace
-            epsagon.trace.trace_factory.pop_trace(trace=trace)
-            return await original_handler(*args, **kwargs)
-        try:
-            collect_container_metadata(runner.resource['metadata'])
-        except Exception as exception: # pylint: disable=W0703
-            warnings.warn(
-                'Could not extract container metadata',
-                EpsagonWarning
-            )
-        raised_err = None
-        try:
-            response = await original_handler(*args, **kwargs)
-        except Exception as exception:  # pylint: disable=W0703
-            raised_err = exception
-            traceback_data = get_traceback_data_from_exception(exception)
-            trace.runner.set_exception(exception, traceback_data)
-        try:
-            trace.runner.update_request_body(
-                json.dumps(await request.json())
-            )
-        except json.decoder.JSONDecodeError:
-            pass
-        except ClientDisconnect:
-            print_debug(
-                'Could not extract request body - client is disconnected'
-            )
-        except Exception as exception: # pylint: disable=W0703
-            print_debug(
-                'Could not extract request body: {}'.format(exception)
-            )
-        return _handle_response(response, trace, raised_err)
-
-    if is_async:
-        dependant.call = async_wrapped_handler
-    else:
-        dependant.call = sync_wrapped_handler
+    dependant.call = wrapped_handler
 
 
 class TracingAPIRoute(APIRoute):

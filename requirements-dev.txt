@@ -18,7 +18,6 @@ pytest-asyncio; python_version >= '3.5'
 pytest-aiohttp; python_version >= '3.5'
 httpx; python_version >= '3.5'
 asynctest; python_version >= '3.5'
-pytest-lazy-fixture; python_version >= '3.5'
 moto
 tornado
 kafka-python

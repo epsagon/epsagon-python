@@ -96,7 +96,6 @@ class TraceFactory(object):
         self.keys_to_ignore = None
         self.keys_to_allow = None
         self.use_single_trace = True
-        self.use_async_tracer = False
         self.singleton_trace = None
         self.local_thread_to_unique_id = {}
         self.transport = NoneTransport()
@@ -209,24 +208,11 @@ class TraceFactory(object):
         """
         self.use_single_trace = False
 
-    def switch_to_async_tracer(self):
-        """
-        Set the use_async_tracer flag to True.
-        :return: None
-        """
-        self.use_async_tracer = True
-
-    def is_async_tracer(self):
-        """
-        Returns whether using an async tracer
-        """
-        return self.use_async_tracer
-
     def is_multi_threaded_tracer(self):
         """
         Returns whether using a tracer per thread
         """
-        return not self.use_single_trace and not self.use_async_tracer
+        return not self.use_single_trace
 
     def _create_new_trace(self, unique_id=None):
         """
@@ -276,70 +262,18 @@ class TraceFactory(object):
             self.traces[thread_id] = new_trace
         return self.traces[thread_id]
 
-    @staticmethod
-    def _get_current_task():
-        """
-        Gets the current asyncio task safely
-        :return: The task.
-        """
-        # Dynamic import since this is only valid in Python3+
-        asyncio = __import__('asyncio')
-        try:
-            # pylint: disable=W0212
-            if not asyncio.events._get_running_loop():
-                return None
-
-            return asyncio.Task.current_task()
-        except Exception: # pylint: disable=broad-except
-            return None
-
-    def _get_tracer_async_mode(self, should_create):
-        """
-        Get trace assuming async tracer.
-        :return: The trace.
-        """
-        task = type(self)._get_current_task()
-        if not task:
-            return None
-
-        trace = getattr(task, EPSAGON_MARKER, None)
-        if not trace and should_create:
-            trace = self._create_new_trace()
-            setattr(task, EPSAGON_MARKER, trace)
-        return trace
-
-    def _pop_trace_async_mode(self):
-        """
-        Pops the trace from the current task, assuming async tracer
-        :return: The trace.
-        """
-        task = type(self)._get_current_task()
-        if not task:
-            return None
-
-        trace = getattr(task, EPSAGON_MARKER, None)
-        if trace: # can safely remove tracer from async task
-            delattr(task, EPSAGON_MARKER)
-        return trace
-
     def _get_trace(self, unique_id=None, should_create=False):
         """
         Get trace based on the tracing mode:
         single trace (use_single_trace=True) or
-        multiple threads (use_single_trace=False) or
-        async tasks (use_async_tracer=True)
+        multiple threads (use_single_trace=False)
 
         If should_create then creating a new trace if trace does not exist
         if use_single_trace is set to False, each thread will have
         it's own trace..
-        if use_async_tracer is set to True, each asyncio.Task will be
-        assigned with the trace.
         :return: The trace.
         """
         with TraceFactory.LOCK:
-            if self.use_async_tracer:
-                return self._get_tracer_async_mode(should_create=should_create)
-
             unique_id = self.get_thread_local_unique_id(unique_id)
             if unique_id:
                 trace = (
@@ -394,11 +328,6 @@ class TraceFactory(object):
         :return: unique id
         """
         with self.LOCK:
-            if self.use_async_tracer:
-                trace = self._pop_trace_async_mode()
-                if trace:
-                    # async tracer found
-                    return trace
             if self.traces:
                 trace = self.traces.pop(self.get_trace_identifier(trace), None)
                 if not self.traces:

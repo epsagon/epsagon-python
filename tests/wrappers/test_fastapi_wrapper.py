@@ -30,18 +30,10 @@ def _get_response(key):
     return JSONResponse(content=_get_response_data(key))
 
 # test fastapi app handlers
-async def handle():
+def handle():
     return _get_response(RETURN_VALUE)
 
-def handle_sync():
-    return _get_response(RETURN_VALUE)
-
-async def handle_given_request(request: Request):
-    assert request.method == 'POST'
-    assert await request.json() == TEST_POST_DATA
-    return _get_response(RETURN_VALUE)
-
-def handle_given_request_sync(request: Request):
+def handle_given_request(request: Request):
     assert request.method == 'POST'
     loop = None
     try:
@@ -52,31 +44,17 @@ def handle_given_request_sync(request: Request):
             loop.close()
     return _get_response(RETURN_VALUE)
 
-async def handle_a():
-    await asyncio.sleep(0.2)
-    return _get_response('a')
-
-def handle_a_sync():
+def handle_a():
     time.sleep(0.2)
     return _get_response('a')
 
-async def handle_b():
+def handle_b():
     return _get_response('b')
 
-def handle_b_sync():
-    return _get_response('b')
-
-async def handle_router_endpoint():
+def handle_router_endpoint():
     return _get_response(ROUTER_RETURN_VALUE)
 
-def handle_router_endpoint_sync():
-    return _get_response(ROUTER_RETURN_VALUE)
-
-async def multiple_threads_route():
-    multiple_threads_handler()
-    return _get_response(MULTIPLE_THREADS_RETURN_VALUE)
-
-def multiple_threads_route_sync():
+def multiple_threads_route():
     multiple_threads_handler()
     return _get_response(MULTIPLE_THREADS_RETURN_VALUE)
 
@@ -84,15 +62,12 @@ def multiple_threads_route_sync():
 class CustomFastAPIException(Exception):
     pass
 
-async def handle_error():
-    raise CustomFastAPIException('test')
-
-def handle_error_sync():
+def handle_error():
     raise CustomFastAPIException('test')
 
 
 @pytest.fixture(scope='function', autouse=False)
-def async_fastapi_app():
+def fastapi_app():
     app = FastAPI()
     app.add_api_route("/", handle, methods=["GET"])
     app.add_api_route(REQUEST_OBJ_PATH, handle_given_request, methods=["POST"])
@@ -105,30 +80,7 @@ def async_fastapi_app():
     app.include_router(router, prefix=TEST_ROUTER_PREFIX)
     return app
 
-@pytest.fixture(scope='function', autouse=False)
-def sync_fastapi_app():
-    app = FastAPI()
-    app.add_api_route("/", handle_sync, methods=["GET"])
-    app.add_api_route(
-        REQUEST_OBJ_PATH, handle_given_request_sync, methods=["POST"]
-    )
-    app.add_api_route("/a", handle_a_sync, methods=["GET"])
-    app.add_api_route("/b", handle_b_sync, methods=["GET"])
-    app.add_api_route("/err", handle_error_sync, methods=["GET"])
-    app.add_api_route(MULTIPLE_THREADS_ROUTE, multiple_threads_route_sync, methods=["GET"])
-    router = APIRouter()
-    router.add_api_route(TEST_ROUTER_PATH, handle_router_endpoint_sync)
-    app.include_router(router, prefix=TEST_ROUTER_PREFIX)
-    return app
-
 @pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "fastapi_app",
-    [
-        pytest.lazy_fixture("sync_fastapi_app"),
-        pytest.lazy_fixture("async_fastapi_app"),
-    ],
-)
 async def test_fastapi_sanity(trace_transport, fastapi_app):
     """Sanity test."""
     async with AsyncClient(app=fastapi_app, base_url="http://test") as ac:
@@ -144,16 +96,11 @@ async def test_fastapi_sanity(trace_transport, fastapi_app):
     )
     assert runner.resource['metadata']['Query Params'] == { 'x': 'testval'}
     assert response_data == expected_response_data
+    # validating no `zombie` traces exist
+    assert not trace_factory.traces
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "fastapi_app",
-    [
-        pytest.lazy_fixture("sync_fastapi_app"),
-        pytest.lazy_fixture("async_fastapi_app"),
-    ],
-)
 async def test_fastapi_given_request(trace_transport, fastapi_app):
     """Sanity test."""
     request_path = f'{REQUEST_OBJ_PATH}?x=testval'
@@ -170,16 +117,11 @@ async def test_fastapi_given_request(trace_transport, fastapi_app):
     )
     assert runner.resource['metadata']['Query Params'] == { 'x': 'testval'}
     assert response_data == expected_response_data
+    # validating no `zombie` traces exist
+    assert not trace_factory.traces
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "fastapi_app",
-    [
-        pytest.lazy_fixture("sync_fastapi_app"),
-        pytest.lazy_fixture("async_fastapi_app"),
-    ],
-)
 async def test_fastapi_custom_router(trace_transport, fastapi_app):
     """Custom router sanity test."""
     full_route_path= f'{TEST_ROUTER_PREFIX}{TEST_ROUTER_PATH}'
@@ -198,13 +140,6 @@ async def test_fastapi_custom_router(trace_transport, fastapi_app):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "fastapi_app",
-    [
-        pytest.lazy_fixture("sync_fastapi_app"),
-        pytest.lazy_fixture("async_fastapi_app"),
-    ],
-)
 async def test_fastapi_exception(trace_transport, fastapi_app):
     """Test when the handler got an exception."""
     try:
@@ -217,6 +152,8 @@ async def test_fastapi_exception(trace_transport, fastapi_app):
     assert runner.error_code == ErrorCode.EXCEPTION
     assert runner.exception['type'] == 'CustomFastAPIException'
     assert runner.exception['message'] == 'test'
+    # validating no `zombie` traces exist
+    assert not trace_factory.traces
 
 
 async def _send_request(app, path, trace_transport):
@@ -237,13 +174,6 @@ async def _send_request(app, path, trace_transport):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "fastapi_app",
-    [
-        pytest.lazy_fixture("sync_fastapi_app"),
-        pytest.lazy_fixture("async_fastapi_app"),
-    ],
-)
 async def test_fastapi_multiple_requests(trace_transport, fastapi_app):
     """ Multiple requests test """
     for _ in range(3):
@@ -251,20 +181,15 @@ async def test_fastapi_multiple_requests(trace_transport, fastapi_app):
             _send_request(fastapi_app, "a", trace_transport),
             _send_request(fastapi_app, "b", trace_transport)
         )
-
+    # validating no `zombie` traces exist
+    assert not trace_factory.traces
 
 
 async def _send_async_request(app, path):
     async with AsyncClient(app=app, base_url="http://test") as ac:
         return await ac.get(path)
 
-@pytest.mark.parametrize(
-    "fastapi_app",
-    [
-        pytest.lazy_fixture("sync_fastapi_app"),
-        pytest.lazy_fixture("async_fastapi_app"),
-    ],
-)
+
 def test_fastapi_multiple_threads_route(trace_transport, fastapi_app):
     """
     Tests request to a route, which invokes multiple threads.
