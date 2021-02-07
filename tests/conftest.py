@@ -74,3 +74,10 @@ def clean_traces():
     """
     epsagon.trace_factory.singleton_trace = None
     epsagon.trace_factory.traces = {}
+
+@pytest.fixture(scope='function', autouse=True)
+def reset_tracer_mode():
+    """
+    Resets trace factory tracer mode to a single trace.
+    """
+    epsagon.trace_factory.use_single_trace = True
