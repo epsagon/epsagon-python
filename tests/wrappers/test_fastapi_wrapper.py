@@ -251,7 +251,8 @@ async def test_fastapi_multiple_requests(trace_transport, fastapi_app):
             _send_request(fastapi_app, "a", trace_transport),
             _send_request(fastapi_app, "b", trace_transport)
         )
-
+    # validating no `zombie` traces exist
+    assert not trace_factory.traces
 
 
 async def _send_async_request(app, path):
