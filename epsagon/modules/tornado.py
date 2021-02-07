@@ -95,7 +95,7 @@ class TornadoWrapper(object):
 
         res = wrapped(*args, **kwargs)
         trace = None
-        sent_trace = False
+        is_trace_sent = False
         try:
             unique_id = getattr(instance, TORNADO_TRACE_ID, None)
             if not unique_id:
@@ -124,9 +124,9 @@ class TornadoWrapper(object):
                 if not ignored:
                     tornado_runner.update_response(instance, response_body)
                     epsagon.trace.trace_factory.send_traces(trace)
-                    sent_trace = True
+                    is_trace_sent = True
         except Exception:  # pylint: disable=W0703
-            if not sent_trace and trace:
+            if not is_trace_sent and trace:
                 epsagon.trace.trace_factory.pop_trace(trace=trace)
 
         return res
