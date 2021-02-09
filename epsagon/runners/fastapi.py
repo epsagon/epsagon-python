@@ -7,6 +7,7 @@ import json
 import uuid
 import warnings
 from fastapi.responses import (
+    Response,
     JSONResponse,
     HTMLResponse,
     PlainTextResponse,
@@ -107,16 +108,16 @@ class FastapiRunner(BaseEvent):
                     'Response Data',
                     body
                 )
+        if isinstance(response, Response):
+            response_headers = dict(response.headers.items())
+            if response.headers:
+                add_data_if_needed(
+                    self.resource['metadata'],
+                    'Response Headers',
+                    response_headers
+                )
 
-        response_headers = dict(response.headers.items())
-        if response.headers:
-            add_data_if_needed(
-                self.resource['metadata'],
-                'Response Headers',
-                response_headers
-            )
+            self.resource['metadata']['status_code'] = response.status_code
 
-        self.resource['metadata']['status_code'] = response.status_code
-
-        if response.status_code >= 500:
-            self.set_error()
+            if response.status_code >= 500:
+                self.set_error()
