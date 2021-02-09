@@ -5,6 +5,7 @@ import time
 import pytest
 import asynctest
 import asyncio
+from typing import List
 from httpx import AsyncClient
 from fastapi import FastAPI, APIRouter, Request
 from fastapi.responses import JSONResponse
@@ -22,6 +23,8 @@ MULTIPLE_THREADS_KEY = "multiple_threads"
 MULTIPLE_THREADS_ROUTE = f'/{MULTIPLE_THREADS_KEY}'
 MULTIPLE_THREADS_RETURN_VALUE = MULTIPLE_THREADS_KEY
 TEST_POST_DATA = {'post_test': '123'}
+CUSTOM_RESPONSE = ["A"]
+CUSTOM_RESPONSE_PATH = "/custom_response"
 
 def _get_response_data(key):
     return {key: key}
@@ -32,6 +35,9 @@ def _get_response(key):
 # test fastapi app handlers
 def handle():
     return _get_response(RETURN_VALUE)
+
+def handle_custom_response(response_model=List[str]):
+    return CUSTOM_RESPONSE
 
 def handle_given_request(request: Request):
     assert request.method == 'POST'
@@ -70,6 +76,7 @@ def handle_error():
 def fastapi_app():
     app = FastAPI()
     app.add_api_route("/", handle, methods=["GET"])
+    app.add_api_route(CUSTOM_RESPONSE_PATH, handle_custom_response, methods=["GET"])
     app.add_api_route(REQUEST_OBJ_PATH, handle_given_request, methods=["POST"])
     app.add_api_route("/a", handle_a, methods=["GET"])
     app.add_api_route("/b", handle_b, methods=["GET"])
@@ -96,6 +103,23 @@ async def test_fastapi_sanity(trace_transport, fastapi_app):
     )
     assert runner.resource['metadata']['Query Params'] == { 'x': 'testval'}
     assert response_data == expected_response_data
+    # validating no `zombie` traces exist
+    assert not trace_factory.traces
+
+
+@pytest.mark.asyncio
+async def test_fastapi_custom_response(trace_transport, fastapi_app):
+    """Sanity test."""
+    request_path = f'{CUSTOM_RESPONSE_PATH}?x=testval'
+    async with AsyncClient(app=fastapi_app, base_url="http://test") as ac:
+        response = await ac.get(request_path)
+    response_data = response.json()
+    runner = trace_transport.last_trace.events[0]
+    assert isinstance(runner, FastapiRunner)
+    assert runner.resource['name'].startswith('127.0.0.1')
+    assert runner.resource['metadata']['Path'] == CUSTOM_RESPONSE_PATH
+    assert runner.resource['metadata']['Query Params'] == { 'x': 'testval'}
+    assert response_data == CUSTOM_RESPONSE
     # validating no `zombie` traces exist
     assert not trace_factory.traces
 
