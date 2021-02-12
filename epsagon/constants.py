@@ -37,6 +37,9 @@ HTTP_ERR_CODE = int(os.getenv('EPSAGON_HTTP_ERR_CODE', '500'))
 # List of ignored endpoints for web frameworks.
 IGNORED_ENDPOINTS = []
 
+# Mask used to hide values in sql query
+OBFUSCATION_MASK = '???'
+
 EPSAGON_MARKER = '__EPSAGON'
 EPSAGON_HEADER = 'epsagon-trace-id'
 # In some web frameworks, there is an automated capitalization
