@@ -2,6 +2,7 @@ import epsagon.trace
 import epsagon.utils
 import epsagon.http_filters
 from epsagon.trace import trace_factory
+from epsagon.constants import OBFUSCATION_MASK
 
 
 def setup_function(func):
@@ -52,3 +53,41 @@ def test_trace_blacklist():
     trace_factory.get_trace().url_patterns_to_ignore = set()
     assert not epsagon.http_filters.is_payload_collection_blacklisted('http://www.test.net')
     assert not epsagon.http_filters.is_payload_collection_blacklisted('http://www.bla.test.net')
+
+def test_obfuscate_sql():
+    """
+    Validate SQL Query Obfuscation
+    :return: None
+    """
+    assert epsagon.utils.obfuscate_sql_query(
+        "INSERT "
+        "   INTO people "
+        "   VALUES ('Mahatma', 'Ghandi', 78);",
+        'insert',
+    ).count(OBFUSCATION_MASK) == 3
+
+    assert epsagon.utils.obfuscate_sql_query(
+        "SELECT * "
+        "   FROM people "
+        "   WHERE first = 'Mahatma' AND last = 'Ghandi' OR age>=78 "
+        "   GROUP BY first, last, age ORDER BY age;",
+        'select',
+    ).count(OBFUSCATION_MASK) == 3
+
+    assert epsagon.utils.obfuscate_sql_query(
+        "SELECT Count(*) "
+        "   FROM people "
+        "   WHERE first='M' OR first NOT IN "
+        "       (SELECT last FROM people WHERE age =30 AND last='F') "
+        "   AND NOT EXISTS "
+        "       (SELECT age FROM people WHERE first='J');",
+        'select',
+    ).count(OBFUSCATION_MASK) == 4
+
+    assert epsagon.utils.obfuscate_sql_query(
+        "SELECT * "
+        "   FROM people p "
+        "   INNER JOIN people pp on p.age = pp.age "
+        "   WHERE p.age >=78;",
+        'select',
+    ).count(OBFUSCATION_MASK) == 1
