@@ -21,7 +21,7 @@ except ImportError:
 import sqlparse
 import wrapt
 from epsagon import http_filters
-from epsagon.constants import TRACE_COLLECTOR_URL, REGION, EPSAGON_MARKER
+from epsagon.constants import TRACE_COLLECTOR_URL, REGION, EPSAGON_MARKER, OBFUSCATION_MASK
 from .trace import trace_factory, create_transport
 from .constants import EPSAGON_HANDLER, DEBUG_MODE, DEFAULT_SAMPLE_RATE
 
@@ -513,7 +513,6 @@ def obfuscate_sql_query(query, operation):
         return query
 
     token_type, start, stop, separator, operators = bounds[operation].values()
-    replacer = '???'
     obfuscated_query = []
 
     parsed = sqlparse.parse(query)[0].tokens
@@ -540,8 +539,6 @@ def obfuscate_sql_query(query, operation):
             operators = build_split_string(operators)
 
             values = re.split(separator, values, flags=re.IGNORECASE) or []
-            print_debug('split values:')
-            print_debug(values)
 
             # step ignores the seperators in between
             for i, v in enumerate(values[::2]):
@@ -554,11 +551,11 @@ def obfuscate_sql_query(query, operation):
                         continue
 
                     v[0] = v[0].strip()
-                    v[2] = replacer
+                    v[2] = OBFUSCATION_MASK
                     v = ''.join(v)
-                    # else replace entire value
+                # else replace entire value
                 else:
-                    v = replacer
+                    v = OBFUSCATION_MASK
                 values[i] = v
 
             values = ''.join(values)
