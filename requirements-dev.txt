@@ -11,6 +11,7 @@ pytest==6.0.0; python_version >= '3.5'
 pytest==4.6.0; python_version < '3.5'
 requests
 sqlalchemy
+sqlparse
 psycopg2
 aiohttp; python_version >= '3.5'
 fastapi; python_version >= '3.5'
