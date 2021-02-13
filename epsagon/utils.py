@@ -470,7 +470,7 @@ def build_split_string(options):
     if not isinstance(options, str):
         return ''
 
-    return f'({options})'
+    return f'({options})'.format(options=options)
 
 
 def obfuscate_sql_query(query, operation):
@@ -530,7 +530,7 @@ def obfuscate_sql_query(query, operation):
             )
 
             if -1 in positions or positions[0] > positions[1]:
-                print_debug(f'could not obfuscate clause: {token_type}')
+                print_debug('could not obfuscate clause: {clause}'.format(clause=token_type))
                 continue
 
             values = t[positions[0]:positions[1]]
