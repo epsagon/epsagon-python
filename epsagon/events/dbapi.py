@@ -72,9 +72,7 @@ class DBAPIEvent(BaseEvent):
 
         # in case of pg instrumentation we extract data from the dsn property
         if hasattr(connection, 'dsn'):
-            print_debug('Parsing using dsn')
             dsn = parse_dsn(connection.dsn)
-            print_debug('Parsed dsn: {}'.format(dsn))
             db_name = dsn.get('dbname', '')
             host = dsn.get('host', 'local')
             query = cursor.query
@@ -82,11 +80,6 @@ class DBAPIEvent(BaseEvent):
             query = _args[0]
             host = connection.extract_hostname
             db_name = connection.extract_dbname
-        print_debug(
-            'Extracted db name - {}, host - {}, query - {}'.format(
-                db_name, host, query
-            )
-        )
 
         self.resource['name'] = db_name if db_name else host
 
@@ -103,11 +96,6 @@ class DBAPIEvent(BaseEvent):
         self.resource['type'] = database_connection_type(
             host,
             self.RESOURCE_TYPE
-        )
-        print_debug(
-            '{}: resource name - {}, operation - {}'.format(
-                self.event_id, self.resource['name'], self.resource['operation']
-            )
         )
         self.resource['metadata'] = {
             'Host': host,
@@ -126,11 +114,6 @@ class DBAPIEvent(BaseEvent):
                 query_max = obfuscate_sql_query(query_max, operation)
 
             self.resource['metadata']['Query'] = query_max
-            print_debug(
-                '{}: collected query {}'.format(
-                    self.event_id, self.resource['metadata']['Query']
-                    )
-            )
 
         if exception is None:
             # Update response data
@@ -179,7 +162,6 @@ class DBAPIEventFactory(object):
         :param exception:
         :return:
         """
-        print_debug('Creating DBAPI event')
         event = DBAPIEvent(
             cursor_wrapper.connection_wrapper,
             cursor_wrapper,
@@ -188,5 +170,4 @@ class DBAPIEventFactory(object):
             start_time,
             exception,
         )
-        print_debug('Adding DBAPI event to trace')
         trace_factory.add_event(event)

@@ -11,7 +11,6 @@ MODULES = {}
 IGNORE_MODULES = ('__init__',)
 PYTHON_EXTENSIONS = ('.py', '.pyc')
 VERSION_DEPENDENCIES = {
-    'aiohttp': (3, 5, 3),
     'fastapi': (3, 5, 3),
 }
 
