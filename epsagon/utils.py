@@ -4,6 +4,7 @@ Utilities for Epsagon module.
 
 # pylint: disable=C0302
 from __future__ import absolute_import, print_function
+from collections import OrderedDict
 import os
 import collections
 import uuid
@@ -21,7 +22,9 @@ except ImportError:
 import sqlparse
 import wrapt
 from epsagon import http_filters
-from epsagon.constants import TRACE_COLLECTOR_URL, REGION, EPSAGON_MARKER, OBFUSCATION_MASK
+from epsagon.constants import (
+    TRACE_COLLECTOR_URL, REGION, EPSAGON_MARKER, OBFUSCATION_MASK
+)
 from .trace import trace_factory, create_transport
 from .constants import EPSAGON_HANDLER, DEBUG_MODE, DEFAULT_SAMPLE_RATE
 
@@ -486,20 +489,20 @@ def obfuscate_sql_query(query, operation):
     :var bounds: signal is a preceding identifier for each value
     """
     bounds = {
-        'select': {
-            'token_type': sqlparse.sql.Where,
-            'left_bound': 'WHERE ',
-            'right_bound': None,
-            'separators': [')', ' AND ', ' OR '],
-            'operators': ['>=', '<=', '>', '<', '=', '<>'],
-        },
-        'insert': {
-            'token_type': sqlparse.sql.Values,
-            'left_bound': 'VALUES (',
-            'right_bound': ')',
-            'separators': ', ',
-            'operators': None,
-        }
+        'select': [
+            ('token_type', sqlparse.sql.Where),
+            ('left_bound', 'WHERE '),
+            ('right_bound', None),
+            ('separators', [')', ' AND ', ' OR ']),
+            ('operators', ['>=', '<=', '>', '<', '=', '<>'])
+        ],
+        'insert': [
+            ('token_type', sqlparse.sql.Values),
+            ('left_bound', 'VALUES ('),
+            ('right_bound', ')'),
+            ('separators', ', '),
+            ('operators', None),
+        ],
 
     }
 
@@ -512,7 +515,12 @@ def obfuscate_sql_query(query, operation):
     if operation not in bounds.keys():
         return query
 
-    token_type, start, stop, separator, operators = bounds[operation].values()
+    # order not preserved in py2. Dont default to OrderedDict, very inefficient
+    to_dict = OrderedDict if sys.version_info.major == 2 else dict
+
+    token_type, \
+    start, stop, \
+    separator, operators = to_dict(bounds[operation]).values()
     obfuscated_query = []
 
     parsed = sqlparse.parse(query)[0].tokens
@@ -530,7 +538,8 @@ def obfuscate_sql_query(query, operation):
             )
 
             if -1 in positions or positions[0] > positions[1]:
-                print_debug('could not obfuscate clause: {clause}'.format(clause=token_type))
+                print_debug('could not obfuscate clause: {clause}'
+                            .format(clause=token_type))
                 continue
 
             values = t[positions[0]:positions[1]]
