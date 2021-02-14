@@ -470,7 +470,7 @@ def build_split_string(options):
     if not isinstance(options, str):
         return ''
 
-    return f'({options})'.format(options=options)
+    return '({options})'.format(options=options)
 
 
 def obfuscate_sql_query(query, operation):
