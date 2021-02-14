@@ -46,7 +46,10 @@ def dummy_python_wrapper(*args, **_kwargs):
     return _inner_wrapper
 
 
-if os.getenv('DISABLE_EPSAGON') == 'TRUE':
+if (
+        os.getenv('DISABLE_EPSAGON') and
+        os.getenv('DISABLE_EPSAGON').upper() == 'TRUE'
+):
     os.environ['DISABLE_EPSAGON_PATCH'] = 'TRUE'
     lambda_wrapper = dummy_wrapper  # pylint: disable=C0103
     step_lambda_wrapper = dummy_wrapper  # pylint: disable=C0103
@@ -97,5 +100,8 @@ __all__ = [
 
 
 # The modules are patched only if DISABLE_EPSAGON_PATCH variable is NOT 'TRUE'
-if os.getenv('DISABLE_EPSAGON_PATCH') != 'TRUE':
+if (
+        not os.getenv('DISABLE_EPSAGON_PATCH') or
+        os.getenv('DISABLE_EPSAGON_PATCH').upper() != 'TRUE'
+):
     patch_all()
