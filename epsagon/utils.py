@@ -4,7 +4,6 @@ Utilities for Epsagon module.
 
 # pylint: disable=C0302
 from __future__ import absolute_import, print_function
-from collections import OrderedDict
 import os
 import collections
 import uuid
@@ -515,18 +514,17 @@ def obfuscate_sql_query(query, operation):
     if operation not in bounds.keys():
         return query
 
-    # order not preserved in py2. Dont default to OrderedDict, very inefficient
-    to_dict = OrderedDict if sys.version_info.major == 2 else dict
+    # order not preserved in py2. Dont default to OrderedDict,not inefficient
+    to_dict = collections.OrderedDict if sys.version_info.major == 2 else dict
 
-    token_type, \
-    start, stop, \
-    separator, operators = to_dict(bounds[operation]).values()
+    [token_type,
+    start, stop,
+    separators, operators] = to_dict(bounds[operation]).values()
     obfuscated_query = []
 
-    parsed = sqlparse.parse(query)[0].tokens
+    parse_query = sqlparse.parse(query)[0].tokens
 
-    # for every token in query
-    for token in parsed:
+    for token in parse_query:
         t = str(token)
 
         if isinstance(token, token_type):
@@ -544,10 +542,10 @@ def obfuscate_sql_query(query, operation):
 
             values = t[positions[0]:positions[1]]
 
-            separator = build_split_string(separator)
+            separators = build_split_string(separators)
             operators = build_split_string(operators)
 
-            values = re.split(separator, values, flags=re.IGNORECASE) or []
+            values = re.split(separators, values, flags=re.IGNORECASE) or []
 
             # step ignores the seperators in between
             for i, v in enumerate(values[::2]):
