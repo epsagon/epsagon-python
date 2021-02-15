@@ -24,7 +24,7 @@ jobs:
       python:
         - "3.8"
       nodejs:
-        - "node"
+        - "12"
       edge: true
       script:
         - ./scripts/publish.sh
