@@ -1,7 +1,6 @@
 import mock
 
 from epsagon.modules.botocore import _wrapper as _botocore_wrapper
-from epsagon.modules.grpc import _wrapper as _grpc_wrapper
 from epsagon.modules.requests import _wrapper as _request_wrapper
 from epsagon.modules.pymongo import _wrapper as _pymongo_wrapper
 from epsagon.trace import trace_factory
@@ -46,14 +45,6 @@ def test_pymongo_wrapper_failsafe(_):
     """Validates that the pymongo wrapper is not raising any exception to
     the user."""
     _test(_pymongo_wrapper)
-
-
-@mock.patch('epsagon.events.grpc.GRPCEventFactory.create_event',
-            side_effect=raise_exception)
-def test_grpc_wrapper_failsafe(_):
-    """Validates that the GRPC wrapper is not raising any exception to
-    the user."""
-    _test(_grpc_wrapper)
 
 
 @mock.patch('epsagon.events.botocore.BotocoreEventFactory.create_event',
