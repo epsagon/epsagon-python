@@ -23,7 +23,8 @@ except ImportError:
 
 from ..trace import trace_factory
 from ..event import BaseEvent
-from ..utils import print_debug, database_connection_type, obfuscate_sql_query
+from ..utils import print_debug
+from ..db_utils import database_connection_type, obfuscate_sql_query
 
 MAX_QUERY_SIZE = 2048
 

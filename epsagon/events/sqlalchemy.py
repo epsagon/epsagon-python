@@ -8,7 +8,7 @@ from uuid import uuid4
 
 from ..trace import trace_factory
 from ..event import BaseEvent
-from ..utils import database_connection_type
+from ..db_utils import database_connection_type
 
 
 class SqlAlchemyEvent(BaseEvent):

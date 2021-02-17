@@ -14,16 +14,14 @@ import re
 import json
 import six
 import urllib3
+from operator import itemgetter
 try:
     from urllib.parse import urlparse
 except ImportError:
     from urlparse import urlparse
-import sqlparse
 import wrapt
 from epsagon import http_filters
-from epsagon.constants import (
-    TRACE_COLLECTOR_URL, REGION, EPSAGON_MARKER, OBFUSCATION_MASK
-)
+from epsagon.constants import TRACE_COLLECTOR_URL, REGION, EPSAGON_MARKER
 from .trace import trace_factory, create_transport
 from .constants import EPSAGON_HANDLER, DEBUG_MODE, DEFAULT_SAMPLE_RATE
 
@@ -443,136 +441,3 @@ def is_lambda_env():
 def print_debug(log):
     if DEBUG_MODE:
         print('[EPSAGON_DEBUG]: {}'.format(log))
-
-
-def database_connection_type(hostname, default_type):
-    """
-    returns known DB types based on the hostname
-    :param hostname: hostname from the URL
-    :return: string type, or default type
-    """
-    if 'rds.amazonaws' in hostname:
-        return 'rds'
-    if 'redshift.amazonaws' in hostname:
-        return 'redshift'
-    return default_type
-
-
-def build_split_string(options):
-    """
-    returns regex string to split on option(s)
-    :param options: Union[str: 1 option, list[str]: multiple options]
-    :param options: options to split string on
-    :return: string type, compatible for multiple options of regex split
-    """
-    if isinstance(options, list):
-        options = '|'.join(map(re.escape, options))
-
-    # if options is not a string by now param was invalid
-    if not isinstance(options, str):
-        return ''
-
-    return '({options})'.format(options=options)
-
-
-def obfuscate_sql_query(query, operation):
-    """
-    Obfuscate SQL queries to protect sensitive uploads
-    :param query: The SQL query string
-    :param operation: Operation in DB
-    :return: the obfuscated query (string)
-    :var bounds: specifier for locating values based upon operation
-    :var bounds: token_type is sqlparse type
-    :var bounds: leftmost bound and rightmost bound are absolute limits
-    :var bounds: separator is the symbol(s) between values
-    :var bounds: signal is a preceding identifier for each value
-    """
-    bounds = {
-        'select': [
-            ('token_type', sqlparse.sql.Where),
-            ('left_bound', 'WHERE '),
-            ('right_bound', None),
-            ('separators', [')', ' AND ', ' OR ']),
-            ('operators', ['>=', '<=', '>', '<', '=', '<>'])
-        ],
-        'insert': [
-            ('token_type', sqlparse.sql.Values),
-            ('left_bound', 'VALUES ('),
-            ('right_bound', ')'),
-            ('separators', ', '),
-            ('operators', None),
-        ],
-
-    }
-
-    if isinstance(query, bytes):
-        query = query.decode('UTF-8')
-
-    if isinstance(operation, bytes):
-        operation = operation.decode('UTF-8')
-
-    if operation not in bounds.keys():
-        return query
-
-    # order not preserved in py2. Dont default to OrderedDict,not inefficient
-    to_dict = collections.OrderedDict if sys.version_info.major == 2 else dict
-
-    [token_type,
-    start, stop,
-    separators, operators] = to_dict(bounds[operation]).values()
-    obfuscated_query = []
-
-    parse_query = sqlparse.parse(query)[0].tokens
-
-    for token in parse_query:
-        t = str(token)
-
-        if isinstance(token, token_type):
-
-            # indices of start and stop positions
-            positions = (
-                t.upper().find(start) + len(start) if start else -1,
-                t.upper().find(stop) if stop else len(t) - 1,
-            )
-
-            if -1 in positions or positions[0] > positions[1]:
-                print_debug('could not obfuscate clause: {clause}'
-                            .format(clause=token_type))
-                continue
-
-            values = t[positions[0]:positions[1]]
-
-            separators = build_split_string(separators)
-            operators = build_split_string(operators)
-
-            values = re.split(separators, values, flags=re.IGNORECASE) or []
-
-            # step ignores the seperators in between
-            for i, v in enumerate(values[::2]):
-                i *= 2  # enumerate properly for step
-
-                # partition into 3 if operator defined, mask the right
-                if operators:
-                    v = re.split(operators, v, flags=re.IGNORECASE)
-                    if len(v) != 3:
-                        continue
-
-                    v[0] = v[0].strip()
-                    v[2] = OBFUSCATION_MASK
-                    v = ''.join(v)
-                # else replace entire value
-                else:
-                    v = OBFUSCATION_MASK
-                values[i] = v
-
-            values = ''.join(values)
-
-            t = t[:positions[0]] \
-                + values \
-                + t[positions[1]:]
-
-        obfuscated_query.append(t)
-
-    obfuscated_query = ''.join(obfuscated_query)
-
-    return obfuscated_query
