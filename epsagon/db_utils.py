@@ -21,7 +21,7 @@ def database_connection_type(hostname, default_type):
 
 def build_split_string(options):
     """
-    returns regex string to split on option(s)
+    Returns regex string to split on option(s)
     :param options: Union[str: 1 option, list[str]: multiple options]
     :param options: options to split string on
     :return: string type, compatible for multiple options of regex split
@@ -36,7 +36,29 @@ def build_split_string(options):
     return '({options})'.format(options=options)
 
 
+def clean(x):
+    """
+    Removes extraneous whitespace from strings
+    :param x: string to clean
+    :return: string with extraneous whitespace removed
+    """
+    return ' '.join(str(x).split())
+
+
+def queries_eq(*queries):
+    """
+    Boolean validator whether queries are equal
+    :param queries: queries to validate
+    :return: boolean signaling equality
+    """
+    return all(clean(q) == clean(queries[0]) for q in queries)
+
+
 def get_sql_bounds():
+    """
+    Bounds used for determining sql parsing
+    :return: dict of bounds by operation
+    """
     return {
         'select': {
             'token_type': sqlparse.sql.Where,
@@ -57,10 +79,11 @@ def get_sql_bounds():
 
 def get_query_values(token, operation):
     """
-
-    :param token:
-    :param config: left bound is
-    :return:
+    Gets list of hardcoded values in array
+    :param token: SQL token to parse
+    :param operation: DB operation
+    :return: values - list of values split by separators
+    :return: positions - indices of values in token string
     """
 
     t = str(token)
@@ -88,7 +111,12 @@ def get_query_values(token, operation):
 
 
 def mask_values(values, operation):
-
+    """
+    Obfuscates list of values with Mask, depending on Operations allowed
+    :param values: list of values in query
+    :param operation: DB operation
+    :return: list of obfuscated/masked values
+    """
     ops = get_sql_bounds().get(operation, {}).get('operators')
     ops = build_split_string(ops)
 
@@ -112,7 +140,12 @@ def mask_values(values, operation):
 
 
 def _obfuscate_query(tokens, operation):
-
+    """
+    Inner Method for each obfuscating individual query
+    :param tokens: list of tokens in 1 query
+    :param operation: DB operation
+    :return: string of obfuscated query
+    """
     token_type = get_sql_bounds().get(operation, {}).get('token_type')
     query = []
 
@@ -123,7 +156,7 @@ def _obfuscate_query(tokens, operation):
 
             values, pos = get_query_values(token, operation)
 
-            if not isinstance(values, list):
+            if not values or not isinstance(values, list):
                 continue
 
             values = mask_values(values, operation)
@@ -138,37 +171,35 @@ def _obfuscate_query(tokens, operation):
 
 def obfuscate_sql_query(query, operation):
     """
-    Obfuscate SQL queries to protect sensitive uploads
-    :param query: The SQL query string
+    Obfuscate SQL queries to protect sensitive ops
+    :param query: The SQL query string to obfuscate
     :param operation: Operation in DB
-    :return: the obfuscated query (string)
-    :var bounds: specifier for locating values based upon operation
-    :var bounds: token_type is sqlparse type
-    :var bounds: leftmost bound and rightmost bound are absolute limits
-    :var bounds: separator is the symbol(s) between values
-    :var bounds: signal is a preceding identifier for each value
+    :return: string of obfuscated queries
     """
 
+    original_query = query
 
-    if isinstance(query, bytes):
-        query = query.decode('UTF-8')
+    try:
+        if isinstance(query, bytes):
+            query = query.decode('UTF-8')
 
-    if isinstance(operation, bytes):
-        operation = operation.decode('UTFå-8')
+        if isinstance(operation, bytes):
+            operation = operation.decode('UTFå-8')
 
-    if operation not in get_sql_bounds().keys():
-        return query
+        if operation not in get_sql_bounds().keys():
+            return query
 
-    parsed_query = sqlparse.parse(query)
-    obfuscated_query = []
+        parsed_query = sqlparse.parse(query)
+        obfuscated_query = []
 
-    for q in parsed_query:
-        obfuscated = _obfuscate_query(q.tokens, operation)
-        obfuscated_query.append(obfuscated)
+        for q in parsed_query:
+            obfuscated = _obfuscate_query(q.tokens, operation)
+            obfuscated_query.append(obfuscated)
 
-    obfuscated_query = ''.join(obfuscated_query)
+        obfuscated_query = ''.join(obfuscated_query)
 
-    print_debug('obfuscated:')
-    print_debug(obfuscated_query)
+    except Exception as err:
+        print_debug('Err while obfuscating: {err}'.format(err=err))
+        return original_query
 
     return obfuscated_query
