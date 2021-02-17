@@ -3,3 +3,4 @@ autowrapt==1.0
 urllib3
 six
 future
+sqlparse
