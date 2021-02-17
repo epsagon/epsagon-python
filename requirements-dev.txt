@@ -19,5 +19,6 @@ pytest-aiohttp; python_version >= '3.5'
 httpx; python_version >= '3.5'
 asynctest; python_version >= '3.5'
 moto
+rsa>=4.5,>=4.7.1
 tornado
 kafka-python
