@@ -112,7 +112,7 @@ class DBAPIEvent(BaseEvent):
 
             query = query[:MAX_QUERY_SIZE]
             if trace_factory.obfuscate_sql:
-                query_max = obfuscate_sql_query(query, operation)
+                query = obfuscate_sql_query(query, operation)
 
             self.resource['metadata']['Query'] = query
 

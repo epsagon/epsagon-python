@@ -14,7 +14,6 @@ import re
 import json
 import six
 import urllib3
-from operator import itemgetter
 try:
     from urllib.parse import urlparse
 except ImportError:

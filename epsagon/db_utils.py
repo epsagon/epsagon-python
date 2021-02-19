@@ -1,9 +1,23 @@
+"""
+DB Utilities for Epsagon module.
+"""
 
-import sys
 import re
 import sqlparse
 from epsagon.utils import print_debug
 from epsagon.constants import OBFUSCATION_MASK
+
+try:
+    from psycopg2.errors import SyntaxError as PsycopSyntaxError
+except ImportError:
+    class PsycopSyntaxError(Exception):
+        pass
+
+try:
+    from sqlalchemy.exc import SqlProgrammingError
+except ImportError:
+    class SqlProgrammingError(Exception):
+        pass
 
 
 def database_connection_type(hostname, default_type):
@@ -187,7 +201,7 @@ def obfuscate_sql_query(query, operation):
             operation = operation.decode('UTFå-8')
 
         if operation not in get_sql_bounds().keys():
-            return query
+            return original_query
 
         parsed_query = sqlparse.parse(query)
         obfuscated_query = []
@@ -198,7 +212,7 @@ def obfuscate_sql_query(query, operation):
 
         obfuscated_query = ''.join(obfuscated_query)
 
-    except Exception as err:
+    except (PsycopSyntaxError, SqlProgrammingError, ValueError) as err:
         print_debug('Err while obfuscating: {err}'.format(err=err))
         return original_query
 
