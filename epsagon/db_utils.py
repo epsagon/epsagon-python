@@ -198,7 +198,7 @@ def obfuscate_sql_query(query, operation):
             query = query.decode('UTF-8')
 
         if isinstance(operation, bytes):
-            operation = operation.decode('UTFå-8')
+            operation = operation.decode('UTF-8')
 
         if operation not in get_sql_bounds().keys():
             return original_query
