@@ -3,4 +3,5 @@ autowrapt==1.0
 urllib3
 six
 future
+rsa==4.5.0; python_version < '3.5'
 sqlparse
