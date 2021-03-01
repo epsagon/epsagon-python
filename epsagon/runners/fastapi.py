@@ -153,6 +153,5 @@ class FastapiRunner(BaseEvent):
                 print_debug(
                     'Could not json encode fastapi handler response data'
                 )
-
             if status_code:
                 self._update_status_code(status_code)

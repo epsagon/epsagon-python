@@ -209,6 +209,9 @@ async def test_fastapi_custom_status_code(trace_transport, fastapi_app):
         jsonable_encoder(CUSTOM_RESPONSE)
     )
     assert runner.resource['metadata']['Query Params'] == { 'x': 'testval'}
+    assert runner.resource['metadata']['Response Data'] == (
+        jsonable_encoder(CUSTOM_RESPONSE)
+    )
     assert response_data == CUSTOM_RESPONSE
     # validating no `zombie` traces exist
     assert not trace_factory.traces
