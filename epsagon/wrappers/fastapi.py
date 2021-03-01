@@ -167,4 +167,4 @@ class TracingAPIRoute(APIRoute):
         """
         super().__init__(*args, **kwargs)
         if self.dependant and self.dependant.call:
-            _wrap_handler(self.dependant, kwargs.pop("status_code", 200))
+            _wrap_handler(self.dependant, kwargs.pop('status_code', 200))
