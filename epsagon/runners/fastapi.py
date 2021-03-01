@@ -14,12 +14,13 @@ from fastapi.responses import (
     UJSONResponse,
     RedirectResponse,
 )
+from fastapi.encoders import jsonable_encoder
 from epsagon.common import EpsagonWarning
 from ..event import BaseEvent
-from ..utils import add_data_if_needed, normalize_http_url
+from ..utils import add_data_if_needed, normalize_http_url, print_debug
 from ..constants import EPSAGON_HEADER
 
-SUPPORTED_RESPONSE_TYPES = (
+SUPPORTED_RAW_RESPONSE_TYPES = (
     JSONResponse,
     HTMLResponse,
     PlainTextResponse,
@@ -85,39 +86,65 @@ class FastapiRunner(BaseEvent):
                 body
             )
 
+    def _update_raw_response_body(self, response, response_type):
+        """
+        Updates the response body by given `raw` response and its type
+        """
+        body = response.body
+        if response_type == JSONResponse:
+            try:
+                body = json.loads(body)
+            except Exception: # pylint: disable=W0703
+                warnings.warn(
+                    'Could not load response json',
+                    EpsagonWarning
+                )
+                body = body.decode('utf-8')
+        else:
+            body = body.decode('utf-8')
+        add_data_if_needed(
+            self.resource['metadata'],
+            'Response Data',
+            body
+        )
+
+
+    def _update_raw_response(self, response):
+        """
+        Updates the event with data by given raw response.
+        Raw response is an instance of Response.
+        """
+        for response_type in SUPPORTED_RAW_RESPONSE_TYPES:
+            if isinstance(response, response_type):
+                self._update_raw_response_body(response, response_type)
+                break
+
+        response_headers = dict(response.headers.items())
+        if response.headers:
+            add_data_if_needed(
+                self.resource['metadata'],
+                'Response Headers',
+                response_headers
+            )
+
+        self.resource['metadata']['status_code'] = response.status_code
+        if response.status_code >= 500:
+            self.set_error()
+
     def update_response(self, response):
         """
         Adds response data to event.
         """
-        for response_type in SUPPORTED_RESPONSE_TYPES:
-            if isinstance(response, response_type):
-                body = response.body
-                if response_type == JSONResponse:
-                    try:
-                        body = json.loads(body)
-                    except Exception: # pylint: disable=W0703
-                        warnings.warn(
-                            'Could not load response json',
-                            EpsagonWarning
-                        )
-                        body = body.decode('utf-8')
-                else:
-                    body = body.decode('utf-8')
+        if isinstance(response, Response):
+            self._update_raw_response(response)
+        else:
+            try:
                 add_data_if_needed(
                     self.resource['metadata'],
                     'Response Data',
-                    body
+                    jsonable_encoder(response)
                 )
-        if isinstance(response, Response):
-            response_headers = dict(response.headers.items())
-            if response.headers:
-                add_data_if_needed(
-                    self.resource['metadata'],
-                    'Response Headers',
-                    response_headers
+            except Exception: # pylint: disable=W0703
+                print_debug(
+                    'Could not json encode fastapi handler response data'
                 )
-
-            self.resource['metadata']['status_code'] = response.status_code
-
-            if response.status_code >= 500:
-                self.set_error()

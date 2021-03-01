@@ -7,8 +7,10 @@ import asynctest
 import asyncio
 from typing import List
 from httpx import AsyncClient
+from pydantic import BaseModel
 from fastapi import FastAPI, APIRouter, Request
 from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
 from epsagon import trace_factory
 from epsagon.common import ErrorCode
 from epsagon.runners.fastapi import FastapiRunner
@@ -25,6 +27,10 @@ MULTIPLE_THREADS_RETURN_VALUE = MULTIPLE_THREADS_KEY
 TEST_POST_DATA = {'post_test': '123'}
 CUSTOM_RESPONSE = ["A"]
 CUSTOM_RESPONSE_PATH = "/custom_response"
+BASE_MODEL_RESPONSE_PATH = "/base_model_response"
+
+class CustomBaseModel(BaseModel):
+    data: List[str]
 
 def _get_response_data(key):
     return {key: key}
@@ -38,6 +44,9 @@ def handle():
 
 def handle_custom_response(response_model=List[str]):
     return CUSTOM_RESPONSE
+
+def handle_base_model_response(response_model=CustomBaseModel):
+    return CustomBaseModel(data=CUSTOM_RESPONSE)
 
 def handle_given_request(request: Request):
     assert request.method == 'POST'
@@ -76,7 +85,16 @@ def handle_error():
 def fastapi_app():
     app = FastAPI()
     app.add_api_route("/", handle, methods=["GET"])
-    app.add_api_route(CUSTOM_RESPONSE_PATH, handle_custom_response, methods=["GET"])
+    app.add_api_route(
+        CUSTOM_RESPONSE_PATH,
+        handle_custom_response,
+        methods=["GET"]
+    )
+    app.add_api_route(
+        BASE_MODEL_RESPONSE_PATH,
+        handle_base_model_response,
+        methods=["GET"]
+    )
     app.add_api_route(REQUEST_OBJ_PATH, handle_given_request, methods=["POST"])
     app.add_api_route("/a", handle_a, methods=["GET"])
     app.add_api_route("/b", handle_b, methods=["GET"])
@@ -119,7 +137,31 @@ async def test_fastapi_custom_response(trace_transport, fastapi_app):
     assert runner.resource['name'].startswith('127.0.0.1')
     assert runner.resource['metadata']['Path'] == CUSTOM_RESPONSE_PATH
     assert runner.resource['metadata']['Query Params'] == { 'x': 'testval'}
+    assert runner.resource['metadata']['Response Data'] == (
+        jsonable_encoder(CUSTOM_RESPONSE)
+    )
     assert response_data == CUSTOM_RESPONSE
+    # validating no `zombie` traces exist
+    assert not trace_factory.traces
+
+
+@pytest.mark.asyncio
+async def test_fastapi_base_model_response(trace_transport, fastapi_app):
+    """Sanity test."""
+    request_path = f'{BASE_MODEL_RESPONSE_PATH}?x=testval'
+    async with AsyncClient(app=fastapi_app, base_url="http://test") as ac:
+        response = await ac.get(request_path)
+    response_data = response.json()
+    runner = trace_transport.last_trace.events[0]
+    expected_response_data = CustomBaseModel(data=CUSTOM_RESPONSE)
+    assert isinstance(runner, FastapiRunner)
+    assert runner.resource['name'].startswith('127.0.0.1')
+    assert runner.resource['metadata']['Path'] == BASE_MODEL_RESPONSE_PATH
+    assert runner.resource['metadata']['Query Params'] == { 'x': 'testval'}
+    assert runner.resource['metadata']['Response Data'] == (
+        jsonable_encoder(expected_response_data)
+    )
+    assert response_data == expected_response_data
     # validating no `zombie` traces exist
     assert not trace_factory.traces
 
