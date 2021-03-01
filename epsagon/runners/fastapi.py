@@ -109,6 +109,14 @@ class FastapiRunner(BaseEvent):
         )
 
 
+    def _update_status_code(self, status_code):
+        """
+        Updates the event with given status code.
+        """
+        self.resource['metadata']['status_code'] = status_code
+        if status_code and status_code >= 500:
+            self.set_error()
+
     def _update_raw_response(self, response):
         """
         Updates the event with data by given raw response.
@@ -126,12 +134,9 @@ class FastapiRunner(BaseEvent):
                 'Response Headers',
                 response_headers
             )
+        self._update_status_code(response.status_code)
 
-        self.resource['metadata']['status_code'] = response.status_code
-        if response.status_code >= 500:
-            self.set_error()
-
-    def update_response(self, response):
+    def update_response(self, response, status_code=None):
         """
         Adds response data to event.
         """
@@ -148,3 +153,6 @@ class FastapiRunner(BaseEvent):
                 print_debug(
                     'Could not json encode fastapi handler response data'
                 )
+
+            if status_code:
+                self._update_status_code(status_code)

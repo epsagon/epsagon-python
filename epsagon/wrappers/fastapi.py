@@ -37,10 +37,11 @@ def _handle_wrapper_params(_args, kwargs, original_request_param_name):
     return kwargs.pop(EPSAGON_REQUEST_PARAM_NAME, None)
 
 
-def _handle_response(response, trace, raised_err):
+def _handle_response(response, status_code, trace, raised_err):
     """
-    Handles the HTTP handler response. Used by both async & sync wrappers.
+    Handles the HTTP handler response.
     :param response:
+    :param status_code:
     :param trace: to update the response with
     :param raised_err: any error which might occured while trying to get
     the response.
@@ -56,7 +57,7 @@ def _handle_response(response, trace, raised_err):
                 return response
 
         if response is not None:
-            trace.runner.update_response(response)
+            trace.runner.update_response(response, status_code=status_code)
         epsagon.trace.trace_factory.send_traces()
     except Exception as exception:  # pylint: disable=W0703
         print_debug('Failed to send traces: {}'.format(exception))
@@ -68,7 +69,7 @@ def _handle_response(response, trace, raised_err):
     return response
 
 # pylint: disable=too-many-statements
-def _wrap_handler(dependant):
+def _wrap_handler(dependant, status_code):
     """
     Wraps the endppint handler.
     """
@@ -150,7 +151,7 @@ def _wrap_handler(dependant):
             )
         finally:
             loop.close()
-        return _handle_response(response, trace, raised_err)
+        return _handle_response(response, status_code, trace, raised_err)
 
     dependant.call = wrapped_handler
 
@@ -166,4 +167,4 @@ class TracingAPIRoute(APIRoute):
         """
         super().__init__(*args, **kwargs)
         if self.dependant and self.dependant.call:
-            _wrap_handler(self.dependant)
+            _wrap_handler(self.dependant, kwargs.pop("status_code", 200))
