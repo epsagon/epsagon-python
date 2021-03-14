@@ -327,7 +327,10 @@ async def server_call_wrapper(wrapped, _instance, args, kwargs):
                     DEFAULT_ERROR_STATUS_CODE,
                     override=False
                 )
-            await run_in_threadpool(epsagon.trace.trace_factory.send_traces, trace=trace)
+            await run_in_threadpool(
+                epsagon.trace.trace_factory.send_traces,
+                trace=trace
+            )
             sent_trace = True
         except Exception as exception: # pylint: disable=broad-except
             print_debug('Failed to send traces: {}'.format(exception))
