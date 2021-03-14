@@ -11,6 +11,7 @@ import warnings
 from fastapi.routing import APIRoute
 from fastapi import Request, Response
 from starlette.requests import ClientDisconnect
+from starlette.concurrency import run_in_threadpool
 
 import epsagon.trace
 from epsagon.runners.fastapi import FastapiRunner
@@ -326,7 +327,7 @@ async def server_call_wrapper(wrapped, _instance, args, kwargs):
                     DEFAULT_ERROR_STATUS_CODE,
                     override=False
                 )
-            epsagon.trace.trace_factory.send_traces(trace=trace)
+            await run_in_threadpool(epsagon.trace.trace_factory.send_traces, trace=trace)
             sent_trace = True
         except Exception as exception: # pylint: disable=broad-except
             print_debug('Failed to send traces: {}'.format(exception))
