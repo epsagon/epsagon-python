@@ -208,7 +208,7 @@ class TornadoWrapper(object):
 
         try:
             trace = epsagon.trace.trace_factory.get_trace()
-            if trace:
+            if trace and trace.unique_id in cls.RUNNERS:
                 unique_id = trace.unique_id
 
         except Exception as instrumentation_exception:  # pylint: disable=W0703
