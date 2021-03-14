@@ -26,9 +26,9 @@ from ..utils import is_lambda_env, print_debug
 DEFAULT_SUCCESS_STATUS_CODE = 200
 DEFAULT_ERROR_STATUS_CODE = 500
 EPSAGON_REQUEST_PARAM_NAME = 'epsagon_request'
-SCOPE_UNIQUE_ID = "trace_unique_id"
-SCOPE_CONTAINER_METADATA_COLLECTED = "container_metadata"
-SCOPE_IGNORE_REQUEST = "ignore_request"
+SCOPE_UNIQUE_ID = 'trace_unique_id'
+SCOPE_CONTAINER_METADATA_COLLECTED = 'container_metadata'
+SCOPE_IGNORE_REQUEST = 'ignore_request'
 
 def _handle_wrapper_params(_args, kwargs, original_request_param_name):
     """
@@ -90,6 +90,31 @@ def _get_epsagon_scope_data(request: Request) -> str:
         return None
 
 
+def _extract_request_body(trace, request):
+    """
+    Extracts the request body (if exists), and saves it to the trace runner.
+    """
+    try:
+        loop = asyncio.new_event_loop()
+        trace.runner.update_request_body(
+            json.dumps(loop.run_until_complete(request.json()))
+        )
+    except json.decoder.JSONDecodeError:
+        pass
+    except ClientDisconnect:
+        print_debug(
+            'Could not extract request body - client is disconnected'
+        )
+    except Exception as exception: # pylint: disable=W0703
+        print_debug(
+            'Could not extract request body: {}'.format(exception)
+        )
+    finally:
+        if loop:
+            loop.close()
+
+
+# pylint: disable=too-many-return-statements
 def _fastapi_handler(
         original_handler,
         request,
@@ -105,8 +130,6 @@ def _fastapi_handler(
     Can be None when called by exception handlers wrapper, as there's
     no status code configuration for exception handlers.
     """
-    #import ipdb
-    #ipdb.set_trace()
     epsagon_scope = _get_epsagon_scope_data(request)
     if not epsagon_scope:
         return original_handler(*args, **kwargs)
@@ -120,8 +143,7 @@ def _fastapi_handler(
         )
     except Exception: # pylint: disable=broad-except
         return original_handler(*args, **kwargs)
-    ##### the previous raised error is irrelevant when exception handler is called
-    #epsagon_scope[SCOPE_RAISED_ERROR] = None
+
     trace = None
     should_ignore_request = True
     try:
@@ -148,7 +170,7 @@ def _fastapi_handler(
             # failed to add runner event, skipping trace
             return original_handler(*args, **kwargs)
     try:
-        if not epsagon_scope.get(CONTAINER_METADATA_COLLECTED):
+        if not epsagon_scope.get(SCOPE_CONTAINER_METADATA_COLLECTED):
             collect_container_metadata(trace.runner.resource['metadata'])
             epsagon_scope[SCOPE_CONTAINER_METADATA_COLLECTED] = True
     except Exception as exception: # pylint: disable=W0703
@@ -168,25 +190,15 @@ def _fastapi_handler(
             pass
     # no need to update request body if runner already created before
     if created_runner:
-        try:
-            loop = asyncio.new_event_loop()
-            trace.runner.update_request_body(
-                json.dumps(loop.run_until_complete(request.json()))
-            )
-        except json.decoder.JSONDecodeError:
-            pass
-        except ClientDisconnect:
-            print_debug(
-                'Could not extract request body - client is disconnected'
-            )
-        except Exception as exception: # pylint: disable=W0703
-            print_debug(
-                'Could not extract request body: {}'.format(exception)
-            )
-        finally:
-            if loop:
-                loop.close()
-    return _handle_response(epsagon_scope, response, status_code, trace, raised_err)
+        _extract_request_body(trace, request)
+
+    return _handle_response(
+        epsagon_scope,
+        response,
+        status_code,
+        trace,
+        raised_err
+    )
 
 
 # pylint: disable=too-many-statements
@@ -276,12 +288,9 @@ async def server_call_wrapper(wrapped, _instance, args, kwargs):
     # Skip on Lambda environment since it's not relevant and might be duplicate
     if is_lambda_env() or not args or len(args) != 3:
         return await wrapped(*args, **kwargs)
-        if scope["type"] != "http":
-            await self.app(scope, receive, send)
-            return
 
     scope = args[0]
-    if not scope or scope.get("type", "") != "http":
+    if not scope or scope.get('type', '') != 'http':
         return await wrapped(*args, **kwargs)
 
     trace = None
@@ -313,7 +322,10 @@ async def server_call_wrapper(wrapped, _instance, args, kwargs):
             if raised_error:
                 traceback_data = get_traceback_data_from_exception(raised_error)
                 trace.runner.set_exception(raised_error, traceback_data)
-                trace.runner.update_status_code(DEFAULT_ERROR_STATUS_CODE, override=False)
+                trace.runner.update_status_code(
+                    DEFAULT_ERROR_STATUS_CODE,
+                    override=False
+                )
             epsagon.trace.trace_factory.send_traces(trace=trace)
             sent_trace = True
         except Exception as exception: # pylint: disable=broad-except
