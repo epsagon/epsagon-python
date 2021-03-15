@@ -143,7 +143,7 @@ def _setup_trace_runner(epsagon_scope, trace, request):
     """
     try:
         trace.set_runner(FastapiRunner(time.time(), request))
-    except Exception as exception: # pylint: disable=W0703
+    except Exception: # pylint: disable=W0703
         print_debug('Failed to add FastAPI runner event, skipping trace')
         # failed to add runner event, skipping trace
         return False
