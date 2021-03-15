@@ -151,7 +151,7 @@ def _setup_trace_runner(epsagon_scope, trace, request):
         if not epsagon_scope.get(SCOPE_CONTAINER_METADATA_COLLECTED):
             collect_container_metadata(trace.runner.resource['metadata'])
             epsagon_scope[SCOPE_CONTAINER_METADATA_COLLECTED] = True
-    except Exception as exception: # pylint: disable=W0703
+    except Exception: # pylint: disable=W0703
         warnings.warn(
             'Could not extract container metadata',
             EpsagonWarning
