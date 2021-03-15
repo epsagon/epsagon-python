@@ -115,7 +115,50 @@ def _extract_request_body(trace, request):
             loop.close()
 
 
-# pylint: disable=too-many-return-statements
+def _setup_handler(request):
+    """
+    Setup the handler according to given request epsa.
+    Extracts and returns the epsagon scope & epsagon trace.
+    :return: A tuple of (epsagon_scope, trace)
+    """
+    epsagon_scope = _get_epsagon_scope_data(request)
+    if not epsagon_scope:
+        return None, None
+    unique_id = epsagon_scope.get(SCOPE_UNIQUE_ID)
+    if not unique_id or epsagon_scope.get(SCOPE_IGNORE_REQUEST):
+        return None, None
+
+    epsagon.trace.trace_factory.set_thread_local_unique_id(
+        unique_id=unique_id
+    )
+    return epsagon_scope, epsagon.trace.trace_factory.get_trace()
+
+
+def _setup_trace_runner(epsagon_scope, trace, request):
+    """
+    Setups the trace runner event - creates the FastAPI runner event,
+    collects container metadata (if relevant).
+    Assumption: a runner event has NOT been created before for given trace.
+    :return: True if succeeded to setup runner event, False otherwise
+    """
+    try:
+        trace.set_runner(FastapiRunner(time.time(), request))
+    except Exception as exception: # pylint: disable=W0703
+        print_debug('Failed to add FastAPI runner event, skipping trace')
+        # failed to add runner event, skipping trace
+        return False
+    try:
+        if not epsagon_scope.get(SCOPE_CONTAINER_METADATA_COLLECTED):
+            collect_container_metadata(trace.runner.resource['metadata'])
+            epsagon_scope[SCOPE_CONTAINER_METADATA_COLLECTED] = True
+    except Exception as exception: # pylint: disable=W0703
+        warnings.warn(
+            'Could not extract container metadata',
+            EpsagonWarning
+        )
+    return True
+
+
 def _fastapi_handler(
         original_handler,
         request,
@@ -131,54 +174,28 @@ def _fastapi_handler(
     Can be None when called by exception handlers wrapper, as there's
     no status code configuration for exception handlers.
     """
-    epsagon_scope = _get_epsagon_scope_data(request)
-    if not epsagon_scope:
-        return original_handler(*args, **kwargs)
-    unique_id = epsagon_scope.get(SCOPE_UNIQUE_ID)
-    if not unique_id or epsagon_scope.get(SCOPE_IGNORE_REQUEST):
-        return original_handler(*args, **kwargs)
-
+    has_setup_succeeded = False
+    should_ignore_request = False
     try:
-        epsagon.trace.trace_factory.set_thread_local_unique_id(
-            unique_id=unique_id
-        )
-    except Exception: # pylint: disable=broad-except
-        return original_handler(*args, **kwargs)
-
-    trace = None
-    should_ignore_request = True
-    try:
-        if not ignore_request('', request.url.path.lower()):
-            should_ignore_request = False
-            trace = epsagon.trace.trace_factory.get_trace()
-        else:
+        epsagon_scope, trace = _setup_handler(request)
+        if epsagon_scope and trace:
+            has_setup_succeeded = True
+        if ignore_request('', request.url.path.lower()):
+            should_ignore_request = True
             epsagon_scope[SCOPE_IGNORE_REQUEST] = True
 
-    except Exception as exception: # pylint: disable=W0703
-        return original_handler(*args, **kwargs)
+    except Exception: # pylint: disable=broad-except
+        has_setup_succeeded = False
 
-    if not trace or should_ignore_request:
+    if not has_setup_succeeded or should_ignore_request:
         return original_handler(*args, **kwargs)
 
     created_runner = False
     response = None
     if not trace.runner:
-        try:
-            trace.set_runner(FastapiRunner(time.time(), request))
-            created_runner = True
-        except Exception as exception: # pylint: disable=W0703
-            print_debug('Failed to add FastAPI runner event, skipping trace')
-            # failed to add runner event, skipping trace
+        if not _setup_trace_runner(epsagon_scope, trace, request):
             return original_handler(*args, **kwargs)
-    try:
-        if not epsagon_scope.get(SCOPE_CONTAINER_METADATA_COLLECTED):
-            collect_container_metadata(trace.runner.resource['metadata'])
-            epsagon_scope[SCOPE_CONTAINER_METADATA_COLLECTED] = True
-    except Exception as exception: # pylint: disable=W0703
-        warnings.warn(
-            'Could not extract container metadata',
-            EpsagonWarning
-        )
+
     raised_err = None
     try:
         response = original_handler(*args, **kwargs)
