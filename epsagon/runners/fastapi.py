@@ -109,10 +109,13 @@ class FastapiRunner(BaseEvent):
         )
 
 
-    def _update_status_code(self, status_code):
+    def update_status_code(self, status_code, override=True):
         """
         Updates the event with given status code.
+        :param override: indicates whether to override existing status code
         """
+        if self.resource['metadata'].get('status_code') and not override:
+            return
         self.resource['metadata']['status_code'] = status_code
         if status_code and status_code >= 500:
             self.set_error()
@@ -134,7 +137,7 @@ class FastapiRunner(BaseEvent):
                 'Response Headers',
                 response_headers
             )
-        self._update_status_code(response.status_code)
+        self.update_status_code(response.status_code)
 
     def update_response(self, response, status_code=None):
         """
@@ -154,4 +157,4 @@ class FastapiRunner(BaseEvent):
                     'Could not json encode fastapi handler response data'
                 )
             if status_code:
-                self._update_status_code(status_code)
+                self.update_status_code(status_code)

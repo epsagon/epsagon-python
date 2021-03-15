@@ -247,7 +247,7 @@ class TraceFactory(object):
         :return: The trace.
         """
         # If multiple threads are used, then create a new trace for each thread
-        thread_id = self.get_trace_identifier()
+        thread_id = get_thread_id()
         if thread_id not in self.traces:
             if not should_create:
                 return None

@@ -14,6 +14,10 @@ from fastapi.encoders import jsonable_encoder
 from epsagon import trace_factory
 from epsagon.common import ErrorCode
 from epsagon.runners.fastapi import FastapiRunner
+from epsagon.wrappers.fastapi import (
+    DEFAULT_SUCCESS_STATUS_CODE,
+    DEFAULT_ERROR_STATUS_CODE,
+)
 from .common import multiple_threads_handler
 
 RETURN_VALUE = 'testresponsedata'
@@ -28,10 +32,14 @@ TEST_POST_DATA = {'post_test': '123'}
 CUSTOM_RESPONSE = ["A"]
 CUSTOM_RESPONSE_PATH = "/custom_response"
 BASE_MODEL_RESPONSE_PATH = "/base_model_response"
-DEFAULT_STATUS_CODE = 200
 CUSTOM_STATUS_CODE = 202
 CUSTOM_STATUS_CODE_PATH = "/custom_status_code"
 OVERRIDDEN_CUSTOM_STATUS_CODE_PATH = "/overridden_custom_status_code"
+CUSTON_EXCEPTION_HANDLER_RESPONSE = {"some exception": "test"}
+DEFAULT_EXCEPTION_HANDLER_RESPONSE = {"default exception": "test2"}
+HANDLED_EXCEPTION_PATH = "/custom_handled_exception"
+UNHANDLED_EXCEPTION_PATH = "/default_handled_exception"
+
 
 class CustomBaseModel(BaseModel):
     data: List[str]
@@ -87,12 +95,41 @@ def multiple_threads_route():
 class CustomFastAPIException(Exception):
     pass
 
-def handle_error():
+
+class HandledFastAPIException(Exception):
+    pass
+
+
+class UnhandledFastAPIException(Exception):
+    pass
+
+
+def handle_error_from_route():
     raise CustomFastAPIException('test')
 
 
-@pytest.fixture(scope='function', autouse=False)
-def fastapi_app():
+def handle_raise_custom_error():
+    raise HandledFastAPIException('test')
+
+
+def handle_raise_unhandled_error():
+    raise UnhandledFastAPIException('test')
+
+
+def custom_exception_handler(request: Request, exc):
+    return JSONResponse(
+        status_code=CUSTOM_STATUS_CODE,
+        content=CUSTON_EXCEPTION_HANDLER_RESPONSE
+    )
+
+
+def default_exception_handler(request: Request, exc):
+    return JSONResponse(
+        content=DEFAULT_EXCEPTION_HANDLER_RESPONSE
+    )
+
+
+def _build_fastapi_app():
     app = FastAPI()
     app.add_api_route("/", handle, methods=["GET"])
     app.add_api_route(
@@ -120,11 +157,35 @@ def fastapi_app():
     app.add_api_route(REQUEST_OBJ_PATH, handle_given_request, methods=["POST"])
     app.add_api_route("/a", handle_a, methods=["GET"])
     app.add_api_route("/b", handle_b, methods=["GET"])
-    app.add_api_route("/err", handle_error, methods=["GET"], status_code=200)
+    app.add_api_route("/err", handle_error_from_route, methods=["GET"], status_code=200)
     app.add_api_route(MULTIPLE_THREADS_ROUTE, multiple_threads_route, methods=["GET"])
     router = APIRouter()
     router.add_api_route(TEST_ROUTER_PATH, handle_router_endpoint)
     app.include_router(router, prefix=TEST_ROUTER_PREFIX)
+    return app
+
+@pytest.fixture(scope='function', autouse=False)
+def fastapi_app():
+    return _build_fastapi_app()
+
+
+@pytest.fixture(scope='function', autouse=False)
+def fastapi_app_with_exception_handlers(fastapi_app):
+    app = fastapi_app
+    app.add_api_route(
+        HANDLED_EXCEPTION_PATH, handle_raise_custom_error, methods=["GET"]
+    )
+    app.add_api_route(
+        UNHANDLED_EXCEPTION_PATH, handle_raise_unhandled_error, methods=["GET"]
+    )
+    app.add_exception_handler(
+        HandledFastAPIException,
+        custom_exception_handler,
+    )
+    app.add_exception_handler(
+        Exception,
+        default_exception_handler,
+    )
     return app
 
 
@@ -138,7 +199,7 @@ async def test_fastapi_sanity(trace_transport, fastapi_app):
     assert isinstance(runner, FastapiRunner)
     assert runner.resource['name'].startswith('127.0.0.1')
     assert runner.resource['metadata']['Path'] == '/'
-    assert runner.resource['metadata']['status_code'] == DEFAULT_STATUS_CODE
+    assert runner.resource['metadata']['status_code'] == DEFAULT_SUCCESS_STATUS_CODE
     expected_response_data = _get_response_data(RETURN_VALUE)
     assert runner.resource['metadata']['Response Data'] == (
         expected_response_data
@@ -160,7 +221,7 @@ async def test_fastapi_custom_response(trace_transport, fastapi_app):
     assert isinstance(runner, FastapiRunner)
     assert runner.resource['name'].startswith('127.0.0.1')
     assert runner.resource['metadata']['Path'] == CUSTOM_RESPONSE_PATH
-    assert runner.resource['metadata']['status_code'] == DEFAULT_STATUS_CODE
+    assert runner.resource['metadata']['status_code'] == DEFAULT_SUCCESS_STATUS_CODE
     assert runner.resource['metadata']['Query Params'] == { 'x': 'testval'}
     assert runner.resource['metadata']['Response Data'] == (
         jsonable_encoder(CUSTOM_RESPONSE)
@@ -182,7 +243,7 @@ async def test_fastapi_base_model_response(trace_transport, fastapi_app):
     assert isinstance(runner, FastapiRunner)
     assert runner.resource['name'].startswith('127.0.0.1')
     assert runner.resource['metadata']['Path'] == BASE_MODEL_RESPONSE_PATH
-    assert runner.resource['metadata']['status_code'] == DEFAULT_STATUS_CODE
+    assert runner.resource['metadata']['status_code'] == DEFAULT_SUCCESS_STATUS_CODE
     assert runner.resource['metadata']['Query Params'] == { 'x': 'testval'}
     assert runner.resource['metadata']['Response Data'] == (
         jsonable_encoder(expected_response_data)
@@ -229,7 +290,7 @@ async def test_fastapi_custom_status_code_overridden(trace_transport, fastapi_ap
     assert isinstance(runner, FastapiRunner)
     assert runner.resource['name'].startswith('127.0.0.1')
     assert runner.resource['metadata']['Path'] == path
-    assert runner.resource['metadata']['status_code'] == DEFAULT_STATUS_CODE
+    assert runner.resource['metadata']['status_code'] == DEFAULT_SUCCESS_STATUS_CODE
     assert runner.resource['metadata']['Query Params'] == { 'x': 'testval'}
     expected_response_data = _get_response_data(RETURN_VALUE)
     assert runner.resource['metadata']['Response Data'] == (
@@ -252,7 +313,7 @@ async def test_fastapi_given_request(trace_transport, fastapi_app):
     assert isinstance(runner, FastapiRunner)
     assert runner.resource['name'].startswith('127.0.0.1')
     assert runner.resource['metadata']['Path'] == REQUEST_OBJ_PATH
-    assert runner.resource['metadata']['status_code'] == DEFAULT_STATUS_CODE
+    assert runner.resource['metadata']['status_code'] == DEFAULT_SUCCESS_STATUS_CODE
     expected_response_data = _get_response_data(RETURN_VALUE)
     assert runner.resource['metadata']['Response Data'] == (
         expected_response_data
@@ -274,7 +335,7 @@ async def test_fastapi_custom_router(trace_transport, fastapi_app):
     assert isinstance(runner, FastapiRunner)
     assert runner.resource['name'].startswith('127.0.0.1')
     assert runner.resource['metadata']['Path'] == full_route_path
-    assert runner.resource['metadata']['status_code'] == DEFAULT_STATUS_CODE
+    assert runner.resource['metadata']['status_code'] == DEFAULT_SUCCESS_STATUS_CODE
     expected_response_data = _get_response_data(ROUTER_RETURN_VALUE)
     assert runner.resource['metadata']['Response Data'] == (
         expected_response_data
@@ -284,7 +345,7 @@ async def test_fastapi_custom_router(trace_transport, fastapi_app):
 
 @pytest.mark.asyncio
 async def test_fastapi_exception(trace_transport, fastapi_app):
-    """Test when the handler got an exception."""
+    """Test when the handler raises an exception."""
     try:
         async with AsyncClient(app=fastapi_app, base_url="http://test") as ac:
             _ = await ac.get("/err")
@@ -295,9 +356,72 @@ async def test_fastapi_exception(trace_transport, fastapi_app):
     assert runner.error_code == ErrorCode.EXCEPTION
     assert runner.exception['type'] == 'CustomFastAPIException'
     assert runner.exception['message'] == 'test'
-    assert "status_code" not in runner.resource['metadata']
+    assert runner.resource['metadata']['status_code'] == (
+        DEFAULT_ERROR_STATUS_CODE
+    )
     # validating no `zombie` traces exist
     assert not trace_factory.traces
+
+
+@pytest.mark.asyncio
+async def test_fastapi_handled_custom_exception(
+        trace_transport,
+        fastapi_app_with_exception_handlers
+):
+    """
+    Test when the handler raises a custom exception and
+    there's a matching exception handler.
+    """
+    app = fastapi_app_with_exception_handlers
+    request_path = f'{HANDLED_EXCEPTION_PATH}?x=testval'
+    async with AsyncClient(app=app, base_url="http://test") as ac:
+        response = await ac.get(request_path)
+    response_data = response.json()
+    runner = trace_transport.last_trace.events[0]
+    assert isinstance(runner, FastapiRunner)
+    assert runner.resource['name'].startswith('127.0.0.1')
+    assert runner.resource['metadata']['Path'] == HANDLED_EXCEPTION_PATH
+    assert runner.resource['metadata']['status_code'] == CUSTOM_STATUS_CODE
+    assert runner.resource['metadata']['Response Data'] == (
+        CUSTON_EXCEPTION_HANDLER_RESPONSE
+    )
+    assert runner.resource['metadata']['Query Params'] == { 'x': 'testval'}
+    assert response_data == CUSTON_EXCEPTION_HANDLER_RESPONSE
+    # validating no `zombie` traces exist
+    assert not trace_factory.traces
+
+
+@pytest.mark.asyncio
+async def test_fastapi_handled_default_exception(
+        trace_transport,
+        fastapi_app_with_exception_handlers
+):
+    """
+    Test when the handler raises Exception() and
+    there's a matching default exception handler.
+    """
+    app = fastapi_app_with_exception_handlers
+    request_path = f'{UNHANDLED_EXCEPTION_PATH}?x=testval'
+    try:
+        async with AsyncClient(app=app, base_url="http://test") as ac:
+            response = await ac.get(request_path)
+    except UnhandledFastAPIException:
+        pass
+
+    runner = trace_transport.last_trace.events[0]
+    assert isinstance(runner, FastapiRunner)
+    assert runner.error_code == ErrorCode.EXCEPTION
+    assert runner.exception['type'] == 'UnhandledFastAPIException'
+    assert runner.resource['name'].startswith('127.0.0.1')
+    assert runner.resource['metadata']['Path'] == UNHANDLED_EXCEPTION_PATH
+    assert runner.resource['metadata']['status_code'] == DEFAULT_SUCCESS_STATUS_CODE
+    assert runner.resource['metadata']['Response Data'] == (
+        DEFAULT_EXCEPTION_HANDLER_RESPONSE
+    )
+    assert runner.resource['metadata']['Query Params'] == { 'x': 'testval'}
+    # validating no `zombie` traces exist
+    assert not trace_factory.traces
+
 
 
 async def _send_request(app, path, trace_transport):
@@ -310,7 +434,7 @@ async def _send_request(app, path, trace_transport):
     assert isinstance(runner, FastapiRunner)
     assert runner.resource['name'].startswith('127.0.0.1')
     assert runner.resource['metadata']['Path'] == request_path
-    assert runner.resource['metadata']['status_code'] == DEFAULT_STATUS_CODE
+    assert runner.resource['metadata']['status_code'] == DEFAULT_SUCCESS_STATUS_CODE
     expected_response_data = _get_response_data(path)
     assert runner.resource['metadata']['Response Data'] == (
         expected_response_data
@@ -359,7 +483,7 @@ def test_fastapi_multiple_threads_route(trace_transport, fastapi_app):
     assert isinstance(runner, FastapiRunner)
     assert runner.resource['name'].startswith('127.0.0.1')
     assert runner.resource['metadata']['Path'] == MULTIPLE_THREADS_ROUTE
-    assert runner.resource['metadata']['status_code'] == DEFAULT_STATUS_CODE
+    assert runner.resource['metadata']['status_code'] == DEFAULT_SUCCESS_STATUS_CODE
     expected_response_data = _get_response_data(MULTIPLE_THREADS_RETURN_VALUE)
     assert runner.resource['metadata']['Response Data'] == (
         expected_response_data
