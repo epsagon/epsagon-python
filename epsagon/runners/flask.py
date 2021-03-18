@@ -85,7 +85,8 @@ class FlaskRunner(BaseEvent):
 
         # In some cases capturing the data messes with the original sequence
         # (`direct_passthrough`). So we let the user configure this
-        if not os.getenv('EPSAGON_IGNORE_FLASK_RESPONSE', False):
+
+        if os.getenv('EPSAGON_IGNORE_FLASK_RESPONSE', '').upper() != 'TRUE':
             add_data_if_needed(
                 self.resource['metadata'],
                 'Response Data',
