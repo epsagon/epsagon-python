@@ -26,6 +26,7 @@ def test_blacklist_url():
     assert epsagon.http_filters.is_blacklisted_url('http://www.google.com')
     assert epsagon.http_filters.is_blacklisted_url('https://www.restricted-site.org')
     assert epsagon.http_filters.is_blacklisted_url('http://www.restricted-site.com')
+    assert epsagon.http_filters.is_blacklisted_url('file://test.file')
     assert not epsagon.http_filters.is_blacklisted_url('https://www.com.org')
     assert not epsagon.http_filters.is_blacklisted_url('http://www.google.org')
 

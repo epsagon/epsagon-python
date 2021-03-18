@@ -25,6 +25,8 @@ IGNORED_FILE_TYPES = [
     '.ico',
 ]
 
+FILE_PREFIX = 'file://'
+
 # Method to URL dict.
 BLACKLIST_URLS = {
     str.endswith: [
@@ -53,6 +55,8 @@ def is_blacklisted_url(url):
     :param url: url string
     :return: True if URL is blacklisted, else False
     """
+    if url.startswith(FILE_PREFIX):
+        return True
 
     url = urllib.parse.urlparse(url).netloc
     for method in WHITELIST_URL:

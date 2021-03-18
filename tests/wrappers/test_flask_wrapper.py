@@ -1,3 +1,4 @@
+import os
 import threading
 import pytest
 import mock
@@ -157,6 +158,20 @@ def test_flask_wrapper_multiple_requests(trace_transport, client):
 
     for thread in [a, b]:
         thread.join()
+
+
+def test_ignore_response_data(trace_transport, client):
+    """
+    Make sure no response data is being captured when
+    Make sure none of the responses or generated traces mix up.
+    """
+    os.environ['EPSAGON_IGNORE_FLASK_RESPONSE'] = 'TRUE'
+    client.get('/a')
+    assert (
+        'Response Data' not in
+        trace_transport.last_trace.events[0].resource['metadata']
+    )
+    os.environ.pop('EPSAGON_IGNORE_FLASK_RESPONSE')
 
 
 def test_call_to_self(trace_transport, client):

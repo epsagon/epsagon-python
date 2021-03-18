@@ -3,6 +3,7 @@ Runner for a Flask Python function
 """
 
 from __future__ import absolute_import
+import os
 import uuid
 from ..event import BaseEvent
 from ..utils import add_data_if_needed, normalize_http_url
@@ -82,11 +83,14 @@ class FlaskRunner(BaseEvent):
         :return: None
         """
 
-        add_data_if_needed(
-            self.resource['metadata'],
-            'Response Data',
-            response.data
-        )
+        # In some cases capturing the data messes with the original sequence
+        # (`direct_passthrough`). So we let the user configure this
+        if not os.getenv('EPSAGON_IGNORE_FLASK_RESPONSE', False):
+            add_data_if_needed(
+                self.resource['metadata'],
+                'Response Data',
+                response.data
+            )
 
         add_data_if_needed(
             self.resource['metadata'],
