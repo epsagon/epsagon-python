@@ -6,6 +6,7 @@ import sys
 import uuid
 import json
 import time
+import platform
 from datetime import datetime
 import mock
 import pytest
@@ -1365,9 +1366,11 @@ def test_event_with_datetime(wrapped_post):
 def test_event_with_non_unicode_binary(wrapped_post):
     epsagon.utils.init(token='token', app_name='app-name', collector_url='collector')
     trace = trace_factory.get_or_create_trace()
-
+    py_ver = platform.python_version_tuple()[0]
     event = EventMock()
-    event.resource['metadata'] = { 'hello': b'\x80hello' }
+    event.resource['metadata'] = {
+        'hello': b'\x80hello' if py_ver != '2' else 'hello'
+    }
     trace.add_event(event)
     trace_factory.send_traces()
     wrapped_post.assert_called_with(
