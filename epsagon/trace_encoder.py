@@ -15,7 +15,7 @@ class TraceEncoder(json.JSONEncoder):
         if isinstance(o, (datetime, date)):
             return o.isoformat()
         if isinstance(o, bytes):
-            return o.decode('utf-8')
+            return o.decode('utf-8', 'ignore') # skipping non-unicode chars
 
         output = repr(o)
         try:
