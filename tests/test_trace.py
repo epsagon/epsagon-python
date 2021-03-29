@@ -1361,6 +1361,21 @@ def test_event_with_datetime(wrapped_post):
         timeout=epsagon.constants.SEND_TIMEOUT,
     )
 
+@mock.patch('urllib3.PoolManager.request', side_effect=urllib3.exceptions.TimeoutError)
+def test_event_with_non_unicode_binary(wrapped_post):
+    epsagon.utils.init(token='token', app_name='app-name', collector_url='collector')
+    trace = trace_factory.get_or_create_trace()
+
+    event = EventMock()
+    event.resource['metadata'] = { 'hello': b'\x80hello' }
+    trace.add_event(event)
+    trace_factory.send_traces()
+    wrapped_post.assert_called_with(
+        'POST',
+        'collector',
+        body=json.dumps(trace.to_dict(), cls=TraceEncoder),
+        timeout=epsagon.constants.SEND_TIMEOUT,
+    )
 
 @mock.patch('urllib3.PoolManager.request')
 def test_send_on_error_only_off_with_error(wrapped_post):
