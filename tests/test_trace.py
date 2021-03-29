@@ -1369,7 +1369,7 @@ def test_event_with_non_unicode_binary(wrapped_post):
     py_ver = platform.python_version_tuple()[0]
     event = EventMock()
     event.resource['metadata'] = {
-        'hello': b'\x80hello' if py_ver != '2' else 'hello'
+        'hello': b'\x80hi' if py_ver != '2' else 'hi'
     } # We don't support python 2.7 non-unicode binary strings
     trace.add_event(event)
     trace_factory.send_traces()
