@@ -36,6 +36,7 @@ class COSEvent(BaseEvent):
         self.resource['name'] = kwargs['bucket']
         self.resource['operation'] = kwargs['method']
         self.resource['metadata'] = {
+            # pylint: disable=protected-access
             'tencent.region': instance._conf._region,
             'tencent.cos.object_key': kwargs['url'].split('myqcloud.com/')[-1],
         }
