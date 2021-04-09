@@ -15,8 +15,8 @@ import epsagon.wrappers.python_function
 import epsagon.utils
 import epsagon.runners.python_function
 from epsagon.common import EpsagonWarning
-from .. import constants
 from epsagon.triggers.tencent_function import TencentFunctionTriggerFactory
+from .. import constants
 
 
 def _add_status_code(runner, return_value):

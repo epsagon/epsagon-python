@@ -4,10 +4,7 @@ Triggers for Tencent Functions
 
 from __future__ import absolute_import
 from uuid import uuid4
-from importlib import import_module
-import hashlib
-import json
-from epsagon.utils import add_data_if_needed, parse_json, print_debug
+from epsagon.utils import add_data_if_needed
 from ..event import BaseEvent
 
 
@@ -114,7 +111,9 @@ class COSTrigger(BaseTencentFunctionTrigger):
             'tencent.app_id': record['cos']['cosBucket']['appid'],
             'tencent.cos.object_key': record['cos']['cosObject']['key'],
             'tencent.cos.object_size': record['cos']['cosObject']['size'],
-            'tencent.cos.request_id': record['cos']['cosObject']['meta']['x-cos-request-id'],
+            'tencent.cos.request_id': (
+                record['cos']['cosObject']['meta']['x-cos-request-id']
+            ),
         }
 
 
@@ -213,7 +212,9 @@ class APIGatewayTrigger(BaseTencentFunctionTrigger):
         self.resource['metadata'] = {
             'http.route': event['requestContext']['path'],
             'http.request.path': event['path'],
-            'tencent.api_gateway.request_id': event['requestContext']['requestId'],
+            'tencent.api_gateway.request_id': (
+                event['requestContext']['requestId']
+            ),
             'tencent.api_gateway.stage': event['requestContext']['stage'],
         }
 
