@@ -32,6 +32,7 @@ BLACKLIST_URLS = {
     str.endswith: [
         'epsagon.com',
         '.amazonaws.com',
+        '.myqcloud.com',
     ],
     str.__contains__: [
         'accounts.google.com',
