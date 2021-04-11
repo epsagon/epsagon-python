@@ -8,6 +8,7 @@ from .chalice import chalice_wrapper
 from .azure_function import azure_wrapper
 from .python_function import python_wrapper
 from .gcp_function import gcp_wrapper
+from .tencent_function import tencent_function_wrapper
 
 __all__ = [
     'lambda_wrapper',
@@ -15,5 +16,6 @@ __all__ = [
     'python_wrapper',
     'step_lambda_wrapper',
     'gcp_wrapper',
+    'tencent_function_wrapper',
     'chalice_wrapper',
 ]

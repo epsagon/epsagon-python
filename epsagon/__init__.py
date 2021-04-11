@@ -58,6 +58,7 @@ if (
     python_wrapper = dummy_python_wrapper  # pylint: disable=C0103
     flask_wrapper = dummy_wrapper  # pylint: disable=C0103
     gcp_wrapper = dummy_wrapper  # pylint: disable=C0103
+    tencent_function_wrapper = dummy_wrapper  # pylint: disable=C0103
 else:
     # Environments.
     from .wrappers import (
@@ -66,7 +67,8 @@ else:
         chalice_wrapper,
         azure_wrapper,
         python_wrapper,
-        gcp_wrapper
+        gcp_wrapper,
+        tencent_function_wrapper
     )
 
     # Frameworks.
@@ -93,6 +95,7 @@ __all__ = [
     'flask_wrapper',
     'wrapper',
     'gcp_wrapper',
+    'tencent_function_wrapper',
     'chalice_wrapper',
     'auto_load',
     'measure',
