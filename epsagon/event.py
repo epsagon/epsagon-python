@@ -114,7 +114,10 @@ class BaseEvent(object):
         :param from_logs: True if the exception was captured from logging
         """
         self.error_code = ErrorCode.EXCEPTION
-        self.exception['type'] = type(exception).__name__
+        if hasattr(exception, '__name__'):
+            self.exception['type'] = type(exception).__name__
+        else:
+            self.exception['type'] = None
         self.exception['message'] = str(exception)
         self.exception['traceback'] = traceback_data
         self.exception['time'] = time.time()
