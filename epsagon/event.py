@@ -117,7 +117,7 @@ class BaseEvent(object):
         if hasattr(type(exception), '__name__'):
             self.exception['type'] = type(exception).__name__
         else:
-            self.exception['type'] = ''
+            self.exception['type'] = 'Unknown'
         self.exception['message'] = str(exception)
         self.exception['traceback'] = traceback_data
         self.exception['time'] = time.time()
