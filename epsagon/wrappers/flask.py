@@ -14,7 +14,7 @@ import epsagon.runners.flask
 from epsagon.common import EpsagonWarning
 from epsagon.utils import collect_container_metadata,\
     get_traceback_data_from_exception
-from ..http_filters import ignore_request
+from ..http_filters import ignore_request, is_ignored_endpoint, add_ignored_endpoints
 
 
 class FlaskWrapper(object):
@@ -34,9 +34,11 @@ class FlaskWrapper(object):
             return
         setattr(app, self.EPSAGON_MARKER, True)
         self.app = app
-        self.ignored_endpoints = []
         if ignored_endpoints:
-            self.ignored_endpoints = ignored_endpoints
+            if isinstance(ignored_endpoints, list):
+                add_ignored_endpoints(ignored_endpoints)
+            elif isinstance(ignored_endpoints, str):
+                add_ignored_endpoints([ignored_endpoints])
 
         # Override request handling.
         self.app.before_request(self._before_request)
@@ -134,7 +136,7 @@ class FlaskWrapper(object):
         # Ignoring endpoint, only if no error happened.
         if (not exception and
             request.url_rule and
-            request.url_rule.rule in self.ignored_endpoints
+            is_ignored_endpoint(request.url_rule.rule)
         ):
             return
 
