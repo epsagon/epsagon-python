@@ -14,7 +14,8 @@ import epsagon.runners.flask
 from epsagon.common import EpsagonWarning
 from epsagon.utils import collect_container_metadata,\
     get_traceback_data_from_exception
-from ..http_filters import ignore_request, is_ignored_endpoint, add_ignored_endpoints
+from ..http_filters import ignore_request, \
+    is_ignored_endpoint, add_ignored_endpoints
 
 
 class FlaskWrapper(object):
