@@ -470,8 +470,8 @@ class CognitoLambdaTrigger(BaseLambdaTrigger):
         super(CognitoLambdaTrigger, self).__init__(start_time)
 
         self.event_id = 'cognito-{uid}'.format(uid=str(uuid4))
-        self.resource['name'] = event.get('userPoolId') or 'Cognito'
-        self.resource['operation'] = event.get('triggerSource').split('_')[0]
+        self.resource['name'] = event.get('userPoolId')
+        self.resource['operation'] = event.get('triggerSource')
 
         self.resource['metadata'] = {
             'region': event.get('region'),
@@ -479,12 +479,19 @@ class CognitoLambdaTrigger(BaseLambdaTrigger):
             'client_id': event.get('callerContext', {}).get('clientId'),
             'user_pool_id': event.get('userPoolId'),
             'trigger_source': event.get('triggerSource'),
+            'version': event.get('version')
         }
 
         add_data_if_needed(
             self.resource['metadata'],
             'attributes',
             event.get('request', {}).get('userAttributes')
+        )
+
+        add_data_if_needed(
+            self.resource['metadata'],
+            'session',
+            event.get('request', {}).get('session')
         )
 
         add_data_if_needed(
@@ -498,8 +505,6 @@ class CognitoLambdaTrigger(BaseLambdaTrigger):
             'response',
             event.get('response'),
         )
-
-
 
 
 class LambdaTriggerFactory(object):
