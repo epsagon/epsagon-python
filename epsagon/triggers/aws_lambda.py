@@ -497,7 +497,7 @@ class CognitoLambdaTrigger(BaseLambdaTrigger):
         add_data_if_needed(
             self.resource['metadata'],
             'callercontext',
-            event.get('request', {}).get('callerContext')
+            event.get('callerContext')
         )
 
         add_data_if_needed(
