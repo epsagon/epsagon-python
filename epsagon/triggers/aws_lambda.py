@@ -476,13 +476,21 @@ class CognitoLambdaTrigger(BaseLambdaTrigger):
         self.resource['metadata'] = {
             'region': event.get('region'),
             'username': event.get('userName'),
-
+            'client_id': event.get('callerContext', {}).get('clientId'),
+            'user_pool_id': event.get('userPoolId'),
+            'trigger_source': event.get('triggerSource'),
         }
 
         add_data_if_needed(
             self.resource['metadata'],
             'attributes',
             event.get('request', {}).get('userAttributes')
+        )
+
+        add_data_if_needed(
+            self.resource['metadata'],
+            'callercontext',
+            event.get('request', {}).get('callerContext')
         )
 
         add_data_if_needed(
