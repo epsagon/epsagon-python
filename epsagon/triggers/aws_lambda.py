@@ -453,6 +453,47 @@ class EventsLambdaTrigger(BaseLambdaTrigger):
         }
 
 
+class CognitoLambdaTrigger(BaseLambdaTrigger):
+    """
+    Represents a Cognito Lambda Trigger
+    """
+    RESOURCE_TYPE = 'cognito'
+
+    def __init__(self, start_time, event, context):
+        """
+        Initialize Trigger
+        :param start_time: event's start time (epoch unix)
+        :param event: event dict from entry point
+        :param context: context dict from entry point
+        """
+
+        super(CognitoLambdaTrigger, self).__init__(start_time)
+
+        self.event_id = 'cognito-{uid}'.format(uid=str(uuid4))
+        self.resource['name'] = event.get('userPoolId') or 'Cognito'
+        self.resource['operation'] = event.get('triggerSource').split('_')[0]
+
+        self.resource['metadata'] = {
+            'region': event.get('region'),
+            'username': event.get('userName'),
+
+        }
+
+        add_data_if_needed(
+            self.resource['metadata'],
+            'attributes',
+            event.get('request', {}).get('userAttributes')
+        )
+
+        add_data_if_needed(
+            self.resource['metadata'],
+            'response',
+            event.get('response'),
+        )
+
+
+
+
 class LambdaTriggerFactory(object):
     """
     Represents a Lambda Trigger Factory.
@@ -485,6 +526,8 @@ class LambdaTriggerFactory(object):
             trigger_service = NoProxyAPIGatewayLambdaTrigger.RESOURCE_TYPE
         elif 'source' in event and 'detail-type' in event and 'detail' in event:
             trigger_service = EventsLambdaTrigger.RESOURCE_TYPE
+        elif 'userPoolId' in event:
+            trigger_service = CognitoLambdaTrigger.RESOURCE_TYPE
         elif 'source' in event:
             trigger_service = str(event['source'].split('.')[-1])
         return LambdaTriggerFactory.FACTORY.get(trigger_service)(
