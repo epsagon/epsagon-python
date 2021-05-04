@@ -1,6 +1,7 @@
 """
 Triggers for aws_lambda
 """
+# pylint: disable=too-many-lines
 
 from __future__ import absolute_import
 from uuid import uuid4
@@ -459,7 +460,7 @@ class CognitoLambdaTrigger(BaseLambdaTrigger):
     """
     RESOURCE_TYPE = 'cognito'
 
-    def __init__(self, start_time, event, context):
+    def __init__(self, start_time, event, _context):
         """
         Initialize Trigger
         :param start_time: event's start time (epoch unix)
