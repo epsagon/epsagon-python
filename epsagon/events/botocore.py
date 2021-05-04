@@ -1243,6 +1243,12 @@ class BotocoreCognitoEvent(BotocoreEvent):
         """
         _, request_args = args
         self.resource['name'] = request_args['UserPoolId']
+        for k, v in request_args.items():
+            if 'id' in k and '_' not in k:
+                id = k.lower().index('id')
+                k_fmt = k[:id] + '_' + k[id:]
+                del request_args[k]
+                request_args[k_fmt] = v
         self.resource['metadata'].update(request_args)
 
 
