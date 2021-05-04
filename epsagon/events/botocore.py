@@ -1090,11 +1090,13 @@ class BotocoreCognitoEvent(BotocoreEvent):
 
         self.OPERATION_TO_FUNC.update({
             'AdminCreateUser': self.admin_create_user_op,
+            'AdminInitiateAuth': self.admin_initiate_auth_op,
             'AdminListGroupsForUser': self.admin_list_user_group_op,
             'AdminSetUserPassword': self.admin_set_pass_op,
             'DescribeUserPool': self.describe_user_pool_op,
             'ListUsers': self.list_users_op,
             'UpdateUserPool': self.update_pool_op,
+            'SignUp': self.sign_up_op,
         })
 
         super(BotocoreCognitoEvent, self).__init__(
@@ -1213,6 +1215,28 @@ class BotocoreCognitoEvent(BotocoreEvent):
     def update_pool_op(self, args, _):
         """
         Process UpdateUserPool operation
+        :param args: command arguments
+        :param _: unused, kwargs
+        :return: None
+        """
+        _, request_args = args
+        self.resource['name'] = request_args['UserPoolId']
+        self.resource['metadata'].update(request_args)
+
+    def sign_up_op(self, args, _):
+        """
+        Process User Signup operation
+        :param args: command arguments
+        :param _: unused, kwargs
+        :return: None
+        """
+        _, request_args = args
+        self.resource['name'] = request_args['UserPoolId']
+        self.resource['metadata'].update(request_args)
+
+    def admin_initiate_auth_op(self, args, _):
+        """
+        Process Auth Initiation as Admin
         :param args: command arguments
         :param _: unused, kwargs
         :return: None
