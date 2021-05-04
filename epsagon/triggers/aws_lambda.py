@@ -469,7 +469,7 @@ class CognitoLambdaTrigger(BaseLambdaTrigger):
 
         super(CognitoLambdaTrigger, self).__init__(start_time)
 
-        self.event_id = 'cognito-{uid}'.format(uid=str(uuid4))
+        self.event_id = 'cognito-{uid}'.format(uid=str(uuid4()))
         self.resource['name'] = event.get('userPoolId')
         self.resource['operation'] = event.get('triggerSource')
 
