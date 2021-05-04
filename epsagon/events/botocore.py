@@ -1093,6 +1093,7 @@ class BotocoreCognitoEvent(BotocoreEvent):
             'AdminInitiateAuth': self.admin_initiate_auth_op,
             'AdminListGroupsForUser': self.admin_list_user_group_op,
             'AdminSetUserPassword': self.admin_set_pass_op,
+            'AdminRespondToAuthChallenge': self.admin_respond_to_auth_challenge_op,
             'DescribeUserPool': self.describe_user_pool_op,
             'ListUsers': self.list_users_op,
             'UpdateUserPool': self.update_pool_op,
@@ -1245,10 +1246,21 @@ class BotocoreCognitoEvent(BotocoreEvent):
         self.resource['name'] = request_args['UserPoolId']
         for k, v in request_args.items():
             if 'id' in k and '_' not in k:
-                id = k.lower().index('id')
-                k_fmt = k[:id] + '_' + k[id:]
+                id_idx = k.lower().index('id')
+                k_fmt = k[:id_idx] + '_' + k[id_idx:]
                 del request_args[k]
                 request_args[k_fmt] = v
+        self.resource['metadata'].update(request_args)
+
+    def admin_respond_to_auth_challenge_op(self, args, _):
+        """
+        Process Respond to Auth Challenge as Admin
+        :param args: command arguments
+        :param _: unused, kwargs
+        :return: None
+        """
+        _, request_args = args
+        self.resource['name'] = request_args['UserPoolId']
         self.resource['metadata'].update(request_args)
 
 
