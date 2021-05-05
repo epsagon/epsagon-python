@@ -1081,6 +1081,7 @@ class BotocoreCognitoEvent(BotocoreEvent):
     RESOURCE_TYPE = 'cognitoidentityprovider'
     RESOURCE_TYPE_UPDATE = 'cognito-idp'
 
+
     def __init__(self, wrapped, instance, args, kwargs, start_time, response,
                  exception):
         self.RESPONSE_TO_FUNC.update({
@@ -1232,7 +1233,7 @@ class BotocoreCognitoEvent(BotocoreEvent):
         :return: None
         """
         _, request_args = args
-        self.resource['name'] = request_args['UserPoolId']
+        self.resource['name'] = request_args.get('ClientId')
         self.resource['metadata'].update(request_args)
 
     def admin_initiate_auth_op(self, args, _):
@@ -1244,12 +1245,6 @@ class BotocoreCognitoEvent(BotocoreEvent):
         """
         _, request_args = args
         self.resource['name'] = request_args['UserPoolId']
-        for k, v in request_args.items():
-            if 'id' in k and '_' not in k:
-                id_idx = k.lower().index('id')
-                k_fmt = k[:id_idx] + '_' + k[id_idx:]
-                del request_args[k]
-                request_args[k_fmt] = v
         self.resource['metadata'].update(request_args)
 
     def admin_respond_to_auth_challenge_op(self, args, _):
