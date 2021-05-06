@@ -2,7 +2,7 @@
 botocore events module.
 """
 
-# pylint: disable=C0302
+# pylint: disable=C0301, C0302
 from __future__ import absolute_import
 
 import hashlib
@@ -1094,7 +1094,8 @@ class BotocoreCognitoEvent(BotocoreEvent):
             'AdminInitiateAuth': self.admin_initiate_auth_op,
             'AdminListGroupsForUser': self.admin_list_user_group_op,
             'AdminSetUserPassword': self.admin_set_pass_op,
-            'AdminRespondToAuthChallenge': self.admin_respond_to_auth_challenge_op,
+            'AdminRespondToAuthChallenge':
+                self.admin_respond_to_auth_challenge_op,
             'DescribeUserPool': self.describe_user_pool_op,
             'ListUsers': self.list_users_op,
             'UpdateUserPool': self.update_pool_op,
