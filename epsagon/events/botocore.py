@@ -2,7 +2,7 @@
 botocore events module.
 """
 
-# pylint: disable=C0301, C0302
+# pylint: disable=C0302
 from __future__ import absolute_import
 
 import hashlib
