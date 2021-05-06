@@ -1090,16 +1090,15 @@ class BotocoreCognitoEvent(BotocoreEvent):
         })
 
         self.OPERATION_TO_FUNC.update({
-            'AdminCreateUser': self.admin_create_user_op,
-            'AdminInitiateAuth': self.admin_initiate_auth_op,
-            'AdminListGroupsForUser': self.admin_list_user_group_op,
+            'AdminCreateUser': self.general_user_pool_op,
+            'AdminInitiateAuth': self.general_user_pool_op,
+            'AdminListGroupsForUser': self.general_user_pool_op,
             'AdminSetUserPassword': self.admin_set_pass_op,
-            'AdminRespondToAuthChallenge':
-                self.admin_respond_to_auth_challenge_op,
-            'DescribeUserPool': self.describe_user_pool_op,
-            'ListUsers': self.list_users_op,
-            'UpdateUserPool': self.update_pool_op,
-            'SignUp': self.sign_up_op,
+            'AdminRespondToAuthChallenge': self.general_user_pool_op,
+            'DescribeUserPool': self.general_user_pool_op,
+            'ListUsers': self.general_user_pool_op,
+            'UpdateUserPool': self.general_user_pool_op,
+            'SignUp': self.general_user_pool_client_op,
         })
 
         super(BotocoreCognitoEvent, self).__init__(
@@ -1129,21 +1128,6 @@ class BotocoreCognitoEvent(BotocoreEvent):
             response
         )
 
-    def admin_create_user_op(self, args, _):
-        """
-        Process AdminCreateUser operation
-        :param args: command arguments
-        :param _: unused, kwargs
-        :return: None
-        """
-        _, request_args = args
-        self.resource['name'] = request_args['UserPoolId']
-        add_data_if_needed(
-            self.resource['metadata'],
-            'request',
-            request_args
-        )
-
     def admin_create_user_res(self, response):
         """
         Process AdminCreateUser response
@@ -1151,17 +1135,6 @@ class BotocoreCognitoEvent(BotocoreEvent):
         :return: None
         """
         self.resource['metadata']['user'] = response['User']
-
-    def admin_list_user_group_op(self, args, _):
-        """
-        Process AdminListGroupsForUser operation
-        :param args: command arguments
-        :param _: unused, kwargs
-        :return: None
-        """
-        _, request_args = args
-        self.resource['name'] = request_args['UserPoolId']
-        self.resource['metadata']['username'] = request_args['Username']
 
     def admin_list_user_group_res(self, response):
         """
@@ -1190,73 +1163,26 @@ class BotocoreCognitoEvent(BotocoreEvent):
             False
         )
 
-    def describe_user_pool_op(self, args, _):
+    def general_user_pool_op(self, args, _):
         """
-        Process DescribeUserPool operation
+        Process any User Pool operation
         :param args: command arguments
         :param _: unused, kwargs
         :return: None
         """
         _, request_args = args
-        self.resource['name'] = request_args['UserPoolId']
-
-    def list_users_op(self, args, _):
-        """
-        Process ListUsers operation
-        :param args: command arguments
-        :param _: unused, kwargs
-        :return: None
-        """
-        _, request_args = args
-        self.resource['name'] = request_args['UserPoolId']
-        add_data_if_needed(
-            self.resource['metadata'],
-            'request',
-            request_args
-        )
-
-    def update_pool_op(self, args, _):
-        """
-        Process UpdateUserPool operation
-        :param args: command arguments
-        :param _: unused, kwargs
-        :return: None
-        """
-        _, request_args = args
-        self.resource['name'] = request_args['UserPoolId']
+        self.resource['name'] = request_args.get('UserPoolId')
         self.resource['metadata'].update(request_args)
 
-    def sign_up_op(self, args, _):
+    def general_user_pool_client_op(self, args, _):
         """
-        Process User Signup operation
+        Process any User Pool App Client operation
         :param args: command arguments
         :param _: unused, kwargs
         :return: None
         """
         _, request_args = args
         self.resource['name'] = request_args.get('ClientId')
-        self.resource['metadata'].update(request_args)
-
-    def admin_initiate_auth_op(self, args, _):
-        """
-        Process Auth Initiation as Admin
-        :param args: command arguments
-        :param _: unused, kwargs
-        :return: None
-        """
-        _, request_args = args
-        self.resource['name'] = request_args['UserPoolId']
-        self.resource['metadata'].update(request_args)
-
-    def admin_respond_to_auth_challenge_op(self, args, _):
-        """
-        Process Respond to Auth Challenge as Admin
-        :param args: command arguments
-        :param _: unused, kwargs
-        :return: None
-        """
-        _, request_args = args
-        self.resource['name'] = request_args['UserPoolId']
         self.resource['metadata'].update(request_args)
 
 
