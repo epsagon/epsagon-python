@@ -160,7 +160,7 @@ def wrap_prerun(*args, **kwargs):
     """
     event_key = get_event_key(*args, **kwargs)
     if event_key:
-        trace_factory.prepare()
+        trace_factory.get_or_create_trace(unique_id=event_key)
         runner = CeleryRunner(*args, **kwargs)
         ACTIVE_EVENTS[event_key] = runner
         trace_factory.set_runner(runner)
