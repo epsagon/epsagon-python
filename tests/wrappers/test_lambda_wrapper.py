@@ -549,6 +549,7 @@ def test_step_lambda_wrapper_none_context(wrap_python_function_wrapper,
             assert wrapped_lambda('a', None) == 'success'
         assert len(w) == 1
 
+
     trace_mock.prepare.assert_called()
     wrap_python_function_wrapper.assert_called()
 
