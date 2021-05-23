@@ -22,7 +22,7 @@ def _exception_handler_wrapper(wrapped, _instance, args, kwargs):
     """
     # Skip on Lambda environment since it's not relevant and might be duplicate
     if is_lambda_env():
-        return
+        return wrapped(*args, **kwargs)
 
     if args and len(args) == 2:
         args = list(args)

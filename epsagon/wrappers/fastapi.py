@@ -255,6 +255,7 @@ def route_class_wrapper(wrapped, instance, args, kwargs):
     :param args: wrapt's args
     :param kwargs: wrapt's kwargs
     """
+    result = wrapped(*args, **kwargs)
     # Skip on Lambda environment since it's not relevant and might be duplicate
     if not is_lambda_env() and instance:
         try:
