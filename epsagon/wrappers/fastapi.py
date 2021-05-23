@@ -255,8 +255,8 @@ def route_class_wrapper(wrapped, instance, args, kwargs):
     :param args: wrapt's args
     :param kwargs: wrapt's kwargs
     """
-    result = wrapped(*args, **kwargs)
-    if instance:
+    # Skip on Lambda environment since it's not relevant and might be duplicate
+    if not is_lambda_env() and instance:
         try:
             if instance.dependant and instance.dependant.call:
                 _wrap_handler(

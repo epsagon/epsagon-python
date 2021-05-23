@@ -20,6 +20,10 @@ def _exception_handler_wrapper(wrapped, _instance, args, kwargs):
     :param args: wrapt's args
     :param kwargs: wrapt's kwargs
     """
+    # Skip on Lambda environment since it's not relevant and might be duplicate
+    if is_lambda_env():
+        return
+
     if args and len(args) == 2:
         args = list(args)
         args[1] = exception_handler_wrapper(args[1])
@@ -31,10 +35,6 @@ def patch():
     Patch module.
     :return: None
     """
-    # Skip on Lambda environment since it's not relevant and might be duplicate
-    if is_lambda_env():
-        return
-
     wrapt.wrap_function_wrapper(
         'fastapi.routing',
         'APIRoute.__init__',
