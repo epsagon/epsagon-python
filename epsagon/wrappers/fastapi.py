@@ -219,6 +219,7 @@ def _fastapi_handler(
     )
 
 
+
 # pylint: disable=too-many-statements
 def _wrap_handler(dependant, status_code):
     """
