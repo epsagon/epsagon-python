@@ -70,7 +70,7 @@ def _handle_response(epsagon_scope, response, status_code, trace, raised_err):
             trace.runner.update_response(response, status_code=status_code)
 
     except Exception as exception:  # pylint: disable=W0703
-        print_debug('Failed to handle response: {}'.format(exception))
+        print_debug('failed to handle response: {}'.format(exception))
 
     if raised_err:
         raise raised_err
@@ -319,7 +319,8 @@ async def server_call_wrapper(wrapped, _instance, args, kwargs):
         trace = epsagon.trace.trace_factory.get_or_create_trace(
             unique_id=unique_id
         )
-        trace.prepare()
+        if trace:
+            trace.prepare()
         scope[EPSAGON_MARKER] = {
             SCOPE_UNIQUE_ID: unique_id,
         }
