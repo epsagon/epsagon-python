@@ -5,5 +5,5 @@ excludes=''
 if [ $ret -eq 0 ]; then
     pytest -vv --ignore-glob=*fastapi*
 else
-    pytest -vv
+    pytest -vvs
 fi
