@@ -9,6 +9,7 @@ from typing import List
 from httpx import AsyncClient
 from pydantic import BaseModel
 from fastapi import FastAPI, APIRouter, Request
+from fastapi.routing import APIRoute
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from epsagon import trace_factory
@@ -22,9 +23,12 @@ from .common import multiple_threads_handler
 
 RETURN_VALUE = 'testresponsedata'
 ROUTER_RETURN_VALUE = 'router-endpoint-return-data'
+CUSTOM_ROUTE_RETURN_VALUE = 'custom-route-endpoint-return-data'
 REQUEST_OBJ_PATH = '/given_request'
 TEST_ROUTER_PREFIX = '/test-router-path'
 TEST_ROUTER_PATH = '/test-router'
+TEST_CUSTOM_ROUTE_PATH = '/atest-custom-route'
+TEST_CUSTOM_ROUTE_PREFIX = '/test-custom-route-main'
 MULTIPLE_THREADS_KEY = "multiple_threads"
 MULTIPLE_THREADS_ROUTE = f'/{MULTIPLE_THREADS_KEY}'
 MULTIPLE_THREADS_RETURN_VALUE = MULTIPLE_THREADS_KEY
@@ -43,6 +47,9 @@ UNHANDLED_EXCEPTION_PATH = "/default_handled_exception"
 
 class CustomBaseModel(BaseModel):
     data: List[str]
+
+class CustomRouteClass(APIRoute):
+    pass
 
 def _get_response_data(key):
     return {key: key}
@@ -86,6 +93,9 @@ def handle_b():
 
 def handle_router_endpoint():
     return _get_response(ROUTER_RETURN_VALUE)
+
+def handle_custom_route_endpoint():
+    return _get_response(CUSTOM_ROUTE_RETURN_VALUE)
 
 def multiple_threads_route():
     multiple_threads_handler()
@@ -162,6 +172,9 @@ def _build_fastapi_app():
     router = APIRouter()
     router.add_api_route(TEST_ROUTER_PATH, handle_router_endpoint)
     app.include_router(router, prefix=TEST_ROUTER_PREFIX)
+    router_with_custom_route = APIRouter(route_class=CustomRouteClass)
+    router_with_custom_route.add_api_route(TEST_CUSTOM_ROUTE_PATH, handle_custom_route_endpoint)
+    app.include_router(router_with_custom_route, prefix=TEST_CUSTOM_ROUTE_PREFIX)
     return app
 
 @pytest.fixture(scope='function', autouse=False)
@@ -337,6 +350,25 @@ async def test_fastapi_custom_router(trace_transport, fastapi_app):
     assert runner.resource['metadata']['Path'] == full_route_path
     assert runner.resource['metadata']['status_code'] == DEFAULT_SUCCESS_STATUS_CODE
     expected_response_data = _get_response_data(ROUTER_RETURN_VALUE)
+    assert runner.resource['metadata']['Response Data'] == (
+        expected_response_data
+    )
+    assert response_data == expected_response_data
+
+
+@pytest.mark.asyncio
+async def test_fastapi_custom_api_route(trace_transport, fastapi_app):
+    """Custom api route sanity test."""
+    full_route_path= f'{TEST_CUSTOM_ROUTE_PREFIX}{TEST_CUSTOM_ROUTE_PATH}'
+    async with AsyncClient(app=fastapi_app, base_url="http://test") as ac:
+        response = await ac.get(full_route_path)
+    response_data = response.json()
+    runner = trace_transport.last_trace.events[0]
+    assert isinstance(runner, FastapiRunner)
+    assert runner.resource['name'].startswith('127.0.0.1')
+    assert runner.resource['metadata']['Path'] == full_route_path
+    assert runner.resource['metadata']['status_code'] == DEFAULT_SUCCESS_STATUS_CODE
+    expected_response_data = _get_response_data(CUSTOM_ROUTE_RETURN_VALUE)
     assert runner.resource['metadata']['Response Data'] == (
         expected_response_data
     )

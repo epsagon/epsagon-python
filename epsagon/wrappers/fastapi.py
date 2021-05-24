@@ -8,7 +8,6 @@ import json.decoder
 import asyncio
 
 import warnings
-from fastapi.routing import APIRoute
 from fastapi import Request, Response
 from starlette.requests import ClientDisconnect
 from starlette.concurrency import run_in_threadpool
@@ -248,21 +247,27 @@ def _wrap_handler(dependant, status_code):
     dependant.call = wrapped_handler
 
 
-class TracingAPIRoute(APIRoute):
+def route_class_wrapper(wrapped, instance, args, kwargs):
     """
-    Custom tracing route - traces each route request & response
+    Route class wrapper - traces each route request & response.
+    :param wrapped: wrapt's wrapped
+    :param instance: wrapt's instance
+    :param args: wrapt's args
+    :param kwargs: wrapt's kwargs
     """
+    result = wrapped(*args, **kwargs)
+    # Skip on Lambda environment since it's not relevant and might be duplicate
+    if not is_lambda_env() and instance:
+        try:
+            if instance.dependant and instance.dependant.call:
+                _wrap_handler(
+                    instance.dependant,
+                    kwargs.get('status_code', DEFAULT_SUCCESS_STATUS_CODE)
+                )
+        except Exception: # pylint: disable=broad-except
+            pass
 
-    def __init__(self, *args, **kwargs):
-        """
-        wraps the route endpoint with Epsagon wrapper
-        """
-        super().__init__(*args, **kwargs)
-        if self.dependant and self.dependant.call:
-            _wrap_handler(
-                self.dependant,
-                kwargs.pop('status_code', DEFAULT_SUCCESS_STATUS_CODE)
-            )
+    return result
 
 
 def exception_handler_wrapper(original_handler):
