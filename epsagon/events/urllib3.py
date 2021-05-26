@@ -113,6 +113,7 @@ class Urllib3Event(BaseEvent):
                 'response_headers',
                 headers
             )
+            # Backward compatibility for urllib3<1.26.x
             response_body = (
                 response.peek()
                 if getattr(response, 'peek', None)
