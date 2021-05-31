@@ -50,6 +50,7 @@ The simplest way to get started is to run your python command with the following
 ```sh
 export EPSAGON_TOKEN=<epsagon-token>
 export EPSAGON_APP_NAME=<app-name-stage>
+export EPSAGON_METADATA=FALSE
 export AUTOWRAPT_BOOTSTRAP=epsagon
 <python command>
 ```
@@ -58,6 +59,7 @@ For example:
 ```sh
 export EPSAGON_TOKEN=<your-token>
 export EPSAGON_APP_NAME=django-prod
+export EPSAGON_METADATA=FALSE
 export AUTOWRAPT_BOOTSTRAP=epsagon
 python app.py
 ```
