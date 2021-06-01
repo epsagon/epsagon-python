@@ -38,7 +38,7 @@ def test_no_data_capture_on_preload_content_false(trace_transport):
     urllib3_event = trace_transport.last_trace.events[-1]
     assert(urllib3_event.resource['metadata']['response_body'] is None)
 
-def test_no_data_capture_on_preload_content_true(trace_transport):
+def test_data_capture_on_preload_content_true(trace_transport):
     @epsagon.wrappers.python_function.python_wrapper
     def wrapped_function():
         TEST_URL = 'https://www.google.com'
