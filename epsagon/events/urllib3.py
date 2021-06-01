@@ -76,7 +76,7 @@ class Urllib3Event(BaseEvent):
             add_data_if_needed(
                 self.resource['metadata'],
                 'request_headers',
-                dict(headers)
+                dict(headers) if headers else {}
             )
 
             add_data_if_needed(
@@ -98,7 +98,7 @@ class Urllib3Event(BaseEvent):
         :return: None
         """
         self.resource['metadata']['status_code'] = response.status
-        headers = dict(response.getheaders())
+        headers = dict(response.getheaders()) if response.getheaders() else {}
         self.resource = update_http_headers(
             self.resource,
             headers
@@ -107,13 +107,20 @@ class Urllib3Event(BaseEvent):
         self.resource['metadata']['response_body'] = None
         full_url = self.resource['metadata']['url']
 
-        if not is_payload_collection_blacklisted(full_url):
+        if (
+                response.tell() > 0 and
+                not is_payload_collection_blacklisted(full_url)
+        ):
             add_data_if_needed(
                 self.resource['metadata'],
                 'response_headers',
                 headers
             )
-            response_body = response.peek()
+            response_body = (
+                response.peek()
+                if getattr(response, 'peek', None)
+                else response.data
+            )
             if isinstance(response_body, bytes):
                 try:
                     response_body = response_body.decode('utf-8')

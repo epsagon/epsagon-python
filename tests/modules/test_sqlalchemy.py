@@ -26,7 +26,7 @@ def test_sanity(sqlalchemy_event_mock):
         call.args for call in sqlalchemy_event_mock.call_args_list
     ]
 
-    assert init_instrumentation[-1] =='initialize'
+    assert init_instrumentation[-1] == 'initialize'
     assert close_instrumentation[-1] == 'close'
 
     init_instrumentation[1].bind.url.database = DB_NAME
