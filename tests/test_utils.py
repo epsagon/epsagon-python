@@ -19,6 +19,7 @@ def test_blacklist_url(blacklist_urls_state_keeper):
     Test is_blacklisted_url functionality.
     :return: None
     """
+
     epsagon.http_filters.BLACKLIST_URLS = {
         str.endswith: [
             '.com',
@@ -41,6 +42,7 @@ def test_original_blacklist_url():
     Validate original needed URLs are in.
     :return: None
     """
+    
     assert epsagon.http_filters.is_blacklisted_url('http://tc.us-east-1.epsagon.com')
     assert epsagon.http_filters.is_blacklisted_url('https://client.tc.epsagon.com')
 
