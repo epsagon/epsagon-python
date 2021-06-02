@@ -14,7 +14,7 @@ def test_blacklist_url():
     :return: None
     """
 
-    original = epsagon.http_filters.BLACKLIST_URLS
+    original = epsagon.http_filters.BLACKLIST_URLS # Storing old state
     epsagon.http_filters.BLACKLIST_URLS = {
         str.endswith: [
             '.com',
@@ -30,7 +30,7 @@ def test_blacklist_url():
     assert epsagon.http_filters.is_blacklisted_url('file://test.file')
     assert not epsagon.http_filters.is_blacklisted_url('https://www.com.org')
     assert not epsagon.http_filters.is_blacklisted_url('http://www.google.org')
-    epsagon.http_filters.BLACKLIST_URLS = original
+    epsagon.http_filters.BLACKLIST_URLS = original # Restoring old state
 
 
 def test_original_blacklist_url():
