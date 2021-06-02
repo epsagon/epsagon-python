@@ -70,9 +70,6 @@ def test_data_capture_with_pool_manager_pc_true(trace_transport):
     assert (len(wrapped_data) == 0)
     # But, data will be stored in the `data` object
     assert (len(wrapped_response.data) > 0)
-    urllib3_event = trace_transport.last_trace.events[-1]
-    # Data will be collected and stored inside the event data
-    assert(len(urllib3_event.resource['metadata']['response_body']) > 0)
     # Compare un-instrumented vs instrumented data
     assert (len(data) == 0)
     assert (len(response.data) > 0)
@@ -100,9 +97,6 @@ def test_data_capture_with_pool_manager_pc_false(trace_transport):
     assert (len(wrapped_data) > 0)
     # But, data will not be stored in the `data` object
     assert (len(wrapped_response.data) == 0)
-    urllib3_event = trace_transport.last_trace.events[-1]
-    # Payload should not be collected in the case of raw-stream usage.
-    assert(urllib3_event.resource['metadata']['response_body'] is None)
     # Compare un-instrumented vs instrumented data
     assert (len(data) > 0)
     assert (len(response.data) == 0)
