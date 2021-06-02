@@ -5,15 +5,14 @@ import epsagon.runners.python_function
 import epsagon.constants
 
 
-TEST_URL = 'https://google.com/'
+TEST_URL = 'www.google.com'
 
 def setup_function(func):
     trace_factory.use_single_trace = True
     epsagon.constants.COLD_START = True
 
-def test_no_data_capture_on_preload_content_false(trace_transport):
-    @epsagon.wrappers.python_function.python_wrapper
-    def wrapped_function():
+def test_no_data_capture_with_urlopen(trace_transport):
+    def use_urlopen():
         headers = {
             'Content-Type': 'application/json'
         }
@@ -21,8 +20,8 @@ def test_no_data_capture_on_preload_content_false(trace_transport):
         http = urllib3.PoolManager()
         conn = http.connection_from_url(TEST_URL)
         urllib_response = conn.urlopen(
-            method='POST',
-            url='/index.html',
+            method='GET',
+            url='/',
             body='',
             headers=headers,
             preload_content=False,
@@ -30,30 +29,80 @@ def test_no_data_capture_on_preload_content_false(trace_transport):
         )
         return urllib_response
 
-    response = wrapped_function()
+    response = use_urlopen()
     data = response.read()
+
+    @epsagon.wrappers.python_function.python_wrapper
+    def wrapped_function():
+        return use_urlopen()
+
+    wrapped_response = wrapped_function()
+    wrapped_data = wrapped_response.read()
     # We expect in this case that the data will be available in the buffer
-    assert(len(data) > 0)
+    assert(len(wrapped_data) > 0)
+    assert(len(wrapped_response.data) == 0)
     urllib3_event = trace_transport.last_trace.events[-1]
     # Payload should not be collected in the case of raw-stream usage.
     assert(urllib3_event.resource['metadata']['response_body'] is None)
+    # Compare un-instrumented vs instrumented data
+    assert (len(data) > 0)
+    assert (len(response.data) == 0)
 
-def test_data_capture_on_preload_content_true(trace_transport):
-    @epsagon.wrappers.python_function.python_wrapper
-    def wrapped_function():
+def test_data_capture_with_pool_manager_pc_true(trace_transport):
+    def use_poolmanager():
         headers = {
             'Content-Type': 'application/json'
         }
 
         http = urllib3.PoolManager()
-        return http.request('POST', TEST_URL, headers=headers, body='', preload_content=True)
+        return http.request('GET', TEST_URL, headers=headers, body='', preload_content=True)
 
-    response = wrapped_function()
+    response = use_poolmanager()
     data = response.read()
+
+    @epsagon.wrappers.python_function.python_wrapper
+    def wrapped_function():
+        return use_poolmanager()
+
+    wrapped_response = wrapped_function()
+    wrapped_data = wrapped_response.read()
     # In this case data will not be available in the buffer
-    assert (len(data) == 0)
+    assert (len(wrapped_data) == 0)
     # But, data will be stored in the `data` object
-    assert (len(response.data) > 0)
+    assert (len(wrapped_response.data) > 0)
     urllib3_event = trace_transport.last_trace.events[-1]
-    # Payload will be collected and stored inside the event data
+    # Data will be collected and stored inside the event data
     assert(len(urllib3_event.resource['metadata']['response_body']) > 0)
+    # Compare un-instrumented vs instrumented data
+    assert (len(data) == 0)
+    assert (len(response.data) > 0)
+
+
+def test_data_capture_with_pool_manager_pc_false(trace_transport):
+    def use_poolmanager():
+        headers = {
+            'Content-Type': 'application/json'
+        }
+
+        http = urllib3.PoolManager()
+        return http.request('GET', TEST_URL, headers=headers, body='', preload_content=False)
+
+    response = use_poolmanager()
+    data = response.read()
+
+    @epsagon.wrappers.python_function.python_wrapper
+    def wrapped_function():
+        return use_poolmanager()
+
+    wrapped_response = wrapped_function()
+    wrapped_data = wrapped_response.read()
+    # In this case data will not be available in the buffer
+    assert (len(wrapped_data) > 0)
+    # But, data will not be stored in the `data` object
+    assert (len(wrapped_response.data) == 0)
+    urllib3_event = trace_transport.last_trace.events[-1]
+    # Payload should not be collected in the case of raw-stream usage.
+    assert(urllib3_event.resource['metadata']['response_body'] is None)
+    # Compare un-instrumented vs instrumented data
+    assert (len(data) > 0)
+    assert (len(response.data) == 0)

@@ -107,10 +107,7 @@ class Urllib3Event(BaseEvent):
         self.resource['metadata']['response_body'] = None
         full_url = self.resource['metadata']['url']
 
-        if (
-                response.tell() > 0 and
-                not is_payload_collection_blacklisted(full_url)
-        ):
+        if not is_payload_collection_blacklisted(full_url):
             add_data_if_needed(
                 self.resource['metadata'],
                 'response_headers',
@@ -120,6 +117,8 @@ class Urllib3Event(BaseEvent):
                 response.peek()
                 if getattr(response, 'peek', None)
                 else response.data
+                if response.tell() > 0
+                else None
             )
             if isinstance(response_body, bytes):
                 try:
