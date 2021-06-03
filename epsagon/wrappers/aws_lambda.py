@@ -3,6 +3,7 @@ Wrapper for AWS Lambda.
 """
 
 from __future__ import absolute_import
+import os
 import traceback
 import time
 import copy
@@ -35,6 +36,7 @@ def _add_status_code(runner, return_value):
             runner.resource['metadata']['status_code'] = status_code
 
 
+# pylint: disable=too-many-statements
 def lambda_wrapper(func):
     """Epsagon's Lambda wrapper."""
 
@@ -57,6 +59,11 @@ def lambda_wrapper(func):
             # This can happen when someone manually calls handler without
             # parameters / sends kwargs. In such case we ignore this trace.
             return func(*args, **kwargs)
+
+        if os.environ.get(
+            'AWS_LAMBDA_INITIALIZATION_TYPE'
+        ) == 'provisioned-concurrency':
+            constants.COLD_START = False
 
         try:
             runner = epsagon.runners.aws_lambda.LambdaRunner(

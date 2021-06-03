@@ -1,3 +1,4 @@
+import os
 import json
 import mock
 import pytest
@@ -81,7 +82,51 @@ def test_lambda_wrapper_sanity(
     trace_mock.add_exception.assert_not_called()
 
     assert not epsagon.constants.COLD_START
+    assert runner.resource['metadata']['cold_start'] == True
     assert runner.resource['metadata']['return_value'] == retval
+
+
+@mock.patch.object(LambdaRunner, 'set_exception')
+@mock.patch(
+    'epsagon.trace.trace_factory.get_trace',
+    side_effect=lambda: trace_mock
+)
+@mock.patch(
+    'epsagon.trace.trace_factory.get_or_create_trace',
+    side_effect=lambda: trace_mock
+)
+@mock.patch(
+    'epsagon.triggers.aws_lambda.LambdaTriggerFactory.factory',
+    side_effect=['trigger']
+)
+def test_lambda_wrapper_provisioned_concurrency_sanity(
+        trigger_factory_mock,
+        _,
+        __,
+        set_exception_mock
+):
+    retval = 'success'
+
+    @epsagon.wrappers.aws_lambda.lambda_wrapper
+    def wrapped_lambda(event, context):
+        return 'success'
+
+    os.environ['AWS_LAMBDA_INITIALIZATION_TYPE'] = 'provisioned-concurrency'
+    assert wrapped_lambda('a', CONTEXT_STUB) == 'success'
+    trace_mock.prepare.assert_called()
+    runner = _get_runner_event(trace_mock)
+
+    trigger_factory_mock.assert_called()
+    set_exception_mock.assert_not_called()
+
+    trace_mock.set_timeout_handler.assert_called()
+
+    trace_mock.send_traces.assert_called()
+    trace_mock.add_exception.assert_not_called()
+
+    assert not epsagon.constants.COLD_START
+    assert runner.resource['metadata']['cold_start'] == False
+    os.environ.pop('AWS_LAMBDA_INITIALIZATION_TYPE')
 
 
 @mock.patch(
