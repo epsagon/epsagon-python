@@ -6,7 +6,8 @@ import epsagon.runners.python_function
 import epsagon.constants
 
 
-TEST_URL = 'www.google.com'
+TEST_DOMAIN = 'jsonplaceholder.typicode.com'
+TEST_PATH = '/todos/1'
 
 def setup_function(func):
     trace_factory.use_single_trace = True
@@ -19,10 +20,10 @@ def test_no_data_capture_with_urlopen(trace_transport):
         }
 
         http = urllib3.PoolManager()
-        conn = http.connection_from_url(TEST_URL)
+        conn = http.connection_from_url(TEST_DOMAIN)
         urllib_response = conn.urlopen(
             method='GET',
-            url='/',
+            url=TEST_PATH,
             body='',
             headers=headers,
             preload_content=False,
@@ -48,6 +49,8 @@ def test_no_data_capture_with_urlopen(trace_transport):
     # Compare un-instrumented vs instrumented data
     assert (len(data) > 0)
     assert (len(response.data) == 0)
+    assert(wrapped_data == data)
+    assert(wrapped_response.data == response.data)
 
 @pytest.mark.parametrize("preload_content", [True, False])
 def test_data_capture_with_pool_manager(preload_content, trace_transport):
@@ -58,7 +61,9 @@ def test_data_capture_with_pool_manager(preload_content, trace_transport):
 
         http = urllib3.PoolManager()
         return http.request(
-            'GET', TEST_URL, headers=headers, body='', preload_content=preload_content
+            'GET', TEST_DOMAIN + TEST_PATH,
+            headers=headers, body='',
+            preload_content=preload_content
         )
 
     response = use_poolmanager()
@@ -86,3 +91,5 @@ def test_data_capture_with_pool_manager(preload_content, trace_transport):
         # Compare un-instrumented vs instrumented data
         assert (len(data) == 0)
         assert (len(response.data) > 0)
+    assert(wrapped_data == data)
+    assert(wrapped_response.data == response.data)
