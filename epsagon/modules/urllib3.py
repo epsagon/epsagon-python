@@ -4,7 +4,7 @@ urllib3 patcher module.
 
 from __future__ import absolute_import
 import uuid
-import wrapt
+from epsagon.utils import patch_once
 from epsagon.modules.general_wrapper import wrapper
 from ..events.urllib3 import Urllib3EventFactory
 from ..http_filters import is_blacklisted_url
@@ -82,7 +82,7 @@ def patch():
     """
 
     try:
-        wrapt.wrap_function_wrapper(
+        patch_once(
             'urllib3',
             'HTTPConnectionPool.urlopen',
             _wrapper
