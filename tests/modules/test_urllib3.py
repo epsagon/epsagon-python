@@ -1,3 +1,4 @@
+import pytest
 import urllib3
 import epsagon.wrappers.python_function
 from epsagon.trace import trace_factory
@@ -48,14 +49,17 @@ def test_no_data_capture_with_urlopen(trace_transport):
     assert (len(data) > 0)
     assert (len(response.data) == 0)
 
-def test_data_capture_with_pool_manager_pc_true(trace_transport):
+@pytest.mark.parametrize("preload_content", [True, False])
+def test_data_capture_with_pool_manager(preload_content, trace_transport):
     def use_poolmanager():
         headers = {
             'Content-Type': 'application/json'
         }
 
         http = urllib3.PoolManager()
-        return http.request('GET', TEST_URL, headers=headers, body='', preload_content=True)
+        return http.request(
+            'GET', TEST_URL, headers=headers, body='', preload_content=preload_content
+        )
 
     response = use_poolmanager()
     data = response.read()
@@ -66,37 +70,19 @@ def test_data_capture_with_pool_manager_pc_true(trace_transport):
 
     wrapped_response = wrapped_function()
     wrapped_data = wrapped_response.read()
-    # In this case data will not be available in the buffer
-    assert (len(wrapped_data) == 0)
-    # But, data will be stored in the `data` object
-    assert (len(wrapped_response.data) > 0)
-    # Compare un-instrumented vs instrumented data
-    assert (len(data) == 0)
-    assert (len(response.data) > 0)
-
-
-def test_data_capture_with_pool_manager_pc_false(trace_transport):
-    def use_poolmanager():
-        headers = {
-            'Content-Type': 'application/json'
-        }
-
-        http = urllib3.PoolManager()
-        return http.request('GET', TEST_URL, headers=headers, body='', preload_content=False)
-
-    response = use_poolmanager()
-    data = response.read()
-
-    @epsagon.wrappers.python_function.python_wrapper
-    def wrapped_function():
-        return use_poolmanager()
-
-    wrapped_response = wrapped_function()
-    wrapped_data = wrapped_response.read()
-    # In this case data will not be available in the buffer
-    assert (len(wrapped_data) > 0)
-    # But, data will not be stored in the `data` object
-    assert (len(wrapped_response.data) == 0)
-    # Compare un-instrumented vs instrumented data
-    assert (len(data) > 0)
-    assert (len(response.data) == 0)
+    if not preload_content:
+        # In this case data will not be available in the buffer
+        assert (len(wrapped_data) > 0)
+        # But, data will not be stored in the `data` object
+        assert (len(wrapped_response.data) == 0)
+        # Compare un-instrumented vs instrumented data
+        assert (len(data) > 0)
+        assert (len(response.data) == 0)
+    else:
+        # In this case data will not be available in the buffer
+        assert (len(wrapped_data) == 0)
+        # But, data will be stored in the `data` object
+        assert (len(wrapped_response.data) > 0)
+        # Compare un-instrumented vs instrumented data
+        assert (len(data) == 0)
+        assert (len(response.data) > 0)
