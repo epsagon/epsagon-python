@@ -36,6 +36,7 @@ def _add_status_code(runner, return_value):
             runner.resource['metadata']['status_code'] = status_code
 
 
+# pylint: disable=too-many-statements
 def lambda_wrapper(func):
     """Epsagon's Lambda wrapper."""
 
