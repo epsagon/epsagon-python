@@ -62,6 +62,9 @@ STRONG_KEYS = [
     'aws_account',
     'fragment_seq',
     'labels',
+    'log_group_name',
+    'log_stream_name',
+    'cold_start',
 ]
 
 
