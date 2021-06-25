@@ -308,7 +308,10 @@ class ProxyAPIGatewayLambdaTrigger(BaseLambdaTrigger):
             request_context.get('apiId')
         )
 
-        self.resource['operation'] = event['httpMethod']
+        self.resource['operation'] = event.get(
+            'httpMethod',
+            request_context.get('http', {}).get('method', 'GET')
+        )
 
         query_params = event.get(
             'queryStringParameters',
@@ -323,10 +326,18 @@ class ProxyAPIGatewayLambdaTrigger(BaseLambdaTrigger):
             'stage': request_context.get('stage', 'N/A'),
             'query_string_parameters': query_params,
             'path_parameters': path_params,
-            'path': event.get('resource', 'N/A'),
+            'path': event.get(
+                'resource',
+                request_context.get('http', {}).get('path', 'N/A')
+            ),
         }
 
-        add_data_if_needed(self.resource['metadata'], 'body', event['body'])
+        if 'body' in event:
+            add_data_if_needed(
+                self.resource['metadata'],
+                'body',
+                event['body']
+            )
         add_data_if_needed(
             self.resource['metadata'],
             'headers',
@@ -534,7 +545,7 @@ class LambdaTriggerFactory(object):
             trigger_service = event['Records'][0][event_source].split(':')[-1]
         elif 'requestContext' in event and 'elb' in event['requestContext']:
             trigger_service = ElasticLoadBalancerLambdaTrigger.RESOURCE_TYPE
-        elif 'httpMethod' in event:
+        elif 'httpMethod' in event or 'routeKey' in event:
             trigger_service = ProxyAPIGatewayLambdaTrigger.RESOURCE_TYPE
         elif 'context' in event and 'http-method' in event['context']:
             trigger_service = NoProxyAPIGatewayLambdaTrigger.RESOURCE_TYPE
