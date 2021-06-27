@@ -77,8 +77,7 @@ def update_http_headers(resource_data, response_headers):
     """
     lowered_response_headers = dict((k.lower(), v) for k, v in response_headers.items())
 
-    # apigw-requestid is sent in type HTTP for api gateway
-    # override previous request_id if x-amzn-requestid exists else use previous value
+    # apigw-requestid is sent in type HTTP for api gateway and x-amzn-requestid for type REST
     request_id = (
         lowered_response_headers.get("x-amzn-requestid")
         if "x-amzn-requestid" in lowered_response_headers.keys()
