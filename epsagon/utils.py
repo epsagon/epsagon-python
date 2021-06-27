@@ -75,11 +75,17 @@ def update_http_headers(resource_data, response_headers):
     :param response_headers: response headers from HTTP request
     :return: update resource data dict
     """
-    lowered_response_headers = dict((k.lower(), v) for k, v in response_headers.items())
+    lowered_response_headers = \
+        dict((k.lower(), v) for k, v in response_headers.items())
 
-    # 'x-amzn-requestid' is sent for type REST in api gateway and 'apigw-requestid' is sent in type HTTP
-    # for backwards compatibility we always try to get 'x-amzn-requestid' first
-    request_id = lowered_response_headers.get("x-amzn-requestid", lowered_response_headers.get("apigw-requestid"))
+    # 'x-amzn-requestid' is sent for type REST in api gateway
+    # and 'apigw-requestid' is sent in type HTTP for backwards compatibility
+    # we always try to get 'x-amzn-requestid' first
+    request_id = \
+        lowered_response_headers.get(
+            "x-amzn-requestid",
+            lowered_response_headers.get("apigw-requestid")
+        )
 
     if request_id:
         # This is a request to API Gateway
