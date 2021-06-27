@@ -75,13 +75,19 @@ def update_http_headers(resource_data, response_headers):
     :param response_headers: response headers from HTTP request
     :return: update resource data dict
     """
-    for header_key, header_value in response_headers.items():
-        if header_key.lower() == 'x-amzn-requestid':
-            # This is a request to API Gateway
-            if '.appsync-api.' not in resource_data['metadata']['url']:
-                resource_data['type'] = 'api_gateway'
-            resource_data['metadata']['request_trace_id'] = header_value
-            break
+    lowered_response_headers = dict((k.lower(), v) for k, v in response_headers.items())
+
+    # apigw-requestid is sent in type HTTP for api gateway
+    request_id = lowered_response_headers.get('apigw-requestid')
+
+    # override previous request_id if x-amzn-requestid exists else use previous value
+    request_id = lowered_response_headers.get('x-amzn-requestid', request_id)
+
+    if request_id:
+        # This is a request to API Gateway
+        if '.appsync-api.' not in resource_data['metadata']['url']:
+            resource_data['type'] = 'api_gateway'
+        resource_data['metadata']['request_trace_id'] = request_id
 
     return resource_data
 
