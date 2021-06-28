@@ -83,8 +83,8 @@ def update_http_headers(resource_data, response_headers):
     # we always try to get 'x-amzn-requestid' first
     request_id = \
         lowered_response_headers.get(
-            "x-amzn-requestid",
-            lowered_response_headers.get("apigw-requestid")
+            'x-amzn-requestid',
+            lowered_response_headers.get('apigw-requestid')
         )
 
     if request_id:
