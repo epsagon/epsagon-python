@@ -82,7 +82,6 @@ class PynamoDBEventAdapter(object):
         }
         if response:
             new_response.update(response)
-
         event = BotocoreDynamoDBEvent(
             wrapped,
             instance.client,
