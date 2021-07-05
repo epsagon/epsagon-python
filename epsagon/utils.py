@@ -281,7 +281,9 @@ def import_original_module():
     try:
         return __import__(module_path), module_path, handler_name
     except ImportError as ex:
-        raise ImportError('Failed to import module: {}, Error: {}'.format(module_path, ex))
+        raise ImportError(
+            'Failed to import module: {}, Error: {}'.format(module_path, ex)
+        )
 
 
 def collect_container_metadata(metadata):
