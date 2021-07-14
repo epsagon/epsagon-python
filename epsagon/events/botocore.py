@@ -1784,7 +1784,9 @@ class BotocoreSecretsManagerEvent(BotocoreEvent):
                             )
                         )
                     else:
-                        data[secret_value_key] = self.OBFUSCATED_DATA
+                        data[secret_value_key] = (
+                            '%s%s' % (str(secret_value[0]), self.OBFUSCATED_DATA)
+                        )
                 except Exception: # pylint: disable=broad-except
                     data[secret_value_key] = self.OBFUSCATED_DATA
 
