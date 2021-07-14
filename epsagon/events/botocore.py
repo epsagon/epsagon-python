@@ -1751,7 +1751,9 @@ class BotocoreSecretsManagerEvent(BotocoreEvent):
         )
         resource_name = self._get_resource_name()
         self.resource['name'] = (
-            resource_name if resource_name is not None else self.DEFAULT_SECRET_NAME
+            resource_name
+            if resource_name is not None
+            else self.DEFAULT_SECRET_NAME
         )
         self.OPERATION_TO_FUNC.get(self.resource['operation'], empty_func)()
 
@@ -1773,11 +1775,13 @@ class BotocoreSecretsManagerEvent(BotocoreEvent):
                     secret_value = data[secret_value_key]
                     if isinstance(secret_value, str):
                         data[secret_value_key] = (
-                            "%s%s" % (secret_value[0], self.OBFUSCATED_DATA)
+                            '%s%s' % (secret_value[0], self.OBFUSCATED_DATA)
                         )
                     elif isinstance(secret_value, (bytes, bytearray)):
                         data[secret_value_key] = (
-                            "%s%s" % (chr(secret_value[0]), self.OBFUSCATED_DATA)
+                            '%s%s' % (
+                                chr(secret_value[0]), self.OBFUSCATED_DATA
+                            )
                         )
                     else:
                         data[secret_value_key] = self.OBFUSCATED_DATA
@@ -1812,7 +1816,9 @@ class BotocoreSecretsManagerEvent(BotocoreEvent):
         """
         Handles get secret value operation.
         """
-        add_data_if_needed(self.resource['metadata'], 'Parameters', self.request_data)
+        add_data_if_needed(
+            self.resource['metadata'], 'Parameters', self.request_data
+        )
 
     def get_secret_value_response(self):
         """
@@ -1825,7 +1831,6 @@ class BotocoreSecretsManagerEvent(BotocoreEvent):
         if created_date:
             response_data['CreatedDate'] = created_date.strftime('%s')
         self._add_data_to_metadata('Response', response_data)
-
 
 
 class BotocoreEventFactory(object):
