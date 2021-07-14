@@ -1710,7 +1710,7 @@ class BotocoreSecretsManagerEvent(BotocoreEvent):
         secret_id = self.request_data.get('SecretId')
         if secret_id:
             # secret id can be the arn or the friendly resource name
-            if not secret_id.startswith("arn:"):
+            if not secret_id.startswith('arn:'):
                 return secret_id
 
         return self.response.get('Name')
