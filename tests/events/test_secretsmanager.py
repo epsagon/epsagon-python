@@ -119,7 +119,7 @@ def test_get_secret_value_string():
     client.create_secret(Name=TEST_SECRET_NAME, SecretString=TEST_SECRET_VALUE_STRING)
     client.get_secret_value(SecretId=TEST_SECRET_NAME)
     trace = _get_active_trace()
-    event = trace.events[1]
+    event = trace.events[-1]
     _validate_get_secret_value_metadata(event)
     assert 'Parameters' in event.resource['metadata']
     assert 'SecretId' in event.resource['metadata']['Parameters']
@@ -136,7 +136,7 @@ def test_get_secret_value_binary():
     client.create_secret(Name=TEST_SECRET_NAME, SecretBinary=_get_secret_binary_value())
     client.get_secret_value(SecretId=TEST_SECRET_NAME)
     trace = _get_active_trace()
-    event = trace.events[1]
+    event = trace.events[-1]
     _validate_get_secret_value_metadata(event)
     assert 'Parameters' in event.resource['metadata']
     assert 'SecretId' in event.resource['metadata']['Parameters']
@@ -154,7 +154,7 @@ def test_get_secret_value_string_metadata_only():
     client.create_secret(Name=TEST_SECRET_NAME, SecretString=TEST_SECRET_VALUE_STRING)
     client.get_secret_value(SecretId=TEST_SECRET_NAME)
     trace = _get_active_trace()
-    event = trace.events[1]
+    event = trace.events[-1]
     _validate_get_secret_value_metadata(event)
     assert 'Response' not in event.resource['metadata']
 
@@ -169,7 +169,7 @@ def test_get_secret_value_binary_metadata_only():
     client.create_secret(Name=TEST_SECRET_NAME, SecretBinary=_get_secret_binary_value())
     client.get_secret_value(SecretId=TEST_SECRET_NAME)
     trace = _get_active_trace()
-    event = trace.events[1]
+    event = trace.events[-1]
     _validate_get_secret_value_metadata(event)
     assert 'Response' not in event.resource['metadata']
 
@@ -183,7 +183,7 @@ def test_get_secret_value_by_arn():
     arn = client.create_secret(Name=TEST_SECRET_NAME, SecretString=TEST_SECRET_VALUE_STRING)["ARN"]
     client.get_secret_value(SecretId=arn)
     trace = _get_active_trace()
-    event = trace.events[1]
+    event = trace.events[-1]
     _validate_get_secret_value_metadata(event)
     assert 'Parameters' in event.resource['metadata']
     assert 'SecretId' in event.resource['metadata']['Parameters']
