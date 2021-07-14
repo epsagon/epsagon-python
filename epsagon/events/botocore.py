@@ -1686,6 +1686,148 @@ class BotocoreEmr(BotocoreEvent):
         self.resource['metadata']['Job Flow ID'] = self.response['JobFlowId']
 
 
+class BotocoreSecretsManagerEvent(BotocoreEvent):
+    """
+    Represents secrets manager botocore event.
+    """
+
+    RESOURCE_TYPE = 'secretsmanager'
+    CREATE_SECRET_OPERATION = 'CreateSecret'
+    DEFAULT_SECRET_NAME = 'N/A'
+    SECRET_VALUE_KEYS = (
+        'SecretBinary',
+        'SecretString',
+    )
+    OBFUSCATED_DATA = '*******'
+
+    def _get_resource_name(self):
+        """
+        Gets the relevant resource name, None if not found.
+        """
+        if self.resource['operation'] == self.CREATE_SECRET_OPERATION:
+            return self.request_data.get('Name')
+
+        secret_id = self.request_data.get('SecretId')
+        if secret_id:
+            # secret id can be the arn or the friendly resource name
+            if not secret_id.startswith("arn:"):
+                return secret_id
+
+        return self.response.get('Name')
+
+    def __init__(self, wrapped, instance, args, kwargs, start_time, response,
+                 exception):
+        """
+        Initialize.
+        :param wrapped: wrapt's wrapped
+        :param instance: wrapt's instance
+        :param args: wrapt's args
+        :param kwargs: wrapt's kwargs
+        :param start_time: Start timestamp (epoch)
+        :param response: response data
+        :param exception: Exception (if happened)
+        """
+        self.OPERATION_TO_FUNC.update({
+            self.CREATE_SECRET_OPERATION: self.create_secret_op,
+            'GetSecretValue': self.get_secret_value_op,
+        })
+
+        self.RESPONSE_TO_FUNC.update({
+            self.CREATE_SECRET_OPERATION: self.create_secret_response,
+            'GetSecretValue': self.get_secret_value_response,
+        })
+        _, request_data = args
+        self.request_data = request_data
+        self.response = response
+
+        super(BotocoreSecretsManagerEvent, self).__init__(
+            wrapped,
+            instance,
+            args,
+            kwargs,
+            start_time,
+            response,
+            exception
+        )
+        resource_name = self._get_resource_name()
+        self.resource['name'] = (
+            resource_name if resource_name is not None else self.DEFAULT_SECRET_NAME
+        )
+        self.OPERATION_TO_FUNC.get(self.resource['operation'], empty_func)()
+
+    def update_response(self, response):
+        """
+        Adds response data to event.
+        :param response: Response from botocore
+        """
+        super(BotocoreSecretsManagerEvent, self).update_response(response)
+        self.RESPONSE_TO_FUNC.get(self.resource['operation'], empty_func)()
+
+    def _obfuscate_secret_values(self, data):
+        """
+        Changes the given data dict so the secret values are obfuscated.
+        """
+        for secret_value_key in self.SECRET_VALUE_KEYS:
+            if secret_value_key in data:
+                try:
+                    secret_value = data[secret_value_key]
+                    if isinstance(secret_value, str):
+                        data[secret_value_key] = (
+                            "%s%s" % (secret_value[0], self.OBFUSCATED_DATA)
+                        )
+                    elif isinstance(secret_value, (bytes, bytearray)):
+                        data[secret_value_key] = (
+                            "%s%s" % (chr(secret_value[0]), self.OBFUSCATED_DATA)
+                        )
+                    else:
+                        data[secret_value_key] = self.OBFUSCATED_DATA
+                except Exception: # pylint: disable=broad-except
+                    data[secret_value_key] = self.OBFUSCATED_DATA
+
+    def _add_data_to_metadata(self, key, data):
+        """
+        Obfuscating given data and adding the given data to metadata with the
+        given key.
+        """
+        self._obfuscate_secret_values(data)
+        self.resource['metadata'][key] = data
+
+    def create_secret_op(self):
+        """
+        Handles create secret operation.
+        """
+        if trace_factory.metadata_only or not self.request_data:
+            return
+        request_data = self.request_data.copy()
+        self._add_data_to_metadata('Parameters', request_data)
+
+    def create_secret_response(self):
+        """
+        Handles create secret response.
+        """
+        if self.response:
+            self.resource['metadata']['Response'] = self.response
+
+    def get_secret_value_op(self):
+        """
+        Handles get secret value operation.
+        """
+        add_data_if_needed(self.resource['metadata'], 'Parameters', self.request_data)
+
+    def get_secret_value_response(self):
+        """
+        Handles get secret value response.
+        """
+        if trace_factory.metadata_only or not self.response:
+            return
+        response_data = self.response.copy()
+        created_date = response_data.get('CreatedDate')
+        if created_date:
+            response_data['CreatedDate'] = created_date.strftime('%s')
+        self._add_data_to_metadata('Response', response_data)
+
+
+
 class BotocoreEventFactory(object):
     """
     Factory class, generates botocore event.
