@@ -55,7 +55,7 @@ def test_create_secret_string():
     """
     Tests create secret with a secret string
     """
-    client = boto3.client('secretsmanager')
+    client = boto3.client('secretsmanager', region_name='us-west-1')
     client.create_secret(Name=TEST_SECRET_NAME, SecretString=TEST_SECRET_VALUE_STRING)
     trace = _get_active_trace()
     event = trace.events[0]
@@ -71,7 +71,7 @@ def test_create_secret_binary():
     """
     Tests create secret with a secret binary
     """
-    client = boto3.client('secretsmanager')
+    client = boto3.client('secretsmanager', region_name='us-west-1')
     client.create_secret(Name=TEST_SECRET_NAME, SecretBinary=_get_secret_binary_value())
     trace = _get_active_trace()
     event = trace.events[0]
@@ -88,7 +88,7 @@ def test_create_secret_string_metadata_only():
     Tests create secret with a secret string and metadtaonly is set
     """
     trace_factory.metadata_only = True
-    client = boto3.client('secretsmanager')
+    client = boto3.client('secretsmanager', region_name='us-west-1')
     client.create_secret(Name=TEST_SECRET_NAME, SecretString=TEST_SECRET_VALUE_STRING)
     trace = _get_active_trace()
     event = trace.events[0]
@@ -102,7 +102,7 @@ def test_create_secret_binary_metadata_only():
     Tests create secret with a secret binary and metadtaonly is set
     """
     trace_factory.metadata_only = True
-    client = boto3.client('secretsmanager')
+    client = boto3.client('secretsmanager', region_name='us-west-1')
     client.create_secret(Name=TEST_SECRET_NAME, SecretBinary=_get_secret_binary_value())
     trace = _get_active_trace()
     event = trace.events[0]
@@ -115,7 +115,7 @@ def test_get_secret_value_string():
     """
     Tests get secret value and the secret has a string value
     """
-    client = boto3.client('secretsmanager')
+    client = boto3.client('secretsmanager', region_name='us-west-1')
     client.create_secret(Name=TEST_SECRET_NAME, SecretString=TEST_SECRET_VALUE_STRING)
     client.get_secret_value(SecretId=TEST_SECRET_NAME)
     trace = _get_active_trace()
@@ -132,7 +132,7 @@ def test_get_secret_value_binary():
     """
     Tests get secret value and the secret has a binary value
     """
-    client = boto3.client('secretsmanager')
+    client = boto3.client('secretsmanager', region_name='us-west-1')
     client.create_secret(Name=TEST_SECRET_NAME, SecretBinary=_get_secret_binary_value())
     client.get_secret_value(SecretId=TEST_SECRET_NAME)
     trace = _get_active_trace()
@@ -150,7 +150,7 @@ def test_get_secret_value_string_metadata_only():
     Tests get secret value and the secret has string value. metadtaonly is set
     """
     trace_factory.metadata_only = True
-    client = boto3.client('secretsmanager')
+    client = boto3.client('secretsmanager', region_name='us-west-1')
     client.create_secret(Name=TEST_SECRET_NAME, SecretString=TEST_SECRET_VALUE_STRING)
     client.get_secret_value(SecretId=TEST_SECRET_NAME)
     trace = _get_active_trace()
@@ -165,7 +165,7 @@ def test_get_secret_value_binary_metadata_only():
     Tests get secret value and the secret has binary value. metadtaonly is set
     """
     trace_factory.metadata_only = True
-    client = boto3.client('secretsmanager')
+    client = boto3.client('secretsmanager', region_name='us-west-1')
     client.create_secret(Name=TEST_SECRET_NAME, SecretBinary=_get_secret_binary_value())
     client.get_secret_value(SecretId=TEST_SECRET_NAME)
     trace = _get_active_trace()
@@ -179,7 +179,7 @@ def test_get_secret_value_by_arn():
     """
     Tests get secret value using a secret ARN, and the secret has string value. metadtaonly is set
     """
-    client = boto3.client('secretsmanager')
+    client = boto3.client('secretsmanager', region_name='us-west-1')
     arn = client.create_secret(Name=TEST_SECRET_NAME, SecretString=TEST_SECRET_VALUE_STRING)["ARN"]
     client.get_secret_value(SecretId=arn)
     trace = _get_active_trace()
