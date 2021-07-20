@@ -20,7 +20,7 @@ from epsagon.utils import (
     collect_container_metadata,
     get_traceback_data_from_exception
 )
-from ..http_filters import ignore_request
+from ..http_filters import ignore_request, is_ignored_endpoint
 from ..utils import is_lambda_env, print_debug
 
 DEFAULT_SUCCESS_STATUS_CODE = 200
@@ -175,11 +175,16 @@ def _fastapi_handler(
     """
     has_setup_succeeded = False
     should_ignore_request = False
+
     try:
         epsagon_scope, trace = _setup_handler(request)
         if epsagon_scope and trace:
             has_setup_succeeded = True
-        if ignore_request('', request.url.path.lower()):
+        if (
+                ignore_request('', request.url.path.lower())
+                or
+                is_ignored_endpoint(request.url.path.lower())
+        ):
             should_ignore_request = True
             epsagon_scope[SCOPE_IGNORE_REQUEST] = True
 
