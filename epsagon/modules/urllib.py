@@ -3,7 +3,7 @@ requests patcher module.
 """
 
 from __future__ import absolute_import
-from epsagon.utils import patch_once
+import wrapt
 from epsagon.modules.general_wrapper import wrapper
 from ..events.urllib import UrllibEventFactory
 
@@ -27,7 +27,7 @@ def patch():
     """
 
     try:
-        patch_once(
+        wrapt.wrap_function_wrapper(
             'urllib.request',
             'OpenerDirector._open',
             _wrapper
