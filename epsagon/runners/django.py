@@ -14,9 +14,9 @@ class DjangoRunner(BaseEvent):
     Represents Python Django event runner.
     """
 
-    ORIGIN = 'runner'
-    RESOURCE_TYPE = 'python_django'
-    OPERATION = 'request'
+    ORIGIN = "runner"
+    RESOURCE_TYPE = "python_django"
+    OPERATION = "request"
 
     def __init__(self, start_time, request):
         """
@@ -27,30 +27,24 @@ class DjangoRunner(BaseEvent):
         super(DjangoRunner, self).__init__(start_time)
 
         self.event_id = str(uuid.uuid4())
-        self.resource['name'] = request.get_host()
-        self.resource['operation'] = request.method
+        self.resource["name"] = request.get_host()
+        self.resource["operation"] = request.method
 
-        self.resource['metadata'].update({'Path': request.path})
+        self.resource["metadata"].update({"Path": request.path})
 
         if request.body:
-            add_data_if_needed(
-                self.resource['metadata'],
-                'Request Data',
-                request.body
-            )
+            add_data_if_needed(self.resource["metadata"], "Request Data", request.body)
 
         # request.headers introduced since django==2.2
-        if hasattr(request, 'headers'):
+        if hasattr(request, "headers"):
             if request.headers.get(EPSAGON_HEADER_TITLE):
-                self.resource['metadata']['http_trace_id'] = (
-                    request.headers.get(EPSAGON_HEADER_TITLE)
+                self.resource["metadata"]["http_trace_id"] = request.headers.get(
+                    EPSAGON_HEADER_TITLE
                 )
 
             if request.headers:
                 add_data_if_needed(
-                    self.resource['metadata'],
-                    'Request Headers',
-                    request.headers
+                    self.resource["metadata"], "Request Headers", request.headers
                 )
 
     def update_response(self, response):
@@ -59,19 +53,21 @@ class DjangoRunner(BaseEvent):
         :param response: WSGI Response
         :return: None
         """
-        add_data_if_needed(
-            self.resource['metadata'],
-            'Response Data',
-            response.content
-        )
+        if not response:
+            return
 
-        add_data_if_needed(
-            self.resource['metadata'],
-            'Response Headers',
-            dict(response.items())
-        )
+        if hasattr(response, "content"):
+            add_data_if_needed(
+                self.resource["metadata"], "Response Data", response.content
+            )
 
-        self.resource['metadata']['status_code'] = response.status_code
+        if hasattr(response, "items"):
+            add_data_if_needed(
+                self.resource["metadata"], "Response Headers", dict(response.items())
+            )
 
-        if response.status_code >= 500:
-            self.set_error()
+        if hasattr(response, "status_code"):
+            self.resource["metadata"]["status_code"] = response.status_code
+
+            if response.status_code >= 500:
+                self.set_error()
