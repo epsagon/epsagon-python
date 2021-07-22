@@ -76,7 +76,7 @@ class Urllib3Event(BaseEvent):
             add_data_if_needed(
                 self.resource['metadata'],
                 'request_headers',
-                dict(headers) if headers else {}
+                dict(headers)
             )
 
             add_data_if_needed(
@@ -98,7 +98,7 @@ class Urllib3Event(BaseEvent):
         :return: None
         """
         self.resource['metadata']['status_code'] = response.status
-        headers = dict(response.getheaders()) if response.getheaders() else {}
+        headers = dict(response.getheaders())
         self.resource = update_http_headers(
             self.resource,
             headers
@@ -113,13 +113,7 @@ class Urllib3Event(BaseEvent):
                 'response_headers',
                 headers
             )
-            response_body = (
-                response.peek()
-                if getattr(response, 'peek', None)
-                else response.data
-                if response.tell() > 0
-                else None
-            )
+            response_body = response.peek()
             if isinstance(response_body, bytes):
                 try:
                     response_body = response_body.decode('utf-8')
