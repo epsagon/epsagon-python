@@ -1,4 +1,3 @@
-import pytest
 import epsagon.trace
 import epsagon.utils
 import epsagon.http_filters
@@ -8,13 +7,8 @@ from epsagon.trace import trace_factory
 def setup_function(func):
     trace_factory.get_or_create_trace()
 
-@pytest.yield_fixture
-def blacklist_urls_state_keeper():
-    original = epsagon.http_filters.BLACKLIST_URLS  # Storing old state
-    yield
-    epsagon.http_filters.BLACKLIST_URLS = original  # Restoring old state
 
-def test_blacklist_url(blacklist_urls_state_keeper):
+def test_blacklist_url():
     """
     Test is_blacklisted_url functionality.
     :return: None
@@ -42,6 +36,7 @@ def test_original_blacklist_url():
     Validate original needed URLs are in.
     :return: None
     """
+
     assert epsagon.http_filters.is_blacklisted_url('http://tc.us-east-1.epsagon.com')
     assert epsagon.http_filters.is_blacklisted_url('https://client.tc.epsagon.com')
 
