@@ -812,3 +812,29 @@ def test_cold_start_duration(_, __):
     assert not epsagon.constants.COLD_START
     runner = _get_runner_event(trace_mock)
     assert runner.resource['metadata']['aws.lambda.cold_start_duration'] == 1.5
+
+@mock.patch(
+    "epsagon.trace.trace_factory.get_or_create_trace", side_effect=lambda: trace_mock
+)
+@mock.patch("time.time", return_value=1.5)
+def test_skip_sls_warmup(_, __):
+    """Verify sls warmup plugin calls are not traced"""
+
+    warmup_event = {"source": "serverless-plugin-warmup"}
+
+    @epsagon.wrappers.aws_lambda.lambda_wrapper
+    def wrapped_lambda(_event, _context):
+        return ""
+
+    lambda_runner_mock = mock.MagicMock(set_exception=mock.MagicMock())
+    with mock.patch(
+        "epsagon.runners.aws_lambda.LambdaRunner", side_effect=[lambda_runner_mock]
+    ):
+        # assert wrapped_lambda(event="a", context="b") == "success"
+        wrapped_lambda(warmup_event, CONTEXT_STUB)
+
+    trace_mock.prepare.assert_called()
+    trace_mock.add_event.assert_not_called()
+    trace_mock.send_traces.assert_not_called()
+    trace_mock.add_exception.assert_not_called()
+    assert epsagon.constants.COLD_START

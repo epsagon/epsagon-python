@@ -60,6 +60,10 @@ def lambda_wrapper(func):
             # parameters / sends kwargs. In such case we ignore this trace.
             return func(*args, **kwargs)
 
+        if isinstance(event, dict) and event.get("source") == "serverless-plugin-warmup":
+            # Do not trace serverless-plugin-warmup invocations
+            return func(*args, **kwargs)
+
         if os.environ.get(
             'AWS_LAMBDA_INITIALIZATION_TYPE'
         ) == 'provisioned-concurrency':
