@@ -3,6 +3,8 @@ Wrapper for AWS Lambda.
 """
 
 from __future__ import absolute_import
+
+import json
 import os
 import traceback
 import time
@@ -36,6 +38,15 @@ def _add_status_code(runner, return_value):
             runner.resource['metadata']['status_code'] = status_code
 
 
+def _get_ignored_payloads():
+    """Return a list of payload dictionaries to ignore, if any"""
+    ignored_payloads = os.environ.get("EPSAGON_PAYLOADS_TO_IGNORE")
+    if ignored_payloads:
+        return [json.loads(payload) for payload in ignored_payloads.split(",")]
+
+    return []
+
+
 # pylint: disable=too-many-statements
 def lambda_wrapper(func):
     """Epsagon's Lambda wrapper."""
@@ -60,9 +71,10 @@ def lambda_wrapper(func):
             # parameters / sends kwargs. In such case we ignore this trace.
             return func(*args, **kwargs)
 
-        if isinstance(event, dict) and event.get("source") == "serverless-plugin-warmup":
-            # Do not trace serverless-plugin-warmup invocations
-            return func(*args, **kwargs)
+        if isinstance(event, dict):
+            ignored_payloads = _get_ignored_payloads()
+            if ignored_payloads and event in ignored_payloads:
+                return func(*args, **kwargs)
 
         if os.environ.get(
             'AWS_LAMBDA_INITIALIZATION_TYPE'
