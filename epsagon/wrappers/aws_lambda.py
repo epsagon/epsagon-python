@@ -42,7 +42,7 @@ def _get_ignored_payloads():
     """Return a list of payload dictionaries to ignore, if any."""
     ignored_payloads = os.environ.get('EPSAGON_PAYLOADS_TO_IGNORE')
     if ignored_payloads:
-        return [json.loads(payload) for payload in ignored_payloads.split(',')]
+        return json.loads(ignored_payloads)
 
     return []
 

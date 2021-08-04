@@ -817,7 +817,7 @@ def test_cold_start_duration(_, __):
     "epsagon.trace.trace_factory.get_or_create_trace", side_effect=lambda: trace_mock
 )
 @mock.patch.dict('os.environ',
-                 {'EPSAGON_PAYLOADS_TO_IGNORE': '{"source": "serverless-plugin-warmup"}'}
+                 {'EPSAGON_PAYLOADS_TO_IGNORE': '[{"source": "serverless-plugin-warmup"}]'}
                  )
 def test_ignore_payload_one(_):
     """Verify one payload to ignore is not instrumented"""
@@ -841,7 +841,7 @@ def test_ignore_payload_one(_):
     "epsagon.trace.trace_factory.get_or_create_trace", side_effect=lambda: trace_mock
 )
 @mock.patch.dict('os.environ',
-                 {'EPSAGON_PAYLOADS_TO_IGNORE': '{"source": "serverless-plugin-warmup"},{"custom": "payload"}'}
+                 {'EPSAGON_PAYLOADS_TO_IGNORE': '[{"source": "serverless-plugin-warmup"},{"custom": "payload"}]'}
                  )
 def test_ignore_payload_many(_):
     """Verify many payloads to ignore are not instrumented"""
