@@ -245,7 +245,6 @@ def test_lambda_wrapper_none_context(wrap_python_function_wrapper, _):
 
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter('always')
-        lambda_runner_mock = mock.MagicMock(set_exception=mock.MagicMock())
         with mock.patch(
                 'epsagon.runners.aws_lambda.LambdaRunner',
                 side_effect=TypeError()
