@@ -65,15 +65,41 @@ class RequestsEvent(BaseEvent):
         )
 
         if response is not None:
-            self.update_response(response)
+            self.update_response(response, kwargs.get('stream', False))
 
         if exception is not None:
             self.set_exception(exception, traceback.format_exc())
 
-    def update_response(self, response):
+    def _get_response_body(response, is_stream):
+        """
+        Gets the response body from the response
+        :param response: the Response object
+        :param is_stream: the param value as given to the original request
+        :return: the response body, None on failure
+        """
+        try:
+            if is_stream:
+                data = response.raw.peek()
+            else:
+                data = response.content
+        except: # pylint: disable=broad-except
+            return None
+
+        if not data:
+            return data
+        try:
+            return json.loads(data)
+        except ValueError:
+            if isinstance(data, bytes):
+                try:
+                    return data.decode('utf-8')
+                except UnicodeDecodeError:
+                    return str(response_body)
+
+    def update_response(self, response, is_stream):
         """
         Adds response data to event.
-        :param response: Response from botocore
+        :param response: the Response object
         :return: None
         """
 
@@ -90,20 +116,10 @@ class RequestsEvent(BaseEvent):
         )
 
         self.resource['metadata']['response_body'] = None
-        response_body = None
-        try:
-            response_body = json.loads(response.content)
-        except ValueError:
-            response_body = response.content
-            if isinstance(response_body, bytes):
-                try:
-                    response_body = response_body.decode('utf-8')
-                except UnicodeDecodeError:
-                    response_body = str(response_body)
         add_data_if_needed(
             self.resource['metadata'],
             'response_body',
-            response_body
+            type(self)._get_response_body(response, is_stream)
         )
 
         # Detect errors based on status code
