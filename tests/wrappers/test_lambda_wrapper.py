@@ -250,11 +250,6 @@ def test_lambda_wrapper_none_context(wrap_python_function_wrapper, _):
                 side_effect=TypeError()
         ):
             assert wrapped_lambda('a', None) == 'success'
-        for x in w:
-            print(x.message)
-            print(x.filename)
-            print(x.line)
-            print(x.source)
         assert len(w) == 1
 
     trace_mock.prepare.assert_called()
