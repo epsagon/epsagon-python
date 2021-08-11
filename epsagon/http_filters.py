@@ -30,7 +30,7 @@ FILE_PREFIX = 'file://'
 # Method to URL dict.
 BLACKLIST_URLS = {
     str.endswith: [
-        'tc.epsagon.com',
+        'epsagon.com',
         '.amazonaws.com',
         '.myqcloud.com',
     ],
