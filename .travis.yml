@@ -12,6 +12,7 @@ before_install:
 
 install:
   - pip install -r requirements-dev.txt
+  - pip list
 
 script:
   - ./scripts/run_lint.sh
