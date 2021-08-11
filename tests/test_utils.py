@@ -37,7 +37,7 @@ def test_original_blacklist_url():
     :return: None
     """
 
-    assert epsagon.http_filters.is_blacklisted_url('http://tc.us-east-1.epsagon.com')
+    assert epsagon.http_filters.is_blacklisted_url('http://us-east-1.tc.epsagon.com')
     assert epsagon.http_filters.is_blacklisted_url('https://client.tc.epsagon.com')
 
 
