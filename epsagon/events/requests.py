@@ -14,7 +14,11 @@ from ..trace import trace_factory
 from ..event import BaseEvent
 from ..http_filters import is_blacklisted_url
 from ..utils import update_http_headers, normalize_http_url
-from ..constants import HTTP_ERR_CODE, EPSAGON_HEADER
+from ..constants import (
+    HTTP_ERR_CODE,
+    EPSAGON_HEADER,
+    SKIP_REQUESTS_RESPONSE_PAYLOAD,
+)
 
 
 class RequestsEvent(BaseEvent):
@@ -114,13 +118,12 @@ class RequestsEvent(BaseEvent):
             'response_headers',
             dict(response.headers)
         )
-
-        self.resource['metadata']['response_body'] = None
-        add_data_if_needed(
-            self.resource['metadata'],
-            'response_body',
-            type(self)._get_response_body(response, is_stream)
-        )
+        if not SKIP_REQUESTS_RESPONSE_PAYLOAD:
+            add_data_if_needed(
+                self.resource['metadata'],
+                'response_body',
+                type(self)._get_response_body(response, is_stream)
+            )
 
         # Detect errors based on status code
         if response.status_code >= HTTP_ERR_CODE:
