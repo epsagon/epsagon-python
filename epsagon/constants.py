@@ -14,10 +14,10 @@ COLD_START_TIME = time.time()
 
 DEBUG_MODE = ((os.getenv('EPSAGON_DEBUG') or '').upper() == 'TRUE')
 
-# Indicates whether to skip collection of http `requests` response payload
-SKIP_REQUESTS_RESPONSE_PAYLOAD = (
+# Indicates whether to skip collection of http client response payload
+SKIP_HTTP_CLIENT_RESPONSE = (
     True
-    if os.getenv('EPSAGON_SKIP_REQUESTS_RESPONSE', 'false').lower() == 'true'
+    if os.getenv('EPSAGON_SKIP_HTTP_RESPONSE', 'false').lower() == 'true'
     else False
 )
 

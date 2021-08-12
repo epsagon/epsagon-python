@@ -476,6 +476,7 @@ Advanced options can be configured as a parameter to the init() method or as env
 |-                       |EPSAGON_SEND_TIMEOUT_SEC       |Float  |`1.0`        |The timeout duration in seconds to send the traces to the trace collector          |
 |-                       |EPSAGON_DISABLE_LOGGING_ERRORS |Boolean|`False`      |Disable the automatic capture of error messages into `logging`                     |
 |-                       |EPSAGON_IGNORE_FLASK_RESPONSE  |Boolean|`False`      |Disable the automatic capture of Flask response data                     |
+|-                       |EPSAGON_SKIP_HTTP_RESPONSE     |Boolean|`False`      |Disable the automatic capture of http client response data                     |
 |-                       |DISABLE_EPSAGON                |Boolean|`False`      |A flag to completely disable Epsagon (can be used for tests or locally)            |
 |-                       |DISABLE_EPSAGON_PATCH          |Boolean|`False`      |Disable the library patching (instrumentation)                                     |
 |-                       |EPSAGON_LAMBDA_TIMEOUT_THRESHOLD_MS          |Integer|`200`      |The threshold in millieseconds to send the trace before a Lambda timeout occurs                                     |

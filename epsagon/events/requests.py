@@ -17,7 +17,7 @@ from ..utils import update_http_headers, normalize_http_url
 from ..constants import (
     HTTP_ERR_CODE,
     EPSAGON_HEADER,
-    SKIP_REQUESTS_RESPONSE_PAYLOAD,
+    SKIP_HTTP_CLIENT_RESPONSE,
 )
 
 
@@ -118,7 +118,10 @@ class RequestsEvent(BaseEvent):
             'response_headers',
             dict(response.headers)
         )
-        if not SKIP_REQUESTS_RESPONSE_PAYLOAD:
+        if (
+                not trace_factory.metadta_only and
+                not SKIP_HTTP_CLIENT_RESPONSE
+        ):
             add_data_if_needed(
                 self.resource['metadata'],
                 'response_body',
