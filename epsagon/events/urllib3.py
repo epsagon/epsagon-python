@@ -114,7 +114,7 @@ class Urllib3Event(BaseEvent):
 
         if (
                 not is_payload_collection_blacklisted(full_url) and
-                not trace_factory.metadta_only
+                not trace_factory.metadata_only
         ):
             add_data_if_needed(
                 self.resource['metadata'],

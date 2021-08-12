@@ -16,9 +16,7 @@ DEBUG_MODE = ((os.getenv('EPSAGON_DEBUG') or '').upper() == 'TRUE')
 
 # Indicates whether to skip collection of http client response payload
 SKIP_HTTP_CLIENT_RESPONSE = (
-    True
-    if os.getenv('EPSAGON_SKIP_HTTP_RESPONSE', 'false').lower() == 'true'
-    else False
+    os.getenv('EPSAGON_SKIP_HTTP_RESPONSE', 'false').lower() == 'true'
 )
 
 # Customer original handler.

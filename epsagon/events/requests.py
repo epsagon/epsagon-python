@@ -74,6 +74,7 @@ class RequestsEvent(BaseEvent):
         if exception is not None:
             self.set_exception(exception, traceback.format_exc())
 
+    @staticmethod
     def _get_response_body(response, is_stream):
         """
         Gets the response body from the response
@@ -86,7 +87,7 @@ class RequestsEvent(BaseEvent):
                 data = response.raw.peek()
             else:
                 data = response.content
-        except: # pylint: disable=broad-except
+        except Exception: # pylint: disable=broad-except
             return None
 
         if not data:
@@ -98,7 +99,7 @@ class RequestsEvent(BaseEvent):
                 try:
                     return data.decode('utf-8')
                 except UnicodeDecodeError:
-                    return str(response_body)
+                    return str(data)
 
     def update_response(self, response, is_stream):
         """
@@ -119,7 +120,7 @@ class RequestsEvent(BaseEvent):
             dict(response.headers)
         )
         if (
-                not trace_factory.metadta_only and
+                not trace_factory.metadata_only and
                 not SKIP_HTTP_CLIENT_RESPONSE
         ):
             add_data_if_needed(
