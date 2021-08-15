@@ -90,16 +90,16 @@ class RequestsEvent(BaseEvent):
         except Exception: # pylint: disable=broad-except
             return None
 
-        if not data:
-            return data
-        try:
-            return json.loads(data)
-        except ValueError:
-            if isinstance(data, bytes):
-                try:
-                    return data.decode('utf-8')
-                except UnicodeDecodeError:
-                    return str(data)
+        if data:
+            try:
+                data = json.loads(data)
+            except ValueError:
+                if isinstance(data, bytes):
+                    try:
+                        data = data.decode('utf-8')
+                    except UnicodeDecodeError:
+                        data = str(data)
+        return data
 
     def update_response(self, response, is_stream):
         """
