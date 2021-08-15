@@ -22,3 +22,4 @@ moto; python_version >= '3.5'
 moto==2.1.0; python_version < '3.5'
 tornado
 kafka-python
+pytest-httpserver; python_version >= '3.5'
