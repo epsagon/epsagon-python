@@ -69,6 +69,7 @@ def test_python_wrapper_python_runner_factory_failed(_):
     trace_mock.prepare.assert_called_once()
     trace_mock.send_traces.assert_not_called()
     trace_mock.set_runner.assert_not_called()
+    trace_mock.reset_mock()
 
 
 @mock.patch(
