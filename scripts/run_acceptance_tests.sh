@@ -4,5 +4,5 @@ if [ -z $AWS_ACCESS_KEY_ID ] || [ -z $AWS_SECRET_ACCESS_KEY ]; then
     exit 1
 else
     npm install && export PATH=$(pwd)/node_modules/.bin:$PATH
-    ../acceptance/run.sh $TRAVIS_BUILD_NUMBER $TRAVIS_PYTHON_VERSION
+    ./acceptance/run.sh $TRAVIS_BUILD_NUMBER $TRAVIS_PYTHON_VERSION
 fi
