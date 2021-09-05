@@ -18,7 +18,6 @@ from epsagon.utils import (
 )
 from ..http_filters import ignore_request
 
-
 class DjangoMiddleware(object):
     """
     Represents a Django Middleware for Epsagon instrumentation.
@@ -54,11 +53,13 @@ class DjangoMiddleware(object):
     def __call__(self, request):
         # Link epsagon to the request object for easy-access to epsagon lib
         request.epsagon = epsagon
-
         if epsagon.http_filters.is_ignored_endpoint(request.path):
             return self.get_response(request)
 
-        request_middleware = DjangoRequestMiddleware(request)
+        request_middleware = DjangoRequestMiddleware(
+            request,
+            is_gunicorn_server="gunicorn.socket" in request.environ
+        )
         request_middleware.before_request()
 
         response = self.get_response(request)
@@ -72,10 +73,14 @@ class DjangoRequestMiddleware(object):
     Django middleware for a single request
     """
 
-    def __init__(self, request):
+    def __init__(self, request, is_gunicorn_server=False):
         self.request = request
         self.runner = None
         self.ignored_request = False
+        if is_gunicorn_server:
+            self.should_send_trace = False
+        else:
+            self.should_send_trace = True
 
     def before_request(self):
         """
@@ -131,11 +136,13 @@ class DjangoRequestMiddleware(object):
         Runs after process of response.
         """
         if self.ignored_request:
+            epsagon.trace.trace_factory.pop_trace()
             return
 
         # Ignoring non relevant content types.
         if ignore_request(response.get('Content-Type', '').lower(), ''):
             self.ignored_request = True
+            epsagon.trace.trace_factory.pop_trace()
             return
 
         # Safety in case we run on an old Django version
@@ -143,4 +150,5 @@ class DjangoRequestMiddleware(object):
             return
 
         self.runner.update_response(response)
-        epsagon.trace.trace_factory.send_traces()
+        if self.should_send_trace:
+            epsagon.trace.trace_factory.send_traces()
