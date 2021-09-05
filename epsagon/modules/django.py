@@ -3,8 +3,8 @@ Django patcher module.
 """
 
 from __future__ import absolute_import
-import wrapt
 import traceback
+import wrapt
 from ..utils import print_debug, is_lambda_env
 from ..trace import trace_factory
 try:
