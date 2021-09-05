@@ -79,7 +79,12 @@ def gunicorn_sync_wrapper(wrapped, _instance, args, kwargs):
     if is_lambda_env() or not args or len(args) != 4:
         return wrapped(*args, **kwargs)
 
-    trace = None
+    try:
+        # creates the trace on the current thread
+        trace_factory.switch_to_multiple_traces()
+        trace_factory.get_or_create_trace()
+    except Exception as error: # pylint: disable=broad-except
+        pass
     try:
         return wrapped(*args, **kwargs)
     except Exception as error: # pylint: disable=broad-except

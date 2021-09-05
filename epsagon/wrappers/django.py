@@ -56,10 +56,7 @@ class DjangoMiddleware(object):
         if epsagon.http_filters.is_ignored_endpoint(request.path):
             return self.get_response(request)
 
-        request_middleware = DjangoRequestMiddleware(
-            request,
-            is_gunicorn_server="gunicorn.socket" in request.environ
-        )
+        request_middleware = DjangoRequestMiddleware(request)
         request_middleware.before_request()
 
         response = self.get_response(request)
@@ -73,20 +70,21 @@ class DjangoRequestMiddleware(object):
     Django middleware for a single request
     """
 
-    def __init__(self, request, is_gunicorn_server=False):
+    def __init__(self, request):
         self.request = request
         self.runner = None
         self.ignored_request = False
-        if is_gunicorn_server:
-            self.should_send_trace = False
-        else:
-            self.should_send_trace = True
+        self.should_send_trace = True
 
     def before_request(self):
         """
         Runs before process of response.
         """
-        trace = epsagon.trace.trace_factory.get_or_create_trace()
+        trace = epsagon.trace.trace_factory.get_trace()
+        if not trace:
+            trace = epsagon.trace.trace_factory.get_or_create_trace()
+        else:
+            self.should_send_trace = False
         trace.prepare()
 
         # Ignoring non relevant content types.
