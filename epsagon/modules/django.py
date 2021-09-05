@@ -109,6 +109,11 @@ def patch():
     )
     try:
         wrapt.wrap_function_wrapper(
+            'gunicorn.workers.ggevent',
+            'GeventWorker.handle_request',
+            gunicorn_sync_wrapper
+        )
+        wrapt.wrap_function_wrapper(
             'gunicorn.workers.sync',
             'SyncWorker.handle_request',
             gunicorn_sync_wrapper
