@@ -1853,7 +1853,7 @@ class BotocoreAuroraServerlessEvent(BotocoreEvent):
         Gets the relevant resource name - the managed RDS name
         """
         resource_arn = self.request_data.get(self.RESOURCE_ARN_FIELD, '')
-        return resource_arn.spנlit(':')[-1]
+        return resource_arn.split(':')[-1]
 
 
     def __init__(self, wrapped, instance, args, kwargs, start_time, response,
