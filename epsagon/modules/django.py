@@ -88,7 +88,7 @@ def gunicorn_sync_wrapper(wrapped, _instance, args, kwargs):
     try:
         return wrapped(*args, **kwargs)
     except StopIteration:
-        pass
+        raise
     except Exception as error: # pylint: disable=broad-except
         trace_factory.set_error(error, traceback.format_exc())
         raise error
