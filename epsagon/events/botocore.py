@@ -878,6 +878,69 @@ class BotocoreSESEvent(BotocoreEvent):
             self.resource['metadata']['message_id'] = response['MessageId']
 
 
+class BotocoreSESv2Event(BotocoreEvent):
+    """
+    Represents SESV2 botocore event.
+    """
+    RESOURCE_TYPE = 'sesv2'
+    RESOURCE_TYPE_UPDATE = 'ses'
+
+    def __init__(self, wrapped, instance, args, kwargs, start_time, response,
+                 exception):
+        """
+        Initialize.
+        :param wrapped: wrapt's wrapped
+        :param instance: wrapt's instance
+        :param args: wrapt's args
+        :param kwargs: wrapt's kwargs
+        :param start_time: Start timestamp (epoch)
+        :param response: response data
+        :param exception: Exception (if happened)
+        """
+
+        super(BotocoreSESv2Event, self).__init__(
+            wrapped,
+            instance,
+            args,
+            kwargs,
+            start_time,
+            response,
+            exception
+        )
+
+        _, request_data = args
+
+        if self.resource['operation'] == 'SendEmail':
+            self.resource['metadata']['From_Email_Address'] = \
+                request_data['FromEmailAddress']
+            self.resource['metadata']['From_Email_Address_Identity_Arn'] = \
+                request_data['FromEmailAddressIdentityArn']
+            self.resource['metadata']['destination'] = \
+                request_data['Destination']
+            self.resource['metadata']['subject'] = \
+                request_data['Content']['Simple']['Subject']
+
+            add_data_if_needed(
+                self.resource['metadata'],
+                'body',
+                request_data['Content']['Simple']['Body']
+            )
+
+        self.resource['type'] = self.RESOURCE_TYPE_UPDATE
+
+    def update_response(self, response):
+        """
+        Adds response data to event.
+        :param response: Response from botocore
+        :return: None
+        """
+
+        super(BotocoreSESv2Event, self).update_response(response)
+
+        if self.resource['operation'] == 'SendEmail':
+            self.resource['metadata']['message_id'] = response['MessageId']
+
+
 class BotocoreAthenaEvent(BotocoreEvent):
     """
     Represents Athena botocore event
