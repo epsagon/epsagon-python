@@ -917,16 +917,55 @@ class BotocoreSESv2Event(BotocoreEvent):
                 request_data['FromEmailAddressIdentityArn']
             self.resource['metadata']['destination'] = \
                 request_data['Destination']
-            self.resource['metadata']['subject'] = \
-                request_data['Content']['Simple']['Subject']
+            self.add_subject_and_body(request_data)
 
+        self.resource['type'] = self.RESOURCE_TYPE_UPDATE
+
+    def add_subject_and_body(self, request_data):
+        """
+        Adds subject and body to event.
+        :param request_data: SESV2 request data
+        :return: None
+         """
+
+        if "Simple" in request_data['Content']:
             add_data_if_needed(
                 self.resource['metadata'],
                 'body',
                 request_data['Content']['Simple']['Body']
             )
 
-        self.resource['type'] = self.RESOURCE_TYPE_UPDATE
+            add_data_if_needed(
+                self.resource['metadata'],
+                'subject',
+                request_data['Content']['Simple']['Subject']
+            )
+
+        elif "Raw" in request_data['Content']:
+            add_data_if_needed(
+                self.resource['metadata'],
+                'data',
+                request_data['Content']['Raw']['Data']
+            )
+
+        elif "Template" in request_data['Content']:
+            add_data_if_needed(
+                self.resource['metadata'],
+                'template name',
+                request_data['Content']['Template']['TemplateName']
+            )
+
+            add_data_if_needed(
+                self.resource['metadata'],
+                'template arn',
+                request_data['Content']['Template']['TemplateArn']
+            )
+
+            add_data_if_needed(
+                self.resource['metadata'],
+                'template data',
+                request_data['Content']['Template']['TemplateData']
+            )
 
     def update_response(self, response):
         """
