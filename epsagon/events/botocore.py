@@ -928,7 +928,7 @@ class BotocoreSESv2Event(BotocoreEvent):
         :return: None
          """
 
-        if "Simple" in request_data['Content']:
+        if 'Simple' in request_data['Content']:
             add_data_if_needed(
                 self.resource['metadata'],
                 'body',
@@ -941,14 +941,14 @@ class BotocoreSESv2Event(BotocoreEvent):
                 request_data['Content']['Simple']['Subject']
             )
 
-        elif "Raw" in request_data['Content']:
+        elif 'Raw' in request_data['Content']:
             add_data_if_needed(
                 self.resource['metadata'],
                 'data',
                 request_data['Content']['Raw']['Data']
             )
 
-        elif "Template" in request_data['Content']:
+        elif 'Template' in request_data['Content']:
             add_data_if_needed(
                 self.resource['metadata'],
                 'template name',
