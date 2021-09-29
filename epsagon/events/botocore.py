@@ -878,6 +878,108 @@ class BotocoreSESEvent(BotocoreEvent):
             self.resource['metadata']['message_id'] = response['MessageId']
 
 
+class BotocoreSESv2Event(BotocoreEvent):
+    """
+    Represents SESV2 botocore event.
+    """
+    RESOURCE_TYPE = 'sesv2'
+    RESOURCE_TYPE_UPDATE = 'ses'
+
+    def __init__(self, wrapped, instance, args, kwargs, start_time, response,
+                 exception):
+        """
+        Initialize.
+        :param wrapped: wrapt's wrapped
+        :param instance: wrapt's instance
+        :param args: wrapt's args
+        :param kwargs: wrapt's kwargs
+        :param start_time: Start timestamp (epoch)
+        :param response: response data
+        :param exception: Exception (if happened)
+        """
+
+        super(BotocoreSESv2Event, self).__init__(
+            wrapped,
+            instance,
+            args,
+            kwargs,
+            start_time,
+            response,
+            exception
+        )
+
+        _, request_data = args
+
+        if self.resource['operation'] == 'SendEmail':
+            self.resource['metadata']['From_Email_Address'] = \
+                request_data['FromEmailAddress']
+            self.resource['metadata']['From_Email_Address_Identity_Arn'] = \
+                request_data['FromEmailAddressIdentityArn']
+            self.resource['metadata']['destination'] = \
+                request_data['Destination']
+            self.add_subject_and_body(request_data)
+
+        self.resource['type'] = self.RESOURCE_TYPE_UPDATE
+
+    def add_subject_and_body(self, request_data):
+        """
+        Adds subject and body to event.
+        :param request_data: SESV2 request data
+        :return: None
+         """
+
+        if 'Simple' in request_data['Content']:
+            add_data_if_needed(
+                self.resource['metadata'],
+                'body',
+                request_data['Content']['Simple']['Body']
+            )
+
+            add_data_if_needed(
+                self.resource['metadata'],
+                'subject',
+                request_data['Content']['Simple']['Subject']
+            )
+
+        elif 'Raw' in request_data['Content']:
+            add_data_if_needed(
+                self.resource['metadata'],
+                'data',
+                request_data['Content']['Raw']['Data']
+            )
+
+        elif 'Template' in request_data['Content']:
+            add_data_if_needed(
+                self.resource['metadata'],
+                'template name',
+                request_data['Content']['Template']['TemplateName']
+            )
+
+            add_data_if_needed(
+                self.resource['metadata'],
+                'template arn',
+                request_data['Content']['Template']['TemplateArn']
+            )
+
+            add_data_if_needed(
+                self.resource['metadata'],
+                'template data',
+                request_data['Content']['Template']['TemplateData']
+            )
+
+    def update_response(self, response):
+        """
+        Adds response data to event.
+        :param response: Response from botocore
+        :return: None
+        """
+
+        super(BotocoreSESv2Event, self).update_response(response)
+
+        if self.resource['operation'] == 'SendEmail':
+            self.resource['metadata']['message_id'] = response['MessageId']
+
+
 class BotocoreAthenaEvent(BotocoreEvent):
     """
     Represents Athena botocore event
@@ -1837,6 +1939,95 @@ class BotocoreSecretsManagerEvent(BotocoreEvent):
         self._add_data_to_metadata('Response', response_data)
 
 
+class BotocoreAuroraServerlessEvent(BotocoreEvent):
+    """
+    Represents data API (aurora serverless) botocore event.
+    """
+
+    RESOURCE_TYPE = 'rdsdataservice'
+    RESOURCE_TYPE_UPDATE = 'database'
+    EXECUTE_STATEMENT_OPERATION = 'ExecuteStatement'
+    DATABASE_FIELD = 'database'
+    RESOURCE_ARN_FIELD = 'resourceArn'
+
+    def _get_resource_name(self):
+        """
+        Gets the relevant resource name - the managed RDS name
+        """
+        resource_arn = self.request_data.get(self.RESOURCE_ARN_FIELD, '')
+        return resource_arn.split(':')[-1]
+
+
+    def __init__(self, wrapped, instance, args, kwargs, start_time, response,
+                 exception):
+        """
+        Initialize.
+        :param wrapped: wrapt's wrapped
+        :param instance: wrapt's instance
+        :param args: wrapt's args
+        :param kwargs: wrapt's kwargs
+        :param start_time: Start timestamp (epoch)
+        :param response: response data
+        :param exception: Exception (if happened)
+        """
+        self.OPERATION_TO_FUNC.update({
+            self.EXECUTE_STATEMENT_OPERATION: self.execute_statement_op,
+        })
+
+        self.RESPONSE_TO_FUNC.update({
+            self.EXECUTE_STATEMENT_OPERATION: self.execute_statement_response,
+        })
+        _, request_data = args
+        self.request_data = request_data
+        self.response = response
+
+        super(BotocoreAuroraServerlessEvent, self).__init__(
+            wrapped,
+            instance,
+            args,
+            kwargs,
+            start_time,
+            response,
+            exception
+        )
+        self.resource['name'] = self._get_resource_name()
+        self.resource['type'] = self.RESOURCE_TYPE_UPDATE
+        self.OPERATION_TO_FUNC.get(self.resource['operation'], empty_func)()
+
+    def update_response(self, response):
+        """
+        Adds response data to event.
+        :param response: Response from botocore
+        """
+        super(BotocoreAuroraServerlessEvent, self).update_response(response)
+        self.RESPONSE_TO_FUNC.get(self.resource['operation'], empty_func)()
+
+    def execute_statement_op(self):
+        """
+        Handles execute statement operation.
+        """
+        self.resource['metadata']['database'] = self.request_data.get(
+            self.DATABASE_FIELD
+        )
+        self.resource['metadata']['Secret Arn'] = self.request_data.get(
+            'secretArn'
+        )
+        add_data_if_needed(
+            self.resource['metadata'], 'sql', self.request_data.get('sql')
+        )
+
+    def execute_statement_response(self):
+        """
+        Handles execute statement response.
+        """
+        add_data_if_needed(
+            self.resource['metadata'], 'records', self.response.get('records')
+        )
+        self.resource['metadata']['number of records updated'] = (
+            self.response.get('numberOfRecordsUpdated')
+        )
+
+
 class BotocoreEventFactory(object):
     """
     Factory class, generates botocore event.
@@ -1866,7 +2057,6 @@ class BotocoreEventFactory(object):
             instance_type,
             None
         )
-
         if event_class is not None:
             event = event_class(
                 wrapped,
