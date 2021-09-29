@@ -75,13 +75,23 @@ def update_http_headers(resource_data, response_headers):
     :param response_headers: response headers from HTTP request
     :return: update resource data dict
     """
-    for header_key, header_value in response_headers.items():
-        if header_key.lower() == 'x-amzn-requestid':
-            # This is a request to API Gateway
-            if '.appsync-api.' not in resource_data['metadata']['url']:
-                resource_data['type'] = 'api_gateway'
-            resource_data['metadata']['request_trace_id'] = header_value
-            break
+    lowered_response_headers = \
+        dict((k.lower(), v) for k, v in response_headers.items())
+
+    # 'x-amzn-requestid' is sent for type REST in api gateway
+    # and 'apigw-requestid' is sent in type HTTP for backwards compatibility
+    # we always try to get 'x-amzn-requestid' first
+    request_id = \
+        lowered_response_headers.get(
+            'x-amzn-requestid',
+            lowered_response_headers.get('apigw-requestid')
+        )
+
+    if request_id:
+        # This is a request to API Gateway
+        if '.appsync-api.' not in resource_data['metadata']['url']:
+            resource_data['type'] = 'api_gateway'
+        resource_data['metadata']['request_trace_id'] = request_id
 
     return resource_data
 
@@ -270,8 +280,10 @@ def import_original_module():
 
     try:
         return __import__(module_path), module_path, handler_name
-    except ImportError:
-        raise ImportError('Failed to import module: {}'.format(module_path))
+    except ImportError as ex:
+        raise ImportError(
+            'Failed to import module: {}, Error: {}'.format(module_path, ex)
+        )
 
 
 def collect_container_metadata(metadata):

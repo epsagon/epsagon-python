@@ -14,6 +14,11 @@ COLD_START_TIME = time.time()
 
 DEBUG_MODE = ((os.getenv('EPSAGON_DEBUG') or '').upper() == 'TRUE')
 
+# Indicates whether to skip collection of http client response payload
+SKIP_HTTP_CLIENT_RESPONSE = (
+    os.getenv('EPSAGON_SKIP_HTTP_RESPONSE', 'false').lower() == 'true'
+)
+
 # Customer original handler.
 EPSAGON_HANDLER = 'EPSAGON_HANDLER'
 
@@ -62,6 +67,9 @@ STRONG_KEYS = [
     'aws_account',
     'fragment_seq',
     'labels',
+    'log_group_name',
+    'log_stream_name',
+    'cold_start',
 ]
 
 
