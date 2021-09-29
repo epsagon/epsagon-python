@@ -11,7 +11,7 @@
   "dependencies": {
     "@semantic-release/exec": "^3.3.2",
     "semantic-release": "^17.4.7",
-    "serverless": "^1.44.1",
+    "serverless": "^2.60.0",
     "serverless-python-requirements": "^4.3.0"
   }
 }
