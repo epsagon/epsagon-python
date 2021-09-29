@@ -45,7 +45,7 @@ class CeleryRunner(BaseEvent):
         self.resource['metadata'].update({
             'id': task_id,
             'state': state,
-            'hostname': app_conn.hostname,
+            'hostname': app_conn.hostname or 'localhost',
             'virtual_host': app_conn.virtual_host,
             'driver': app_conn.transport.driver_type,
         })

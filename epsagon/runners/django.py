@@ -59,19 +59,25 @@ class DjangoRunner(BaseEvent):
         :param response: WSGI Response
         :return: None
         """
-        add_data_if_needed(
-            self.resource['metadata'],
-            'Response Data',
-            response.content
-        )
+        if not response:
+            return
 
-        add_data_if_needed(
-            self.resource['metadata'],
-            'Response Headers',
-            dict(response.items())
-        )
+        if hasattr(response, 'content'):
+            add_data_if_needed(
+                self.resource['metadata'],
+                'Response Data',
+                response.content
+            )
 
-        self.resource['metadata']['status_code'] = response.status_code
+        if hasattr(response, 'items'):
+            add_data_if_needed(
+                self.resource['metadata'],
+                'Response Headers',
+                dict(response.items())
+            )
 
-        if response.status_code >= 500:
-            self.set_error()
+        if hasattr(response, 'status_code'):
+            self.resource['metadata']['status_code'] = response.status_code
+
+            if response.status_code >= 500:
+                self.set_error()

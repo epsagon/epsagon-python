@@ -50,6 +50,7 @@ The simplest way to get started is to run your python command with the following
 ```sh
 export EPSAGON_TOKEN=<epsagon-token>
 export EPSAGON_APP_NAME=<app-name-stage>
+export EPSAGON_METADATA=FALSE
 export AUTOWRAPT_BOOTSTRAP=epsagon
 <python command>
 ```
@@ -58,6 +59,7 @@ For example:
 ```sh
 export EPSAGON_TOKEN=<your-token>
 export EPSAGON_APP_NAME=django-prod
+export EPSAGON_METADATA=FALSE
 export AUTOWRAPT_BOOTSTRAP=epsagon
 python app.py
 ```
@@ -474,9 +476,11 @@ Advanced options can be configured as a parameter to the init() method or as env
 |-                       |EPSAGON_SEND_TIMEOUT_SEC       |Float  |`1.0`        |The timeout duration in seconds to send the traces to the trace collector          |
 |-                       |EPSAGON_DISABLE_LOGGING_ERRORS |Boolean|`False`      |Disable the automatic capture of error messages into `logging`                     |
 |-                       |EPSAGON_IGNORE_FLASK_RESPONSE  |Boolean|`False`      |Disable the automatic capture of Flask response data                     |
+|-                       |EPSAGON_SKIP_HTTP_RESPONSE     |Boolean|`False`      |Disable the automatic capture of http client response data                     |
 |-                       |DISABLE_EPSAGON                |Boolean|`False`      |A flag to completely disable Epsagon (can be used for tests or locally)            |
 |-                       |DISABLE_EPSAGON_PATCH          |Boolean|`False`      |Disable the library patching (instrumentation)                                     |
 |-                       |EPSAGON_LAMBDA_TIMEOUT_THRESHOLD_MS          |Integer|`200`      |The threshold in millieseconds to send the trace before a Lambda timeout occurs                                     |
+|-                       |EPSAGON_PAYLOADS_TO_IGNORE     |List   |-            |Array of dictionaries to not instrument. Example: `'[{"source": "serverless-plugin-warmup"}]'` |
 
 
 ## Getting Help

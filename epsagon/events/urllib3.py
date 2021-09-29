@@ -19,7 +19,12 @@ from ..http_filters import (
     is_payload_collection_blacklisted
 )
 from ..utils import update_http_headers, normalize_http_url
-from ..constants import HTTP_ERR_CODE, EPSAGON_MARKER, EPSAGON_HEADER
+from ..constants import (
+    HTTP_ERR_CODE,
+    EPSAGON_MARKER,
+    EPSAGON_HEADER,
+    SKIP_HTTP_CLIENT_RESPONSE,
+)
 
 
 class Urllib3Event(BaseEvent):
@@ -107,22 +112,27 @@ class Urllib3Event(BaseEvent):
         self.resource['metadata']['response_body'] = None
         full_url = self.resource['metadata']['url']
 
-        if not is_payload_collection_blacklisted(full_url):
+        if (
+                not is_payload_collection_blacklisted(full_url) and
+                not trace_factory.metadata_only
+        ):
             add_data_if_needed(
                 self.resource['metadata'],
                 'response_headers',
                 headers
             )
-            response_body = response.peek()
-            if isinstance(response_body, bytes):
-                try:
-                    response_body = response_body.decode('utf-8')
-                except UnicodeDecodeError:
-                    response_body = str(response_body)
-            add_data_if_needed(
-                self.resource['metadata'],
-                'response_body',
-                response_body)
+            if not SKIP_HTTP_CLIENT_RESPONSE:
+                response_body = getattr(response, 'peek', None)
+                if isinstance(response_body, bytes):
+                    try:
+                        response_body = response_body.decode('utf-8')
+                    except UnicodeDecodeError:
+                        response_body = str(response_body)
+                add_data_if_needed(
+                    self.resource['metadata'],
+                    'response_body',
+                    response_body
+                )
 
         # Detect errors based on status code
         if response.status >= HTTP_ERR_CODE:

@@ -1,3 +1,4 @@
+import os
 import json
 import mock
 import pytest
@@ -81,7 +82,51 @@ def test_lambda_wrapper_sanity(
     trace_mock.add_exception.assert_not_called()
 
     assert not epsagon.constants.COLD_START
+    assert runner.resource['metadata']['cold_start'] == True
     assert runner.resource['metadata']['return_value'] == retval
+
+
+@mock.patch.object(LambdaRunner, 'set_exception')
+@mock.patch(
+    'epsagon.trace.trace_factory.get_trace',
+    side_effect=lambda: trace_mock
+)
+@mock.patch(
+    'epsagon.trace.trace_factory.get_or_create_trace',
+    side_effect=lambda: trace_mock
+)
+@mock.patch(
+    'epsagon.triggers.aws_lambda.LambdaTriggerFactory.factory',
+    side_effect=['trigger']
+)
+def test_lambda_wrapper_provisioned_concurrency_sanity(
+        trigger_factory_mock,
+        _,
+        __,
+        set_exception_mock
+):
+    retval = 'success'
+
+    @epsagon.wrappers.aws_lambda.lambda_wrapper
+    def wrapped_lambda(event, context):
+        return 'success'
+
+    os.environ['AWS_LAMBDA_INITIALIZATION_TYPE'] = 'provisioned-concurrency'
+    assert wrapped_lambda('a', CONTEXT_STUB) == 'success'
+    trace_mock.prepare.assert_called()
+    runner = _get_runner_event(trace_mock)
+
+    trigger_factory_mock.assert_called()
+    set_exception_mock.assert_not_called()
+
+    trace_mock.set_timeout_handler.assert_called()
+
+    trace_mock.send_traces.assert_called()
+    trace_mock.add_exception.assert_not_called()
+
+    assert not epsagon.constants.COLD_START
+    assert runner.resource['metadata']['cold_start'] == False
+    os.environ.pop('AWS_LAMBDA_INITIALIZATION_TYPE')
 
 
 @mock.patch(
@@ -200,7 +245,6 @@ def test_lambda_wrapper_none_context(wrap_python_function_wrapper, _):
 
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter('always')
-        lambda_runner_mock = mock.MagicMock(set_exception=mock.MagicMock())
         with mock.patch(
                 'epsagon.runners.aws_lambda.LambdaRunner',
                 side_effect=TypeError()
@@ -767,3 +811,52 @@ def test_cold_start_duration(_, __):
     assert not epsagon.constants.COLD_START
     runner = _get_runner_event(trace_mock)
     assert runner.resource['metadata']['aws.lambda.cold_start_duration'] == 1.5
+
+@mock.patch(
+    "epsagon.trace.trace_factory.get_or_create_trace", side_effect=lambda: trace_mock
+)
+@mock.patch.dict('os.environ',
+                 {'EPSAGON_PAYLOADS_TO_IGNORE': '[{"source": "serverless-plugin-warmup"}]'}
+                 )
+def test_ignore_payload_one(_):
+    """Verify one payload to ignore is not instrumented"""
+
+    @epsagon.wrappers.aws_lambda.lambda_wrapper
+    def wrapped_lambda(_event, _context):
+        return ""
+
+    lambda_runner_mock = mock.MagicMock(set_exception=mock.MagicMock())
+    with mock.patch(
+        "epsagon.runners.aws_lambda.LambdaRunner", side_effect=[lambda_runner_mock]
+    ):
+        wrapped_lambda({"source": "serverless-plugin-warmup"}, CONTEXT_STUB)
+
+    trace_mock.prepare.assert_called()
+    trace_mock.add_event.assert_not_called()
+    trace_mock.send_traces.assert_not_called()
+    trace_mock.add_exception.assert_not_called()
+
+@mock.patch(
+    "epsagon.trace.trace_factory.get_or_create_trace", side_effect=lambda: trace_mock
+)
+@mock.patch.dict('os.environ',
+                 {'EPSAGON_PAYLOADS_TO_IGNORE': '[{"source": "serverless-plugin-warmup"},{"custom": "payload"}]'}
+                 )
+def test_ignore_payload_many(_):
+    """Verify many payloads to ignore are not instrumented"""
+
+    @epsagon.wrappers.aws_lambda.lambda_wrapper
+    def wrapped_lambda(_event, _context):
+        return ""
+
+    lambda_runner_mock = mock.MagicMock(set_exception=mock.MagicMock())
+    with mock.patch(
+        "epsagon.runners.aws_lambda.LambdaRunner", side_effect=[lambda_runner_mock]
+    ):
+        wrapped_lambda({'source': 'serverless-plugin-warmup'}, CONTEXT_STUB)
+        wrapped_lambda({'custom': 'payload'}, CONTEXT_STUB)
+
+    trace_mock.prepare.assert_called()
+    trace_mock.add_event.assert_not_called()
+    trace_mock.send_traces.assert_not_called()
+    trace_mock.add_exception.assert_not_called()

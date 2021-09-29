@@ -8,7 +8,6 @@ import json.decoder
 import asyncio
 
 import warnings
-from fastapi.routing import APIRoute
 from fastapi import Request, Response
 from starlette.requests import ClientDisconnect
 from starlette.concurrency import run_in_threadpool
@@ -21,7 +20,7 @@ from epsagon.utils import (
     collect_container_metadata,
     get_traceback_data_from_exception
 )
-from ..http_filters import ignore_request
+from ..http_filters import ignore_request, is_ignored_endpoint
 from ..utils import is_lambda_env, print_debug
 
 DEFAULT_SUCCESS_STATUS_CODE = 200
@@ -176,11 +175,16 @@ def _fastapi_handler(
     """
     has_setup_succeeded = False
     should_ignore_request = False
+
     try:
         epsagon_scope, trace = _setup_handler(request)
         if epsagon_scope and trace:
             has_setup_succeeded = True
-        if ignore_request('', request.url.path.lower()):
+        if (
+                ignore_request('', request.url.path.lower())
+                or
+                is_ignored_endpoint(request.url.path.lower())
+        ):
             should_ignore_request = True
             epsagon_scope[SCOPE_IGNORE_REQUEST] = True
 
@@ -248,21 +252,27 @@ def _wrap_handler(dependant, status_code):
     dependant.call = wrapped_handler
 
 
-class TracingAPIRoute(APIRoute):
+def route_class_wrapper(wrapped, instance, args, kwargs):
     """
-    Custom tracing route - traces each route request & response
+    Route class wrapper - traces each route request & response.
+    :param wrapped: wrapt's wrapped
+    :param instance: wrapt's instance
+    :param args: wrapt's args
+    :param kwargs: wrapt's kwargs
     """
+    result = wrapped(*args, **kwargs)
+    # Skip on Lambda environment since it's not relevant and might be duplicate
+    if not is_lambda_env() and instance:
+        try:
+            if instance.dependant and instance.dependant.call:
+                _wrap_handler(
+                    instance.dependant,
+                    kwargs.get('status_code', DEFAULT_SUCCESS_STATUS_CODE)
+                )
+        except Exception: # pylint: disable=broad-except
+            pass
 
-    def __init__(self, *args, **kwargs):
-        """
-        wraps the route endpoint with Epsagon wrapper
-        """
-        super().__init__(*args, **kwargs)
-        if self.dependant and self.dependant.call:
-            _wrap_handler(
-                self.dependant,
-                kwargs.pop('status_code', DEFAULT_SUCCESS_STATUS_CODE)
-            )
+    return result
 
 
 def exception_handler_wrapper(original_handler):

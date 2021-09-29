@@ -878,6 +878,108 @@ class BotocoreSESEvent(BotocoreEvent):
             self.resource['metadata']['message_id'] = response['MessageId']
 
 
+class BotocoreSESv2Event(BotocoreEvent):
+    """
+    Represents SESV2 botocore event.
+    """
+    RESOURCE_TYPE = 'sesv2'
+    RESOURCE_TYPE_UPDATE = 'ses'
+
+    def __init__(self, wrapped, instance, args, kwargs, start_time, response,
+                 exception):
+        """
+        Initialize.
+        :param wrapped: wrapt's wrapped
+        :param instance: wrapt's instance
+        :param args: wrapt's args
+        :param kwargs: wrapt's kwargs
+        :param start_time: Start timestamp (epoch)
+        :param response: response data
+        :param exception: Exception (if happened)
+        """
+
+        super(BotocoreSESv2Event, self).__init__(
+            wrapped,
+            instance,
+            args,
+            kwargs,
+            start_time,
+            response,
+            exception
+        )
+
+        _, request_data = args
+
+        if self.resource['operation'] == 'SendEmail':
+            self.resource['metadata']['From_Email_Address'] = \
+                request_data['FromEmailAddress']
+            self.resource['metadata']['From_Email_Address_Identity_Arn'] = \
+                request_data['FromEmailAddressIdentityArn']
+            self.resource['metadata']['destination'] = \
+                request_data['Destination']
+            self.add_subject_and_body(request_data)
+
+        self.resource['type'] = self.RESOURCE_TYPE_UPDATE
+
+    def add_subject_and_body(self, request_data):
+        """
+        Adds subject and body to event.
+        :param request_data: SESV2 request data
+        :return: None
+         """
+
+        if 'Simple' in request_data['Content']:
+            add_data_if_needed(
+                self.resource['metadata'],
+                'body',
+                request_data['Content']['Simple']['Body']
+            )
+
+            add_data_if_needed(
+                self.resource['metadata'],
+                'subject',
+                request_data['Content']['Simple']['Subject']
+            )
+
+        elif 'Raw' in request_data['Content']:
+            add_data_if_needed(
+                self.resource['metadata'],
+                'data',
+                request_data['Content']['Raw']['Data']
+            )
+
+        elif 'Template' in request_data['Content']:
+            add_data_if_needed(
+                self.resource['metadata'],
+                'template name',
+                request_data['Content']['Template']['TemplateName']
+            )
+
+            add_data_if_needed(
+                self.resource['metadata'],
+                'template arn',
+                request_data['Content']['Template']['TemplateArn']
+            )
+
+            add_data_if_needed(
+                self.resource['metadata'],
+                'template data',
+                request_data['Content']['Template']['TemplateData']
+            )
+
+    def update_response(self, response):
+        """
+        Adds response data to event.
+        :param response: Response from botocore
+        :return: None
+        """
+
+        super(BotocoreSESv2Event, self).update_response(response)
+
+        if self.resource['operation'] == 'SendEmail':
+            self.resource['metadata']['message_id'] = response['MessageId']
+
+
 class BotocoreAthenaEvent(BotocoreEvent):
     """
     Represents Athena botocore event
@@ -1081,6 +1183,7 @@ class BotocoreCognitoEvent(BotocoreEvent):
     RESOURCE_TYPE = 'cognitoidentityprovider'
     RESOURCE_TYPE_UPDATE = 'cognito-idp'
 
+
     def __init__(self, wrapped, instance, args, kwargs, start_time, response,
                  exception):
         self.RESPONSE_TO_FUNC.update({
@@ -1089,12 +1192,15 @@ class BotocoreCognitoEvent(BotocoreEvent):
         })
 
         self.OPERATION_TO_FUNC.update({
-            'AdminCreateUser': self.admin_create_user_op,
-            'AdminListGroupsForUser': self.admin_list_user_group_op,
+            'AdminCreateUser': self.general_user_pool_op,
+            'AdminInitiateAuth': self.general_user_pool_op,
+            'AdminListGroupsForUser': self.general_user_pool_op,
             'AdminSetUserPassword': self.admin_set_pass_op,
-            'DescribeUserPool': self.describe_user_pool_op,
-            'ListUsers': self.list_users_op,
-            'UpdateUserPool': self.update_pool_op,
+            'AdminRespondToAuthChallenge': self.general_user_pool_op,
+            'DescribeUserPool': self.general_user_pool_op,
+            'ListUsers': self.general_user_pool_op,
+            'UpdateUserPool': self.general_user_pool_op,
+            'SignUp': self.general_user_pool_client_op,
         })
 
         super(BotocoreCognitoEvent, self).__init__(
@@ -1124,21 +1230,6 @@ class BotocoreCognitoEvent(BotocoreEvent):
             response
         )
 
-    def admin_create_user_op(self, args, _):
-        """
-        Process AdminCreateUser operation
-        :param args: command arguments
-        :param _: unused, kwargs
-        :return: None
-        """
-        _, request_args = args
-        self.resource['name'] = request_args['UserPoolId']
-        add_data_if_needed(
-            self.resource['metadata'],
-            'request',
-            request_args
-        )
-
     def admin_create_user_res(self, response):
         """
         Process AdminCreateUser response
@@ -1146,17 +1237,6 @@ class BotocoreCognitoEvent(BotocoreEvent):
         :return: None
         """
         self.resource['metadata']['user'] = response['User']
-
-    def admin_list_user_group_op(self, args, _):
-        """
-        Process AdminListGroupsForUser operation
-        :param args: command arguments
-        :param _: unused, kwargs
-        :return: None
-        """
-        _, request_args = args
-        self.resource['name'] = request_args['UserPoolId']
-        self.resource['metadata']['username'] = request_args['Username']
 
     def admin_list_user_group_res(self, response):
         """
@@ -1185,40 +1265,26 @@ class BotocoreCognitoEvent(BotocoreEvent):
             False
         )
 
-    def describe_user_pool_op(self, args, _):
+    def general_user_pool_op(self, args, _):
         """
-        Process DescribeUserPool operation
+        Process any User Pool operation
         :param args: command arguments
         :param _: unused, kwargs
         :return: None
         """
         _, request_args = args
-        self.resource['name'] = request_args['UserPoolId']
+        self.resource['name'] = request_args.get('UserPoolId')
+        self.resource['metadata'].update(request_args)
 
-    def list_users_op(self, args, _):
+    def general_user_pool_client_op(self, args, _):
         """
-        Process ListUsers operation
+        Process any User Pool App Client operation
         :param args: command arguments
         :param _: unused, kwargs
         :return: None
         """
         _, request_args = args
-        self.resource['name'] = request_args['UserPoolId']
-        add_data_if_needed(
-            self.resource['metadata'],
-            'request',
-            request_args
-        )
-
-    def update_pool_op(self, args, _):
-        """
-        Process UpdateUserPool operation
-        :param args: command arguments
-        :param _: unused, kwargs
-        :return: None
-        """
-        _, request_args = args
-        self.resource['name'] = request_args['UserPoolId']
+        self.resource['name'] = request_args.get('ClientId')
         self.resource['metadata'].update(request_args)
 
 
@@ -1722,6 +1788,246 @@ class BotocoreEmr(BotocoreEvent):
         self.resource['metadata']['Job Flow ID'] = self.response['JobFlowId']
 
 
+class BotocoreSecretsManagerEvent(BotocoreEvent):
+    """
+    Represents secrets manager botocore event.
+    """
+
+    RESOURCE_TYPE = 'secretsmanager'
+    CREATE_SECRET_OPERATION = 'CreateSecret'
+    DEFAULT_SECRET_NAME = 'N/A'
+    SECRET_VALUE_KEYS = (
+        'SecretBinary',
+        'SecretString',
+    )
+    OBFUSCATED_DATA = '*******'
+
+    def _get_resource_name(self):
+        """
+        Gets the relevant resource name, None if not found.
+        """
+        if self.resource['operation'] == self.CREATE_SECRET_OPERATION:
+            return self.request_data.get('Name')
+
+        secret_id = self.request_data.get('SecretId')
+        if secret_id:
+            # secret id can be the arn or the friendly resource name
+            if not secret_id.startswith('arn:'):
+                return secret_id
+
+        return self.response.get('Name')
+
+    def __init__(self, wrapped, instance, args, kwargs, start_time, response,
+                 exception):
+        """
+        Initialize.
+        :param wrapped: wrapt's wrapped
+        :param instance: wrapt's instance
+        :param args: wrapt's args
+        :param kwargs: wrapt's kwargs
+        :param start_time: Start timestamp (epoch)
+        :param response: response data
+        :param exception: Exception (if happened)
+        """
+        self.OPERATION_TO_FUNC.update({
+            self.CREATE_SECRET_OPERATION: self.create_secret_op,
+            'GetSecretValue': self.get_secret_value_op,
+        })
+
+        self.RESPONSE_TO_FUNC.update({
+            self.CREATE_SECRET_OPERATION: self.create_secret_response,
+            'GetSecretValue': self.get_secret_value_response,
+        })
+        _, request_data = args
+        self.request_data = request_data
+        self.response = response
+
+        super(BotocoreSecretsManagerEvent, self).__init__(
+            wrapped,
+            instance,
+            args,
+            kwargs,
+            start_time,
+            response,
+            exception
+        )
+        resource_name = self._get_resource_name()
+        self.resource['name'] = (
+            resource_name
+            if resource_name is not None
+            else self.DEFAULT_SECRET_NAME
+        )
+        self.OPERATION_TO_FUNC.get(self.resource['operation'], empty_func)()
+
+    def update_response(self, response):
+        """
+        Adds response data to event.
+        :param response: Response from botocore
+        """
+        super(BotocoreSecretsManagerEvent, self).update_response(response)
+        self.RESPONSE_TO_FUNC.get(self.resource['operation'], empty_func)()
+
+    def _obfuscate_secret_values(self, data):
+        """
+        Changes the given data dict so the secret values are obfuscated.
+        """
+        for secret_value_key in self.SECRET_VALUE_KEYS:
+            if secret_value_key in data:
+                try:
+                    secret_value = data[secret_value_key]
+                    if isinstance(secret_value, str):
+                        data[secret_value_key] = (
+                            '%s%s' % (secret_value[0], self.OBFUSCATED_DATA)
+                        )
+                    elif isinstance(secret_value, (bytes, bytearray)):
+                        data[secret_value_key] = (
+                            '%s%s' % (
+                                chr(secret_value[0]), self.OBFUSCATED_DATA
+                            )
+                        )
+                    else:
+                        data[secret_value_key] = (
+                            '%s%s' % (
+                                str(secret_value[0]), self.OBFUSCATED_DATA
+                            )
+                        )
+                except Exception: # pylint: disable=broad-except
+                    data[secret_value_key] = self.OBFUSCATED_DATA
+
+    def _add_data_to_metadata(self, key, data):
+        """
+        Obfuscating given data and adding the given data to metadata with the
+        given key.
+        """
+        self._obfuscate_secret_values(data)
+        self.resource['metadata'][key] = data
+
+    def create_secret_op(self):
+        """
+        Handles create secret operation.
+        """
+        if trace_factory.metadata_only or not self.request_data:
+            return
+        request_data = self.request_data.copy()
+        self._add_data_to_metadata('Parameters', request_data)
+
+    def create_secret_response(self):
+        """
+        Handles create secret response.
+        """
+        if self.response:
+            self.resource['metadata']['Response'] = self.response
+
+    def get_secret_value_op(self):
+        """
+        Handles get secret value operation.
+        """
+        add_data_if_needed(
+            self.resource['metadata'], 'Parameters', self.request_data
+        )
+
+    def get_secret_value_response(self):
+        """
+        Handles get secret value response.
+        """
+        if trace_factory.metadata_only or not self.response:
+            return
+        response_data = self.response.copy()
+        created_date = response_data.get('CreatedDate')
+        if created_date:
+            response_data['CreatedDate'] = created_date.strftime('%s')
+        self._add_data_to_metadata('Response', response_data)
+
+
+class BotocoreAuroraServerlessEvent(BotocoreEvent):
+    """
+    Represents data API (aurora serverless) botocore event.
+    """
+
+    RESOURCE_TYPE = 'rdsdataservice'
+    RESOURCE_TYPE_UPDATE = 'database'
+    EXECUTE_STATEMENT_OPERATION = 'ExecuteStatement'
+    DATABASE_FIELD = 'database'
+    RESOURCE_ARN_FIELD = 'resourceArn'
+
+    def _get_resource_name(self):
+        """
+        Gets the relevant resource name - the managed RDS name
+        """
+        resource_arn = self.request_data.get(self.RESOURCE_ARN_FIELD, '')
+        return resource_arn.split(':')[-1]
+
+
+    def __init__(self, wrapped, instance, args, kwargs, start_time, response,
+                 exception):
+        """
+        Initialize.
+        :param wrapped: wrapt's wrapped
+        :param instance: wrapt's instance
+        :param args: wrapt's args
+        :param kwargs: wrapt's kwargs
+        :param start_time: Start timestamp (epoch)
+        :param response: response data
+        :param exception: Exception (if happened)
+        """
+        self.OPERATION_TO_FUNC.update({
+            self.EXECUTE_STATEMENT_OPERATION: self.execute_statement_op,
+        })
+
+        self.RESPONSE_TO_FUNC.update({
+            self.EXECUTE_STATEMENT_OPERATION: self.execute_statement_response,
+        })
+        _, request_data = args
+        self.request_data = request_data
+        self.response = response
+
+        super(BotocoreAuroraServerlessEvent, self).__init__(
+            wrapped,
+            instance,
+            args,
+            kwargs,
+            start_time,
+            response,
+            exception
+        )
+        self.resource['name'] = self._get_resource_name()
+        self.resource['type'] = self.RESOURCE_TYPE_UPDATE
+        self.OPERATION_TO_FUNC.get(self.resource['operation'], empty_func)()
+
+    def update_response(self, response):
+        """
+        Adds response data to event.
+        :param response: Response from botocore
+        """
+        super(BotocoreAuroraServerlessEvent, self).update_response(response)
+        self.RESPONSE_TO_FUNC.get(self.resource['operation'], empty_func)()
+
+    def execute_statement_op(self):
+        """
+        Handles execute statement operation.
+        """
+        self.resource['metadata']['database'] = self.request_data.get(
+            self.DATABASE_FIELD
+        )
+        self.resource['metadata']['Secret Arn'] = self.request_data.get(
+            'secretArn'
+        )
+        add_data_if_needed(
+            self.resource['metadata'], 'sql', self.request_data.get('sql')
+        )
+
+    def execute_statement_response(self):
+        """
+        Handles execute statement response.
+        """
+        add_data_if_needed(
+            self.resource['metadata'], 'records', self.response.get('records')
+        )
+        self.resource['metadata']['number of records updated'] = (
+            self.response.get('numberOfRecordsUpdated')
+        )
+
+
 class BotocoreEventFactory(object):
     """
     Factory class, generates botocore event.
@@ -1751,7 +2057,6 @@ class BotocoreEventFactory(object):
             instance_type,
             None
         )
-
         if event_class is not None:
             event = event_class(
                 wrapped,
