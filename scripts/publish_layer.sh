@@ -10,7 +10,7 @@ for region in "${regions[@]}"
 do
     echo ${region}
     aws s3 cp epsagon-python-layer.zip s3://epsagon-layers-${region}/
-    LAYER_VERSION=$(aws lambda publish-layer-version --layer-name epsagon-python-layer --description "Epsagon Python layer that includes pre-installed packages to get up and running with monitoring and distributed tracing" --content S3Bucket=epsagon-layers-${region},S3Key=epsagon-python-layer.zip --compatible-runtimes python3.8 python3.7 python3.6 python2.7 --license-info MIT --region ${region} | jq '.Version')
+    LAYER_VERSION=$(aws lambda publish-layer-version --layer-name epsagon-python-layer --description "Epsagon Python layer that includes pre-installed packages to get up and running with monitoring and distributed tracing" --content S3Bucket=epsagon-layers-${region},S3Key=epsagon-python-layer.zip --compatible-runtimes python3.9 python3.8 python3.7 python3.6 python2.7 --license-info MIT --region ${region} | jq '.Version')
     aws lambda add-layer-version-permission --layer-name epsagon-python-layer --version-number ${LAYER_VERSION} --statement-id sid1 --action lambda:GetLayerVersion --principal \* --region ${region}
 done
 
