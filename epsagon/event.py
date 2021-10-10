@@ -104,10 +104,10 @@ class BaseEvent(object):
         Safely copies user data in order to be able to send it in the trace.
         Converts any tuple keys to str (required for json.dumps).
         """
-        if not data or not isinstance(data, (list, dict)):
+        if not data or not isinstance(data, (list, tuple, dict)):
             return data
 
-        if isinstance(data, list):
+        if isinstance(data, (list, tuple)):
             return [
                 self._copy_user_data_safely(item) for item in data
             ]
