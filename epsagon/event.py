@@ -116,13 +116,13 @@ class BaseEvent(object):
         copied_dict = data.copy()
         for key in data:
             value = self._copy_user_data_safely(data[key])
-            if type(key) not in (
+            if not isinstance(key, (
                     str,
                     int,
                     float,
                     bool,
                     None,
-            ): # the only supported keys
+            )): # the only supported keys
                 copied_dict.pop(key)
                 copied_dict[str(key)] = value
 
