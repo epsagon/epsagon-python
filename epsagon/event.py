@@ -149,7 +149,9 @@ class BaseEvent(object):
         else:
             self.exception['type'] = 'Unknown'
         self.exception['message'] = str(exception)
-        self.exception['traceback'] = self._copy_user_data_safely(traceback_data)
+        self.exception['traceback'] = self._copy_user_data_safely(
+            traceback_data
+        )
         self.exception['time'] = time.time()
 
         # Adding python frames (input data of functions in stack) in python 3.
