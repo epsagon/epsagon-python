@@ -98,6 +98,35 @@ class BaseEvent(object):
         if self.error_code != ErrorCode.EXCEPTION:
             self.error_code = ErrorCode.ERROR
 
+    def _copy_user_data_safely(self, data):
+        # pylint: disable=no-self-use
+        """
+        Safely copies user data in order to be able to send it in the trace.
+        Converts any tuple keys to str (required for json.dumps).
+        """
+        if not data or not isinstance(data, (list, tuple, dict)):
+            return data
+
+        if isinstance(data, (list, tuple)):
+            return [
+                self._copy_user_data_safely(item) for item in data
+            ]
+
+        # data is a dict
+        copied_dict = data.copy()
+        for key in data:
+            value = self._copy_user_data_safely(data[key])
+            if key is None or not isinstance(key, (
+                    str,
+                    int,
+                    float,
+                    bool,
+            )): # the only supported keys
+                copied_dict.pop(key)
+                copied_dict[str(key)] = value
+
+        return copied_dict
+
     def set_exception(
             self,
             exception,
@@ -119,7 +148,9 @@ class BaseEvent(object):
         else:
             self.exception['type'] = 'Unknown'
         self.exception['message'] = str(exception)
-        self.exception['traceback'] = traceback_data
+        self.exception['traceback'] = self._copy_user_data_safely(
+            traceback_data
+        )
         self.exception['time'] = time.time()
 
         # Adding python frames (input data of functions in stack) in python 3.
