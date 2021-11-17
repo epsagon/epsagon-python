@@ -1,12 +1,11 @@
 import time
-from pytest_httpserver import HTTPServer
 import pytest
 import urllib3
 from epsagon.trace_transports import HTTPTransport
 from epsagon.trace import (trace_factory)
 
 
-def test_sanity(httpserver: HTTPServer):
+def test_sanity(httpserver):
     collector_url = '/collector'
     httpserver.expect_request(collector_url).respond_with_data("success")
     http_transport = HTTPTransport(httpserver.url_for(collector_url), 'token')
