@@ -1,16 +1,18 @@
 import time
 import pytest
+from pytest_httpserver import HTTPServer
 import urllib3
 from epsagon.trace_transports import HTTPTransport
 from epsagon.trace import (trace_factory)
 
 
-def test_sanity(httpserver):
-    collector_url = '/collector'
-    httpserver.expect_request(collector_url).respond_with_data("success")
-    http_transport = HTTPTransport(httpserver.url_for(collector_url), 'token')
-    trace = trace_factory.get_or_create_trace()
-    http_transport.send(trace)
+def test_sanity():
+    with HTTPServer() as httpserver:
+        collector_url = '/collector'
+        httpserver.expect_request(collector_url).respond_with_data("success")
+        http_transport = HTTPTransport(httpserver.url_for(collector_url), 'token')
+        trace = trace_factory.get_or_create_trace()
+        http_transport.send(trace)
 
 
 def test_timeout():
