@@ -5,7 +5,7 @@ from epsagon.trace_transports import HTTPTransport
 from epsagon.trace import (trace_factory)
 
 
-def test_sanity(httpserver):
+def test_httptransport_sanity(httpserver):
     collector_url = '/collector'
     httpserver.expect_request(collector_url).respond_with_data("success")
     http_transport = HTTPTransport(httpserver.url_for(collector_url), 'token')
@@ -13,7 +13,7 @@ def test_sanity(httpserver):
     http_transport.send(trace)
 
 
-def test_timeout():
+def test_httptransport_timeout():
     start_time = time.time()
     # non-routable IP address, will result in a timeout
     http_transport = HTTPTransport('http://10.255.255.1', 'token')
