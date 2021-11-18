@@ -56,5 +56,6 @@ class HTTPTransport(object):
             'POST',
             self.dest,
             body=to_json(trace.to_dict()),
-            timeout=self.timeout
+            timeout=self.timeout,
+            retries=False
         )

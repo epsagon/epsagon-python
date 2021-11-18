@@ -582,6 +582,7 @@ def test_send_traces_sanity(wrapped_post):
         'collector',
         body=json.dumps(trace.to_dict()),
         timeout=epsagon.constants.SEND_TIMEOUT,
+        retries=False,
     )
 
 
@@ -596,6 +597,7 @@ def test_send_traces_unicode(wrapped_post):
         'collector',
         body=json.dumps(trace.to_dict(), ensure_ascii=True),
         timeout=epsagon.constants.SEND_TIMEOUT,
+        retries=False,
     )
 
 
@@ -628,6 +630,7 @@ def test_send_big_trace(wrapped_post):
         'collector',
         body=json.dumps(trace.to_dict()),
         timeout=epsagon.constants.SEND_TIMEOUT,
+        retries=False,
     )
 
 
@@ -655,6 +658,7 @@ def test_strong_keys_not_trimmed(wrapped_post):
         'collector',
         body=json.dumps(trace.to_dict()),
         timeout=epsagon.constants.SEND_TIMEOUT,
+        retries=False,
     )
 
 
@@ -677,6 +681,7 @@ def test_send_invalid_return_value(wrapped_post):
         'collector',
         body=json.dumps(trace.to_dict()),
         timeout=epsagon.constants.SEND_TIMEOUT,
+        retries=False,
     )
 
 def _assert_key_not_exist(data, ignored_key):
@@ -870,6 +875,7 @@ def test_whitelist_full_flow(wrapped_post):
         'collector',
         body=json.dumps(trace.to_dict()),
         timeout=epsagon.constants.SEND_TIMEOUT,
+        retries=False,
     )
 
     os.environ.pop('EPSAGON_ALLOWED_KEYS')
@@ -895,6 +901,7 @@ def test_metadata_field_too_big(wrapped_post):
         'collector',
         body=json.dumps(trace.to_dict()),
         timeout=epsagon.constants.SEND_TIMEOUT,
+        retries=False,
     )
 
 
@@ -908,6 +915,7 @@ def test_send_traces_timeout(wrapped_post):
         'collector',
         body=json.dumps(trace.to_dict()),
         timeout=epsagon.constants.SEND_TIMEOUT,
+        retries=False,
     )
 
 
@@ -921,6 +929,7 @@ def test_send_traces_post_error(wrapped_post):
         'collector',
         body=json.dumps(trace.to_dict()),
         timeout=epsagon.constants.SEND_TIMEOUT,
+        retries=False,
     )
 
 
@@ -1360,6 +1369,7 @@ def test_event_with_datetime(wrapped_post):
         'collector',
         body=json.dumps(trace.to_dict(), cls=TraceEncoder),
         timeout=epsagon.constants.SEND_TIMEOUT,
+        retries=False,
     )
 
 @mock.patch('urllib3.PoolManager.request', side_effect=urllib3.exceptions.TimeoutError)
@@ -1378,6 +1388,7 @@ def test_event_with_non_unicode_binary(wrapped_post):
         'collector',
         body=json.dumps(trace.to_dict(), cls=TraceEncoder),
         timeout=epsagon.constants.SEND_TIMEOUT,
+        retries=False,
     )
 
 @mock.patch('urllib3.PoolManager.request')
