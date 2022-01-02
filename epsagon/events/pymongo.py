@@ -97,7 +97,7 @@ class PyMongoEvent(BaseEvent):
 
             if self.resource['operation'] == 'find':
                 self.resource['metadata']['Results'] = \
-                        [x for x in response]
+                        list(response)
 
             elif self.resource['operation'] in ['update_one']:
                 self.resource['metadata']['matched_count'] = \
