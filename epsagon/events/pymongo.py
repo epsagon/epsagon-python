@@ -39,7 +39,7 @@ class PyMongoEvent(BaseEvent):
 
         self.resource['operation'] = getattr(wrapped, '__name__')
 
-        if len(args) == 0:
+        if not args:
             documents = list()
 
         else:
@@ -60,7 +60,7 @@ class PyMongoEvent(BaseEvent):
 
         if self.resource['operation'] in PyMongoEvent.INSERT_OPERATIONS:
             add_data_if_needed(self.resource['metadata'], 'Items', documents)
-        
+
         elif self.resource['operation'] in PyMongoEvent.FILTER_OPERATIONS:
             add_data_if_needed(self.resource['metadata'], 'Search', documents)
 
@@ -94,18 +94,18 @@ class PyMongoEvent(BaseEvent):
             self.resource['metadata']['Search'] = str(
                     self.resource['metadata']['Search']
                 )
-            
+
             if self.resource['operation'] == 'find':
                 self.resource['metadata']['Results'] = \
                         [x for x in response]
-        
+
             elif self.resource['operation'] in ['update_one']:
                 self.resource['metadata']['matched_count'] = \
                         response.matched_count
                 self.resource['metadata']['modified_count'] = \
                         response.modified_count
-        
-            elif self.resource['operation'] in ['delete_many']:  
+
+            elif self.resource['operation'] in ['delete_many']:
                 self.resource['metadata']['deleted_count'] = \
                         response.deleted_count
 
