@@ -45,10 +45,7 @@ class PyMongoEvent(BaseEvent):
         else:
             documents = args[0]
 
-        # print('docs: ', [str(x.document) for x in documents])
-
         self.event_id = 'mongo-{}'.format(str(uuid4()))
-        
         self.resource['name'] = instance.name
         address = list(getattr(
             instance.database.client,
