@@ -42,10 +42,10 @@ class PyMongoEvent(BaseEvent):
         self.resource['operation'] = getattr(wrapped, '__name__')
 
         if not args:
-            input = list()
+            input_args = list()
 
         else:
-            input = args[0]
+            input_args = args[0]
 
         self.event_id = 'mongo-{}'.format(str(uuid4()))
         self.resource['name'] = instance.name
@@ -60,7 +60,7 @@ class PyMongoEvent(BaseEvent):
                 'Collection Name': str(instance.collection.name),
             }
 
-        self.handle_request_payload(input)
+        self.handle_request_payload(input_args)
 
         if response is not None:
             self.update_response(response)
@@ -82,21 +82,21 @@ class PyMongoEvent(BaseEvent):
             self.handle_filter_operations_response(response)
 
 
-    def handle_request_payload(self, input):
+    def handle_request_payload(self, input_args):
         """
         Handle input data before add to event.
-        :param input: input from botocore
+        :param input_args: input from botocore
         :return: None
         """
 
         if self.resource['operation'] == PyMongoEvent.INSERT_MANY:
-            add_data_if_needed(self.resource['metadata'], 'Items', input)
+            add_data_if_needed(self.resource['metadata'], 'Items', input_args)
 
         elif self.resource['operation'] == PyMongoEvent.INSERT_ONE:
-            add_data_if_needed(self.resource['metadata'], 'Item', input)
+            add_data_if_needed(self.resource['metadata'], 'Item', input_args)
 
         elif self.resource['operation'] in PyMongoEvent.FILTER_OPERATIONS:
-            add_data_if_needed(self.resource['metadata'], 'Filter', input)
+            add_data_if_needed(self.resource['metadata'], 'Filter', input_args)
 
 
     def handle_insert_operations_response(self, response):
