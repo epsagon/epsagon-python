@@ -19,7 +19,9 @@ class PyMongoEvent(BaseEvent):
 
     ORIGIN = 'pymongo'
     RESOURCE_TYPE = 'pymongo'
-    INSERT_OPERATIONS = ['insert_one', 'insert_many']
+    INSERT_ONE = 'insert_one'
+    INSERT_MANY = 'insert_many'
+    INSERT_OPERATIONS = (INSERT_ONE, INSERT_MANY)
     FILTER_OPERATIONS = ['find', 'update_one', 'delete_many']
 
     #pylint: disable=W0613
@@ -40,10 +42,10 @@ class PyMongoEvent(BaseEvent):
         self.resource['operation'] = getattr(wrapped, '__name__')
 
         if not args:
-            documents = list()
+            input = list()
 
         else:
-            documents = args[0]
+            input = args[0]
 
         self.event_id = 'mongo-{}'.format(str(uuid4()))
         self.resource['name'] = instance.name
@@ -58,11 +60,7 @@ class PyMongoEvent(BaseEvent):
                 'Collection Name': str(instance.collection.name),
             }
 
-        if self.resource['operation'] in PyMongoEvent.INSERT_OPERATIONS:
-            add_data_if_needed(self.resource['metadata'], 'Items', documents)
-
-        elif self.resource['operation'] in PyMongoEvent.FILTER_OPERATIONS:
-            add_data_if_needed(self.resource['metadata'], 'Search', documents)
+        self.handle_request_payload(input)
 
         if response is not None:
             self.update_response(response)
@@ -78,35 +76,78 @@ class PyMongoEvent(BaseEvent):
         """
 
         if self.resource['operation'] in PyMongoEvent.INSERT_OPERATIONS:
-            for i in range(len(self.resource['metadata'].get('items', []))):
-                self.resource['metadata']['items'][i]['_id'] = str(
-                    self.resource['metadata']['items'][i]['_id']
-                )
-
-            if self.resource['operation'] == 'insert_many':
-                self.resource['metadata']['inserted_ids'] = \
-                    [str(x) for x in response.inserted_ids]
-            elif self.resource['operation'] == 'insert_one':
-                self.resource['metadata']['inserted_ids'] = \
-                    [str(response.inserted_id)]
+            self.handle_insert_operations_response(response)
 
         elif self.resource['operation'] in PyMongoEvent.FILTER_OPERATIONS:
-            self.resource['metadata']['Search'] = str(
-                    self.resource['metadata']['Search']
+            self.handle_filter_operations_response(response)
+
+
+    def handle_request_payload(self, input):
+        """
+        Handle input data before add to event.
+        :param input: input from botocore
+        :return: None
+        """
+
+        if self.resource['operation'] == PyMongoEvent.INSERT_MANY:
+            add_data_if_needed(self.resource['metadata'], 'Items', input)
+
+        elif self.resource['operation'] == PyMongoEvent.INSERT_ONE:
+            add_data_if_needed(self.resource['metadata'], 'Item', input)
+
+        elif self.resource['operation'] in PyMongoEvent.FILTER_OPERATIONS:
+            add_data_if_needed(self.resource['metadata'], 'Filter', input)
+
+
+    def handle_insert_operations_response(self, response):
+        """
+        Handle response data before add to event.
+        :param response: response from botocore
+        :return: None
+        """
+
+        if self.resource['operation'] == PyMongoEvent.INSERT_MANY:
+            for i in range(len(self.resource['metadata'].get('items', []))):
+                self.resource['metadata']['Items'][i]['_id'] = str(
+                    self.resource['metadata']['Items'][i]['_id']
                 )
 
-            if self.resource['operation'] == 'find':
-                self.resource['metadata']['Results'] = \
+            self.resource['metadata']['inserted_ids'] = \
+                    [str(x) for x in response.inserted_ids]
+
+        elif self.resource['operation'] == PyMongoEvent.INSERT_ONE:
+            for i in range(len(self.resource['metadata'].get('Item', []))):
+                self.resource['metadata']['Item'][i]['_id'] = str(
+                    self.resource['metadata']['Item'][i]['_id']
+                )
+
+            self.resource['metadata']['inserted_id'] = \
+                    [str(response.inserted_id)]
+
+
+    def handle_filter_operations_response(self, response):
+        """
+        Handle response data before add to event.
+        :param response: response from botocore
+        :return: None
+        """
+
+        self.resource['metadata']['Filter'] = str(
+                    self.resource['metadata']['Filter']
+                )
+
+        if self.resource['operation'] == 'find':
+            self.resource['metadata']['Results'] = \
                         list(response)
 
-            elif self.resource['operation'] in ['update_one']:
-                self.resource['metadata']['matched_count'] = \
+        elif self.resource['operation'] in ['update_one']:
+            self.resource['metadata']['matched_count'] = \
                         response.matched_count
-                self.resource['metadata']['modified_count'] = \
+            self.resource['metadata']['modified_count'] = \
                         response.modified_count
 
-            elif self.resource['operation'] in ['delete_many']:
-                self.resource['metadata']['deleted_count'] = \
+        elif self.resource['operation'] in ['delete_many']:
+            self.resource['metadata']['deleted_count'] = \
                         response.deleted_count
 
 
