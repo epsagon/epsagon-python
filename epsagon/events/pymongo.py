@@ -5,7 +5,6 @@ pymongo events module.
 from __future__ import absolute_import
 from uuid import uuid4
 import traceback
-from past.builtins import range
 
 from epsagon.utils import add_data_if_needed
 from ..event import BaseEvent
