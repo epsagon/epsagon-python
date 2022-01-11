@@ -83,18 +83,22 @@ class PyMongoEvent(BaseEvent):
         :param input_args: input from botocore
         :return: None
         """
-        
+
         if self.resource['operation'] == PyMongoEvent.INSERT_MANY:
-            add_data_if_needed(self.resource['metadata'], 'Items', input_args[0])
+            add_data_if_needed(self.resource['metadata'], 'Items',
+                input_args[0])
 
         elif self.resource['operation'] == PyMongoEvent.INSERT_ONE:
-            add_data_if_needed(self.resource['metadata'], 'Item', input_args[0])
+            add_data_if_needed(self.resource['metadata'], 'Item',
+                input_args[0])
 
         elif self.resource['operation'] in PyMongoEvent.FILTER_OPERATIONS:
-            add_data_if_needed(self.resource['metadata'], 'Filter', input_args[0])
-            
+            add_data_if_needed(self.resource['metadata'], 'Filter',
+                input_args[0])
+
             if self.resource['operation'] == 'update_one':
-                add_data_if_needed(self.resource['metadata'], 'New Values', input_args[1])
+                add_data_if_needed(self.resource['metadata'], 'New Values',
+                    input_args[1])
 
 
     def handle_insert_operations_response(self, response):
