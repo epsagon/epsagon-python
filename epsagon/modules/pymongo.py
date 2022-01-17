@@ -37,3 +37,18 @@ def patch():
         'Collection.insert_many',
         _wrapper
     )
+    wrapt.wrap_function_wrapper(
+        'pymongo.collection',
+        'Collection.find',
+        _wrapper
+    )
+    wrapt.wrap_function_wrapper(
+        'pymongo.collection',
+        'Collection.update_one',
+        _wrapper
+    )
+    wrapt.wrap_function_wrapper(
+        'pymongo.collection',
+        'Collection.delete_many',
+        _wrapper
+    )
