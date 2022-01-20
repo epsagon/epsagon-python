@@ -1144,14 +1144,13 @@ class Trace(object):
                 )
 
         except Exception as exception:
-            if self.debug:
-                print(
+            print(
                     'Failed to send trace: '
                     'updating events resource metadata failed: {}'.format(
                         exception
                     )
                 )
-                traceback.print_exc()
+            traceback.print_exc()
             return
 
         try:
