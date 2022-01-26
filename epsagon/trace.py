@@ -1150,7 +1150,8 @@ class Trace(object):
                         exception
                     )
                 )
-            traceback.print_exc()
+            if self.debug:
+                traceback.print_exc()
             return
 
         try:
