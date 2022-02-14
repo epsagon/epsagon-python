@@ -125,7 +125,7 @@ class PyMongoEvent(BaseEvent):
 
         if self.resource['operation'] == 'find':
             self.resource['metadata']['Results'] = \
-                        list(response)
+                        [response[i] for i in range(response.count())]
 
         elif self.resource['operation'] == 'update_one':
             self.resource['metadata']['matched_count'] = \
