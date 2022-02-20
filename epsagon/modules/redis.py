@@ -54,9 +54,3 @@ def patch():
         'Pipeline.execute',
         _multi_wrapper
     )
-    # Version < 3.0
-    wrapt.wrap_function_wrapper(
-        'redis',
-        'StrictRedis.execute_command',
-        _single_wrapper
-    )
