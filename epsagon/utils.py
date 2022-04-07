@@ -6,7 +6,7 @@ from __future__ import absolute_import, print_function
 import os
 try:
     from collections import Mapping, Iterable
-except:
+except: # pylint: disable=W0702
     from collections.abc import Mapping, Iterable
 import uuid
 import socket

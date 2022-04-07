@@ -13,7 +13,7 @@ import functools
 import warnings
 try:
     from collections import Mapping
-except:
+except: # pylint: disable=W0702
     from collections.abc import Mapping
 from uuid import uuid4
 
