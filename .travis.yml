@@ -11,6 +11,7 @@ before_install:
   - nvm use 12
 
 install:
+  - pip install pip==22.0.3
   - pip install -r requirements-dev.txt
 
 script:
