@@ -12,6 +12,7 @@ before_install:
 
 install:
   - pip install pip==20.1
+  - pip --version
   - pip install -r requirements-dev.txt
 
 script:
