@@ -9,8 +9,6 @@ python:
 before_install:
   - nvm install 12  
   - nvm use 12
-  - pip install pip==20.1
-  - pip --version
 
 install:
   - pip install -r requirements-dev.txt
