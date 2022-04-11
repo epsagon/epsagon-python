@@ -1,5 +1,5 @@
 wrapt>=1.11.0
-autowrapt
+autowrapt==1.0
 urllib3
 six
 future
