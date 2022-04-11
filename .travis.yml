@@ -11,6 +11,8 @@ before_install:
   - nvm use 12
 
 install:
+  - pip install -U importlib-metadata
+  - pip install -U pluggy
   - pip install -r requirements-dev.txt
 
 script:
