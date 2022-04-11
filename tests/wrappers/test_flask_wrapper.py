@@ -65,7 +65,7 @@ def self_call():
 
     if not inner_call:
         return CLIENT.post('/self_call', json={
-            'inner_call': 'True'
+            'inner_call': True
         })
 
     return RETURN_VALUE
@@ -179,7 +179,7 @@ def test_call_to_self(trace_transport, client):
     And API that calls itself. Make sure instrumentation doesn't throw
     and exception that gets to the user.
     """
-    result = CLIENT.post('/self_call')
+    result = CLIENT.post('/self_call', json={})
     assert result.data.decode('ascii') == RETURN_VALUE
 
 
