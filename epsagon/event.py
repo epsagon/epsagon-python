@@ -155,7 +155,7 @@ class BaseEvent(object):
             traceback_data
         )
         self.exception['time'] = time.time()
-        
+        # Check if to collect the frames
         # Adding python frames (input data of functions in stack) in python 3.
         # Ignoring filenames with /epsagon since they are ours.
         if not REMOVE_FRAMES:
