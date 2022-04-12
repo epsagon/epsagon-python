@@ -8,6 +8,9 @@ import time
 import inspect
 import uuid
 from .common import ErrorCode
+from .constants import (
+    REMOVE_FRAMES,
+)
 
 
 class BaseEvent(object):
@@ -152,19 +155,20 @@ class BaseEvent(object):
             traceback_data
         )
         self.exception['time'] = time.time()
-
+        
         # Adding python frames (input data of functions in stack) in python 3.
         # Ignoring filenames with /epsagon since they are ours.
-        if sys.version_info.major == 3:
-            self.exception['frames'] = {
-                '/'.join([
-                    frame.filename,
-                    frame.function,
-                    str(frame.lineno)
-                ]): frame.frame.f_locals
-                for frame in inspect.trace()
-                if '/epsagon' not in frame.filename and frame.frame.f_locals
-            }
+        if not REMOVE_FRAMES:
+            if sys.version_info.major == 3:
+                self.exception['frames'] = {
+                    '/'.join([
+                        frame.filename,
+                        frame.function,
+                        str(frame.lineno)
+                    ]): frame.frame.f_locals
+                    for frame in inspect.trace()
+                    if '/epsagon' not in frame.filename and frame.frame.f_locals
+                }
         self.exception.setdefault('additional_data', {})['handled'] = handled
         if from_logs:
             self.exception['additional_data']['from_logs'] = True
