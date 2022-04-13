@@ -43,7 +43,7 @@ HTTP_ERR_CODE = int(os.getenv('EPSAGON_HTTP_ERR_CODE', '500'))
 IGNORED_ENDPOINTS = []
 
 # Indicates whether to skip collection of the exception frames part
-REMOVE_FRAMES = (
+SHOULD_REMOVE_EXCEPTION_FRAMES = (
     os.getenv('EPSAGON_REMOVE_EXCEPTION_FRAMES', 'false').lower() == 'true'
 )
 

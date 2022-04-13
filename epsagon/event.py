@@ -9,7 +9,7 @@ import inspect
 import uuid
 from .common import ErrorCode
 from .constants import (
-    REMOVE_FRAMES,
+    SHOULD_REMOVE_EXCEPTION_FRAMES,
 )
 
 
@@ -158,7 +158,7 @@ class BaseEvent(object):
         # Check if to collect the frames
         # Adding python frames (input data of functions in stack) in python 3.
         # Ignoring filenames with /epsagon since they are ours.
-        if not REMOVE_FRAMES:
+        if not SHOULD_REMOVE_EXCEPTION_FRAMES:
             if sys.version_info.major == 3:
                 self.exception['frames'] = {
                     '/'.join([
