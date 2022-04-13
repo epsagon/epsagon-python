@@ -42,6 +42,11 @@ HTTP_ERR_CODE = int(os.getenv('EPSAGON_HTTP_ERR_CODE', '500'))
 # List of ignored endpoints for web frameworks.
 IGNORED_ENDPOINTS = []
 
+# Indicates whether to skip collection of the exception frames part
+SHOULD_REMOVE_EXCEPTION_FRAMES = (
+    os.getenv('EPSAGON_REMOVE_EXCEPTION_FRAMES', 'false').lower() == 'true'
+)
+
 EPSAGON_MARKER = '__EPSAGON'
 EPSAGON_HEADER = 'epsagon-trace-id'
 # In some web frameworks, there is an automated capitalization
