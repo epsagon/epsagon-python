@@ -481,7 +481,7 @@ Advanced options can be configured as a parameter to the init() method or as env
 |-                       |DISABLE_EPSAGON_PATCH          |Boolean|`False`      |Disable the library patching (instrumentation)                                     |
 |-                       |EPSAGON_LAMBDA_TIMEOUT_THRESHOLD_MS          |Integer|`200`      |The threshold in millieseconds to send the trace before a Lambda timeout occurs                                     |
 |-                       |EPSAGON_PAYLOADS_TO_IGNORE     |List   |-            |Array of dictionaries to not instrument. Example: `'[{"source": "serverless-plugin-warmup"}]'` |
-|-                       |EPSAGON_REMOVE_EXCEPTION_FRAMES|Boolean|`False`      |Disable the automatic capture of exception frames data                             |
+|-                       |EPSAGON_REMOVE_EXCEPTION_FRAMES|Boolean|`False`      |Disable the automatic capture of exception frames data (Python 3)                             |
 
 
 
