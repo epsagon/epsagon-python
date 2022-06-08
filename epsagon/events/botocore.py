@@ -222,7 +222,6 @@ class BotocoreS3Event(BotocoreEvent):
 
         _, request_data = args
         self.resource['name'] = request_data['Bucket']
-
         if self.resource['operation'] in \
                 ['HeadObject', 'GetObject', 'PutObject']:
             self.resource['metadata']['key'] = request_data['Key']
@@ -237,7 +236,6 @@ class BotocoreS3Event(BotocoreEvent):
         :return: None
         """
         super(BotocoreS3Event, self).update_response(response)
-
         if self.resource['operation'] == 'ListObjects':
             files = [
                 [str(x['Key']).strip('"'), x['Size'], x['ETag']]
@@ -251,12 +249,12 @@ class BotocoreS3Event(BotocoreEvent):
             self.resource['metadata']['etag'] = response['ETag'].strip('"')
             self.resource['metadata']['file_size'] = response['ContentLength']
             self.resource['metadata']['last_modified'] = \
-                response['LastModified'].strftime('%s')
+                response['LastModified'].strftime('%S')
         elif self.resource['operation'] == 'GetObject':
             self.resource['metadata']['etag'] = response['ETag'].strip('"')
             self.resource['metadata']['file_size'] = response['ContentLength']
             self.resource['metadata']['last_modified'] = \
-                response['LastModified'].strftime('%s')
+                response['LastModified'].strftime('%S')
 
 
 class BotocoreKinesisEvent(BotocoreEvent):
