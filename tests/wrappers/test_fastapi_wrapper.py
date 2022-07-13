@@ -18,6 +18,7 @@ from epsagon.runners.fastapi import FastapiRunner
 from epsagon.wrappers.fastapi import (
     DEFAULT_SUCCESS_STATUS_CODE,
     DEFAULT_ERROR_STATUS_CODE,
+    _initialize_async_mode,
 )
 from .common import multiple_threads_handler
 
@@ -61,19 +62,45 @@ def _get_response(key):
 def handle():
     return _get_response(RETURN_VALUE)
 
+async def async_handle():
+    return _get_response(RETURN_VALUE)
+
 def handle_custom_response(response_model=List[str]):
+    return CUSTOM_RESPONSE
+
+async def async_handle_custom_response(response_model=List[str]):
     return CUSTOM_RESPONSE
 
 def handle_base_model_response(response_model=CustomBaseModel):
     return CustomBaseModel(data=CUSTOM_RESPONSE)
 
+async def async_handle_base_model_response(response_model=CustomBaseModel):
+    return CustomBaseModel(data=CUSTOM_RESPONSE)
+
 def handle_custom_status_code(response_model=List[str]):
+    return CUSTOM_RESPONSE
+
+async def async_handle_custom_status_code(response_model=List[str]):
     return CUSTOM_RESPONSE
 
 def handle_overridden_custom_status_code():
     return _get_response(RETURN_VALUE)
 
+async def async_handle_overridden_custom_status_code():
+    return _get_response(RETURN_VALUE)
+
 def handle_given_request(request: Request):
+    assert request.method == 'POST'
+    loop = None
+    try:
+        loop = asyncio.new_event_loop()
+        assert loop.run_until_complete(request.json()) == TEST_POST_DATA
+    finally:
+        if loop:
+            loop.close()
+    return _get_response(RETURN_VALUE)
+
+async def async_handle_given_request(request: Request):
     assert request.method == 'POST'
     loop = None
     try:
@@ -88,16 +115,33 @@ def handle_a():
     time.sleep(0.2)
     return _get_response('a')
 
+async def async_handle_a():
+    time.sleep(0.2)
+    return _get_response('a')
+
 def handle_b():
+    return _get_response('b')
+
+async def async_handle_b():
     return _get_response('b')
 
 def handle_router_endpoint():
     return _get_response(ROUTER_RETURN_VALUE)
 
+async def async_handle_router_endpoint():
+    return _get_response(ROUTER_RETURN_VALUE)
+
 def handle_custom_route_endpoint():
     return _get_response(CUSTOM_ROUTE_RETURN_VALUE)
 
+async def async_handle_custom_route_endpoint():
+    return _get_response(CUSTOM_ROUTE_RETURN_VALUE)
+
 def multiple_threads_route():
+    multiple_threads_handler()
+    return _get_response(MULTIPLE_THREADS_RETURN_VALUE)
+
+async def async_multiple_threads_route():
     multiple_threads_handler()
     return _get_response(MULTIPLE_THREADS_RETURN_VALUE)
 
@@ -117,14 +161,20 @@ class UnhandledFastAPIException(Exception):
 def handle_error_from_route():
     raise CustomFastAPIException('test')
 
+async def async_handle_error_from_route():
+    raise CustomFastAPIException('test')
 
 def handle_raise_custom_error():
     raise HandledFastAPIException('test')
 
+async def async_handle_raise_custom_error():
+    raise HandledFastAPIException('test')
 
 def handle_raise_unhandled_error():
     raise UnhandledFastAPIException('test')
 
+async def async_handle_raise_unhandled_error():
+    raise UnhandledFastAPIException('test')
 
 def custom_exception_handler(request: Request, exc):
     return JSONResponse(
@@ -132,8 +182,18 @@ def custom_exception_handler(request: Request, exc):
         content=CUSTON_EXCEPTION_HANDLER_RESPONSE
     )
 
+async def async_custom_exception_handler(request: Request, exc):
+    return JSONResponse(
+        status_code=CUSTOM_STATUS_CODE,
+        content=CUSTON_EXCEPTION_HANDLER_RESPONSE
+    )
 
 def default_exception_handler(request: Request, exc):
+    return JSONResponse(
+        content=DEFAULT_EXCEPTION_HANDLER_RESPONSE
+    )
+
+async def async_default_exception_handler(request: Request, exc):
     return JSONResponse(
         content=DEFAULT_EXCEPTION_HANDLER_RESPONSE
     )
@@ -177,14 +237,58 @@ def _build_fastapi_app():
     app.include_router(router_with_custom_route, prefix=TEST_CUSTOM_ROUTE_PREFIX)
     return app
 
+def _build_async_fastapi_app():
+    app = FastAPI()
+    app.add_api_route("/", async_handle, methods=["GET"])
+    app.add_api_route(
+        CUSTOM_RESPONSE_PATH,
+        async_handle_custom_response,
+        methods=["GET"]
+    )
+    app.add_api_route(
+        BASE_MODEL_RESPONSE_PATH,
+        async_handle_base_model_response,
+        methods=["GET"]
+    )
+    app.add_api_route(
+        CUSTOM_STATUS_CODE_PATH,
+        async_handle_custom_status_code,
+        methods=["GET"],
+        status_code=CUSTOM_STATUS_CODE
+    )
+    app.add_api_route(
+        OVERRIDDEN_CUSTOM_STATUS_CODE_PATH,
+        async_handle_overridden_custom_status_code,
+        methods=["GET"],
+        status_code=CUSTOM_STATUS_CODE
+    )
+    app.add_api_route(REQUEST_OBJ_PATH, async_handle_given_request, methods=["POST"])
+    app.add_api_route("/a", async_handle_a, methods=["GET"])
+    app.add_api_route("/b", async_handle_b, methods=["GET"])
+    app.add_api_route("/err", async_handle_error_from_route, methods=["GET"], status_code=200)
+    app.add_api_route(MULTIPLE_THREADS_ROUTE, async_multiple_threads_route, methods=["GET"])
+    router = APIRouter()
+    router.add_api_route(TEST_ROUTER_PATH, async_handle_router_endpoint)
+    app.include_router(router, prefix=TEST_ROUTER_PREFIX)
+    router_with_custom_route = APIRouter(route_class=CustomRouteClass)
+    router_with_custom_route.add_api_route(TEST_CUSTOM_ROUTE_PATH, async_handle_custom_route_endpoint)
+    app.include_router(router_with_custom_route, prefix=TEST_CUSTOM_ROUTE_PREFIX)
+    return app
+
 @pytest.fixture(scope='function', autouse=False)
-def fastapi_app():
+def sync_fastapi_app():
+    _initialize_async_mode(False)
     return _build_fastapi_app()
 
+@pytest.fixture(scope='function', autouse=False)
+def async_fastapi_app():
+    _initialize_async_mode(True)
+    return _build_async_fastapi_app()
+
 
 @pytest.fixture(scope='function', autouse=False)
-def fastapi_app_with_exception_handlers(fastapi_app):
-    app = fastapi_app
+def fastapi_app_with_exception_handlers(sync_fastapi_app):
+    app = sync_fastapi_app
     app.add_api_route(
         HANDLED_EXCEPTION_PATH, handle_raise_custom_error, methods=["GET"]
     )
@@ -201,8 +305,14 @@ def fastapi_app_with_exception_handlers(fastapi_app):
     )
     return app
 
-
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "fastapi_app",
+    [
+        pytest.lazy_fixture("sync_fastapi_app"),
+        pytest.lazy_fixture("async_fastapi_app"),
+    ],
+)
 async def test_fastapi_sanity(trace_transport, fastapi_app):
     """Sanity test."""
     async with AsyncClient(app=fastapi_app, base_url="http://test") as ac:
@@ -224,12 +334,20 @@ async def test_fastapi_sanity(trace_transport, fastapi_app):
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "fastapi_app",
+    [
+        pytest.lazy_fixture("sync_fastapi_app"),
+        pytest.lazy_fixture("async_fastapi_app"),
+    ],
+)
 async def test_fastapi_custom_response(trace_transport, fastapi_app):
     """custom response test."""
     request_path = f'{CUSTOM_RESPONSE_PATH}?x=testval'
     async with AsyncClient(app=fastapi_app, base_url="http://test") as ac:
         response = await ac.get(request_path)
     response_data = response.json()
+    print('*********************')
     runner = trace_transport.last_trace.events[0]
     assert isinstance(runner, FastapiRunner)
     assert runner.resource['name'].startswith('127.0.0.1')
@@ -245,6 +363,13 @@ async def test_fastapi_custom_response(trace_transport, fastapi_app):
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "fastapi_app",
+    [
+        pytest.lazy_fixture("sync_fastapi_app"),
+        pytest.lazy_fixture("async_fastapi_app"),
+    ],
+)
 async def test_fastapi_base_model_response(trace_transport, fastapi_app):
     """base model response test."""
     request_path = f'{BASE_MODEL_RESPONSE_PATH}?x=testval'
@@ -267,6 +392,13 @@ async def test_fastapi_base_model_response(trace_transport, fastapi_app):
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "fastapi_app",
+    [
+        pytest.lazy_fixture("sync_fastapi_app"),
+        pytest.lazy_fixture("async_fastapi_app"),
+    ],
+)
 async def test_fastapi_custom_status_code(trace_transport, fastapi_app):
     """custom status code test."""
     request_path = f'{CUSTOM_STATUS_CODE_PATH}?x=testval'
@@ -292,6 +424,13 @@ async def test_fastapi_custom_status_code(trace_transport, fastapi_app):
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "fastapi_app",
+    [
+        pytest.lazy_fixture("sync_fastapi_app"),
+        pytest.lazy_fixture("async_fastapi_app"),
+    ],
+)
 async def test_fastapi_custom_status_code_overridden(trace_transport, fastapi_app):
     """custom status code test - status code overridden by returned Response """
     path = OVERRIDDEN_CUSTOM_STATUS_CODE_PATH
@@ -316,6 +455,14 @@ async def test_fastapi_custom_status_code_overridden(trace_transport, fastapi_ap
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "fastapi_app",
+    [
+        pytest.lazy_fixture("sync_fastapi_app"),
+        pytest.lazy_fixture("async_fastapi_app"),
+    ],
+)
+# RuntimeError: Cannot run the event loop while another loop is running
 async def test_fastapi_given_request(trace_transport, fastapi_app):
     """handler with a request parameter test."""
     request_path = f'{REQUEST_OBJ_PATH}?x=testval'
@@ -338,6 +485,13 @@ async def test_fastapi_given_request(trace_transport, fastapi_app):
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "fastapi_app",
+    [
+        pytest.lazy_fixture("sync_fastapi_app"),
+        pytest.lazy_fixture("async_fastapi_app"),
+    ],
+)
 async def test_fastapi_custom_router(trace_transport, fastapi_app):
     """Custom router sanity test."""
     full_route_path= f'{TEST_ROUTER_PREFIX}{TEST_ROUTER_PATH}'
@@ -357,6 +511,13 @@ async def test_fastapi_custom_router(trace_transport, fastapi_app):
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "fastapi_app",
+    [
+        pytest.lazy_fixture("sync_fastapi_app"),
+        pytest.lazy_fixture("async_fastapi_app"),
+    ],
+)
 async def test_fastapi_custom_api_route(trace_transport, fastapi_app):
     """Custom api route sanity test."""
     full_route_path= f'{TEST_CUSTOM_ROUTE_PREFIX}{TEST_CUSTOM_ROUTE_PATH}'
@@ -376,6 +537,13 @@ async def test_fastapi_custom_api_route(trace_transport, fastapi_app):
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "fastapi_app",
+    [
+        pytest.lazy_fixture("sync_fastapi_app"),
+        pytest.lazy_fixture("async_fastapi_app"),
+    ],
+)
 async def test_fastapi_exception(trace_transport, fastapi_app):
     """Test when the handler raises an exception."""
     try:
@@ -475,12 +643,12 @@ async def _send_request(app, path, trace_transport):
 
 
 @pytest.mark.asyncio
-async def test_fastapi_multiple_requests(trace_transport, fastapi_app):
+async def test_fastapi_multiple_requests(trace_transport, sync_fastapi_app):
     """ Multiple requests test """
     for _ in range(3):
         await asyncio.gather(
-            _send_request(fastapi_app, "a", trace_transport),
-            _send_request(fastapi_app, "b", trace_transport)
+            _send_request(sync_fastapi_app, "a", trace_transport),
+            _send_request(sync_fastapi_app, "b", trace_transport)
         )
     # validating no `zombie` traces exist
     assert not trace_factory.traces
@@ -490,8 +658,7 @@ async def _send_async_request(app, path):
     async with AsyncClient(app=app, base_url="http://test") as ac:
         return await ac.get(path)
 
-
-def test_fastapi_multiple_threads_route(trace_transport, fastapi_app):
+def test_fastapi_multiple_threads_route(trace_transport, sync_fastapi_app):
     """
     Tests request to a route, which invokes multiple threads.
     Validating no `zombie` traces exist (fromn the callback invoked threads)
@@ -501,7 +668,7 @@ def test_fastapi_multiple_threads_route(trace_transport, fastapi_app):
         loop = asyncio.new_event_loop()
         response = loop.run_until_complete(
             _send_async_request(
-                fastapi_app,
+                sync_fastapi_app,
                 f"{MULTIPLE_THREADS_ROUTE}?x=testval"
             )
         )

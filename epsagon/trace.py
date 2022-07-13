@@ -14,6 +14,7 @@ import signal
 import threading
 import random
 import json
+from anyio import get_current_task
 import urllib3.exceptions
 
 from epsagon.event import BaseEvent
@@ -22,6 +23,7 @@ from epsagon.trace_encoder import TraceEncoder
 from epsagon.trace_transports import NoneTransport, HTTPTransport, LogTransport
 from .constants import (
     TIMEOUT_GRACE_TIME_MS,
+    EPSAGON_MARKER,
     MAX_LABEL_SIZE,
     DEFAULT_SAMPLE_RATE,
     TRACE_URL_PREFIX,
@@ -95,6 +97,7 @@ class TraceFactory(object):
         self.keys_to_ignore = None
         self.keys_to_allow = None
         self.use_single_trace = True
+        self.use_async_tracer = False
         self.singleton_trace = None
         self.local_thread_to_unique_id = {}
         self.transport = NoneTransport()
@@ -200,6 +203,20 @@ class TraceFactory(object):
             tracer.step_dict_output_path = self.step_dict_output_path
             tracer.sample_rate = self.sample_rate
 
+    def switch_to_async_tracer(self):
+        """
+        Set the use_async_tracer flag to True.
+        :return: None
+        """
+        self.use_async_tracer = True
+        print('Switching..')
+
+    def is_async_tracer(self):
+        """
+        Returns whether using an async tracer
+        """
+        return self.use_async_tracer
+    
     def switch_to_multiple_traces(self):
         """
         Set the use_single_trace flag to False.
@@ -232,6 +249,50 @@ class TraceFactory(object):
             sample_rate=self.sample_rate,
             unique_id=unique_id,
         )
+
+    @staticmethod
+    def _get_current_task():
+        """
+        Gets the current asyncio task safely
+        :return: The task.
+        """
+        # Dynamic import since this is only valid in Python3+
+        asyncio = __import__('asyncio')
+        if not asyncio.get_event_loop():
+            return None
+        try:
+            return asyncio.Task.current_task()
+        except RuntimeError:
+            return None
+
+    def _get_tracer_async_mode(self, should_create):
+        """
+        Get trace assuming async tracer.
+        :return: The trace.
+        """
+        task = type(self)._get_current_task()
+        if not task:
+            return None
+
+        trace = getattr(task, EPSAGON_MARKER, None)
+        if not trace and should_create:
+            trace = self._create_new_trace()
+            setattr(task, EPSAGON_MARKER, trace)
+        return trace
+
+    def _pop_trace_async_mode(self):
+        """
+        Pops the trace from the current task, assuming async tracer
+        :return: The trace.
+        """
+        task = type(self)._get_current_task()
+        if not task:
+            return None
+
+        trace = getattr(task, EPSAGON_MARKER, None)
+        if trace: # can safely remove tracer from async task
+            delattr(task, EPSAGON_MARKER)
+        return trace
 
     def get_or_create_trace(self, unique_id=None):
         """
@@ -267,6 +328,9 @@ class TraceFactory(object):
         :return: The trace.
         """
         with TraceFactory.LOCK:
+            if self.use_async_tracer:
+                return self._get_tracer_async_mode(should_create=should_create)
+
             unique_id = self.get_thread_local_unique_id(unique_id)
             if unique_id:
                 trace = (
@@ -321,6 +385,11 @@ class TraceFactory(object):
         :return: unique id
         """
         with self.LOCK:
+            if self.use_async_tracer:
+                trace = self._pop_trace_async_mode()
+                if trace:
+                    # async tracer found
+                    return trace
             if self.traces:
                 trace = self.traces.pop(self.get_trace_identifier(trace), None)
                 if not self.traces:
@@ -338,7 +407,13 @@ class TraceFactory(object):
         :param unique_id: input unique id
         :return: active id if there's an active unique id or given one
         """
-        return self.local_thread_to_unique_id.get(
+        if self.is_async_tracer():
+            return self.local_thread_to_unique_id.get(
+            type(self)._get_current_task(), unique_id
+        )
+
+        else:
+            return self.local_thread_to_unique_id.get(
             get_thread_id(), unique_id
         )
 
@@ -353,7 +428,11 @@ class TraceFactory(object):
                 self.singleton_trace.unique_id if self.singleton_trace else None
             )
         )
-        self.local_thread_to_unique_id[get_thread_id()] = unique_id
+
+        if self.is_async_tracer():
+            self.local_thread_to_unique_id[type(self)._get_current_task()] = unique_id
+        else:
+            self.local_thread_to_unique_id[get_thread_id()] = unique_id
         return unique_id
 
     def unset_thread_local_unique_id(self):

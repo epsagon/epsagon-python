@@ -6,6 +6,7 @@ import uuid
 import json
 import json.decoder
 import asyncio
+import os
 
 import warnings
 from fastapi import Request, Response
@@ -29,9 +30,16 @@ EPSAGON_REQUEST_PARAM_NAME = 'epsagon_request'
 SCOPE_UNIQUE_ID = 'trace_unique_id'
 SCOPE_CONTAINER_METADATA_COLLECTED = 'container_metadata'
 SCOPE_IGNORE_REQUEST = 'ignore_request'
+IS_ASYNC_MODE = False
+
+def _initialize_async_mode(mode):
+        global IS_ASYNC_MODE
+        IS_ASYNC_MODE = mode
+
+_initialize_async_mode(os.getenv("EPSAGON_FASTAPI_ASYNC_MODE", "FALSE") == "TRUE")
 
 def _handle_wrapper_params(_args, kwargs, original_request_param_name):
-    """
+    """f
     Handles the sync/async given parameters - gets the request object
     If original handler is set to get the Request object, then getting the
     request using this param. Otherwise, trying to get the Request object using
@@ -222,6 +230,71 @@ def _fastapi_handler(
         raised_err
     )
 
+async def _async_fastapi_handler(
+        original_handler,
+        request,
+        status_code,
+        args,
+        kwargs
+):
+    """
+    FastAPI generic handler - for callbacks executed by a threadpool
+    :param original_handler: the wrapped original handler
+    :param request: the given handler request
+    :param status_code: the default configured response status code.
+    Can be None when called by exception handlers wrapper, as there's
+    no status code configuration for exception handlers.
+    """
+    has_setup_succeeded = False
+    should_ignore_request = False
+
+    try:
+        epsagon_scope, trace = _setup_handler(request)
+        if epsagon_scope and trace:
+            has_setup_succeeded = True
+        if (
+                ignore_request('', request.url.path.lower())
+                or
+                is_ignored_endpoint(request.url.path.lower())
+        ):
+            should_ignore_request = True
+            epsagon_scope[SCOPE_IGNORE_REQUEST] = True
+
+    except Exception: # pylint: disable=broad-except
+        has_setup_succeeded = False
+
+    if not has_setup_succeeded or should_ignore_request:
+        return await original_handler(*args, **kwargs)
+
+    created_runner = False
+    response = None
+    if not trace.runner:
+        if not _setup_trace_runner(epsagon_scope, trace, request):
+            return await original_handler(*args, **kwargs)
+
+    raised_err = None
+    try:
+        response = await original_handler(*args, **kwargs)
+    except Exception as exception:  # pylint: disable=W0703
+        raised_err = exception
+    finally:
+        try:
+            epsagon.trace.trace_factory.unset_thread_local_unique_id()
+        except Exception: # pylint: disable=broad-except
+            pass
+    # no need to update request body if runner already created before
+    if created_runner:
+        _extract_request_body(trace, request)
+
+    return _handle_response(
+        epsagon_scope,
+        response,
+        status_code,
+        trace,
+        raised_err
+    )
+
+
 
 # pylint: disable=too-many-statements
 def _wrap_handler(dependant, status_code):
@@ -230,9 +303,12 @@ def _wrap_handler(dependant, status_code):
     """
     original_handler = dependant.call
     is_async = asyncio.iscoroutinefunction(original_handler)
+
     if is_async:
-        # async endpoints are not supported
-        return
+        if not IS_ASYNC_MODE:
+            # in case of not using the Env var for async endpoints
+            return
+
 
     original_request_param_name = dependant.request_param_name
     if not original_request_param_name:
@@ -249,7 +325,25 @@ def _wrap_handler(dependant, status_code):
             original_handler, request, status_code, args, kwargs
         )
 
-    dependant.call = wrapped_handler
+    async def async_wrapped_handler(*args, **kwargs):
+        """
+        Asynchronous wrapper handler
+        """
+        request: Request = _handle_wrapper_params(
+            args, kwargs, original_request_param_name
+        )
+        return await _async_fastapi_handler(
+            original_handler, request, status_code, args, kwargs
+        )
+
+    if is_async:
+        if IS_ASYNC_MODE:
+            # async endpoints
+            dependant.call = async_wrapped_handler
+
+    else:
+        if not IS_ASYNC_MODE:
+            dependant.call = wrapped_handler
 
 
 def route_class_wrapper(wrapped, instance, args, kwargs):
@@ -323,7 +417,10 @@ async def server_call_wrapper(wrapped, _instance, args, kwargs):
 
     trace = None
     try:
-        epsagon.trace.trace_factory.switch_to_multiple_traces()
+        if (IS_ASYNC_MODE):
+            epsagon.trace.trace_factory.switch_to_async_tracer()
+        else:
+            epsagon.trace.trace_factory.switch_to_multiple_traces()
         unique_id = str(uuid.uuid4())
         trace = epsagon.trace.trace_factory.get_or_create_trace(
             unique_id=unique_id
