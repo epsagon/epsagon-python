@@ -14,7 +14,6 @@ import signal
 import threading
 import random
 import json
-from anyio import get_current_task
 import urllib3.exceptions
 
 from epsagon.event import BaseEvent
@@ -209,14 +208,13 @@ class TraceFactory(object):
         :return: None
         """
         self.use_async_tracer = True
-        print('Switching..')
 
     def is_async_tracer(self):
         """
         Returns whether using an async tracer
         """
         return self.use_async_tracer
-    
+
     def switch_to_multiple_traces(self):
         """
         Set the use_single_trace flag to False.
@@ -412,8 +410,7 @@ class TraceFactory(object):
             type(self)._get_current_task(), unique_id
         )
 
-        else:
-            return self.local_thread_to_unique_id.get(
+        return self.local_thread_to_unique_id.get(
             get_thread_id(), unique_id
         )
 
@@ -430,7 +427,8 @@ class TraceFactory(object):
         )
 
         if self.is_async_tracer():
-            self.local_thread_to_unique_id[type(self)._get_current_task()] = unique_id
+            self.local_thread_to_unique_id[type(self).
+            _get_current_task()] = unique_id
         else:
             self.local_thread_to_unique_id[get_thread_id()] = unique_id
         return unique_id

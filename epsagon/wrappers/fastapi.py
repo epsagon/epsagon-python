@@ -33,10 +33,11 @@ SCOPE_IGNORE_REQUEST = 'ignore_request'
 IS_ASYNC_MODE = False
 
 def _initialize_async_mode(mode):
-        global IS_ASYNC_MODE
-        IS_ASYNC_MODE = mode
+    global IS_ASYNC_MODE
+    IS_ASYNC_MODE = mode
 
-_initialize_async_mode(os.getenv("EPSAGON_FASTAPI_ASYNC_MODE", "FALSE") == "TRUE")
+_initialize_async_mode(os.getenv(
+    'EPSAGON_FASTAPI_ASYNC_MODE', 'FALSE') == 'TRUE')
 
 def _handle_wrapper_params(_args, kwargs, original_request_param_name):
     """f
@@ -304,6 +305,8 @@ def _wrap_handler(dependant, status_code):
     original_handler = dependant.call
     is_async = asyncio.iscoroutinefunction(original_handler)
 
+    print(IS_ASYNC_MODE)
+
     if is_async:
         if not IS_ASYNC_MODE:
             # in case of not using the Env var for async endpoints
@@ -417,7 +420,7 @@ async def server_call_wrapper(wrapped, _instance, args, kwargs):
 
     trace = None
     try:
-        if (IS_ASYNC_MODE):
+        if IS_ASYNC_MODE:
             epsagon.trace.trace_factory.switch_to_async_tracer()
         else:
             epsagon.trace.trace_factory.switch_to_multiple_traces()
