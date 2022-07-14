@@ -33,7 +33,7 @@ SCOPE_IGNORE_REQUEST = 'ignore_request'
 IS_ASYNC_MODE = False
 
 def _initialize_async_mode(mode):
-    global IS_ASYNC_MODE
+    global IS_ASYNC_MODE # pylint: disable=global-statement
     IS_ASYNC_MODE = mode
 
 _initialize_async_mode(os.getenv(
@@ -427,7 +427,7 @@ async def server_call_wrapper(wrapped, _instance, args, kwargs):
             unique_id=unique_id
         )
         trace.prepare()
-        
+
         scope[EPSAGON_MARKER] = {
             SCOPE_UNIQUE_ID: unique_id,
         }
