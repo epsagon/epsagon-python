@@ -220,6 +220,7 @@ class TraceFactory(object):
         Set the use_single_trace flag to False.
         :return: None
         """
+        self.use_async_tracer = False
         self.use_single_trace = False
 
     def _create_new_trace(self, unique_id=None):

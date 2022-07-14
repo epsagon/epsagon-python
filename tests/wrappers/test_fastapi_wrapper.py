@@ -102,13 +102,14 @@ def handle_given_request(request: Request):
 
 async def async_handle_given_request(request: Request):
     assert request.method == 'POST'
-    loop = None
-    try:
-        loop = asyncio.new_event_loop()
-        assert loop.run_until_complete(request.json()) == TEST_POST_DATA
-    finally:
-        if loop:
-            loop.close()
+    assert await request.json() == TEST_POST_DATA
+    # # loop = None
+    # try:
+    #     # loop = asyncio.new_event_loop()
+        
+    # finally:
+    #     if loop:
+    #         loop.close()
     return _get_response(RETURN_VALUE)
 
 def handle_a():
@@ -347,7 +348,6 @@ async def test_fastapi_custom_response(trace_transport, fastapi_app):
     async with AsyncClient(app=fastapi_app, base_url="http://test") as ac:
         response = await ac.get(request_path)
     response_data = response.json()
-    print('*********************')
     runner = trace_transport.last_trace.events[0]
     assert isinstance(runner, FastapiRunner)
     assert runner.resource['name'].startswith('127.0.0.1')

@@ -305,8 +305,6 @@ def _wrap_handler(dependant, status_code):
     original_handler = dependant.call
     is_async = asyncio.iscoroutinefunction(original_handler)
 
-    print(IS_ASYNC_MODE)
-
     if is_async:
         if not IS_ASYNC_MODE:
             # in case of not using the Env var for async endpoints
@@ -377,7 +375,7 @@ def exception_handler_wrapper(original_handler):
     Wraps an exception handler
     """
     is_async = asyncio.iscoroutinefunction(original_handler)
-    if is_async:
+    if is_async or IS_ASYNC_MODE:
         # async handlers are not supported
         return original_handler
 
@@ -429,6 +427,7 @@ async def server_call_wrapper(wrapped, _instance, args, kwargs):
             unique_id=unique_id
         )
         trace.prepare()
+        
         scope[EPSAGON_MARKER] = {
             SCOPE_UNIQUE_ID: unique_id,
         }
