@@ -36,6 +36,7 @@ MAX_TRACE_SIZE_BYTES = 64 * (2 ** 10)
 DEFAULT_MAX_TRACE_SIZE_BYTES = 64 * (2 ** 10)
 MAX_METADATA_FIELD_SIZE_LIMIT = 1024 * 3
 FAILED_TO_SERIALIZE_MESSAGE = 'Failed to serialize returned object to JSON'
+IS_PY_VERSION_ABOVE_3_6 = sys.version_info[0] == 3 and sys.version_info[1] >= 7
 
 
 # pylint: disable=invalid-name
@@ -257,12 +258,22 @@ class TraceFactory(object):
         """
         # Dynamic import since this is only valid in Python3+
         asyncio = __import__('asyncio')
-        if not asyncio.get_event_loop():
-            return None
-        try:
-            return asyncio.Task.current_task()
-        except RuntimeError:
-            return None
+
+        #check if python version 3.7 and above
+        if IS_PY_VERSION_ABOVE_3_6:
+            try:
+                if not asyncio.get_event_loop():
+                    return None
+                return asyncio.Task.current_task()
+            except RuntimeError:
+                return None
+        else:
+            try:
+                if not asyncio._get_event_loop():# pylint: disable=W0212
+                    return None
+                return asyncio.Task.current_task()
+            except RuntimeError:
+                return None
 
     def _get_tracer_async_mode(self, should_create):
         """
@@ -408,7 +419,7 @@ class TraceFactory(object):
         """
         if self.is_async_tracer():
             return self.local_thread_to_unique_id.get(
-            type(self)._get_current_task(), unique_id
+                type(self)._get_current_task(), unique_id
         )
 
         return self.local_thread_to_unique_id.get(
@@ -428,8 +439,8 @@ class TraceFactory(object):
         )
 
         if self.is_async_tracer():
-            self.local_thread_to_unique_id[type(self).
-            _get_current_task()] = unique_id
+            self.local_thread_to_unique_id[
+                type(self)._get_current_task()] = unique_id
         else:
             self.local_thread_to_unique_id[get_thread_id()] = unique_id
         return unique_id
