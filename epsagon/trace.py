@@ -264,7 +264,7 @@ class TraceFactory(object):
             try:
                 if not asyncio.get_event_loop():
                     return None
-                return asyncio.Task.current_task()
+                return asyncio.current_task()
             except RuntimeError:
                 return None
         else:
