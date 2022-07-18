@@ -265,14 +265,16 @@ class TraceFactory(object):
                 if not asyncio.get_event_loop():
                     return None
                 return asyncio.current_task()
-            except RuntimeError:
+            except Exception: # pylint: disable=broad-except:
                 return None
         else:
             try:
-                if not asyncio._get_event_loop():# pylint: disable=W0212
+                # pylint: disable=W0212
+                if not asyncio.events._get_running_loop():
                     return None
+
                 return asyncio.Task.current_task()
-            except RuntimeError:
+            except Exception: # pylint: disable=broad-except:
                 return None
 
     def _get_tracer_async_mode(self, should_create):
