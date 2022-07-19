@@ -103,13 +103,6 @@ def handle_given_request(request: Request):
 async def async_handle_given_request(request: Request):
     assert request.method == 'POST'
     assert await request.json() == TEST_POST_DATA
-    # # loop = None
-    # try:
-    #     # loop = asyncio.new_event_loop()
-        
-    # finally:
-    #     if loop:
-    #         loop.close()
     return _get_response(RETURN_VALUE)
 
 def handle_a():

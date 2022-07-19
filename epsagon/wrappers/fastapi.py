@@ -305,12 +305,6 @@ def _wrap_handler(dependant, status_code):
     original_handler = dependant.call
     is_async = asyncio.iscoroutinefunction(original_handler)
 
-    if is_async:
-        if not IS_ASYNC_MODE:
-            # in case of not using the Env var for async endpoints
-            return
-
-
     original_request_param_name = dependant.request_param_name
     if not original_request_param_name:
         dependant.request_param_name = EPSAGON_REQUEST_PARAM_NAME
@@ -337,13 +331,12 @@ def _wrap_handler(dependant, status_code):
             original_handler, request, status_code, args, kwargs
         )
 
-    if is_async:
-        if IS_ASYNC_MODE:
-            # async endpoints
-            dependant.call = async_wrapped_handler
+    if is_async and IS_ASYNC_MODE:
+        # async endpoints
+        dependant.call = async_wrapped_handler
 
     else:
-        if not IS_ASYNC_MODE:
+        if not is_async and not IS_ASYNC_MODE:
             dependant.call = wrapped_handler
 
 

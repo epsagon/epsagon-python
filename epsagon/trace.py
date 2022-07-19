@@ -36,7 +36,7 @@ MAX_TRACE_SIZE_BYTES = 64 * (2 ** 10)
 DEFAULT_MAX_TRACE_SIZE_BYTES = 64 * (2 ** 10)
 MAX_METADATA_FIELD_SIZE_LIMIT = 1024 * 3
 FAILED_TO_SERIALIZE_MESSAGE = 'Failed to serialize returned object to JSON'
-IS_PY_VERSION_ABOVE_3_6 = sys.version_info[0] == 3 and sys.version_info[1] >= 7
+IS_PY_VERSION_ABOVE_3_6 = sys.version_info[0] == 3 and sys.version_info[1] > 6
 
 
 # pylint: disable=invalid-name
@@ -261,19 +261,22 @@ class TraceFactory(object):
 
         #check if python version 3.7 and above
         if IS_PY_VERSION_ABOVE_3_6:
+            get_loop = asyncio.get_event_loop
+            get_task = asyncio.current_task
             try:
-                if not asyncio.get_event_loop():
+                if not get_loop():
                     return None
-                return asyncio.current_task()
+                return get_task()
             except Exception: # pylint: disable=broad-except
                 return None
         else:
             try:
+                get_loop = asyncio.events._get_running_loop
+                get_task = asyncio.events._get_running_loop
                 # pylint: disable=W0212
-                if not asyncio.events._get_running_loop():
+                if not get_loop():
                     return None
-
-                return asyncio.Task.current_task()
+                return get_task()
             except Exception: # pylint: disable=broad-except
                 return None
 
@@ -398,10 +401,7 @@ class TraceFactory(object):
         """
         with self.LOCK:
             if self.use_async_tracer:
-                trace = self._pop_trace_async_mode()
-                if trace:
-                    # async tracer found
-                    return trace
+                return self._pop_trace_async_mode()
             if self.traces:
                 trace = self.traces.pop(self.get_trace_identifier(trace), None)
                 if not self.traces:
