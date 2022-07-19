@@ -482,6 +482,8 @@ Advanced options can be configured as a parameter to the init() method or as env
 |-                       |EPSAGON_LAMBDA_TIMEOUT_THRESHOLD_MS          |Integer|`200`      |The threshold in millieseconds to send the trace before a Lambda timeout occurs                                     |
 |-                       |EPSAGON_PAYLOADS_TO_IGNORE     |List   |-            |Array of dictionaries to not instrument. Example: `'[{"source": "serverless-plugin-warmup"}]'` |
 |-                       |EPSAGON_REMOVE_EXCEPTION_FRAMES|Boolean|`False`      |Disable the automatic capture of exception frames data (Python 3)                             |
+|-                       |EPSAGON_FASTAPI_ASYNC_MODE|Boolean|`False`      |Enable capturing of Fast API async endpoint handlers calls(Python 3)                             |
+
 
 
 

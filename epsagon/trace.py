@@ -271,9 +271,9 @@ class TraceFactory(object):
                 return None
         else:
             try:
+                # pylint: disable=W0212
                 get_loop = asyncio.events._get_running_loop
                 get_task = asyncio.events._get_running_loop
-                # pylint: disable=W0212
                 if not get_loop():
                     return None
                 return get_task()
