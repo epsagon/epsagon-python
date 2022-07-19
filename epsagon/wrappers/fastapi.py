@@ -335,9 +335,8 @@ def _wrap_handler(dependant, status_code):
         # async endpoints
         dependant.call = async_wrapped_handler
 
-    else:
-        if not is_async and not IS_ASYNC_MODE:
-            dependant.call = wrapped_handler
+    elif not is_async and not IS_ASYNC_MODE:
+        dependant.call = wrapped_handler
 
 
 def route_class_wrapper(wrapped, instance, args, kwargs):
