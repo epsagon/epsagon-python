@@ -81,3 +81,4 @@ def reset_tracer_mode():
     Resets trace factory tracer mode to a single trace.
     """
     epsagon.trace_factory.use_single_trace = True
+    epsagon.use_async_tracer = False

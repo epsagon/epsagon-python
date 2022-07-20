@@ -20,6 +20,7 @@ pytest-asyncio; python_version >= '3.5'
 pytest-aiohttp; python_version >= '3.5'
 httpx; python_version >= '3.5'
 asynctest; python_version >= '3.5'
+pytest-lazy-fixture; python_version >= '3.5'
 moto; python_version >= '3.5'
 moto==2.1.0; python_version < '3.5'
 tornado
