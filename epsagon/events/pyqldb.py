@@ -36,7 +36,7 @@ class QldbEvent(BaseEvent):
 
         self.event_id = 'qldb-{}'.format(str(uuid4()))
         self.resource['name'] = \
-            getattr(instance.__getattribute__('_transaction')._session,
+            getattr(instance.__getattribute__('_transaction')._session,# pylint: disable=W0212
                                                 '_ledger_name')
         self.resource['operation'] = wrapped.__func__.__name__
 
