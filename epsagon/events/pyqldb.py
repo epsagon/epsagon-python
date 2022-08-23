@@ -1,5 +1,5 @@
 """
-pymongo events module.
+pyqldb events module.
 """
 
 from __future__ import absolute_import
@@ -13,7 +13,7 @@ from ..trace import trace_factory
 
 class QldbEvent(BaseEvent):
     """
-    Represents base pymongo event.
+    Represents base pyqldb event.
     """
 
     ORIGIN = 'qldb'

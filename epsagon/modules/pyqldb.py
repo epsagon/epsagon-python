@@ -1,5 +1,5 @@
 """
-pymysql patcher module
+pyqldb patcher module
 """
 from __future__ import absolute_import
 import wrapt
@@ -9,7 +9,7 @@ from ..events.pyqldb import QldbEventFactory
 
 def _wrapper(wrapped, instance, args, kwargs):
     """
-    General wrapper for PynamoDB instrumentation.
+    General wrapper for Pyqldb instrumentation.
     :param wrapped: wrapt's wrapped
     :param instance: wrapt's instance
     :param args: wrapt's args
