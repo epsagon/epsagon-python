@@ -81,6 +81,7 @@ else:
 # pylint: disable=C0103
 label = trace_factory.add_label
 error = trace_factory.set_error
+warning = trace_factory.set_warning
 disable = trace_factory.disable
 enable = trace_factory.enable
 get_trace_url = trace_factory.get_trace_url

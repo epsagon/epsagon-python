@@ -546,6 +546,21 @@ class TraceFactory(object):
                 from_logs=from_logs
             )
 
+    def set_warning(self, exception, traceback_data=None, from_logs=False):
+        """
+        Set a warning for the current thread's trace.
+        :param exception: The exception
+        :param traceback_data: The traceback data.
+        :param from_logs: True if the exception was captured from logging
+        """
+        if self.get_trace():
+            self.get_trace().set_error(
+                exception,
+                traceback_data,
+                from_logs=from_logs,
+                is_warning=True
+            )
+
     def get_trace_url(self):
         """
         Return the trace URL based on the runner ID.
@@ -921,12 +936,19 @@ class Trace(object):
 
         return None
 
-    def set_error(self, exception, traceback_data=None, from_logs=False):
+    def set_error(
+            self,
+            exception,
+            traceback_data=None,
+            from_logs=False,
+            is_warning=False
+        ):
         """
         Sets the error value of the runner
         :param exception: Exception object or String to set.
         :param traceback_data: traceback string
         :param from_logs: True if the exception was captured from logging
+        :param is_warning: True if set a warning type
         """
         if not self.runner:
             return
@@ -945,11 +967,11 @@ class Trace(object):
         # Convert exception string to Exception type
         if isinstance(exception, str):
             exception = Exception(exception)
-
         self.runner.set_exception(
             exception,
             traceback_data,
-            from_logs=from_logs
+            from_logs=from_logs,
+            is_warning=is_warning,
         )
 
     def update_runner_with_labels(self):

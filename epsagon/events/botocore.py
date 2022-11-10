@@ -84,7 +84,8 @@ class BotocoreEvent(BaseEvent):
             exception,
             traceback_data,
             handled=True,
-            from_logs=False
+            from_logs=False,
+            is_warning=False
     ):
         """
         see {Event.set_exception}

@@ -114,7 +114,14 @@ class RunnerEventMock(EventMock):
     def set_timeout(self):
         pass
 
-    def set_exception(self, exception, traceback_data, handled=True, from_logs=False):
+    def set_exception(
+            self,
+            exception,
+            traceback_data,
+            handled=True,
+            from_logs=False,
+            is_warning=False
+        ):
         self.error_code = ErrorCode.EXCEPTION
         self.exception['type'] = type(exception).__name__
         self.exception['message'] = str(exception)

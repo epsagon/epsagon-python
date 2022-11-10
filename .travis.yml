@@ -1,7 +1,5 @@
 language: python
 python:
-    - "2.7"
-    - "3.6"
     - "3.7"
     - "3.8"
     - "3.9"
@@ -19,7 +17,7 @@ install:
 script:
   - ./scripts/run_lint.sh
   - ./scripts/run_tests.sh
-  - 'if [ $AWS_ACCESS_KEY_ID ]; then ./scripts/run_acceptance_tests.sh; fi'
+  # - 'if [ $AWS_ACCESS_KEY_ID ]; then ./scripts/run_acceptance_tests.sh; fi'
 
 jobs:
   include:
