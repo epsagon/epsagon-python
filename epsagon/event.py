@@ -135,7 +135,8 @@ class BaseEvent(object):
             exception,
             traceback_data,
             handled=True,
-            from_logs=False
+            from_logs=False,
+            is_warning=False,
     ):
         """
         Sets exception data on event.
@@ -170,5 +171,7 @@ class BaseEvent(object):
                     if '/epsagon' not in frame.filename and frame.frame.f_locals
                 }
         self.exception.setdefault('additional_data', {})['handled'] = handled
+        if is_warning:
+            self.exception['additional_data']['warning'] = True
         if from_logs:
             self.exception['additional_data']['from_logs'] = True
