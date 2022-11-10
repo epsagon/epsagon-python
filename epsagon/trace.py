@@ -936,7 +936,13 @@ class Trace(object):
 
         return None
 
-    def set_error(self, exception, traceback_data=None, from_logs=False, is_warning=False):
+    def set_error(
+            self,
+            exception,
+            traceback_data=None,
+            from_logs=False,
+            is_warning=False
+        ):
         """
         Sets the error value of the runner
         :param exception: Exception object or String to set.
