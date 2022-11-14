@@ -65,7 +65,7 @@ def get_thread_id():
     Return current thread id
     :return: thread id
     """
-    return threading.currentThread().ident
+    return threading.current_thread().ident
 
 
 def create_transport(collector_url, token):
